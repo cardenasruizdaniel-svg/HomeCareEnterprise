@@ -16,7 +16,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from core.dependencies import requiere_permiso
 from core.roles import ROLES
 from core.templates import templates
-from database.database import consultar_todos
+from database.database import consultar_todos, consultar_uno
 
 from services import profesionales_service
 
@@ -73,6 +73,7 @@ async def nuevo(
 
 @router.post("/guardar")
 async def guardar(
+    request: Request,
     tipo_documento: str = Form(""),
     documento: str = Form(...),
     registro_profesional: str = Form(""),
@@ -99,40 +100,57 @@ async def guardar(
     tipo_cuenta: str = Form(""),
     numero_cuenta: str = Form(""),
     firma_base64: str = Form(""),
+    nombre_usuario: str = Form(""),
+    password: str = Form(""),
+    rol_sistema: str = Form(""),
     _actor=Depends(requiere_permiso("profesionales")),
 ):
-    profesionales_service.crear(
-        {
-            "tipo_documento": tipo_documento,
-            "documento": documento,
-            "registro_profesional": registro_profesional,
-            "profesion": especialidad_principal,
-            "especialidad_principal": especialidad_principal,
-            "primer_nombre": primer_nombre,
-            "segundo_nombre": segundo_nombre,
-            "primer_apellido": primer_apellido,
-            "segundo_apellido": segundo_apellido,
-            "telefono": telefono,
-            "celular": celular,
-            "correo": correo,
-            "direccion": direccion,
-            "municipio": municipio,
-            "departamento": departamento,
-            "capacidad_diaria": capacidad_diaria,
-            "acepta_urgencias": acepta_urgencias,
-            "radio_cobertura_km": radio_cobertura_km,
-            "tiempo_promedio_visita": tiempo_promedio_visita,
-            "observaciones": observaciones,
-            "tipo_contrato": tipo_contrato,
-            "valor_hora": valor_hora,
-            "salario_fijo": salario_fijo,
-            "banco": banco,
-            "tipo_cuenta": tipo_cuenta,
-            "numero_cuenta": numero_cuenta,
-            "firma_base64": firma_base64 or None,
-        },
-        usuario_id=_actor.get("id") if isinstance(_actor, dict) else None,
-    )
+    datos_profesional = {
+        "tipo_documento": tipo_documento,
+        "documento": documento,
+        "registro_profesional": registro_profesional,
+        "profesion": especialidad_principal,
+        "especialidad_principal": especialidad_principal,
+        "primer_nombre": primer_nombre,
+        "segundo_nombre": segundo_nombre,
+        "primer_apellido": primer_apellido,
+        "segundo_apellido": segundo_apellido,
+        "telefono": telefono,
+        "celular": celular,
+        "correo": correo,
+        "direccion": direccion,
+        "municipio": municipio,
+        "departamento": departamento,
+        "capacidad_diaria": capacidad_diaria,
+        "acepta_urgencias": acepta_urgencias,
+        "radio_cobertura_km": radio_cobertura_km,
+        "tiempo_promedio_visita": tiempo_promedio_visita,
+        "observaciones": observaciones,
+        "tipo_contrato": tipo_contrato,
+        "valor_hora": valor_hora,
+        "salario_fijo": salario_fijo,
+        "banco": banco,
+        "tipo_cuenta": tipo_cuenta,
+        "numero_cuenta": numero_cuenta,
+        "firma_base64": firma_base64 or None,
+    }
+
+    try:
+        profesionales_service.crear_con_cuenta_acceso(
+            datos_profesional, nombre_usuario or None, password or None,
+            rol_sistema or especialidad_principal,
+            usuario_creacion=_actor.get("id") if isinstance(_actor, dict) else None,
+        )
+    except ValueError as error:
+        from repositories.catalogo_bancos_repository import CatalogoBancosRepository
+        return templates.TemplateResponse(
+            request=request, name="profesionales/nuevo.html",
+            context={
+                "usuario": _actor, "roles": ROLES,
+                "lista_bancos": [dict(b) for b in CatalogoBancosRepository.listar_activos()],
+                "error": str(error), "datos_previos": {**datos_profesional, "nombre_usuario": nombre_usuario, "rol_sistema": rol_sistema},
+            },
+        )
 
     return RedirectResponse(url="/profesionales", status_code=303)
 
@@ -151,6 +169,13 @@ async def editar(
 
     from repositories.catalogo_bancos_repository import CatalogoBancosRepository
 
+    cuenta_vinculada = None
+    if profesional and dict(profesional).get("usuario_id"):
+        cuenta_vinculada = consultar_uno(
+            "SELECT * FROM usuarios WHERE id=?", (dict(profesional)["usuario_id"],)
+        )
+        cuenta_vinculada = dict(cuenta_vinculada) if cuenta_vinculada else None
+
     return templates.TemplateResponse(
         request=request,
         name="profesionales/editar.html",
@@ -158,7 +183,7 @@ async def editar(
             "usuario": usuario,
             "profesional": profesional,
             "roles": ROLES,
-            "usuarios": consultar_todos("SELECT id, nombre, usuario FROM usuarios ORDER BY nombre"),
+            "cuenta_vinculada": cuenta_vinculada,
             "lista_bancos": [dict(b) for b in CatalogoBancosRepository.listar_activos()],
         },
     )
@@ -170,6 +195,7 @@ async def editar(
 
 @router.post("/actualizar/{id}")
 async def actualizar(
+    request: Request,
     id: int,
     especialidad_principal: str = Form(...),
     registro_profesional: str = Form(""),
@@ -190,9 +216,32 @@ async def actualizar(
     banco: str = Form(""),
     tipo_cuenta: str = Form(""),
     numero_cuenta: str = Form(""),
-    usuario_id: str = Form(""),
+    nombre_usuario: str = Form(""),
+    password: str = Form(""),
+    rol_sistema: str = Form(""),
     _actor=Depends(requiere_permiso("profesionales")),
 ):
+    try:
+        nuevo_usuario_id = profesionales_service.gestionar_cuenta_acceso(
+            id, nombre_usuario, password, rol_sistema
+        )
+    except ValueError as error:
+        profesional = profesionales_service.obtener(id)
+        from repositories.catalogo_bancos_repository import CatalogoBancosRepository
+        cuenta_vinculada = None
+        if profesional and dict(profesional).get("usuario_id"):
+            cuenta_vinculada = consultar_uno("SELECT * FROM usuarios WHERE id=?", (dict(profesional)["usuario_id"],))
+            cuenta_vinculada = dict(cuenta_vinculada) if cuenta_vinculada else None
+        return templates.TemplateResponse(
+            request=request, name="profesionales/editar.html",
+            context={
+                "usuario": _actor, "profesional": profesional, "roles": ROLES,
+                "cuenta_vinculada": cuenta_vinculada,
+                "lista_bancos": [dict(b) for b in CatalogoBancosRepository.listar_activos()],
+                "error": str(error),
+            },
+        )
+
     profesionales_service.actualizar(
         id,
         {
@@ -215,7 +264,7 @@ async def actualizar(
             "banco": banco,
             "tipo_cuenta": tipo_cuenta,
             "numero_cuenta": numero_cuenta,
-            "usuario_id": int(usuario_id) if usuario_id else None,
+            "usuario_id": nuevo_usuario_id,
         },
         usuario_id=_actor.get("id") if isinstance(_actor, dict) else None,
     )

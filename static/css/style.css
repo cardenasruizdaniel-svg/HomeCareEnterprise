@@ -707,3 +707,30 @@ footer{
 .bg-warning.text-dark{
     color:#fff !important;
 }
+
+/* ===========================================
+   BARRA LATERAL OCULTABLE
+   Un botón en la barra superior la esconde o
+   la vuelve a mostrar, para tener más espacio
+   en pantalla cuando se necesite.
+   =========================================== */
+body.sidebar-oculta .sidebar{
+    transform: translateX(-270px);
+}
+body.sidebar-oculta .topbar{
+    left: 0;
+}
+body.sidebar-oculta .contenido-principal{
+    margin-left: 0;
+}
+#btn-alternar-sidebar{
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #334155;
+    cursor: pointer;
+    margin-right: 12px;
+}
+#btn-alternar-sidebar:hover{
+    color: #0f172a;
+}

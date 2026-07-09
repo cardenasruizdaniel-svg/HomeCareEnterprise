@@ -81,6 +81,81 @@ def crear(datos: dict, usuario_id=None) -> int:
     return ProfesionalesRepository.crear(datos)
 
 
+def crear_con_cuenta_acceso(datos: dict, nombre_usuario, password, rol, usuario_creacion=None) -> dict:
+    """
+    Crea, en un solo paso, la cuenta de acceso (usuarios) Y la
+    ficha del profesional, ya vinculadas entre si -- para no
+    tener que pasar primero por "Usuarios" y luego por
+    "Profesionales" por separado. Si no se indica usuario ni
+    contraseña, se crea SOLO el profesional (sin cuenta de
+    acceso), por si en algun caso no la necesita todavia.
+    """
+
+    nuevo_usuario_id = None
+
+    if nombre_usuario and password:
+        from repositories.usuarios_repository import UsuariosRepository
+        if UsuariosRepository.obtener_por_usuario(nombre_usuario):
+            raise ValueError(f"Ya existe un usuario con el nombre de acceso '{nombre_usuario}'.")
+
+        from services.usuarios_service import crear_usuario
+        nuevo_usuario_id = crear_usuario(
+            datos.get("nombre_completo") or f"{datos.get('primer_nombre','')} {datos.get('primer_apellido','')}".strip(),
+            nombre_usuario, password, rol or "Consulta",
+            datos.get("correo", ""), datos.get("celular", "") or datos.get("telefono", ""),
+        )
+
+    datos = {**datos, "usuario_id": nuevo_usuario_id}
+    profesional_id = crear(datos, usuario_creacion)
+
+    return {"profesional_id": profesional_id, "usuario_id": nuevo_usuario_id}
+
+
+def gestionar_cuenta_acceso(profesional_id, nombre_usuario, password, rol_sistema) -> int | None:
+    """
+    Se usa desde la pantalla de EDITAR profesional:
+    - Si el profesional todavia no tiene cuenta y se indicaron
+      usuario+contraseña, crea la cuenta nueva y la vincula.
+    - Si el profesional YA tiene cuenta, actualiza su rol (si
+      se indico uno) y su contraseña (solo si se escribio una
+      nueva; si se deja en blanco, la contraseña actual no se toca).
+
+    Devuelve el usuario_id vinculado (nuevo o existente), o None
+    si no hay ninguna cuenta.
+    """
+
+    profesional = ProfesionalesRepository.obtener(profesional_id)
+    profesional = dict(profesional) if profesional else {}
+    usuario_id_actual = profesional.get("usuario_id")
+
+    if not usuario_id_actual:
+        if nombre_usuario and password:
+            from repositories.usuarios_repository import UsuariosRepository
+            if UsuariosRepository.obtener_por_usuario(nombre_usuario):
+                raise ValueError(f"Ya existe un usuario con el nombre de acceso '{nombre_usuario}'.")
+
+            from services.usuarios_service import crear_usuario
+            return crear_usuario(
+                profesional.get("nombre_completo", ""), nombre_usuario, password,
+                rol_sistema or profesional.get("especialidad_principal", "Consulta"),
+                profesional.get("correo", ""), profesional.get("celular", "") or profesional.get("telefono", ""),
+            )
+        return None
+
+    # Ya tiene cuenta: solo se actualiza lo que se haya indicado.
+    from database.database import ejecutar
+    if rol_sistema:
+        ejecutar("UPDATE usuarios SET rol=? WHERE id=?", (rol_sistema, usuario_id_actual))
+    if password:
+        from services.auth_service import AuthService
+        ejecutar(
+            "UPDATE usuarios SET password=? WHERE id=?",
+            (AuthService.generar_hash(password), usuario_id_actual),
+        )
+
+    return usuario_id_actual
+
+
 def actualizar(profesional_id: int, datos: dict, usuario_id=None):
 
     datos = dict(datos)

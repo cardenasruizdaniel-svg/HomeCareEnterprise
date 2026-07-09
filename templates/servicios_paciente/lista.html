@@ -102,7 +102,7 @@
                 <div class="card-body">
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
-                            <tr><th>Servicio</th><th>Profesional</th><th>Periodo</th><th>Frecuencia</th><th class="text-center">Renovación</th><th class="text-center">Estado</th><th class="text-center">Planilla</th></tr>
+                            <tr><th>Servicio</th><th>Profesional</th><th>Periodo</th><th>Frecuencia</th><th class="text-center">Renovación</th><th class="text-center">Estado</th><th class="text-center">Programación</th><th class="text-center">Planilla</th></tr>
                         </thead>
                         <tbody>
                             {% for s in servicios %}
@@ -120,6 +120,18 @@
                                 </td>
                                 <td class="text-center">
                                     <span class="badge {% if s.estado == 'Activo' %}bg-success{% else %}bg-secondary{% endif %}">{{ s.estado }}</span>
+                                </td>
+                                <td class="text-center">
+                                    {% if s.sesiones_pendientes and s.sesiones_pendientes > 0 %}
+                                    <span class="badge bg-warning text-dark">
+                                        {{ s.sesiones_programadas or 0 }}/{{ s.total_sesiones_reales or 0 }} programadas
+                                        — {{ s.sesiones_pendientes }} pendiente(s)
+                                    </span>
+                                    {% elif s.total_sesiones_reales and s.total_sesiones_reales > 0 %}
+                                    <span class="badge bg-success">Todas programadas ({{ s.total_sesiones_reales }})</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Sin sesiones generadas</span>
+                                    {% endif %}
                                 </td>
                                 <td class="text-center">
                                     <a href="/gestion-visitas/{{ s.id }}" class="btn btn-outline-success btn-sm">

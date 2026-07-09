@@ -60,3 +60,16 @@ class PlantillasVisitaRepository:
     @staticmethod
     def desactivar(plantilla_id: int):
         ejecutar("UPDATE plantillas_visita SET activo=0 WHERE id=?", (plantilla_id,))
+
+    @staticmethod
+    def actualizar(plantilla_id: int, datos: dict):
+        datos = {**datos, "id": plantilla_id}
+        ejecutar(
+            """
+            UPDATE plantillas_visita
+            SET nombre=:nombre, tipo_servicio=:tipo_servicio, subtipo=:subtipo,
+                rol_destinatario=:rol_destinatario, contenido=:contenido
+            WHERE id=:id
+            """,
+            datos,
+        )

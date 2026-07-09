@@ -35,6 +35,7 @@
                             <th>Profesión</th>
                             <th>Municipio</th>
                             <th>Estado</th>
+                            <th>Cuenta de acceso</th>
                             <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
@@ -50,6 +51,15 @@
                                 <span class="badge bg-success">{{ p.estado }}</span>
                                 {% else %}
                                 <span class="badge bg-secondary">{{ p.estado }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if p.nombre_usuario_acceso %}
+                                <span class="badge {% if p.cuenta_activa %}bg-primary{% else %}bg-secondary{% endif %}">
+                                    {{ p.nombre_usuario_acceso }} — {{ p.rol_sistema_actual }}
+                                </span>
+                                {% else %}
+                                <span class="badge bg-light text-dark">Sin cuenta</span>
                                 {% endif %}
                             </td>
                             <td class="text-center">

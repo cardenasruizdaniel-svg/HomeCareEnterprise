@@ -167,6 +167,35 @@
 
                 <hr>
 
+                <h5><i class="fa-solid fa-key"></i> Cuenta de acceso al sistema</h5>
+                <p class="text-muted small">
+                    Cree aquí mismo el usuario y la contraseña con los que esta persona va a
+                    iniciar sesión (en la web y en la app de campo). Si no la necesita todavía,
+                    puede dejar estos campos vacíos y crearla más adelante.
+                </p>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label>Usuario de acceso</label>
+                        <input type="text" name="nombre_usuario" class="form-control" autocomplete="off">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Contraseña</label>
+                        <input type="password" name="password" class="form-control" autocomplete="new-password">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Rol en el sistema (permisos)</label>
+                        <select name="rol_sistema" class="form-select">
+                            <option value="">-- Igual a la especialidad de arriba --</option>
+                            {% for r in roles %}
+                            <option value="{{ r }}">{{ r }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Define qué partes del sistema puede usar. Si lo deja en blanco, se usa la misma especialidad indicada arriba.</small>
+                    </div>
+                </div>
+
+                <hr>
+
                 <button class="btn btn-success">
                     <i class="fa-solid fa-floppy-disk"></i> Guardar
                 </button>

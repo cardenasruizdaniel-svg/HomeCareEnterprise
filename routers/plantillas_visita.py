@@ -18,13 +18,18 @@ async def listado(request: Request, usuario=Depends(requiere_permiso("programaci
     profesionales = consultar_todos(
         "SELECT id, nombre_completo, especialidad_principal FROM profesionales WHERE estado='ACTIVO' ORDER BY nombre_completo"
     )
+    from repositories.catalogo_actividades_repository import CatalogoActividadesRepository
+    tipos_servicio = ["General"] + [
+        dict(a)["nombre"] for a in CatalogoActividadesRepository.listar_activas()
+    ]
+
     return templates.TemplateResponse(
         request=request, name="plantillas_visita/lista.html",
         context={
             "usuario": usuario,
             "plantillas": plantillas_visita_service.listar_todas(),
             "profesionales": profesionales,
-            "tipos_servicio": ["General", "Medico General", "Terapia", "Curaciones", "Aplicador"],
+            "tipos_servicio": tipos_servicio,
             "roles": plantillas_visita_service.ROLES_DESTINATARIO,
         },
     )
@@ -53,6 +58,58 @@ async def guardar(
 @router.get("/desactivar/{plantilla_id}")
 async def desactivar(plantilla_id: int, _actor=Depends(requiere_permiso("programacion"))):
     plantillas_visita_service.desactivar(plantilla_id)
+    return RedirectResponse(url="/plantillas-visita", status_code=303)
+
+
+@router.get("/editar/{plantilla_id}", response_class=HTMLResponse)
+async def editar_formulario(request: Request, plantilla_id: int, usuario=Depends(requiere_permiso("programacion"))):
+    plantilla = plantillas_visita_service.obtener(plantilla_id)
+    if not plantilla:
+        return RedirectResponse(url="/plantillas-visita", status_code=303)
+
+    from repositories.catalogo_actividades_repository import CatalogoActividadesRepository
+    tipos_servicio = ["General"] + [
+        dict(a)["nombre"] for a in CatalogoActividadesRepository.listar_activas()
+    ]
+
+    return templates.TemplateResponse(
+        request=request, name="plantillas_visita/editar.html",
+        context={
+            "usuario": usuario, "plantilla": dict(plantilla),
+            "tipos_servicio": tipos_servicio, "roles": plantillas_visita_service.ROLES_DESTINATARIO,
+        },
+    )
+
+
+@router.post("/editar/{plantilla_id}")
+async def editar_guardar(
+    request: Request,
+    plantilla_id: int,
+    nombre: str = Form(...),
+    tipo_servicio: str = Form("General"),
+    subtipo: str = Form(""),
+    rol_destinatario: str = Form("Todos"),
+    contenido: str = Form(...),
+    usuario=Depends(requiere_permiso("programacion")),
+):
+    try:
+        plantillas_visita_service.actualizar_plantilla(
+            plantilla_id, nombre, tipo_servicio, subtipo, rol_destinatario, contenido
+        )
+    except ValueError as error:
+        plantilla = plantillas_visita_service.obtener(plantilla_id)
+        from repositories.catalogo_actividades_repository import CatalogoActividadesRepository
+        tipos_servicio = ["General"] + [
+            dict(a)["nombre"] for a in CatalogoActividadesRepository.listar_activas()
+        ]
+        return templates.TemplateResponse(
+            request=request, name="plantillas_visita/editar.html",
+            context={
+                "usuario": usuario, "plantilla": dict(plantilla),
+                "tipos_servicio": tipos_servicio, "roles": plantillas_visita_service.ROLES_DESTINATARIO,
+                "error": str(error),
+            },
+        )
     return RedirectResponse(url="/plantillas-visita", status_code=303)
 
 

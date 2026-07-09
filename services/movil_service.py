@@ -244,6 +244,23 @@ def listar_laboratorios_paciente(paciente_id: int):
     return listar_por_paciente(paciente_id)
 
 
+def crear_orden_medica(paciente_id, profesional_id, tipo, descripcion, codigo_cups, usuario_id):
+    """
+    Permite que el médico o profesional de la salud genere una
+    orden médica (medicamento, examen, remisión, procedimiento)
+    desde la app de campo durante la visita. Usa el mismo motor
+    que la web: genera el PDF y lo envía automáticamente al
+    paciente por WhatsApp/correo.
+    """
+
+    from services.ordenes_service import OrdenesService
+
+    return OrdenesService.crear_y_enviar(
+        paciente_id, profesional_id, tipo, descripcion, codigo_cups or "",
+        usuario_creacion=usuario_id,
+    )
+
+
 def registrar_evolucion(paciente_id, programacion_id, profesional_id, tipo_profesional, nota,
                           latitud=None, longitud=None, usuario_id=None,
                           tipo_registro="INFORME", nota_aclaratoria_de=None) -> dict:

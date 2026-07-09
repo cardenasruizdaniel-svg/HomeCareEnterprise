@@ -1,5 +1,9 @@
 <div class="topbar">
 
+    <button id="btn-alternar-sidebar" title="Ocultar / mostrar el menú">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
     <div class="topbar-left">
         <strong>HomeCare del Quindío I.P.S.</strong>
     </div>
@@ -20,3 +24,18 @@
     </div>
 
 </div>
+
+<script>
+(function () {
+    const PREFERENCIA = "homecare_sidebar_oculta";
+
+    if (localStorage.getItem(PREFERENCIA) === "1") {
+        document.body.classList.add("sidebar-oculta");
+    }
+
+    document.getElementById("btn-alternar-sidebar").addEventListener("click", () => {
+        document.body.classList.toggle("sidebar-oculta");
+        localStorage.setItem(PREFERENCIA, document.body.classList.contains("sidebar-oculta") ? "1" : "0");
+    });
+})();
+</script>

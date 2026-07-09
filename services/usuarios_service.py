@@ -67,8 +67,12 @@ def crear_usuario(nombre, usuario, password, rol, correo, telefono):
 
     ))
 
+    nuevo_id = cursor.lastrowid
+
     conexion.commit()
     conexion.close()
+
+    return nuevo_id
 
 
 def actualizar_usuario(

@@ -11,6 +11,37 @@ router=APIRouter(prefix="/pacientes",tags=["Pacientes"])
 @router.get("/")
 async def listado(request:Request,q:str=Query(""),pagina:int=1,usuario=Depends(requiere_permiso("pacientes"))):
     pacientes=PacientesService.buscar(q) if q.strip() else PacientesService.listar()
+
+    # Los roles administrativos/de coordinación ven TODOS los
+    # pacientes (los necesitan para crearlos, asignarlos, etc.).
+    # Los roles clinicos (medico, enfermero, cuidador, terapeuta...)
+    # solo ven los pacientes que tienen agendados/asignados a
+    # su propio usuario, para no mezclarse con los de otros
+    # profesionales.
+    from core.permissions import tiene_permiso
+    rol_actual = usuario.get("rol") if isinstance(usuario, dict) else None
+    roles_acceso_total = ("Administrador", "Director Médico", "Coordinador", "Administrativo")
+
+    if rol_actual and rol_actual not in roles_acceso_total and not tiene_permiso(rol_actual, "usuarios"):
+        from database.database import consultar_escalar, consultar_todos
+        profesional = consultar_escalar(
+            "SELECT id FROM profesionales WHERE usuario_id=?", (usuario.get("id"),)
+        )
+        if profesional:
+            ids_asignados = {
+                dict(f)["paciente_id"] for f in consultar_todos(
+                    """
+                    SELECT DISTINCT paciente_id FROM servicios_paciente WHERE profesional_id=?
+                    UNION
+                    SELECT DISTINCT paciente_id FROM programaciones WHERE profesional_id=?
+                    """,
+                    (profesional, profesional),
+                )
+            }
+            pacientes = [p for p in pacientes if dict(p)["id"] in ids_asignados]
+        else:
+            pacientes = []
+
     dashboard=getattr(PacientesService,"dashboard_enterprise",lambda:{"total":len(pacientes)})()
     estadisticas=getattr(PacientesService,"estadisticas",lambda:{})()
     return templates.TemplateResponse(request=request,name="pacientes/listado.html",context={

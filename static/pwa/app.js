@@ -443,19 +443,26 @@ async function renderDetalleVisita(visitaId) {
     <button class="btn btn-secondary btn-block" onclick="irAFichaPacienteDesdeVisita(${visita.paciente_id}, ${visita.id})">
       🧑‍⚕️ Ver historia clínica y alergias
     </button>
+    ${esPerfilCuidador() ? "" : `
     <button class="btn btn-secondary btn-block" id="btn-signos">🌡️ Registrar signos vitales</button>
     <button class="btn btn-secondary btn-block" id="btn-medicamento">💊 Registrar medicamento administrado</button>
-    <button class="btn btn-secondary btn-block" id="btn-evolucion">📝 Registrar evolución</button>
+    `}
+    <button class="btn btn-secondary btn-block" id="btn-evolucion">${esPerfilCuidador() ? "📋 Registro Informe de Cuidador" : "📝 Registrar evolución"}</button>
+    ${esPerfilCuidador() ? "" : `
     <button class="btn btn-secondary btn-block" id="btn-laboratorio">🧪 Resultados de laboratorio</button>
+    <button class="btn btn-secondary btn-block" id="btn-ordenes">📋 Órdenes Médicas</button>
+    `}
     ${visita.planilla_id && visita.planilla_estado !== "Firmada" ? `
     <button class="btn btn-primary btn-block" id="btn-firmar-planilla">✍️ Firmar planilla de visita</button>
     ` : ""}
+    ${esPerfilCuidador() ? "" : `
     ${!visita.ubicacion_confirmada || esPerfilAdministrativo() ? `
     <button class="btn btn-secondary btn-block" id="btn-actualizar-ubicacion-paciente">
       📍 ${visita.ubicacion_confirmada ? "Corregir" : "Registrar"} ubicación exacta del paciente
     </button>
     ` : `
     <div class="alerta alerta-info">📍 La ubicación de este paciente ya fue registrada en la visita de valoración inicial.</div>
+    `}
     `}
     <button class="btn btn-secondary btn-block" onclick="irA('agenda')">← Volver a la agenda</button>
   `;
@@ -482,10 +489,13 @@ async function renderDetalleVisita(visitaId) {
 
   document.getElementById("btn-salida").addEventListener("click", () => renderCapturaFotoIngreso(visita, "salida"));
 
-  document.getElementById("btn-signos").addEventListener("click", () => renderFormularioSignos(visita));
-  document.getElementById("btn-medicamento").addEventListener("click", () => renderFormularioMedicamento(visita));
   document.getElementById("btn-evolucion").addEventListener("click", () => renderFormularioEvolucion(visita));
-  document.getElementById("btn-laboratorio").addEventListener("click", () => renderLaboratorio(visita));
+  if (!esPerfilCuidador()) {
+    document.getElementById("btn-signos").addEventListener("click", () => renderFormularioSignos(visita));
+    document.getElementById("btn-medicamento").addEventListener("click", () => renderFormularioMedicamento(visita));
+    document.getElementById("btn-laboratorio").addEventListener("click", () => renderLaboratorio(visita));
+    document.getElementById("btn-ordenes").addEventListener("click", () => renderOrdenMedica(visita));
+  }
 }
 
 function renderFormularioSignos(visita) {
@@ -577,15 +587,15 @@ function renderFormularioEvolucion(visita, opciones) {
 
   contenedor().innerHTML = `
     <div class="card">
-      <h3>Registrar en la Historia Clínica</h3>
-      <div class="form-group">
+      <h3>${esCuidador ? "Registro Informe de Cuidador" : "Registrar en la Historia Clínica"}</h3>
+      <div class="form-group" style="display:${esCuidador ? "none" : "block"};">
         <label>¿Qué tipo de formato va a diligenciar?</label>
         <select id="ev-tipo-nota">
           <option value="">-- Seleccione --</option>
           ${TIPOS_NOTA_MOVIL.map(t => `<option value="${t.rol}" data-nombre="${t.nombre}">${t.nombre}</option>`).join("")}
         </select>
       </div>
-      <div id="ev-contenedor-resto" style="display:none;">
+      <div id="ev-contenedor-resto" style="display:${esCuidador ? "block" : "none"};">
         <div class="form-group">
           <label>Plantilla predefinida (opcional)</label>
           <select id="ev-plantilla">
@@ -617,6 +627,12 @@ function renderFormularioEvolucion(visita, opciones) {
 
   let rolNotaElegido = "";
   let nombreNotaElegida = "";
+
+  if (esCuidador) {
+    rolNotaElegido = "Cuidador";
+    nombreNotaElegida = "Nota de Cuidador";
+    cargarPlantillasMovil();
+  }
 
   async function cargarInformesParaAclarar(preseleccionar) {
     try {
@@ -951,6 +967,52 @@ async function renderLaboratorio(visita) {
     });
 
     alert("Resultado de laboratorio guardado. Se sincronizará cuando haya conexión.");
+    irA("detalle_visita", visita.id);
+  });
+}
+
+function renderOrdenMedica(visita) {
+  titulo("Órdenes Médicas");
+  const nombrePaciente = [visita.primer_nombre, visita.primer_apellido].filter(Boolean).join(" ");
+
+  contenedor().innerHTML = `
+    <div class="card">
+      <h3>📋 Nueva orden médica</h3>
+      <small>${nombrePaciente}</small>
+      <div class="form-group">
+        <label>Tipo de orden</label>
+        <select id="orden-tipo">
+          <option value="Medicamento">Medicamento</option>
+          <option value="Examen">Examen</option>
+          <option value="Remisión">Remisión</option>
+          <option value="Procedimiento">Procedimiento</option>
+          <option value="Otro">Otro</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Descripción de la orden</label><textarea id="orden-descripcion" rows="5" placeholder="Ej: Acetaminofén 500mg cada 8 horas por 5 días"></textarea></div>
+      <div class="form-group"><label>Código CUPS (opcional)</label><input type="text" id="orden-cups"></div>
+      <div class="alerta alerta-info">Al guardar, la orden se envía automáticamente al paciente por WhatsApp/correo, igual que desde la oficina.</div>
+      <button class="btn btn-success w-100" id="btn-guardar-orden">Guardar y enviar</button>
+    </div>
+    <button class="btn btn-secondary btn-block" onclick="irA('detalle_visita', ${visita.id})">← Volver</button>
+  `;
+
+  document.getElementById("btn-guardar-orden").addEventListener("click", async () => {
+    const descripcion = document.getElementById("orden-descripcion").value.trim();
+    if (!descripcion) {
+      alert("Debe describir la orden médica.");
+      return;
+    }
+
+    await encolarAccion("crear_orden_medica", {
+      paciente_id: visita.paciente_id,
+      profesional_id: perfil.profesional_id,
+      tipo_orden: document.getElementById("orden-tipo").value,
+      descripcion: descripcion,
+      codigo_cups: document.getElementById("orden-cups").value,
+    });
+
+    alert("Orden médica guardada. Se enviará al paciente cuando haya conexión.");
     irA("detalle_visita", visita.id);
   });
 }

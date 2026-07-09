@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block titulo %}Editar Plantilla{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-file-pen text-primary"></i> Editar Plantilla</h2>
+    <a href="/plantillas-visita" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form method="post" action="/plantillas-visita/editar/{{ plantilla.id }}">
+                        <div class="mb-3">
+                            <label>Nombre de la plantilla</label>
+                            <input type="text" name="nombre" class="form-control" value="{{ plantilla.nombre }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Tipo de servicio (opcional)</label>
+                            <select name="tipo_servicio" class="form-select">
+                                {% for t in tipos_servicio %}
+                                <option value="{{ t }}" {% if plantilla.tipo_servicio == t %}selected{% endif %}>{{ t }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>¿Para qué perfil/rol es esta plantilla?</label>
+                            <select name="rol_destinatario" class="form-select" required>
+                                {% for r in roles %}
+                                <option value="{{ r }}" {% if plantilla.rol_destinatario == r %}selected{% endif %}>{{ r }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Subtipo (opcional)</label>
+                            <input type="text" name="subtipo" class="form-control" value="{{ plantilla.subtipo or '' }}">
+                        </div>
+                        <div class="mb-3">
+                            <label>Contenido</label>
+                            <textarea name="contenido" class="form-control" rows="6" required>{{ plantilla.contenido }}</textarea>
+                        </div>
+                        <button class="btn btn-success w-100"><i class="fa-solid fa-floppy-disk"></i> Guardar cambios</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -10,3 +10,8 @@
 [jue 09/07/2026  9:33:42.13] Script .bat de arranque ejecutado. Usuario: asert. Carpeta: D:\HomeCareEnterprise. Puerto: 8088 
 [jue 09/07/2026 10:06:33.90] Script .bat de arranque ejecutado. Usuario: asert. Carpeta: D:\HomeCareEnterprise. Puerto: 8088 
 [jue 09/07/2026 10:18:35.91] Script .bat de arranque ejecutado. Usuario: asert. Carpeta: D:\HomeCareEnterprise. Puerto: 8088 
+[jue 09/07/2026 15:38:40.35] Script .bat de arranque ejecutado. Usuario: asert. Carpeta: D:\HomeCareEnterprise. Puerto: 8088 
+[jue 09/07/2026 15:59:07.69] Script .bat de arranque ejecutado. Usuario: asert. Carpeta: D:\HomeCareEnterprise. Puerto: 8088 
+[jue 09/07/2026 16:01:15.83] Script .bat de arranque ejecutado. Usuario: asert. Carpeta: D:\HomeCareEnterprise. Puerto: 8088 
+[jue 09/07/2026 16:03:19.00] Script .bat de arranque ejecutado. Usuario: asert. Carpeta: D:\HomeCareEnterprise. Puerto: 8088 
+[jue 09/07/2026 16:14:44.42] Script .bat de arranque ejecutado. Usuario: asert. Carpeta: D:\HomeCareEnterprise. Puerto: 8088 

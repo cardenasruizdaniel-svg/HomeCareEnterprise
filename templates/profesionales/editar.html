@@ -124,19 +124,54 @@
                     <textarea name="observaciones" class="form-control" rows="2">{{ profesional.observaciones or '' }}</textarea>
                 </div>
 
-                <h5 class="text-muted mb-3">Acceso a la app móvil</h5>
+                <h5 class="text-muted mb-3"><i class="fa-solid fa-key"></i> Cuenta de acceso al sistema</h5>
+
+                {% if cuenta_vinculada %}
+                <div class="alert alert-light border">
+                    <i class="fa-solid fa-circle-check text-success"></i>
+                    Este profesional ya tiene cuenta de acceso: <strong>{{ cuenta_vinculada.usuario }}</strong>
+                    ({{ cuenta_vinculada.nombre }})
+                </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label>Cuenta de usuario vinculada</label>
-                        <select name="usuario_id" class="form-select">
-                            <option value="">— Sin vincular —</option>
-                            {% for u in usuarios %}
-                            <option value="{{ u.id }}" {% if profesional.usuario_id==u.id %}selected{% endif %}>{{ u.nombre }} ({{ u.usuario }})</option>
+                        <label>Rol en el sistema (permisos)</label>
+                        <select name="rol_sistema" class="form-select">
+                            <option value="">-- Dejar igual: {{ cuenta_vinculada.rol }} --</option>
+                            {% for r in roles %}
+                            <option value="{{ r }}">{{ r }}</option>
                             {% endfor %}
                         </select>
-                        <small class="text-muted">Necesario para que este profesional pueda usar la app móvil de campo.</small>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Nueva contraseña (opcional)</label>
+                        <input type="password" name="password" class="form-control" autocomplete="new-password" placeholder="Dejar en blanco para no cambiarla">
                     </div>
                 </div>
+                {% else %}
+                <p class="text-muted small">
+                    Este profesional todavía no tiene cuenta de acceso. Complete estos campos para
+                    crearla ahora mismo (necesaria para usar la app móvil de campo).
+                </p>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label>Usuario de acceso</label>
+                        <input type="text" name="nombre_usuario" class="form-control" autocomplete="off">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Contraseña</label>
+                        <input type="password" name="password" class="form-control" autocomplete="new-password">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Rol en el sistema</label>
+                        <select name="rol_sistema" class="form-select">
+                            <option value="">-- Igual a la especialidad --</option>
+                            {% for r in roles %}
+                            <option value="{{ r }}">{{ r }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                {% endif %}
 
                 <hr>
 

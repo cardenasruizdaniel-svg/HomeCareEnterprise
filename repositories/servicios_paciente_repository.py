@@ -9,10 +9,21 @@ class ServiciosPacienteRepository:
     def listar_por_paciente(paciente_id: int):
         return consultar_todos(
             """
-            SELECT sp.*, pr.nombre_completo AS profesional
+            SELECT sp.*,
+                   COALESCE(pr.nombre_completo, pr_sesion.nombre_completo) AS profesional,
+                   COUNT(pv.id) AS total_sesiones_reales,
+                   SUM(CASE WHEN pv.estado IN ('Programada', 'Firmada') THEN 1 ELSE 0 END) AS sesiones_programadas,
+                   SUM(CASE WHEN pv.estado = 'Pendiente' THEN 1 ELSE 0 END) AS sesiones_pendientes
             FROM servicios_paciente sp
             LEFT JOIN profesionales pr ON pr.id = sp.profesional_id
+            LEFT JOIN planilla_visitas pv ON pv.servicio_paciente_id = sp.id
+            LEFT JOIN profesionales pr_sesion ON pr_sesion.id = (
+                SELECT profesional_id FROM planilla_visitas
+                WHERE servicio_paciente_id = sp.id AND profesional_id IS NOT NULL
+                ORDER BY id LIMIT 1
+            )
             WHERE sp.paciente_id=?
+            GROUP BY sp.id
             ORDER BY sp.fecha_inicio DESC
             """,
             (paciente_id,),

@@ -41,15 +41,17 @@ class ProfesionalesRepository:
 
         cursor.execute("""
 
-            SELECT *
+            SELECT p.*, u.usuario AS nombre_usuario_acceso, u.rol AS rol_sistema_actual,
+                   u.activo AS cuenta_activa
 
-            FROM profesionales
+            FROM profesionales p
+            LEFT JOIN usuarios u ON u.id = p.usuario_id
 
             ORDER BY
 
-                primer_apellido,
+                p.primer_apellido,
 
-                primer_nombre
+                p.primer_nombre
 
         """)
 

@@ -105,5 +105,19 @@ def crear_plantilla(nombre, tipo_servicio, subtipo, rol_destinatario, contenido,
     })
 
 
+def actualizar_plantilla(plantilla_id, nombre, tipo_servicio, subtipo, rol_destinatario, contenido) -> None:
+
+    if not nombre or not contenido:
+        raise ValueError("El nombre y el contenido de la plantilla son obligatorios.")
+
+    PlantillasVisitaRepository.actualizar(plantilla_id, {
+        "nombre": nombre,
+        "tipo_servicio": tipo_servicio or "General",
+        "subtipo": subtipo or None,
+        "rol_destinatario": rol_destinatario or "Todos",
+        "contenido": contenido,
+    })
+
+
 def desactivar(plantilla_id: int):
     PlantillasVisitaRepository.desactivar(plantilla_id)

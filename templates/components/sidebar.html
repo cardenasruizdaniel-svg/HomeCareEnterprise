@@ -80,24 +80,15 @@
 
         {% if usuario and (tiene_permiso(usuario.rol, "profesionales") or tiene_permiso(usuario.rol, "usuarios")) %}
         <li class="menu-title">Personal</li>
-        {% endif %}
-
-        {% if usuario and tiene_permiso(usuario.rol, "profesionales") %}
         <li>
             <a href="/profesionales">
                 <i class="fa-solid fa-user-nurse"></i>
-                <span>Profesionales</span>
+                <span>Usuario/Profesional</span>
             </a>
         </li>
         {% endif %}
 
         {% if usuario and tiene_permiso(usuario.rol, "usuarios") %}
-        <li>
-            <a href="/usuarios">
-                <i class="fa-solid fa-users-gear"></i>
-                <span>Usuarios</span>
-            </a>
-        </li>
         <li>
             <a href="/configuracion-empresa">
                 <i class="fa-solid fa-building"></i>

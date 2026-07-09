@@ -123,6 +123,10 @@
                 <button type="button" class="btn btn-outline-success btn-sm" id="btn-guardar-como-plantilla">
                     <i class="fa-solid fa-floppy-disk"></i> Guardar como mi plantilla
                 </button>
+
+                <button type="button" class="btn btn-outline-danger btn-sm" id="btn-dictado-voz" title="Dictar por voz en vez de escribir">
+                    <i class="fa-solid fa-microphone"></i> <span id="texto-btn-dictado">Dictar por voz</span>
+                </button>
             </div>
 
             <div id="editor-nota" contenteditable="true" class="form-control mb-2" style="min-height:150px; overflow-y:auto;"></div>
@@ -317,6 +321,62 @@ async function cargarPlantillas() {
         menu.innerHTML = `<li><span class="dropdown-item-text text-danger">No se pudieron cargar las plantillas.</span></li>`;
     }
 }
+
+// Dictado por voz: usa el reconocimiento de voz del propio
+// navegador (Chrome/Edge). Si el navegador no lo soporta, el
+// botón se deshabilita en vez de fallar.
+(function () {
+    const ReconocimientoVoz = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const botonDictado = document.getElementById("btn-dictado-voz");
+    const textoBoton = document.getElementById("texto-btn-dictado");
+
+    if (!ReconocimientoVoz) {
+        botonDictado.disabled = true;
+        botonDictado.title = "Su navegador no soporta el dictado por voz.";
+        return;
+    }
+
+    const reconocimiento = new ReconocimientoVoz();
+    reconocimiento.lang = "es-CO";
+    reconocimiento.continuous = true;
+    reconocimiento.interimResults = false;
+
+    let dictando = false;
+
+    reconocimiento.addEventListener("result", (evento) => {
+        const editor = document.getElementById("editor-nota");
+        for (let i = evento.resultIndex; i < evento.results.length; i++) {
+            if (evento.results[i].isFinal) {
+                const texto = evento.results[i][0].transcript.trim();
+                if (texto) {
+                    editor.innerHTML += (editor.innerHTML ? " " : "") + texto;
+                }
+            }
+        }
+    });
+
+    reconocimiento.addEventListener("end", () => {
+        // Si el usuario no lo detuvo a mano, el navegador a veces
+        // corta el reconocimiento solo tras una pausa larga -- se
+        // vuelve a arrancar automaticamente mientras siga "dictando".
+        if (dictando) reconocimiento.start();
+    });
+
+    botonDictado.addEventListener("click", () => {
+        dictando = !dictando;
+        if (dictando) {
+            reconocimiento.start();
+            botonDictado.classList.remove("btn-outline-danger");
+            botonDictado.classList.add("btn-danger");
+            textoBoton.textContent = "Escuchando... (clic para detener)";
+        } else {
+            reconocimiento.stop();
+            botonDictado.classList.remove("btn-danger");
+            botonDictado.classList.add("btn-outline-danger");
+            textoBoton.textContent = "Dictar por voz";
+        }
+    });
+})();
 
 document.getElementById("form-nota-visita").addEventListener("submit", () => {
     document.getElementById("campo-nota-oculto").value = document.getElementById("editor-nota").innerHTML;

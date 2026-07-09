@@ -284,4 +284,11 @@ def _procesar_accion(tipo: str, p: dict, usuario: dict):
             items=p.get("items", []),
         )
 
+    if tipo == "crear_orden_medica":
+        return movil_service.crear_orden_medica(
+            p["paciente_id"], p.get("profesional_id"), p.get("tipo_orden"),
+            p.get("descripcion"), p.get("codigo_cups"),
+            usuario.get("id") if isinstance(usuario, dict) else None,
+        )
+
     raise ValueError(f"Tipo de acción desconocido: {tipo}")
