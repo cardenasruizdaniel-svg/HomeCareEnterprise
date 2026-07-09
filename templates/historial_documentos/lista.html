@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block titulo %}Historial de Documentos{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-id-card text-primary"></i> Historial de Documentos — {{ paciente.primer_nombre }} {{ paciente.primer_apellido }}</h2>
+    <p class="text-muted">
+        Documento actual: <span class="badge bg-primary">{{ paciente.tipo_documento }} {{ paciente.documento }}</span>
+        — Use esta pantalla cuando el paciente cambie de documento (por ejemplo, de Registro Civil a Tarjeta de Identidad,
+        o de Tarjeta de Identidad a Cédula al cumplir la mayoría de edad).
+    </p>
+
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h5 class="mb-0">Registrar cambio de documento</h5></div>
+                <div class="card-body">
+                    <form method="post" action="/historial-documentos/cambiar">
+                        <input type="hidden" name="paciente_id" value="{{ paciente_id }}">
+                        <div class="mb-3">
+                            <label>Tipo de documento nuevo</label>
+                            <select name="tipo_documento_nuevo" class="form-select" required>
+                                <option value="RC">Registro Civil</option>
+                                <option value="TI">Tarjeta de Identidad</option>
+                                <option value="CC">Cédula de Ciudadanía</option>
+                                <option value="CE">Cédula de Extranjería</option>
+                                <option value="PA">Pasaporte</option>
+                                <option value="PEP">Permiso Especial de Permanencia</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Número de documento nuevo</label>
+                            <input type="text" name="numero_documento_nuevo" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Fecha a partir de la cual aplica</label>
+                            <input type="date" name="fecha_cambio" class="form-control" required>
+                            <small class="text-muted">
+                                Los registros con fecha anterior a esta seguirán mostrando el documento anterior;
+                                los de esta fecha en adelante usarán el nuevo.
+                            </small>
+                        </div>
+                        <div class="mb-3">
+                            <label>Motivo del cambio</label>
+                            <input type="text" name="motivo" class="form-control" placeholder="Ej: Cumplió mayoría de edad, expedición de cédula">
+                        </div>
+                        <button class="btn btn-success w-100"><i class="fa-solid fa-right-left"></i> Registrar cambio</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-white"><h5 class="mb-0">Historial completo</h5></div>
+                <div class="card-body">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr><th>Documento</th><th>Vigente desde</th><th>Vigente hasta</th><th>Motivo</th><th class="text-center">Estado</th><th class="text-center">Acción</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for h in historial %}
+                            <tr class="{% if h.es_principal %}table-success{% endif %}">
+                                <td><strong>{{ h.tipo_documento }} {{ h.numero_documento }}</strong></td>
+                                <td>{{ h.fecha_inicio_vigencia }}</td>
+                                <td>{{ h.fecha_fin_vigencia or "— vigente —" }}</td>
+                                <td>{{ h.motivo_cambio }}</td>
+                                <td class="text-center">
+                                    {% if h.es_principal %}
+                                    <span class="badge bg-success">Vigente / Principal</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Histórico</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if not h.es_principal %}
+                                    <a href="/historial-documentos/marcar-principal/{{ h.id }}/{{ paciente_id }}"
+                                       class="btn btn-outline-primary btn-sm"
+                                       onclick="return confirm('¿Marcar este documento como el vigente/principal del paciente?');">
+                                        Marcar como principal
+                                    </a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="6" class="text-center text-muted py-4">Sin historial registrado.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <div class="alert alert-light border small mb-0">
+                        <b>Nota de cumplimiento:</b> al generar reportes de periodos anteriores (como el RIPS), el sistema
+                        usa automáticamente el documento que estaba vigente en la fecha de cada atención, no necesariamente
+                        el documento actual del paciente.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="/pacientes/{{ paciente_id }}" class="btn btn-secondary mt-3">Volver a la ficha</a>
+</div>
+{% endblock %}

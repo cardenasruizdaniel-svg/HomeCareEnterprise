@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+
+Nueva Visita
+
+{% endblock %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <div class="card shadow border-0">
+
+        <div class="card-header bg-primary text-white">
+
+            <div class="d-flex justify-content-between align-items-center">
+
+                <div>
+
+                    <h3 class="mb-0">
+
+                        <i class="fa-solid fa-calendar-plus"></i>
+
+                        Nueva Visita Domiciliaria
+
+                    </h3>
+
+                    <small>
+
+                        Programación de atención HomeCare IPS
+
+                    </small>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="card-body">
+
+            <form action="/programacion/guardar"
+
+                  method="post">
+
+                {% include "programacion/componentes/datos_visita.html" %}
+
+                {% include "programacion/componentes/paciente.html" %}
+
+                {% include "programacion/componentes/profesional.html" %}
+
+                {% include "programacion/componentes/direccion.html" %}
+
+                {% include "programacion/componentes/servicio.html" %}
+
+                {% include "programacion/componentes/observaciones.html" %}
+
+                {% include "programacion/componentes/botones.html" %}
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

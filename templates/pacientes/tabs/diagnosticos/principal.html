@@ -1,0 +1,285 @@
+<div class="card shadow border-0 mb-4">
+
+    <div class="card-header bg-danger text-white">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+            <h4 class="mb-0">
+
+                <i class="fa-solid fa-stethoscope"></i>
+
+                Diagnóstico Principal
+
+            </h4>
+
+            <span class="badge bg-light text-dark">
+
+                CIE-10
+
+            </span>
+
+        </div>
+
+    </div>
+
+    <div class="card-body">
+
+        {% if diagnostico_principal %}
+
+        <div class="row">
+
+            <div class="col-lg-8">
+
+                <h2 class="fw-bold text-danger">
+
+                    {{ diagnostico_principal.codigo_cie10 }}
+
+                </h2>
+
+                <h4>
+
+                    {{ diagnostico_principal.diagnostico }}
+
+                </h4>
+
+                <hr>
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <small class="text-muted">
+
+                            Estado
+
+                        </small>
+
+                        <br>
+
+                        {% if diagnostico_principal.estado=="Activo" %}
+
+                        <span class="badge bg-success">
+
+                            Activo
+
+                        </span>
+
+                        {% elif diagnostico_principal.estado=="Resuelto" %}
+
+                        <span class="badge bg-primary">
+
+                            Resuelto
+
+                        </span>
+
+                        {% elif diagnostico_principal.estado=="Suspendido" %}
+
+                        <span class="badge bg-secondary">
+
+                            Suspendido
+
+                        </span>
+
+                        {% else %}
+
+                        <span class="badge bg-warning">
+
+                            {{ diagnostico_principal.estado }}
+
+                        </span>
+
+                        {% endif %}
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <small class="text-muted">
+
+                            Tipo
+
+                        </small>
+
+                        <h6>
+
+                            {{ diagnostico_principal.tipo }}
+
+                        </h6>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <small class="text-muted">
+
+                            Fecha Diagnóstico
+
+                        </small>
+
+                        <h6>
+
+                            {{ diagnostico_principal.fecha_diagnostico }}
+
+                        </h6>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <small class="text-muted">
+
+                            Profesional
+
+                        </small>
+
+                        <h6>
+
+                            {{ diagnostico_principal.profesional }}
+
+                        </h6>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <small class="text-muted">
+
+                            Especialidad
+
+                        </small>
+
+                        <h6>
+
+                            {{ diagnostico_principal.especialidad }}
+
+                        </h6>
+
+                    </div>
+
+                    <div class="col-md-6">
+
+                        <small class="text-muted">
+
+                            Usuario Registro
+
+                        </small>
+
+                        <h6>
+
+                            {{ diagnostico_principal.usuario_registro }}
+
+                        </h6>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-lg-4">
+
+                <div class="card bg-light">
+
+                    <div class="card-header">
+
+                        Resumen
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <h6>
+
+                            Observaciones Clínicas
+
+                        </h6>
+
+                        <p>
+
+                            {{ diagnostico_principal.observaciones }}
+
+                        </p>
+
+                        <hr>
+
+                        <div class="d-grid gap-2">
+
+                            <a
+
+                                href="/diagnosticos/editar/{{ diagnostico_principal.id }}"
+
+                                class="btn btn-warning">
+
+                                <i class="fa-solid fa-pen"></i>
+
+                                Editar
+
+                            </a>
+
+                            <a
+
+                                href="/diagnosticos/estado/{{ diagnostico_principal.id }}/Resuelto"
+
+                                class="btn btn-success">
+
+                                <i class="fa-solid fa-check"></i>
+
+                                Marcar Resuelto
+
+                            </a>
+
+                            <a
+
+                                href="/diagnosticos/estado/{{ diagnostico_principal.id }}/Suspendido"
+
+                                class="btn btn-secondary">
+
+                                <i class="fa-solid fa-ban"></i>
+
+                                Suspender
+
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% else %}
+
+        <div class="text-center py-5">
+
+            <i class="fa-solid fa-heart-crack fa-5x text-secondary mb-4"></i>
+
+            <h3>
+
+                El paciente no posee diagnóstico principal.
+
+            </h3>
+
+            <button
+
+                class="btn btn-danger mt-3"
+
+                data-bs-toggle="modal"
+
+                data-bs-target="#modalDiagnostico">
+
+                <i class="fa-solid fa-plus"></i>
+
+                Registrar Diagnóstico Principal
+
+            </button>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>

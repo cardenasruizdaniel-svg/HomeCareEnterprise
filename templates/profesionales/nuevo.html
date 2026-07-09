@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h3><i class="fa-solid fa-user-plus"></i> Nuevo Profesional</h3>
+        </div>
+        <div class="card-body">
+            <form method="post" action="/profesionales/guardar">
+
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label>Tipo de documento</label>
+                        <select name="tipo_documento" class="form-select">
+                            <option>CC</option>
+                            <option>CE</option>
+                            <option>PA</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Documento</label>
+                        <input type="text" name="documento" class="form-control" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Registro profesional</label>
+                        <input type="text" name="registro_profesional" class="form-control">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Rol / Profesión</label>
+                        <select name="especialidad_principal" class="form-select" required>
+                            {% for r in roles %}
+                            <option value="{{ r }}">{{ r }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label>Primer nombre</label>
+                        <input type="text" name="primer_nombre" class="form-control" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Segundo nombre</label>
+                        <input type="text" name="segundo_nombre" class="form-control">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Primer apellido</label>
+                        <input type="text" name="primer_apellido" class="form-control" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Segundo apellido</label>
+                        <input type="text" name="segundo_apellido" class="form-control">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label>Teléfono</label>
+                        <input type="text" name="telefono" class="form-control">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Celular</label>
+                        <input type="text" name="celular" class="form-control">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Correo</label>
+                        <input type="email" name="correo" class="form-control">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Capacidad diaria (visitas)</label>
+                        <input type="number" name="capacidad_diaria" value="20" class="form-control">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label>Dirección</label>
+                        <input type="text" name="direccion" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Municipio</label>
+                        <input type="text" name="municipio" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Departamento</label>
+                        <input type="text" name="departamento" class="form-control">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3 form-check mt-4">
+                        <input type="checkbox" name="acepta_urgencias" value="1" class="form-check-input" id="urg">
+                        <label class="form-check-label" for="urg">Acepta urgencias</label>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Radio de cobertura (km)</label>
+                        <input type="number" step="0.1" name="radio_cobertura_km" value="10" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Tiempo promedio de visita (min)</label>
+                        <input type="number" name="tiempo_promedio_visita" value="45" class="form-control">
+                    </div>
+                </div>
+
+                <h5 class="text-muted mb-3">Contratación (para nómina)</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label>Tipo de contrato</label>
+                        <select name="tipo_contrato" class="form-select" id="tipo_contrato">
+                            <option value="POR_HORAS">Por horas</option>
+                            <option value="FIJO">Fijo (salario mensual)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3" id="campo_valor_hora">
+                        <label>Valor por hora</label>
+                        <input type="number" step="100" name="valor_hora" class="form-control" placeholder="0">
+                    </div>
+                    <div class="col-md-4 mb-3 d-none" id="campo_salario_fijo">
+                        <label>Salario fijo mensual</label>
+                        <input type="number" step="1000" name="salario_fijo" class="form-control" placeholder="0">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label>Banco</label>
+                        <select name="banco" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            {% for b in lista_bancos %}
+                            <option value="{{ b.nombre }}">{{ b.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Tipo de cuenta</label>
+                        <select name="tipo_cuenta" class="form-select">
+                            <option>Ahorros</option>
+                            <option>Corriente</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Número de cuenta</label>
+                        <input type="text" name="numero_cuenta" class="form-control">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label>Observaciones</label>
+                    <textarea name="observaciones" class="form-control" rows="2"></textarea>
+                </div>
+
+                <hr>
+
+                <h5><i class="fa-solid fa-signature"></i> Firma digital</h5>
+                <p class="text-muted small">
+                    Esta firma quedará asociada a todas las notas de historia clínica, informes y notas
+                    aclaratorias que este profesional registre en el sistema.
+                </p>
+                <div class="border rounded mb-2" style="touch-action:none;">
+                    <canvas id="lienzo-firma-profesional" width="600" height="180" style="width:100%; height:180px; background:#f8f9fa;"></canvas>
+                </div>
+                <button type="button" class="btn btn-outline-secondary btn-sm mb-3" id="btn-limpiar-firma-profesional">Borrar firma</button>
+                <input type="hidden" name="firma_base64" id="campo-firma-profesional-oculto">
+
+                <hr>
+
+                <button class="btn btn-success">
+                    <i class="fa-solid fa-floppy-disk"></i> Guardar
+                </button>
+                <a href="/profesionales" class="btn btn-secondary">Cancelar</a>
+
+            </form>
+        </div>
+    </div>
+
+<script>
+(function () {
+    const lienzo = document.getElementById("lienzo-firma-profesional");
+    const contexto = lienzo.getContext("2d");
+    let dibujando = false;
+
+    function posicion(evento) {
+        const rect = lienzo.getBoundingClientRect();
+        const escalaX = lienzo.width / rect.width;
+        const escalaY = lienzo.height / rect.height;
+        const punto = evento.touches ? evento.touches[0] : evento;
+        return { x: (punto.clientX - rect.left) * escalaX, y: (punto.clientY - rect.top) * escalaY };
+    }
+
+    function iniciar(e) { dibujando = true; const p = posicion(e); contexto.beginPath(); contexto.moveTo(p.x, p.y); e.preventDefault(); }
+    function dibujar(e) { if (!dibujando) return; const p = posicion(e); contexto.lineTo(p.x, p.y); contexto.stroke(); e.preventDefault(); }
+    function terminar() { dibujando = false; }
+
+    lienzo.addEventListener("mousedown", iniciar);
+    lienzo.addEventListener("mousemove", dibujar);
+    lienzo.addEventListener("mouseup", terminar);
+    lienzo.addEventListener("touchstart", iniciar);
+    lienzo.addEventListener("touchmove", dibujar);
+    lienzo.addEventListener("touchend", terminar);
+
+    document.getElementById("btn-limpiar-firma-profesional").addEventListener("click", () => {
+        contexto.clearRect(0, 0, lienzo.width, lienzo.height);
+    });
+
+    lienzo.closest("form").addEventListener("submit", () => {
+        document.getElementById("campo-firma-profesional-oculto").value = lienzo.toDataURL("image/png");
+    });
+})();
+</script>
+
+</div>
+
+<script>
+document.getElementById('tipo_contrato').addEventListener('change', (e) => {
+    const esFijo = e.target.value === 'FIJO';
+    document.getElementById('campo_salario_fijo').classList.toggle('d-none', !esFijo);
+    document.getElementById('campo_valor_hora').classList.toggle('d-none', esFijo);
+});
+</script>
+
+{% endblock %}

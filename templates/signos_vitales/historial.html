@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block titulo %}Signos Vitales{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+
+    {% include "components/volver_paciente.html" %}
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="fa-solid fa-heart-pulse text-danger"></i> Signos Vitales — {{ paciente.primer_nombre }} {{ paciente.primer_apellido }}</h2>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoSigno">
+            <i class="fa-solid fa-plus"></i> Registrar toma
+        </button>
+        <button class="btn btn-outline-secondary" onclick="window.print()">
+            <i class="fa-solid fa-print"></i> Imprimir historial
+        </button>
+    </div>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-hover table-sm align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Fecha</th><th>Hora</th><th>Temp.</th><th>TA</th><th>FC</th><th>FR</th>
+                        <th>SatO₂</th><th>Glucemia</th><th>Peso</th><th>Talla</th><th>IMC</th><th>Dolor</th><th>Profesional</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in registros %}
+                    <tr>
+                        <td>{{ r.fecha }}</td>
+                        <td>{{ r.hora }}</td>
+                        <td>{{ r.temperatura }}°C</td>
+                        <td>{{ r.presion_sistolica }}/{{ r.presion_diastolica }}</td>
+                        <td>{{ r.frecuencia_cardiaca }}</td>
+                        <td>{{ r.frecuencia_respiratoria }}</td>
+                        <td>{{ r.saturacion_oxigeno }}%</td>
+                        <td>{{ r.glucemia or "—" }}</td>
+                        <td>{{ r.peso }} kg</td>
+                        <td>{{ r.talla }} m</td>
+                        <td>{{ r.imc }}</td>
+                        <td>{{ r.dolor }}/10</td>
+                        <td>{{ r.profesional }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="13" class="text-center text-muted py-4">Sin registros de signos vitales todavía.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNuevoSigno" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" action="/signos-vitales/registrar">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fa-solid fa-heart-pulse"></i> Registrar toma de signos vitales</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="paciente_id" value="{{ paciente_id }}">
+                    <div class="row">
+                        <div class="col-md-4 mb-3"><label>Profesional</label><input type="text" name="profesional" class="form-control"></div>
+                        <div class="col-md-4 mb-3"><label>Temperatura (°C)</label><input type="number" step="0.1" name="temperatura" class="form-control" required></div>
+                        <div class="col-md-4 mb-3"><label>Dolor (0-10)</label><input type="number" min="0" max="10" name="dolor" class="form-control" value="0"></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3"><label>P. Sistólica</label><input type="number" name="presion_sistolica" class="form-control" required></div>
+                        <div class="col-md-3 mb-3"><label>P. Diastólica</label><input type="number" name="presion_diastolica" class="form-control" required></div>
+                        <div class="col-md-3 mb-3"><label>Frec. Cardíaca</label><input type="number" name="frecuencia_cardiaca" class="form-control" required></div>
+                        <div class="col-md-3 mb-3"><label>Frec. Respiratoria</label><input type="number" name="frecuencia_respiratoria" class="form-control" required></div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3 mb-3"><label>Saturación O₂ (%)</label><input type="number" name="saturacion_oxigeno" class="form-control" required></div>
+                        <div class="col-md-3 mb-3"><label>Glucemia</label><input type="number" step="0.1" name="glucemia" class="form-control"></div>
+                        <div class="col-md-3 mb-3"><label>Peso (kg)</label><input type="number" step="0.1" name="peso" class="form-control" required></div>
+                        <div class="col-md-3 mb-3"><label>Talla (m)</label><input type="number" step="0.01" name="talla" class="form-control" required></div>
+                    </div>
+                    <div class="mb-2"><label>Observaciones</label><textarea name="observaciones" class="form-control" rows="2"></textarea></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

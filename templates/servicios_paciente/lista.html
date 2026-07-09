@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% block titulo %}Servicios del Paciente{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-briefcase-medical text-primary"></i> Servicios Asignados — {{ paciente.primer_nombre }} {{ paciente.primer_apellido }}</h2>
+    <p class="text-muted">Defina qué servicios necesita este paciente (médico general, terapias, curaciones, aplicación de medicamentos/sueros) y el periodo en que los recibirá.</p>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    {% if request.query_params.get('creado') %}
+    <div class="alert alert-success">Servicio asignado — se generaron {{ request.query_params.get('creado') }} visitas en la agenda.</div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h5 class="mb-0">Asignar nuevo servicio</h5></div>
+                <div class="card-body">
+                    <form method="post" action="/servicios-paciente/asignar">
+                        <input type="hidden" name="paciente_id" value="{{ paciente_id }}">
+
+                        <div class="mb-3">
+                            <label>Servicio / Actividad</label>
+                            <select name="actividad_id" id="actividad_id" class="form-select" required>
+                                <option value="">-- Seleccione --</option>
+                            </select>
+                            <small class="text-muted">Mismo catálogo que se usa en Programa de Atención.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Profesional asignado (opcional, puede definirse después)</label>
+                            <select name="profesional_id" class="form-select">
+                                <option value="">-- Sin asignar todavía --</option>
+                                {% for p in profesionales %}
+                                <option value="{{ p.id }}">{{ p.nombre_completo }} ({{ p.especialidad_principal }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Frecuencia</label>
+                            <select name="frecuencia" class="form-select">
+                                {% for f in frecuencias %}
+                                <option value="{{ f }}">{{ f }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label>Fecha inicio</label>
+                                <input type="date" name="fecha_inicio" class="form-control" required>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label>Número de sesiones</label>
+                                <input type="number" name="numero_sesiones" min="1" class="form-control" placeholder="Ej: 10">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label>Fecha fin (opcional si indicó sesiones)</label>
+                                <input type="date" name="fecha_fin" class="form-control">
+                            </div>
+                        </div>
+                        <small class="text-muted d-block mb-3">
+                            Indique la fecha de fin, el número de sesiones, o ambos (lo que se cumpla primero corta la programación).
+                        </small>
+
+                        <div class="row">
+                            <div class="col-6 mb-3">
+                                <label>Hora inicio</label>
+                                <input type="time" name="hora_inicio" class="form-control" value="08:00">
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label>Hora fin</label>
+                                <input type="time" name="hora_fin" class="form-control" value="09:00">
+                            </div>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input type="checkbox" name="renovacion_automatica" value="1" class="form-check-input" id="chk-renovacion">
+                            <label class="form-check-label" for="chk-renovacion">
+                                Renovar automáticamente al terminarse las sesiones (indefinido, hasta que se cancele manualmente)
+                            </label>
+                        </div>
+
+                        <div class="mb-3">
+                            <label>Indicaciones</label>
+                            <textarea name="indicaciones" class="form-control" rows="2"></textarea>
+                        </div>
+
+                        <button class="btn btn-success w-100" id="btn-asignar-servicio"><i class="fa-solid fa-calendar-plus"></i> Asignar y generar agenda</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-white"><h5 class="mb-0">Servicios asignados</h5></div>
+                <div class="card-body">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr><th>Servicio</th><th>Profesional</th><th>Periodo</th><th>Frecuencia</th><th class="text-center">Renovación</th><th class="text-center">Estado</th><th class="text-center">Planilla</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for s in servicios %}
+                            <tr>
+                                <td>{{ s.tipo_servicio }}{% if s.subtipo %} - {{ s.subtipo }}{% endif %}</td>
+                                <td>{{ s.profesional or "Sin asignar" }}</td>
+                                <td>{{ s.fecha_inicio }} a {{ s.fecha_fin }}</td>
+                                <td>{{ s.frecuencia }}</td>
+                                <td class="text-center">
+                                    {% if s.renovacion_automatica %}
+                                    <span class="badge bg-info text-dark">Indefinida</span>
+                                    {% else %}
+                                    <span class="badge bg-light text-dark">Se detiene</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge {% if s.estado == 'Activo' %}bg-success{% else %}bg-secondary{% endif %}">{{ s.estado }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <a href="/gestion-visitas/{{ s.id }}" class="btn btn-outline-success btn-sm">
+                                        <i class="fa-solid fa-calendar-check"></i> Programar visitas ({{ s.numero_sesiones or '?' }} sesiones)
+                                    </a>
+                                    <a href="/planilla-visitas/{{ s.id }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fa-solid fa-file-signature"></i> Ver planilla
+                                    </a>
+                                    {% if s.estado == 'Activo' %}
+                                    <a href="/servicios-paciente/cancelar/{{ s.id }}/{{ paciente_id }}" class="btn btn-outline-danger btn-sm"
+                                       onclick="return confirm('¿Cancelar este servicio?');">Cancelar</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="6" class="text-center text-muted py-4">Sin servicios asignados.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="/pacientes/{{ paciente_id }}" class="btn btn-secondary mt-3">Volver a la ficha</a>
+</div>
+
+<script>
+async function cargarActividades() {
+    const respuesta = await fetch("/programas-atencion/api/actividades");
+    const actividades = await respuesta.json();
+    const selector = document.getElementById("actividad_id");
+    selector.innerHTML = '<option value="">-- Seleccione --</option>' +
+        actividades.map(a => `<option value="${a.id}" data-nombre="${a.nombre}">${a.nombre}</option>`).join("");
+}
+cargarActividades();
+
+// Evita que un doble clic (o una conexión lenta) genere el
+// mismo servicio dos veces: al enviar, se deshabilita el
+// botón hasta que la página recargue con la respuesta.
+document.querySelector("form[action='/servicios-paciente/asignar']").addEventListener("submit", function () {
+    const boton = document.getElementById("btn-asignar-servicio");
+    boton.disabled = true;
+    boton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+});
+</script>
+{% endblock %}

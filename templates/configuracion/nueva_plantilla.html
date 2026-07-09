@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Nueva Plantilla
+{% endblock %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        <div class="col-lg-8 mx-auto">
+
+            <div class="card shadow">
+
+                <div class="card-header">
+
+                    <h3>
+
+                        🧩 Nueva Plantilla Clínica
+
+                    </h3>
+
+                </div>
+
+                <div class="card-body">
+
+                            <form
+
+                                method="post"
+
+                                action="/plantillas">
+
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Nombre de la plantilla
+
+                            </label>
+
+                            <input
+                                class="form-control"
+                                name="nombre"
+                                required>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Categoría
+
+                            </label>
+
+                            <select
+                                class="form-select"
+                                name="categoria">
+
+                                <option>Historia Clínica</option>
+
+                                <option>Valoración</option>
+
+                                <option>Evolución</option>
+
+                                <option>PQRS</option>
+
+                                <option>Inventario</option>
+
+                                <option>Encuesta</option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Especialidad
+
+                            </label>
+
+                            <select
+                                class="form-select"
+                                name="especialidad">
+
+                                <option>Médico</option>
+
+                                <option>Enfermería</option>
+
+                                <option>Fisioterapia</option>
+
+                                <option>Psicología</option>
+
+                                <option>Nutrición</option>
+
+                                <option>Terapia Respiratoria</option>
+
+                                <option>Terapia Ocupacional</option>
+
+                                <option>Cuidador</option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Tipo de Profesional
+
+                            </label>
+
+                            <input
+                                class="form-control"
+                                name="tipo_profesional">
+
+                        </div>
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Servicio
+
+                            </label>
+
+                            <input
+                                class="form-control"
+                                name="servicio">
+
+                        </div>
+
+                        <div class="text-end">
+
+                            <button
+                                class="btn btn-success">
+
+                                Crear Plantilla
+
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

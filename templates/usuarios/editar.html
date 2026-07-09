@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <div class="card shadow">
+
+        <div class="card-header bg-warning">
+
+            <h3>
+
+                <i class="fa-solid fa-user-pen"></i>
+
+                Editar Usuario
+
+            </h3>
+
+        </div>
+
+        <div class="card-body">
+
+            <form method="post" action="/usuarios/actualizar">
+
+                <input
+                    type="hidden"
+                    name="id"
+                    value="{{ usuario.id }}">
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+
+                        <label>Nombre</label>
+
+                        <input
+
+                            class="form-control"
+
+                            name="nombre"
+
+                            value="{{ usuario.nombre }}"
+
+                            required>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label>Usuario</label>
+
+                        <input
+
+                            class="form-control"
+
+                            name="usuario"
+
+                            value="{{ usuario.usuario }}"
+
+                            required>
+
+                    </div>
+
+                </div>
+
+                <div class="row">
+
+                    <div class="col-md-4">
+
+                        <label>Rol</label>
+
+                        <select
+
+                            class="form-select"
+
+                            name="rol">
+
+                            {% for r in roles %}
+                            <option value="{{ r }}" {% if usuario.rol==r %}selected{% endif %}>{{ r }}</option>
+                            {% endfor %}
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-4">
+
+                        <label>Correo</label>
+
+                        <input
+
+                            class="form-control"
+
+                            name="correo"
+
+                            value="{{ usuario.correo }}">
+
+                    </div>
+
+                    <div class="col-md-4">
+
+                        <label>Teléfono</label>
+
+                        <input
+
+                            class="form-control"
+
+                            name="telefono"
+
+                            value="{{ usuario.telefono }}">
+
+                    </div>
+
+                </div>
+
+                <br>
+
+                <div class="row">
+
+                    <div class="col-md-6">
+
+                        <label>Nueva contraseña</label>
+
+                        <input
+
+                            type="password"
+
+                            class="form-control"
+
+                            name="password"
+
+                            placeholder="Dejar en blanco para no cambiarla"
+                            autocomplete="new-password">
+
+                        <small class="text-muted">Solo diligencie este campo si quiere cambiar la contraseña.</small>
+
+                    </div>
+
+                </div>
+
+                <br>
+
+                <div class="row">
+
+                    <div class="col-md-4">
+
+                        <label>Estado</label>
+
+                        <select
+
+                            class="form-select"
+
+                            name="estado">
+
+                            <option {% if usuario.estado=="Activo" %}selected{% endif %}>Activo</option>
+
+                            <option {% if usuario.estado=="Inactivo" %}selected{% endif %}>Inactivo</option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+                <hr>
+
+                <button class="btn btn-success">
+
+                    <i class="fa-solid fa-floppy-disk"></i>
+
+                    Actualizar
+
+                </button>
+
+                <a
+                    href="/usuarios"
+                    class="btn btn-secondary">
+
+                    Regresar
+
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

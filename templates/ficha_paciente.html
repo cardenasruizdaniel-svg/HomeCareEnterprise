@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <h2 class="mb-4">
+        👤 Ficha Integral del Paciente
+    </h2>
+
+    <ul class="nav nav-tabs" id="tabsPaciente">
+
+        <li class="nav-item">
+            <button class="nav-link active"
+                    data-bs-toggle="tab"
+                    data-bs-target="#datos">
+                Datos Generales
+            </button>
+        </li>
+
+        <li class="nav-item">
+            <button class="nav-link"
+                    data-bs-toggle="tab"
+                    data-bs-target="#acudiente">
+                Acudiente
+            </button>
+        </li>
+
+        <li class="nav-item">
+            <button class="nav-link"
+                    data-bs-toggle="tab"
+                    data-bs-target="#diagnosticos">
+                Diagnósticos
+            </button>
+        </li>
+
+        <li class="nav-item">
+            <button class="nav-link"
+                    data-bs-toggle="tab"
+                    data-bs-target="#tratamientos">
+                Tratamientos
+            </button>
+        </li>
+
+        <li class="nav-item">
+            <button class="nav-link"
+                    data-bs-toggle="tab"
+                    data-bs-target="#medicamentos">
+                Medicamentos
+            </button>
+        </li>
+
+        <li class="nav-item">
+            <button class="nav-link"
+                    data-bs-toggle="tab"
+                    data-bs-target="#visitas">
+                Visitas
+            </button>
+        </li>
+
+        <li class="nav-item">
+            <button class="nav-link"
+                    data-bs-toggle="tab"
+                    data-bs-target="#evoluciones">
+                Evoluciones
+            </button>
+        </li>
+
+        <li class="nav-item">
+            <button class="nav-link"
+                    data-bs-toggle="tab"
+                    data-bs-target="#firmas">
+                Firmas
+            </button>
+        </li>
+
+    </ul>
+
+    <div class="tab-content mt-4">
+
+        <!-- DATOS -->
+        <div class="tab-pane fade show active"
+             id="datos">
+
+            <div class="card p-4">
+
+                <h4>Datos Generales</h4>
+
+                <div class="row">
+
+                    <div class="col-md-3">
+                        <label>Tipo Documento</label>
+                        <select class="form-control">
+                            <option>CC</option>
+                            <option>TI</option>
+                            <option>CE</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Documento</label>
+                        <input class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Primer Nombre</label>
+                        <input class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Segundo Nombre</label>
+                        <input class="form-control">
+                    </div>
+
+                </div>
+
+                <div class="row mt-3">
+
+                    <div class="col-md-3">
+                        <label>Primer Apellido</label>
+                        <input class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Segundo Apellido</label>
+                        <input class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Fecha Nacimiento</label>
+                        <input type="date"
+                               class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Sexo</label>
+
+                        <select class="form-control">
+                            <option>Masculino</option>
+                            <option>Femenino</option>
+                        </select>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ACUDIENTE -->
+        <div class="tab-pane fade"
+             id="acudiente">
+
+            <div class="card p-4">
+
+                <h4>Acudiente Principal</h4>
+
+                <div class="row">
+
+                    <div class="col-md-6">
+                        <label>Nombre</label>
+                        <input class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Parentesco</label>
+                        <input class="form-control">
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>Celular</label>
+                        <input class="form-control">
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- DIAGNOSTICOS -->
+        <div class="tab-pane fade"
+             id="diagnosticos">
+
+            <div class="card p-4">
+
+                <h4>Diagnósticos</h4>
+
+                <textarea class="form-control"
+                          rows="6"></textarea>
+
+            </div>
+
+        </div>
+
+        <!-- TRATAMIENTOS -->
+        <div class="tab-pane fade"
+             id="tratamientos">
+
+            <div class="card p-4">
+
+                <h4>Tratamientos</h4>
+
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Servicio</th>
+                            <th>Inicio</th>
+                            <th>Fin</th>
+                        </tr>
+                    </thead>
+                </table>
+
+            </div>
+
+        </div>
+
+        <!-- MEDICAMENTOS -->
+        <div class="tab-pane fade"
+             id="medicamentos">
+
+            <div class="card p-4">
+
+                <h4>Medicamentos</h4>
+
+            </div>
+
+        </div>
+
+        <!-- VISITAS -->
+        <div class="tab-pane fade"
+             id="visitas">
+
+            <div class="card p-4">
+
+                <h4>Historial de Visitas</h4>
+
+            </div>
+
+        </div>
+
+        <!-- EVOLUCIONES -->
+        <div class="tab-pane fade"
+             id="evoluciones">
+
+            <div class="card p-4">
+
+                <h4>Evoluciones Clínicas</h4>
+
+            </div>
+
+        </div>
+
+        <!-- FIRMAS -->
+        <div class="tab-pane fade"
+             id="firmas">
+
+            <div class="card p-4">
+
+                <h4>Firmas Digitales</h4>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

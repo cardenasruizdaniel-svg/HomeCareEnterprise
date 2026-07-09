@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<h2>📅 Agenda de Visitas</h2>
+
+<table class="table table-dark table-striped">
+
+<thead>
+<tr>
+<th>Fecha</th>
+<th>Hora</th>
+<th>Paciente</th>
+<th>Profesional</th>
+<th>Servicio</th>
+<th>Estado</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for visita in agenda %}
+
+<tr>
+<td>{{ visita[0] }}</td>
+<td>{{ visita[1] }}</td>
+<td>{{ visita[2] }}</td>
+<td>{{ visita[3] }}</td>
+<td>{{ visita[4] }}</td>
+<td>{{ visita[5] }}</td>
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+{% endblock %}

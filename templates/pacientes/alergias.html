@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Alergias del Paciente
+{% endblock %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <h2 class="mb-4">
+
+        <i class="fa-solid fa-triangle-exclamation text-danger"></i>
+
+        Alergias Clínicas
+
+    </h2>
+
+    {% include "pacientes/componentes/alergias_form.html" %}
+
+    {% include "pacientes/componentes/alergias_tabla.html" %}
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,341 @@
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-dark text-white">
+
+        <h5 class="mb-0">
+
+            <i class="fa-solid fa-user-doctor"></i>
+
+            Gestión Administrativa del Paciente
+
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <!-- ASIGNACIÓN -->
+
+        <div class="card border-0 bg-light mb-4">
+
+            <div class="card-header">
+
+                <strong>
+
+                    Equipo Asistencial
+
+                </strong>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label>Profesional Asignado</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.profesional }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label>Médico Tratante</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.medico_tratante }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label>Coordinador</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.coordinador }}"
+                            readonly>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ESTADO DEL PACIENTE -->
+
+        <div class="card border-0 bg-light mb-4">
+
+            <div class="card-header">
+
+                <strong>
+
+                    Estado del Paciente
+
+                </strong>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-3">
+
+                        <label>Estado</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.estado }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label>Prioridad</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.prioridad }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label>Ingreso</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.fecha_ingreso }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label>Egreso</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.fecha_egreso }}"
+                            readonly>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- PROGRAMACIÓN -->
+
+        <div class="card border-0 bg-light mb-4">
+
+            <div class="card-header">
+
+                <strong>
+
+                    Programación del Servicio
+
+                </strong>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-3">
+
+                        <label>Frecuencia</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.frecuencia }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label>Próxima Visita</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.proxima_visita }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label>Última Visita</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.ultima_visita }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label>Ciudad Atención</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.ciudad_atencion }}"
+                            readonly>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- INDICADORES -->
+
+        <div class="card border-0 bg-light mb-4">
+
+            <div class="card-header">
+
+                <strong>
+
+                    Indicadores Operativos
+
+                </strong>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="row text-center">
+
+                    <div class="col-md-3">
+
+                        <div class="border rounded p-3">
+
+                            <h2 class="text-success">
+
+                                {{ visitas_realizadas|default(0) }}
+
+                            </h2>
+
+                            <small>
+
+                                Visitas Realizadas
+
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <div class="border rounded p-3">
+
+                            <h2 class="text-warning">
+
+                                {{ visitas_programadas|default(0) }}
+
+                            </h2>
+
+                            <small>
+
+                                Programadas
+
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <div class="border rounded p-3">
+
+                            <h2 class="text-danger">
+
+                                {{ visitas_canceladas|default(0) }}
+
+                            </h2>
+
+                            <small>
+
+                                Canceladas
+
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <div class="border rounded p-3">
+
+                            <h2 class="text-primary">
+
+                                {{ cumplimiento|default('0 %') }}
+
+                            </h2>
+
+                            <small>
+
+                                Cumplimiento
+
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- OBSERVACIONES -->
+
+        <div class="card border-warning">
+
+            <div class="card-header bg-warning">
+
+                <strong>
+
+                    Observaciones Administrativas
+
+                </strong>
+
+            </div>
+
+            <div class="card-body">
+
+                <textarea
+                    class="form-control"
+                    rows="5"
+                    readonly>{{ paciente.observaciones_administrativas }}</textarea>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

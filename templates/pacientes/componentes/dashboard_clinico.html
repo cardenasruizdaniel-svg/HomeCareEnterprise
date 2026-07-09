@@ -1,0 +1,161 @@
+<div class="container-fluid">
+
+<div class="row">
+
+<!-- TEMPERATURA -->
+
+<div class="col-md-2">
+
+<div class="card shadow border-start border-danger border-4">
+
+<div class="card-body text-center">
+
+<i class="fa-solid fa-temperature-three-quarters fa-2x text-danger"></i>
+
+<h3>{{ ultimo.temperatura }}</h3>
+
+<p>Temperatura</p>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- TA -->
+
+<div class="col-md-2">
+
+<div class="card shadow border-start border-primary border-4">
+
+<div class="card-body text-center">
+
+<i class="fa-solid fa-heart fa-2x text-primary"></i>
+
+<h3>
+
+{{ ultimo.presion_sistolica }}/{{ ultimo.presion_diastolica }}
+
+</h3>
+
+<p>Presión</p>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- FC -->
+
+<div class="col-md-2">
+
+<div class="card shadow border-start border-success border-4">
+
+<div class="card-body text-center">
+
+<i class="fa-solid fa-heart-pulse fa-2x text-success"></i>
+
+<h3>
+
+{{ ultimo.frecuencia_cardiaca }}
+
+</h3>
+
+<p>FC</p>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- FR -->
+
+<div class="col-md-2">
+
+<div class="card shadow border-start border-warning border-4">
+
+<div class="card-body text-center">
+
+<i class="fa-solid fa-lungs fa-2x text-warning"></i>
+
+<h3>
+
+{{ ultimo.frecuencia_respiratoria }}
+
+</h3>
+
+<p>FR</p>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- SAT -->
+
+<div class="col-md-2">
+
+<div class="card shadow border-start border-info border-4">
+
+<div class="card-body text-center">
+
+<i class="fa-solid fa-lungs-virus fa-2x text-info"></i>
+
+<h3>
+
+{{ ultimo.saturacion_oxigeno }}%
+
+</h3>
+
+<p>SatO₂</p>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- IMC -->
+
+<div class="col-md-2">
+
+<div class="card shadow border-start border-secondary border-4">
+
+<div class="card-body text-center">
+
+<i class="fa-solid fa-weight-scale fa-2x text-secondary"></i>
+
+<h3>
+
+{{ ultimo.imc }}
+
+</h3>
+
+<p>IMC</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<br>
+
+<div class="row">
+
+<div class="col-md-12">
+
+<div id="alertasClinicas"></div>
+
+</div>
+
+</div>
+
+{% include "pacientes/componentes/graficas_signos.html" %}
+
+</div>

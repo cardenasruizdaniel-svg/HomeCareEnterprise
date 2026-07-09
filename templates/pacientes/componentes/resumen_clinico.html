@@ -1,0 +1,99 @@
+<div class="card border-danger shadow-sm mb-4">
+
+    <div class="card-header bg-danger text-white">
+
+        <h5 class="mb-0">
+
+            <i class="fa-solid fa-triangle-exclamation"></i>
+
+            Alertas Clínicas
+
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        {% if alertas %}
+
+            {% for alerta in alertas %}
+
+                {% if alerta.nivel=="Anafilaxia" %}
+
+                    <div class="alert alert-danger">
+
+                        🔴
+
+                        {{ alerta.mensaje }}
+
+                    </div>
+
+                {% elif alerta.nivel=="Grave" %}
+
+                    <div class="alert alert-warning">
+
+                        🟠
+
+                        {{ alerta.mensaje }}
+
+                    </div>
+
+                {% elif alerta.nivel=="Moderada" %}
+
+                    <div class="alert alert-info">
+
+                        🟡
+
+                        {{ alerta.mensaje }}
+
+                    </div>
+
+                {% elif alerta.nivel=="Leve" %}
+
+                    <div class="alert alert-secondary">
+
+                        🟢
+
+                        {{ alerta.mensaje }}
+
+                    </div>
+
+                {% elif alerta.nivel=="Agenda" %}
+
+                    <div class="alert alert-primary">
+
+                        📅
+
+                        {{ alerta.mensaje }}
+
+                    </div>
+
+                {% else %}
+
+                    <div class="alert alert-light">
+
+                        ℹ️
+
+                        {{ alerta.mensaje }}
+
+                    </div>
+
+                {% endif %}
+
+            {% endfor %}
+
+        {% else %}
+
+            <div class="alert alert-success">
+
+                <i class="fa-solid fa-circle-check"></i>
+
+                No existen alertas clínicas activas.
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>

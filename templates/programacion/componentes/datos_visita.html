@@ -1,0 +1,265 @@
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-light">
+
+        <h5 class="mb-0">
+
+            <i class="fa-solid fa-calendar-days text-primary"></i>
+
+            Datos Generales de la Visita
+
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <!-- Fecha -->
+
+            <div class="col-md-3 mb-3">
+
+                <label class="form-label">
+
+                    Fecha
+
+                </label>
+
+                <input
+
+                    type="date"
+
+                    class="form-control"
+
+                    name="fecha"
+
+                    required>
+
+            </div>
+
+            <!-- Hora Inicio -->
+
+            <div class="col-md-3 mb-3">
+
+                <label class="form-label">
+
+                    Hora Inicio
+
+                </label>
+
+                <input
+
+                    type="time"
+
+                    class="form-control"
+
+                    name="hora_inicio"
+
+                    required>
+
+            </div>
+
+            <!-- Hora Fin -->
+
+            <div class="col-md-3 mb-3">
+
+                <label class="form-label">
+
+                    Hora Final
+
+                </label>
+
+                <input
+
+                    type="time"
+
+                    class="form-control"
+
+                    name="hora_fin">
+
+            </div>
+
+            <!-- Duración -->
+
+            <div class="col-md-3 mb-3">
+
+                <label class="form-label">
+
+                    Duración (Minutos)
+
+                </label>
+
+                <input
+
+                    type="number"
+
+                    class="form-control"
+
+                    name="duracion"
+
+                    value="60"
+
+                    min="15"
+
+                    step="15">
+
+            </div>
+
+            <!-- Prioridad -->
+
+            <div class="col-md-3 mb-3">
+
+                <label class="form-label">
+
+                    Prioridad
+
+                </label>
+
+                <select
+
+                    class="form-select"
+
+                    name="prioridad">
+
+                    <option value="Normal">
+
+                        🟢 Normal
+
+                    </option>
+
+                    <option value="Alta">
+
+                        🟡 Alta
+
+                    </option>
+
+                    <option value="Urgente">
+
+                        🔴 Urgente
+
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- Estado -->
+
+            <div class="col-md-3 mb-3">
+
+                <label class="form-label">
+
+                    Estado
+
+                </label>
+
+                <select
+
+                    class="form-select"
+
+                    name="estado">
+
+                    <option selected>
+
+                        Programada
+
+                    </option>
+
+                    <option>
+
+                        Confirmada
+
+                    </option>
+
+                    <option>
+
+                        Reprogramada
+
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- Tipo -->
+
+            <div class="col-md-3 mb-3">
+
+                <label class="form-label">
+
+                    Tipo de Visita
+
+                </label>
+
+                <select
+
+                    class="form-select"
+
+                    name="tipo_visita">
+
+                    <option>
+
+                        Primera Vez
+
+                    </option>
+
+                    <option>
+
+                        Control
+
+                    </option>
+
+                    <option>
+
+                        Seguimiento
+
+                    </option>
+
+                    <option>
+
+                        Urgencia
+
+                    </option>
+
+                </select>
+
+            </div>
+
+            <!-- Confirmación -->
+
+            <div class="col-md-3 mb-3">
+
+                <label class="form-label">
+
+                    Confirmación
+
+                </label>
+
+                <select
+
+                    class="form-select"
+
+                    name="confirmada">
+
+                    <option value="0">
+
+                        Pendiente
+
+                    </option>
+
+                    <option value="1">
+
+                        Confirmada
+
+                    </option>
+
+                </select>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

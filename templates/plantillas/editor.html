@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Diseñador Universal
+{% endblock %}
+
+{% block contenido %}
+
+<div class="container-fluid p-0">
+
+    {% include "plantillas/editor/toolbar.html" %}
+
+    <div class="row g-0">
+
+        <div class="col-lg-3">
+
+            {% include "plantillas/editor/sidebar.html" %}
+
+        </div>
+
+        <div class="col-lg-6">
+
+            {% include "plantillas/editor/canvas.html" %}
+
+        </div>
+
+        <div class="col-lg-3">
+
+            {% include "plantillas/editor/properties.html" %}
+
+        </div>
+
+    </div>
+
+    {% include "plantillas/editor/footer.html" %}
+
+</div>
+
+{% endblock %}
+
+{% block javascript %}
+
+<script src="/static/js/disenador.js"></script>
+
+{% endblock %}

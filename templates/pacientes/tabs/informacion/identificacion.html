@@ -1,0 +1,328 @@
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-primary text-white">
+
+        <h5 class="mb-0">
+
+            <i class="fa-solid fa-id-card"></i>
+
+            Identificación del Paciente
+
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <!-- FOTO -->
+
+            <div class="col-lg-3 text-center">
+
+                <img
+                    src="/static/img/avatar.png"
+                    class="img-thumbnail rounded-circle shadow"
+                    style="width:180px;height:180px;object-fit:cover;">
+
+                <div class="mt-3">
+
+                    <button class="btn btn-outline-primary btn-sm">
+
+                        <i class="fa-solid fa-camera"></i>
+
+                        Cambiar fotografía
+
+                    </button>
+
+                </div>
+
+            </div>
+
+            <!-- INFORMACIÓN -->
+
+            <div class="col-lg-9">
+
+                <div class="row">
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            Tipo Documento
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.tipo_documento }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            Documento
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.documento }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            Estado
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.estado }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            Historia Clínica
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.id }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Primer Nombre
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.primer_nombre }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Segundo Nombre
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.segundo_nombre }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Primer Apellido
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.primer_apellido }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Segundo Apellido
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.segundo_apellido }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            Fecha Nacimiento
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.fecha_nacimiento }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            Edad
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.edad }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            Sexo
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.sexo }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            RH
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.tipo_sangre }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Estado Civil
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.estado_civil }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Escolaridad
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.escolaridad }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Ocupación
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.ocupacion }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Nacionalidad
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.nacionalidad }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+
+                            Lugar de Nacimiento
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.lugar_nacimiento }}"
+                            readonly>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

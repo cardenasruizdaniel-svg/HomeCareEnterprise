@@ -1,0 +1,35 @@
+# Variables de entorno
+.env
+.env.*
+
+# Entornos virtuales
+venv/
+.venv/
+env/
+
+# Caché de Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+
+# Base de datos
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# Logs
+logs/
+*.log
+
+# Archivos temporales
+*.tmp
+*.bak
+
+# Exportaciones
+exports/
+
+# Archivos del sistema
+Thumbs.db
+.DS_Store

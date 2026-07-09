@@ -1,0 +1,352 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <div class="card shadow border-0">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="fa-solid fa-calendar-check"></i>
+                Visita #{{ visita.id }}
+            </h4>
+            <span class="badge bg-light text-dark">{{ visita.estado }}</span>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-4"><strong>Fecha:</strong> {{ visita.fecha }}</div>
+                <div class="col-md-4"><strong>Hora programada:</strong> {{ visita.hora_inicio }} - {{ visita.hora_fin }}</div>
+                <div class="col-md-4"><strong>Duración programada:</strong> {{ visita.duracion }} min</div>
+            </div>
+
+            <div class="alert {% if visita.horas_trabajadas %}alert-success{% else %}alert-light border{% endif %}">
+                <i class="fa-solid fa-stopwatch"></i>
+                <strong>Registro real de labores (para nómina):</strong>
+                Ingreso: {{ visita.hora_real_inicio or "— pendiente —" }}
+                &nbsp;·&nbsp;
+                Salida: {{ visita.hora_real_fin or "— pendiente —" }}
+                {% if visita.horas_trabajadas %}
+                &nbsp;·&nbsp; <strong>{{ visita.horas_trabajadas }} horas trabajadas</strong>
+                {% endif %}
+            </div>
+
+            {% if geocerca_evento %}
+            <div class="alert {% if geocerca_verificable == 'False' %}alert-warning{% elif geocerca_ok == 'True' %}alert-success{% else %}alert-danger{% endif %}">
+                <i class="fa-solid fa-location-dot"></i>
+                <strong>Verificación de ubicación ({{ "ingreso" if geocerca_evento == "ingreso" else "salida" }}):</strong>
+                {% if geocerca_verificable == 'False' %}
+                    No se pudo verificar la ubicación (falta activar el permiso de ubicación del navegador, o el paciente no tiene coordenadas de domicilio registradas).
+                {% elif geocerca_ok == 'True' %}
+                    ✓ Confirmado: el profesional estaba a {{ geocerca_distancia }} m del domicilio del paciente.
+                {% else %}
+                    ⚠ El profesional marcó a {{ geocerca_distancia }} m del domicilio registrado del paciente — más de lo esperado. Revisar.
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if visita.geocerca_inicio_ok is not none or visita.geocerca_fin_ok is not none %}
+            <div class="small text-muted mb-3">
+                <i class="fa-solid fa-shield-halved"></i> Historial de verificación de ubicación:
+                {% if visita.distancia_inicio_metros is not none %}
+                Ingreso: {{ visita.distancia_inicio_metros }} m
+                {% if visita.geocerca_inicio_ok %}<span class="text-success">✓</span>{% else %}<span class="text-danger">⚠</span>{% endif %}
+                {% endif %}
+                {% if visita.distancia_fin_metros is not none %}
+                &nbsp;·&nbsp; Salida: {{ visita.distancia_fin_metros }} m
+                {% if visita.geocerca_fin_ok %}<span class="text-success">✓</span>{% else %}<span class="text-danger">⚠</span>{% endif %}
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if visita.foto_ingreso_base64 or visita.foto_salida_base64 %}
+            <div class="mb-3 d-flex gap-3">
+                {% if visita.foto_ingreso_base64 %}
+                <div class="text-center">
+                    <img src="{{ visita.foto_ingreso_base64 }}" style="max-height:120px; border:1px solid #dee2e6;" class="d-block mb-1">
+                    <small class="text-muted">Foto de ingreso</small>
+                </div>
+                {% endif %}
+                {% if visita.foto_salida_base64 %}
+                <div class="text-center">
+                    <img src="{{ visita.foto_salida_base64 }}" style="max-height:120px; border:1px solid #dee2e6;" class="d-block mb-1">
+                    <small class="text-muted">Foto de salida</small>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="row mb-3">
+                <div class="col-md-6"><strong>Servicio:</strong> {{ visita.servicio }}</div>
+                <div class="col-md-6"><strong>Procedimiento:</strong> {{ visita.procedimiento or "—" }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6"><strong>Dirección:</strong> {{ visita.direccion }}, {{ visita.barrio }}, {{ visita.municipio }}</div>
+                <div class="col-md-6"><strong>Contacto:</strong> {{ visita.nombre_contacto or "—" }} · {{ visita.telefono_contacto or "—" }}</div>
+            </div>
+            <div class="mb-3">
+                <strong>Observaciones:</strong>
+                <p>{{ visita.observaciones or "Sin observaciones." }}</p>
+            </div>
+
+            <hr>
+
+            <h5><i class="fa-solid fa-notes-medical"></i> Registrar en la Historia Clínica</h5>
+
+            <div class="mb-3" id="contenedor-selector-tipo-nota">
+                <label><strong>¿Qué tipo de formato va a diligenciar?</strong></label>
+                <select id="selector-tipo-nota" class="form-select">
+                    <option value="">-- Seleccione --</option>
+                </select>
+            </div>
+
+            <div id="contenedor-editor-nota" style="display:none;">
+            <p class="text-muted small">Escriba libremente, o use una plantilla predefinida (solo se muestran las de este tipo de nota).</p>
+
+            <div class="d-flex gap-2 mb-2 flex-wrap">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatoTexto('bold')"><i class="fa-solid fa-bold"></i></button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatoTexto('italic')"><i class="fa-solid fa-italic"></i></button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatoTexto('underline')"><i class="fa-solid fa-underline"></i></button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatoTexto('insertUnorderedList')"><i class="fa-solid fa-list-ul"></i></button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatoTexto('insertOrderedList')"><i class="fa-solid fa-list-ol"></i></button>
+                </div>
+
+                <div class="dropdown">
+                    <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" id="btn-plantillas">
+                        <i class="fa-solid fa-file-lines"></i> Usar plantilla
+                    </button>
+                    <ul class="dropdown-menu" id="menu-plantillas">
+                        <li><span class="dropdown-item-text text-muted">Cargando...</span></li>
+                    </ul>
+                </div>
+
+                <button type="button" class="btn btn-outline-success btn-sm" id="btn-guardar-como-plantilla">
+                    <i class="fa-solid fa-floppy-disk"></i> Guardar como mi plantilla
+                </button>
+            </div>
+
+            <div id="editor-nota" contenteditable="true" class="form-control mb-2" style="min-height:150px; overflow-y:auto;"></div>
+
+            <form method="post" action="/programacion/registrar-evolucion/{{ visita.id }}" id="form-nota-visita">
+                <input type="hidden" name="nota" id="campo-nota-oculto">
+                <input type="hidden" name="tipo_profesional" id="campo-tipo-nota-oculto">
+                <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-check"></i> Guardar nota</button>
+            </form>
+            </div>
+
+            <hr>
+
+            <div class="d-flex gap-2">
+                <a href="/programacion/confirmar/{{ visita.id }}" class="btn btn-outline-primary btn-sm">Confirmar</a>
+                <button type="button" onclick="abrirModalFoto('iniciar', {{ visita.id }})" class="btn btn-info btn-sm text-white">
+                    <i class="fa-solid fa-play"></i> Registrar ingreso a labores
+                </button>
+                <button type="button" onclick="abrirModalFoto('finalizar', {{ visita.id }})" class="btn btn-success btn-sm">
+                    <i class="fa-solid fa-stop"></i> Finalizar labores
+                </button>
+                <a href="/programacion/cancelar/{{ visita.id }}" class="btn btn-outline-danger btn-sm">Cancelar</a>
+                <a href="/programacion" class="btn btn-secondary btn-sm ms-auto">Volver</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal de foto obligatoria para ingreso/salida -->
+<div class="modal fade" id="modalFotoIngreso" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="titulo-modal-foto-ingreso">Registrar ingreso</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small">
+                    Tome una foto en el domicilio del paciente para corroborar que usted se encuentra en el lugar
+                    (junto con la ubicación GPS).
+                </p>
+                <div class="mb-3">
+                    <label>Foto</label>
+                    <input type="file" accept="image/*" capture="environment" class="form-control" id="campo-foto-ingreso" required>
+                </div>
+                <img id="vista-previa-foto-ingreso" style="max-height:200px; display:none;" class="mb-2 border rounded">
+                <div id="estado-ubicacion-ingreso" class="small text-muted"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btn-confirmar-foto-ingreso">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let accionModalFoto = null;
+let idModalFoto = null;
+let modalFotoIngreso = null;
+
+function abrirModalFoto(accion, id) {
+    accionModalFoto = accion;
+    idModalFoto = id;
+    document.getElementById("titulo-modal-foto-ingreso").textContent =
+        accion === "iniciar" ? "Registrar ingreso — foto obligatoria" : "Finalizar labores — foto obligatoria";
+    document.getElementById("campo-foto-ingreso").value = "";
+    document.getElementById("vista-previa-foto-ingreso").style.display = "none";
+    document.getElementById("estado-ubicacion-ingreso").textContent = "Obteniendo ubicación...";
+
+    if (!modalFotoIngreso) {
+        modalFotoIngreso = new bootstrap.Modal(document.getElementById("modalFotoIngreso"));
+    }
+    modalFotoIngreso.show();
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                window._ubicacionModalFoto = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+                document.getElementById("estado-ubicacion-ingreso").textContent = "Ubicación capturada correctamente.";
+            },
+            () => {
+                window._ubicacionModalFoto = { lat: null, lon: null };
+                document.getElementById("estado-ubicacion-ingreso").textContent = "No se pudo obtener la ubicación (revise el permiso).";
+            },
+            { timeout: 8000 }
+        );
+    } else {
+        window._ubicacionModalFoto = { lat: null, lon: null };
+    }
+}
+
+document.getElementById("campo-foto-ingreso").addEventListener("change", (e) => {
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = () => {
+        window._fotoModalFoto = lector.result;
+        const vista = document.getElementById("vista-previa-foto-ingreso");
+        vista.src = lector.result;
+        vista.style.display = "block";
+    };
+    lector.readAsDataURL(archivo);
+});
+
+document.getElementById("btn-confirmar-foto-ingreso").addEventListener("click", async () => {
+    if (!window._fotoModalFoto) {
+        alert("Debe tomar o seleccionar una foto para continuar.");
+        return;
+    }
+
+    const ubicacion = window._ubicacionModalFoto || { lat: null, lon: null };
+
+    const respuesta = await fetch(`/programacion/${accionModalFoto}-con-foto/${idModalFoto}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat: ubicacion.lat, lon: ubicacion.lon, foto_base64: window._fotoModalFoto }),
+    });
+    const verificacion = await respuesta.json();
+
+    modalFotoIngreso.hide();
+
+    const parametros = new URLSearchParams({
+        geocerca_ok: verificacion.dentro_del_rango,
+        geocerca_distancia: verificacion.distancia_metros,
+        geocerca_verificable: verificacion.verificable,
+        geocerca_evento: accionModalFoto === "iniciar" ? "ingreso" : "salida",
+    });
+    window.location.href = `/programacion/detalle/${idModalFoto}?${parametros.toString()}`;
+});
+
+// ---------------- Nota de la visita: formato + plantillas ----------------
+
+let rolNotaElegido = "";
+
+async function cargarTiposNota() {
+    const selector = document.getElementById("selector-tipo-nota");
+    try {
+        const respuesta = await fetch("/plantillas-visita/api/tipos-nota");
+        const tipos = await respuesta.json();
+        selector.innerHTML = '<option value="">-- Seleccione --</option>' +
+            tipos.map(t => `<option value="${t.rol}" data-nombre="${t.nombre}">${t.nombre}</option>`).join("");
+    } catch (error) {
+        selector.innerHTML = '<option value="">No se pudieron cargar los tipos de nota</option>';
+    }
+}
+cargarTiposNota();
+
+document.getElementById("selector-tipo-nota").addEventListener("change", (e) => {
+    const opcionElegida = e.target.selectedOptions[0];
+    if (!e.target.value) {
+        document.getElementById("contenedor-editor-nota").style.display = "none";
+        return;
+    }
+    rolNotaElegido = e.target.value;
+    document.getElementById("campo-tipo-nota-oculto").value = opcionElegida.dataset.nombre;
+    document.getElementById("contenedor-editor-nota").style.display = "block";
+    cargarPlantillas();
+});
+
+function formatoTexto(comando) {
+    document.execCommand(comando, false, null);
+    document.getElementById("editor-nota").focus();
+}
+
+async function cargarPlantillas() {
+    const menu = document.getElementById("menu-plantillas");
+    try {
+        const respuesta = await fetch(`/plantillas-visita/api/mis-plantillas?rol=${encodeURIComponent(rolNotaElegido)}`);
+        const plantillas = await respuesta.json();
+
+        if (!plantillas.length) {
+            menu.innerHTML = `<li><span class="dropdown-item-text text-muted">No hay plantillas disponibles para este tipo de nota.</span></li>`;
+            return;
+        }
+
+        menu.innerHTML = plantillas.map((p) => `
+            <li><a class="dropdown-item" href="#" data-contenido="${encodeURIComponent(p.contenido)}">
+                ${p.nombre} <span class="badge bg-light text-dark">${p.rol_destinatario || "Todos"}</span>
+            </a></li>
+        `).join("");
+
+        menu.querySelectorAll(".dropdown-item").forEach((item) => {
+            item.addEventListener("click", (e) => {
+                e.preventDefault();
+                const editor = document.getElementById("editor-nota");
+                editor.innerHTML += (editor.innerHTML ? "<br>" : "") + decodeURIComponent(item.dataset.contenido);
+            });
+        });
+    } catch (error) {
+        menu.innerHTML = `<li><span class="dropdown-item-text text-danger">No se pudieron cargar las plantillas.</span></li>`;
+    }
+}
+
+document.getElementById("form-nota-visita").addEventListener("submit", () => {
+    document.getElementById("campo-nota-oculto").value = document.getElementById("editor-nota").innerHTML;
+});
+
+document.getElementById("btn-guardar-como-plantilla").addEventListener("click", async () => {
+    const contenido = document.getElementById("editor-nota").innerHTML.trim();
+
+    if (!contenido) {
+        alert("Escriba algo en el cuadro de la nota antes de guardarlo como plantilla.");
+        return;
+    }
+
+    const nombre = prompt("¿Cómo quiere llamar esta plantilla?", "Mi plantilla");
+    if (!nombre) return;
+
+    const respuesta = await fetch("/plantillas-visita/api/crear-rapida", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre, contenido }),
+    });
+    const resultado = await respuesta.json();
+
+    if (resultado.error) {
+        alert(resultado.error);
+    } else {
+        alert("Plantilla guardada. Ya aparece en su lista de 'Usar plantilla'.");
+        cargarPlantillas();
+    }
+});
+</script>
+
+{% endblock %}

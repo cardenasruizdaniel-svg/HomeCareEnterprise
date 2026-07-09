@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+{% include "components/volver_paciente.html" %}
+
+<h2>
+
+Nuevo Acudiente
+
+</h2>
+
+<form method="post" action="/acudientes/actualizar">
+
+<input
+type="hidden"
+name="id"
+value="{{ acudiente.id }}">
+
+<input
+type="hidden"
+name="paciente_id"
+value="{{ acudiente.paciente_id }}">
+
+<div class="card shadow">
+
+<div class="card-body">
+
+<div class="row g-3">
+
+<div class="col-md-6">
+
+<label>Nombre Completo</label>
+
+<input
+type="hidden"
+name="id"
+value="{{ nombre.id }}">
+
+</div>
+
+<div class="col-md-3">
+
+<label>Parentesco</label>
+
+<input
+type="hidden"
+name="id"
+value="{{ parentesco.id }}">
+
+</div>
+
+<div class="col-md-3">
+
+<label>Teléfono</label>
+
+<input
+type="hidden"
+name="id"
+value="{{ telefono_principal.id }}">
+
+</div>
+
+<div class="col-md-6">
+
+<label>Correo</label>
+
+<input
+type="hidden"
+name="id"
+value="{{ correo.id }}">
+
+</div>
+
+<div class="col-md-6">
+
+<label>Dirección</label>
+
+<input
+type="hidden"
+name="id"
+value="{{ direccion.id }}">
+
+</div>
+
+<div class="col-md-12">
+
+<label>Observaciones</label>
+
+<textarea
+name="observaciones"
+class="form-control"
+rows="4"></textarea>
+
+</div>
+
+</div>
+
+<hr>
+
+<button class="btn btn-success">
+
+Guardar
+
+</button>
+
+<a
+href="/acudientes/{{ paciente_id }}"
+class="btn btn-secondary">
+
+Cancelar
+
+</a>
+
+</div>
+
+</div>
+
+</form>
+
+{% endblock %}

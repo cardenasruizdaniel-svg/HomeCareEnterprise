@@ -1,0 +1,370 @@
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-danger text-white">
+
+        <h5 class="mb-0">
+
+            <i class="fa-solid fa-heart-pulse"></i>
+
+            Datos Clínicos
+
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <!-- ANTROPOMETRÍA -->
+
+        <div class="card border-0 bg-light mb-4">
+
+            <div class="card-header">
+
+                <strong>
+
+                    Antropometría
+
+                </strong>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-3">
+
+                        <label>Peso (Kg)</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.peso }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label>Talla (cm)</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.talla }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label>IMC</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.imc }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label>Grupo Riesgo</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.grupo_riesgo }}"
+                            readonly>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- CONDICIÓN CLÍNICA -->
+
+        <div class="card border-0 bg-light mb-4">
+
+            <div class="card-header">
+
+                <strong>
+
+                    Condición Clínica
+
+                </strong>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label>Diagnóstico Principal</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.diagnostico_principal }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label>Dependencia</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.dependencia }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label>Movilidad</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.movilidad }}"
+                            readonly>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- DISPOSITIVOS -->
+
+        <div class="card border-0 bg-light mb-4">
+
+            <div class="card-header">
+
+                <strong>
+
+                    Dispositivos Médicos
+
+                </strong>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-3">
+
+                        <label>Oxígeno</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.oxigeno }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label>Catéter</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.cateter }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label>Sonda</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.sonda }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label>Traqueostomía</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.traqueostomia }}"
+                            readonly>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ESCALAS CLÍNICAS -->
+
+        <div class="card border-0 bg-light mb-4">
+
+            <div class="card-header">
+
+                <strong>
+
+                    Escalas Clínicas
+
+                </strong>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-2">
+
+                        <label>Barthel</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.barthel }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <label>Braden</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.braden }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <label>Norton</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.norton }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <label>Downton</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.downton }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <label>Glasgow</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.glasgow }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-2">
+
+                        <label>Karnofsky</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.karnofsky }}"
+                            readonly>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- HÁBITOS -->
+
+        <div class="card border-0 bg-light">
+
+            <div class="card-header">
+
+                <strong>
+
+                    Hábitos y Factores de Riesgo
+
+                </strong>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-3">
+
+                        <label>Tabaquismo</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.tabaquismo }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label>Alcohol</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.alcohol }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label>Sustancias Psicoactivas</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.spa }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <label>Observaciones</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.observaciones_clinicas }}"
+                            readonly>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

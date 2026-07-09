@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <h2 class="mb-4">
+        👤 Gestión de Usuarios
+    </h2>
+
+    <div class="card shadow">
+
+        <div class="card-body">
+
+            <table class="table table-hover">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Nombre</th>
+
+                        <th>Usuario</th>
+
+                        <th>Rol</th>
+
+                        <th>Estado</th>
+
+                        <th>Acciones</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for usuario in usuarios %}
+
+                    <tr>
+
+                        <td>{{ usuario.nombre }}</td>
+
+                        <td>{{ usuario.usuario }}</td>
+
+                        <td>{{ usuario.rol }}</td>
+
+                        <td>{{ usuario.estado }}</td>
+
+                        <td>
+
+                            <button class="btn btn-primary btn-sm">
+                                Editar
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

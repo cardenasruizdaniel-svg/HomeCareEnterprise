@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+HomeCare IPS | Centro de Operaciones
+{% endblock %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <!-- ENCABEZADO -->
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2 class="fw-bold">
+
+                <i class="fa-solid fa-chart-line text-primary"></i>
+
+                Centro de Operaciones
+
+            </h2>
+
+            <p class="text-muted mb-0">
+
+                Bienvenido,
+
+                <strong>
+
+                    {{ request.session.get("nombre","Usuario") }}
+
+                </strong>
+
+            </p>
+
+        </div>
+
+        <div>
+
+            <a href="/programacion/nueva"
+
+               class="btn btn-success">
+
+                <i class="fa-solid fa-calendar-plus"></i>
+
+                Nueva Visita
+
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- KPIs -->
+
+    {% include "layout/dashboard_cards.html" %}
+
+    <!-- GRÁFICOS -->
+
+    {% include "layout/dashboard_charts.html" %}
+    {% include "layout/dashboard_operaciones.html" %}
+
+    <div class="row mt-4">
+
+        <!-- AGENDA -->
+
+        <div class="col-lg-8">
+
+            <div class="card shadow border-0">
+
+                <div class="card-header bg-primary text-white">
+
+                    <h5 class="mb-0">
+
+                        <i class="fa-solid fa-calendar-day"></i>
+
+                        Agenda del Día
+
+                    </h5>
+
+                </div>
+
+                <div class="card-body">
+
+                    {% if agenda %}
+
+                    <table class="table table-hover align-middle">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Hora</th>
+
+                                <th>Paciente</th>
+
+                                <th>Profesional</th>
+
+                                <th>Servicio</th>
+
+                                <th>Estado</th>
+
+                                <th></th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            {% for visita in agenda %}
+
+                            <tr>
+
+                                <td>
+
+                                    {{ visita.hora_inicio }}
+
+                                </td>
+
+                                <td>
+
+                                    {{ visita.paciente }}
+
+                                </td>
+
+                                <td>
+
+                                    {{ visita.profesional }}
+
+                                </td>
+
+                                <td>
+
+                                    {{ visita.servicio }}
+
+                                </td>
+
+                                <td>
+
+                                    {% if visita.estado=="Programada" %}
+
+                                    <span class="badge bg-primary">
+
+                                        Programada
+
+                                    </span>
+
+                                    {% elif visita.estado=="En Curso" %}
+
+                                    <span class="badge bg-warning text-dark">
+
+                                        En Curso
+
+                                    </span>
+
+                                    {% elif visita.estado=="Completada" %}
+
+                                    <span class="badge bg-success">
+
+                                        Completada
+
+                                    </span>
+
+                                    {% elif visita.estado=="Cancelada" %}
+
+                                    <span class="badge bg-danger">
+
+                                        Cancelada
+
+                                    </span>
+
+                                    {% else %}
+
+                                    <span class="badge bg-secondary">
+
+                                        {{ visita.estado }}
+
+                                    </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                                <td>
+
+                                    <a
+
+                                        href="/programacion/detalle/{{ visita.id }}"
+
+                                        class="btn btn-sm btn-outline-primary">
+
+                                        Ver
+
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                    {% else %}
+
+                    <div class="text-center py-5">
+
+                        <i class="fa-solid fa-calendar-xmark fa-4x text-secondary mb-3"></i>
+
+                        <h5>
+
+                            No existen visitas programadas para hoy.
+
+                        </h5>
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ALERTAS -->
+
+        <div class="col-lg-4">
+
+            {% include "layout/alerts.html" %}
+
+        </div>
+
+    </div>
+
+    <!-- ACTIVIDAD -->
+
+    <div class="row mt-4">
+
+        <div class="col-lg-12">
+
+            <div class="card shadow border-0">
+
+                <div class="card-header bg-dark text-white">
+
+                    <h5 class="mb-0">
+
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+
+                        Actividad Reciente
+
+                    </h5>
+
+                </div>
+
+                <div class="card-body">
+
+                    <table class="table table-striped">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Hora</th>
+
+                                <th>Actividad</th>
+
+                                <th>Usuario</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                            <tr>
+
+                                <td>08:15</td>
+
+                                <td>Nuevo paciente registrado.</td>
+
+                                <td>Administrador</td>
+
+                            </tr>
+
+                            <tr>
+
+                                <td>09:05</td>
+
+                                <td>Visita programada.</td>
+
+                                <td>Coordinador</td>
+
+                            </tr>
+
+                            <tr>
+
+                                <td>10:30</td>
+
+                                <td>Diagnóstico actualizado.</td>
+
+                                <td>Médico</td>
+
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

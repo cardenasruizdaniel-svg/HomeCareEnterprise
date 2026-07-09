@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block titulo %}Insumos Entregados{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+
+    {% include "components/volver_paciente.html" %}
+
+    <h2 class="mb-1"><i class="fa-solid fa-box-open text-primary"></i> Insumos Entregados — {{ paciente.primer_nombre }} {{ paciente.primer_apellido }}</h2>
+    <p class="text-muted">Cada entrega descuenta el inventario general al instante y queda registrada en la Historia Clínica del paciente.</p>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+    {% if entregado %}<div class="alert alert-success">Entrega registrada correctamente — el inventario ya quedó descontado.</div>{% endif %}
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-warning"><h5 class="mb-0"><i class="fa-solid fa-box"></i> Registrar entrega de insumos</h5></div>
+                <div class="card-body">
+                    <form method="post" action="/inventario/paciente/{{ paciente_id }}/entregar">
+                        <div class="mb-2">
+                            <label>Insumo</label>
+                            <select name="insumo_id" class="form-select" required>
+                                <option value="">-- Seleccione --</option>
+                                {% for i in insumos %}
+                                <option value="{{ i.id }}">{{ i.nombre }} (stock disponible: {{ i.stock_actual }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-2"><label>Cantidad</label><input type="number" name="cantidad" min="1" class="form-control" required></div>
+                        <div class="mb-2">
+                            <label>Profesional que entrega</label>
+                            <select name="profesional_id" class="form-select">
+                                <option value="">-- Seleccione --</option>
+                                {% for p in profesionales %}
+                                <option value="{{ p.id }}">{{ p.nombre_completo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-2"><label>Motivo / indicación</label><input type="text" name="motivo" class="form-control" placeholder="Ej: Curación programada del 07-jul"></div>
+                        <button class="btn btn-warning w-100"><i class="fa-solid fa-box-open"></i> Registrar entrega</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-white"><h5 class="mb-0">Historial de entregas a este paciente</h5></div>
+                <div class="card-body">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light"><tr><th>Fecha</th><th>Insumo</th><th class="text-center">Cantidad</th><th>Motivo</th></tr></thead>
+                        <tbody>
+                            {% for m in movimientos %}
+                            <tr>
+                                <td>{{ m.fecha }}</td>
+                                <td>{{ m.insumo }}</td>
+                                <td class="text-center">{{ m.cantidad }} {{ m.unidad_medida }}</td>
+                                <td>{{ m.motivo or "—" }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted py-4">Sin insumos entregados a este paciente todavía.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

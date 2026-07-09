@@ -1,0 +1,247 @@
+"""
+HomeCare Enterprise - Servicios/actividades asignadas al paciente
+
+Permite indicar que actividades necesita un paciente (del
+mismo catalogo unificado que se usa en "Programa de Atención":
+ver catalogo_actividades), cuantas sesiones, el rango de
+fechas, y si al terminarse las sesiones el servicio se debe
+RENOVAR automaticamente de forma indefinida o simplemente
+detenerse.
+
+IMPORTANTE (flujo de tentativa -> programada): al asignar la
+actividad, el sistema SOLO genera fechas TENTATIVAS (en la
+planilla de visitas), sin tocar todavia la agenda real. Cada
+visita tentativa debe programarse explicitamente (ver
+services/gestion_visitas_service.py) para quedar en la agenda
+del profesional y disparar las alertas -- esto permite elegir
+la fecha exacta de cada visita antes de confirmarla.
+"""
+
+from datetime import date, datetime, timedelta
+
+from database.database import consultar_todos, consultar_uno, ejecutar
+from repositories.servicios_paciente_repository import ServiciosPacienteRepository
+
+# Cada frecuencia se traduce a un intervalo de dias entre una
+# sesion y la siguiente, para generar las fechas tentativas.
+INTERVALO_DIAS_POR_FRECUENCIA = {
+    "Diaria": 1,
+    "Interdiaria": 2,
+    "1 vez por semana": 7,
+    "2 veces por semana": 3,
+    "3 veces por semana": 2,
+    "Cada 8 días": 8,
+    "Cada 15 días": 15,
+    "Cada 20 días": 20,
+    "1 vez al mes": 30,
+}
+
+FRECUENCIAS_VALIDAS = list(INTERVALO_DIAS_POR_FRECUENCIA.keys())
+
+
+def listar_por_paciente(paciente_id: int):
+    return [dict(s) for s in ServiciosPacienteRepository.listar_por_paciente(paciente_id)]
+
+
+def obtener(servicio_id: int):
+    return ServiciosPacienteRepository.obtener(servicio_id)
+
+
+def _generar_fechas(fecha_inicio: str, fecha_fin: str, frecuencia: str, numero_sesiones=None) -> list:
+
+    if frecuencia not in INTERVALO_DIAS_POR_FRECUENCIA:
+        raise ValueError(f"Frecuencia no válida. Use una de: {', '.join(FRECUENCIAS_VALIDAS)}")
+
+    intervalo = INTERVALO_DIAS_POR_FRECUENCIA[frecuencia]
+
+    inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
+
+    if fecha_fin:
+        fin = datetime.strptime(fecha_fin, "%Y-%m-%d").date()
+        if fin < inicio:
+            raise ValueError("La fecha de fin no puede ser anterior a la fecha de inicio.")
+    else:
+        fin = date(2100, 1, 1)  # sin límite real; se corta por numero_sesiones
+
+    if not fecha_fin and not numero_sesiones:
+        raise ValueError("Debe indicar la fecha de fin o el número de sesiones.")
+
+    fechas = []
+    actual = inicio
+
+    while actual <= fin:
+
+        if numero_sesiones and len(fechas) >= numero_sesiones:
+            break
+
+        fechas.append(actual.isoformat())
+
+        actual += timedelta(days=intervalo)
+
+    return fechas
+
+
+def asignar_servicio(paciente_id, tipo_servicio, subtipo, profesional_id, frecuencia,
+                       fecha_inicio, fecha_fin, hora_inicio, hora_fin, indicaciones, usuario,
+                       actividad_id=None, numero_sesiones=None, paciente_programa_id=None,
+                       renovacion_automatica=False) -> dict:
+
+    if actividad_id:
+        # Ruta principal: el nombre del servicio se toma del
+        # catalogo unificado de actividades.
+        actividad = consultar_uno("SELECT nombre FROM catalogo_actividades WHERE id=?", (actividad_id,))
+        if not actividad:
+            raise ValueError("La actividad seleccionada no existe.")
+        tipo_servicio = dict(actividad)["nombre"]
+        subtipo = None
+
+    if not tipo_servicio:
+        raise ValueError("Debe seleccionar el servicio/actividad.")
+
+    if frecuencia not in FRECUENCIAS_VALIDAS:
+        raise ValueError(f"Frecuencia no válida. Use una de: {', '.join(FRECUENCIAS_VALIDAS)}")
+
+    # Protección contra duplicados: si por un doble clic, doble
+    # envío del formulario, o un reintento de red ya se creó
+    # HACE UN MOMENTO (últimos 15 segundos) un servicio
+    # identico para este mismo paciente, no se vuelve a crear
+    # -- se devuelve el que ya existe, en vez de generar una
+    # fila repetida.
+    reciente = consultar_uno(
+        """
+        SELECT id, numero_sesiones FROM servicios_paciente
+        WHERE paciente_id=? AND tipo_servicio=? AND fecha_inicio=? AND estado='Activo'
+          AND datetime(fecha_creacion) >= datetime('now', '-15 seconds')
+        ORDER BY id DESC LIMIT 1
+        """,
+        (paciente_id, tipo_servicio, fecha_inicio),
+    )
+    if reciente:
+        reciente = dict(reciente)
+        return {
+            "servicio_id": reciente["id"],
+            "total_fechas": reciente["numero_sesiones"] or 0,
+            "visitas_creadas": 0,
+            "duplicado_evitado": True,
+        }
+
+    servicio_id = ServiciosPacienteRepository.crear({
+        "paciente_id": paciente_id,
+        "tipo_servicio": tipo_servicio,
+        "subtipo": subtipo or None,
+        "profesional_id": profesional_id or None,
+        "frecuencia": frecuencia,
+        "fecha_inicio": fecha_inicio,
+        "fecha_fin": fecha_fin or "",
+        "hora_inicio": hora_inicio or "08:00",
+        "hora_fin": hora_fin or "09:00",
+        "indicaciones": indicaciones or "",
+        "usuario_creacion": usuario,
+    })
+
+    ejecutar(
+        "UPDATE servicios_paciente SET actividad_id=?, numero_sesiones=?, paciente_programa_id=?, "
+        "renovacion_automatica=? WHERE id=?",
+        (actividad_id, numero_sesiones, paciente_programa_id, 1 if renovacion_automatica else 0, servicio_id),
+    )
+
+    fechas = _generar_fechas(fecha_inicio, fecha_fin, frecuencia, numero_sesiones)
+
+    # Todas las visitas quedan TENTATIVAS (Pendiente): no se
+    # toca la agenda real todavia. Se guarda el profesional
+    # planeado (si ya se sabe cual va a ser) para agilizar el
+    # paso de "Programar" mas adelante.
+    for fecha in fechas:
+        ejecutar(
+            """
+            INSERT INTO planilla_visitas(
+                servicio_paciente_id, paciente_id, fecha, hora_inicio, hora_fin,
+                profesional_id, estado
+            ) VALUES (?, ?, ?, ?, ?, ?, 'Pendiente')
+            """,
+            (servicio_id, paciente_id, fecha, hora_inicio or "08:00", hora_fin or "09:00", profesional_id or None),
+        )
+
+    return {
+        "servicio_id": servicio_id,
+        "total_fechas": len(fechas),
+        "visitas_creadas": 0,  # ya no se crean automaticamente; se programan una a una
+    }
+
+
+def cancelar_servicio(servicio_id: int):
+    ServiciosPacienteRepository.cambiar_estado(servicio_id, "Cancelado")
+
+    # Cancela tambien todas las visitas tentativas/pendientes
+    # que aun no se hayan programado.
+    ejecutar(
+        "UPDATE planilla_visitas SET estado='Cancelada', motivo_cancelacion='Servicio cancelado' "
+        "WHERE servicio_paciente_id=? AND estado='Pendiente'",
+        (servicio_id,),
+    )
+
+
+def listar_activos_por_profesional(profesional_id: int):
+    return [dict(s) for s in ServiciosPacienteRepository.listar_activos_por_profesional(profesional_id)]
+
+
+def renovar_si_corresponde(servicio_id: int):
+    """
+    Se llama cada vez que se firma/completa una visita. Si ya
+    no quedan visitas pendientes ni programadas para este
+    servicio (se agotaron las sesiones) y el servicio tiene
+    marcada la renovacion automatica, genera un nuevo bloque
+    de sesiones (misma frecuencia, hora y profesional),
+    empezando el dia siguiente a la ultima visita -- de forma
+    indefinida, hasta que alguien cancele el servicio a mano.
+    """
+
+    servicio = ServiciosPacienteRepository.obtener(servicio_id)
+    if not servicio:
+        return
+
+    servicio = dict(servicio)
+
+    if not servicio.get("renovacion_automatica") or servicio.get("estado") != "Activo":
+        return
+
+    pendientes_o_programadas = consultar_todos(
+        "SELECT id FROM planilla_visitas WHERE servicio_paciente_id=? AND estado IN ('Pendiente', 'Programada')",
+        (servicio_id,),
+    )
+    if pendientes_o_programadas:
+        return  # aun quedan visitas por hacer, no toca renovar todavia
+
+    ultima_fecha = consultar_uno(
+        "SELECT MAX(fecha) AS ultima FROM planilla_visitas WHERE servicio_paciente_id=?",
+        (servicio_id,),
+    )
+    ultima_fecha = dict(ultima_fecha)["ultima"] if ultima_fecha else None
+    if not ultima_fecha:
+        return
+
+    intervalo = INTERVALO_DIAS_POR_FRECUENCIA.get(servicio["frecuencia"], 1)
+    siguiente_inicio = (
+        datetime.strptime(ultima_fecha, "%Y-%m-%d").date() + timedelta(days=intervalo)
+    ).isoformat()
+
+    numero_sesiones = servicio.get("numero_sesiones") or 10
+
+    fechas = _generar_fechas(siguiente_inicio, None, servicio["frecuencia"], numero_sesiones)
+
+    for fecha in fechas:
+        ejecutar(
+            """
+            INSERT INTO planilla_visitas(
+                servicio_paciente_id, paciente_id, fecha, hora_inicio, hora_fin,
+                profesional_id, estado
+            ) VALUES (?, ?, ?, ?, ?, ?, 'Pendiente')
+            """,
+            (servicio_id, servicio["paciente_id"], fecha, servicio["hora_inicio"], servicio["hora_fin"],
+             servicio.get("profesional_id")),
+        )
+
+    ejecutar(
+        "UPDATE servicios_paciente SET fecha_inicio=?, fecha_fin=NULL WHERE id=?",
+        (siguiente_inicio, servicio_id),
+    )

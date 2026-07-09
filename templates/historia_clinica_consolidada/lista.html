@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block titulo %}Historia Clínica{% endblock %}
+{% block css %}
+<style>
+.linea-tiempo { position:relative; padding-left: 30px; }
+.linea-tiempo::before { content:""; position:absolute; left:9px; top:0; bottom:0; width:2px; background:#dee2e6; }
+.evento-tiempo { position:relative; margin-bottom:18px; }
+.evento-tiempo::before {
+    content:""; position:absolute; left:-25px; top:4px; width:14px; height:14px; border-radius:50%;
+    background:white; border:3px solid var(--bs-primary);
+}
+.evento-aclaratoria { border-left: 3px solid var(--bs-danger); padding-left: 10px; background:#fff5f5; }
+
+@media print {
+    .no-imprimir, .sidebar, .topbar, #modalAclaratoria { display:none !important; }
+    .contenido-principal { margin:0 !important; padding:0 !important; }
+}
+</style>
+{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+
+    {% include "components/volver_paciente.html" %}
+
+    <h2 class="mb-1"><i class="fa-solid fa-book-medical text-primary"></i> Historia Clínica — {{ paciente.primer_nombre }} {{ paciente.primer_apellido }}</h2>
+    <p class="text-muted">Línea de tiempo completa: visitas realizadas, medicamentos administrados, órdenes médicas, evoluciones y notas aclaratorias. Cada informe queda numerado (consecutivo) para trazabilidad.</p>
+
+    <button class="btn btn-outline-secondary mb-3 no-imprimir" onclick="window.print()">
+        <i class="fa-solid fa-print"></i> Imprimir historia clínica
+    </button>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="linea-tiempo">
+                {% for e in eventos %}
+                <div class="evento-tiempo {% if e.tipo_registro == 'NOTA_ACLARATORIA' %}evento-aclaratoria{% endif %}">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <span class="badge bg-{{ e.color }} {% if e.color == 'warning' %}text-dark{% endif %}"><i class="fa-solid {{ e.icono }}"></i> {{ e.tipo }}</span>
+                            {% if e.consecutivo %}
+                            <span class="badge bg-dark">N.° {{ e.consecutivo }}</span>
+                            {% endif %}
+                            {% if e.nota_aclaratoria_de %}
+                            <span class="badge bg-danger">Aclara el informe N.° {{ e.nota_aclaratoria_de }}</span>
+                            {% endif %}
+                            <strong class="ms-2">{{ e.titulo }}</strong>
+                        </div>
+                        <small class="text-muted">{{ e.fecha }}</small>
+                    </div>
+                    <div class="mt-1">{{ e.detalle }}</div>
+                    {% if e.imagen %}
+                    <img src="{{ e.imagen }}" style="max-height:150px; border:1px solid #dee2e6;" class="mt-1 d-block">
+                    {% endif %}
+                    <div class="d-flex justify-content-between align-items-end mt-1">
+                        <small class="text-muted">
+                            {% if e.profesional %}Por: {{ e.profesional }}{% endif %}
+                        </small>
+                        {% if e.firma %}
+                        <img src="{{ e.firma }}" style="max-height:40px; background:white; border:1px solid #dee2e6;" title="Firma del profesional">
+                        {% endif %}
+                    </div>
+                    {% if e.consecutivo %}
+                    <a href="/historia-clinica/informe/{{ e.id }}/imprimir" target="_blank"
+                       class="btn btn-outline-secondary btn-sm mt-1 no-imprimir">
+                        <i class="fa-solid fa-print"></i> Imprimir este informe
+                    </a>
+                    {% endif %}
+                    {% if e.es_informe %}
+                    <button type="button" class="btn btn-outline-danger btn-sm mt-1 btn-aclarar no-imprimir"
+                            data-consecutivo="{{ e.consecutivo }}" data-titulo="{{ e.titulo }}">
+                        <i class="fa-solid fa-pen-to-square"></i> Hacer nota aclaratoria de este informe
+                    </button>
+                    {% endif %}
+                </div>
+                {% else %}
+                <p class="text-muted text-center py-4">Sin eventos clínicos registrados todavía.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de nota aclaratoria -->
+<div class="modal fade" id="modalAclaratoria" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" action="/historia-clinica/nota-aclaratoria">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fa-solid fa-pen-to-square"></i> Nota aclaratoria del informe N.° <span id="numero-informe-modal"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="paciente_id" value="{{ paciente_id }}">
+                    <input type="hidden" name="nota_aclaratoria_de" id="campo-nota-aclaratoria-de">
+                    <p class="text-muted small">
+                        Informe que se está corrigiendo: <strong id="titulo-informe-modal"></strong>
+                    </p>
+                    <label>Describa el error y la corrección</label>
+                    <textarea name="nota" class="form-control" rows="5" required
+                              placeholder="Ej: En el informe N.° X se registró por error... Lo correcto es..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger">Guardar nota aclaratoria</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+const modalAclaratoria = new bootstrap.Modal(document.getElementById("modalAclaratoria"));
+
+document.querySelectorAll(".btn-aclarar").forEach((boton) => {
+    boton.addEventListener("click", () => {
+        document.getElementById("numero-informe-modal").textContent = boton.dataset.consecutivo;
+        document.getElementById("titulo-informe-modal").textContent = boton.dataset.titulo;
+        document.getElementById("campo-nota-aclaratoria-de").value = boton.dataset.consecutivo;
+        modalAclaratoria.show();
+    });
+});
+</script>
+{% endblock %}

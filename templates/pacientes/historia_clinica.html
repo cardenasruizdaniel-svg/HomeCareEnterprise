@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Historia Clínica
+{% endblock %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <div class="row mb-4">
+
+        <div class="col-12">
+
+            <h2 class="fw-bold">
+
+                🏥 Historia Clínica Enterprise
+
+            </h2>
+
+            <p class="text-muted">
+
+                Gestión integral del paciente domiciliario.
+
+            </p>
+
+        </div>
+
+    </div>
+
+<!-- ===================================================== -->
+<!-- CABECERA DEL PACIENTE -->
+<!-- ===================================================== -->
+
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+
+    <div class="card-body">
+
+        <div class="row align-items-center">
+
+            <!-- Foto -->
+
+            <div class="col-lg-2 text-center">
+
+                <img
+                    src="/static/img/avatar.png"
+                    class="img-fluid rounded-circle border"
+                    style="width:120px;height:120px;object-fit:cover;">
+
+            </div>
+
+            <!-- Información -->
+
+            <div class="col-lg-6">
+
+                <h3 class="fw-bold">
+
+                    {{ paciente.nombre_completo }}
+
+                </h3>
+
+                <p class="mb-1">
+
+                    <strong>Documento:</strong>
+
+                    {{ paciente.documento }}
+
+                </p>
+
+                <p class="mb-1">
+
+                    <strong>Edad:</strong>
+
+                    {{ paciente.edad }} años
+
+                </p>
+
+                <p class="mb-1">
+
+                    <strong>EPS:</strong>
+
+                    {{ paciente.eps }}
+
+                </p>
+
+                <p class="mb-0">
+
+                    <strong>Municipio:</strong>
+
+                    {{ paciente.municipio }}
+
+                </p>
+
+            </div>
+
+            <!-- Indicadores -->
+
+            <div class="col-lg-4">
+
+                <div class="row g-3">
+
+                    <div class="col-6">
+
+                        <div class="card bg-danger text-white">
+
+                            <div class="card-body text-center">
+
+                                <small>
+
+                                    Riesgo Clínico
+
+                                </small>
+
+                                <h5>
+
+                                    {{ paciente.riesgo_clinico }}
+
+                                </h5>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <div class="col-6">
+
+                        <div class="card bg-warning">
+
+                            <div class="card-body text-center">
+
+                                <small>
+
+                                    Prioridad
+
+                                </small>
+
+                                <h5>
+
+                                    {{ paciente.prioridad_domiciliaria }}
+
+                                </h5>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+<!-- ===================================================== -->
+<!-- NAVEGACIÓN CLÍNICA -->
+<!-- ===================================================== -->
+
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+
+    <div class="card-body p-2">
+
+        <ul
+            class="nav nav-pills nav-fill"
+            id="menuPaciente">
+
+            <li class="nav-item">
+
+                <a
+                    class="nav-link active"
+                    href="#">
+
+                    <i class="bi bi-house-heart-fill d-block"></i>
+
+                    Resumen
+
+                </a>
+
+            </li>
+
+            <li class="nav-item">
+
+                <a
+                    class="nav-link"
+                    href="#">
+
+                    <i class="bi bi-person-vcard-fill d-block"></i>
+
+                    Datos
+
+                </a>
+
+            </li>
+
+            <li class="nav-item">
+
+                <a
+                    class="nav-link"
+                    href="#">
+
+                    <i class="bi bi-heart-pulse-fill d-block"></i>
+
+                    Diagnósticos
+
+                </a>
+
+            </li>
+
+            <li class="nav-item">
+
+                <a
+                    class="nav-link"
+                    href="#">
+
+                    <i class="bi bi-capsule-pill d-block"></i>
+
+                    Medicamentos
+
+                </a>
+
+            </li>
+
+            <li class="nav-item">
+
+                <a
+                    class="nav-link"
+                    href="#">
+
+                    <i class="bi bi-calendar-check-fill d-block"></i>
+
+                    Programación
+
+                </a>
+
+            </li>
+
+            <li class="nav-item">
+
+                <a
+                    class="nav-link"
+                    href="#">
+
+                    <i class="bi bi-file-earmark-medical-fill d-block"></i>
+
+                    Evoluciones
+
+                </a>
+
+            </li>
+
+            <li class="nav-item">
+
+                <a
+                    class="nav-link"
+                    href="#">
+
+                    <i class="bi bi-file-text-fill d-block"></i>
+
+                    Plantillas
+
+                </a>
+
+            </li>
+
+            <li class="nav-item">
+
+                <a
+                    class="nav-link"
+                    href="#">
+
+                    <i class="bi bi-activity d-block"></i>
+
+                    Signos
+
+                </a>
+
+            </li>
+
+        </ul>
+
+    </div>
+
+</div>
+
+<!-- ===================================================== -->
+<!-- MOTOR DE PLANTILLAS CLÍNICAS -->
+<!-- ===================================================== -->
+
+<div class="card shadow-sm border-0 rounded-4 mb-4">
+
+    <div class="card-header bg-white">
+
+        <h5 class="mb-0">
+
+            📄 Plantilla Clínica de la Visita
+
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <div class="col-md-4">
+
+                <label class="form-label">
+
+                    Profesional
+
+                </label>
+
+                <select
+                    class="form-select"
+                    id="profesional">
+
+                    <option>
+
+                        Seleccione...
+
+                    </option>
+
+                    <option>Médico</option>
+
+                    <option>Enfermero</option>
+
+                    <option>Auxiliar de Enfermería</option>
+
+                    <option>Fisioterapeuta</option>
+
+                    <option>Terapeuta Respiratorio</option>
+
+                    <option>Terapeuta Ocupacional</option>
+
+                    <option>Fonoaudiólogo</option>
+
+                    <option>Psicólogo</option>
+
+                    <option>Nutricionista</option>
+
+                    <option>Cuidador</option>
+
+                </select>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <label class="form-label">
+
+                    Servicio
+
+                </label>
+
+                <select
+                    class="form-select">
+
+                    <option>
+
+                        Atención Domiciliaria
+
+                    </option>
+
+                    <option>
+
+                        Hospitalización en Casa
+
+                    </option>
+
+                    <option>
+
+                        Cuidados Paliativos
+
+                    </option>
+
+                    <option>
+
+                        Programa Crónicos
+
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <label class="form-label">
+
+                    Plantilla
+
+                </label>
+
+                <input
+                    class="form-control"
+                    value="Asignación automática"
+                    readonly>
+
+            </div>
+
+        </div>
+
+        <hr>
+
+        <div class="alert alert-info">
+
+            <strong>
+
+                HomeCare Enterprise
+
+            </strong>
+
+            cargará automáticamente la plantilla clínica correspondiente según el profesional, el servicio y el tipo de visita.
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

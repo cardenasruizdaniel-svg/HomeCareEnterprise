@@ -1,0 +1,270 @@
+<div class="card shadow border-0 mb-4">
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <!-- FOTO -->
+
+            <div class="col-xl-2 col-lg-3 text-center">
+
+                <img
+                    src="/static/img/avatar.png"
+                    class="rounded-circle border border-3 shadow"
+                    style="width:180px;height:180px;object-fit:cover;">
+
+                <div class="mt-3">
+
+                    <span class="badge bg-success fs-6">
+
+                        {{ paciente.estado }}
+
+                    </span>
+
+                </div>
+
+            </div>
+
+            <!-- DATOS PRINCIPALES -->
+
+            <div class="col-xl-7 col-lg-6">
+
+                <h2 class="fw-bold">
+
+                    {{ paciente.primer_nombre }}
+                    {{ paciente.segundo_nombre }}
+                    {{ paciente.primer_apellido }}
+                    {{ paciente.segundo_apellido }}
+
+                </h2>
+
+                <hr>
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <small class="text-muted">
+
+                            Documento
+
+                        </small>
+
+                        <h6>
+
+                            {{ paciente.tipo_documento }}
+                            {{ paciente.documento }}
+
+                        </h6>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <small class="text-muted">
+
+                            Edad
+
+                        </small>
+
+                        <h6>
+
+                            {{ paciente.edad }}
+
+                        </h6>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <small class="text-muted">
+
+                            Sexo
+
+                        </small>
+
+                        <h6>
+
+                            {{ paciente.sexo }}
+
+                        </h6>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <small class="text-muted">
+
+                            RH
+
+                        </small>
+
+                        <h6>
+
+                            {{ paciente.tipo_sangre }}
+
+                        </h6>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <small class="text-muted">
+
+                            EPS
+
+                        </small>
+
+                        <h6>
+
+                            {{ paciente.eps }}
+
+                        </h6>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <small class="text-muted">
+
+                            Programa
+
+                        </small>
+
+                        <h6>
+
+                            {{ paciente.programa }}
+
+                        </h6>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <small class="text-muted">
+
+                            Dirección
+
+                        </small>
+
+                        <h6>
+
+                            {{ paciente.direccion }}
+
+                        </h6>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <small class="text-muted">
+
+                            Municipio
+
+                        </small>
+
+                        <h6>
+
+                            {{ paciente.municipio }}
+
+                        </h6>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <small class="text-muted">
+
+                            Celular
+
+                        </small>
+
+                        <h6>
+
+                            {{ paciente.celular }}
+
+                        </h6>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- PANEL CLÍNICO -->
+
+            <div class="col-xl-3 col-lg-3">
+
+                <div class="card border-primary">
+
+                    <div class="card-header bg-primary text-white">
+
+                        <strong>
+
+                            Resumen Clínico
+
+                        </strong>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <small class="text-muted">
+
+                            Diagnóstico Principal
+
+                        </small>
+
+                        <p class="fw-bold">
+
+                            {{ paciente.diagnostico_principal or "Sin registrar" }}
+
+                        </p>
+
+                        <small class="text-muted">
+
+                            Profesional Asignado
+
+                        </small>
+
+                        <p>
+
+                            {{ paciente.profesional or "Pendiente" }}
+
+                        </p>
+
+                        <small class="text-muted">
+
+                            Última Visita
+
+                        </small>
+
+                        <p>
+
+                            {{ paciente.ultima_visita or "-" }}
+
+                        </p>
+
+                        <small class="text-muted">
+
+                            Próxima Visita
+
+                        </small>
+
+                        <p>
+
+                            {{ paciente.proxima_visita or "-" }}
+
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

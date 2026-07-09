@@ -1,0 +1,129 @@
+<div class="card shadow-sm border-0">
+
+    <div class="card-header bg-primary text-white">
+
+        <div class="d-flex justify-content-between">
+
+            <strong>
+
+                Acudientes del Paciente
+
+            </strong>
+
+            <a
+                href="/acudientes/nuevo/{{ paciente.id }}"
+                class="btn btn-light btn-sm">
+
+                <i class="fa-solid fa-user-plus"></i>
+
+                Agregar
+
+            </a>
+
+        </div>
+
+    </div>
+
+    <div class="card-body">
+
+        {% if acudientes %}
+
+        <table class="table table-hover">
+
+            <thead>
+
+                <tr>
+
+                    <th>Principal</th>
+
+                    <th>Nombre</th>
+
+                    <th>Parentesco</th>
+
+                    <th>Celular</th>
+
+                    <th>Acciones</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for acudiente in acudientes %}
+
+                <tr>
+
+                    <td>
+
+                        {% if acudiente.es_principal == 1 %}
+
+                        <span class="badge bg-success">
+
+                            Principal
+
+                        </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+
+                        {{ acudiente.nombre }}
+
+                    </td>
+
+                    <td>
+
+                        {{ acudiente.parentesco }}
+
+                    </td>
+
+                    <td>
+
+                        {{ acudiente.telefono_principal }}
+
+                    </td>
+
+                    <td>
+
+                        <a
+                            href="/acudientes/editar/{{ acudiente.id }}"
+                            class="btn btn-warning btn-sm">
+
+                            <i class="fa-solid fa-pen"></i>
+
+                        </a>
+
+                        <a
+                            href="/acudientes/eliminar/{{ acudiente.id }}/{{ paciente.id }}"
+                            class="btn btn-danger btn-sm">
+
+                            <i class="fa-solid fa-trash"></i>
+
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+        {% else %}
+
+        <div class="alert alert-info">
+
+            El paciente aún no tiene acudientes registrados.
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>

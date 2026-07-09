@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Firmar documento — HomeCare Enterprise</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet">
+<style>
+body { background:#f4f6f9; padding:20px; }
+.tarjeta { max-width:500px; margin:0 auto; background:white; border-radius:10px; padding:25px; box-shadow:0 2px 10px rgba(0,0,0,0.1); }
+canvas { touch-action:none; }
+</style>
+</head>
+<body>
+<div class="tarjeta">
+
+    {% if not solicitud %}
+    <div class="alert alert-danger">Este enlace de firma no es válido o ya expiró.</div>
+
+    {% elif solicitud.estado == 'Completada' %}
+    <div class="text-center">
+        <i class="fa-solid fa-circle-check text-success" style="font-size:50px;"></i>
+        <h4 class="mt-3">Documento ya firmado</h4>
+        <p class="text-muted">Este documento ya fue firmado anteriormente. Puede cerrar esta ventana.</p>
+        <img src="{{ solicitud.firma_base64 }}" style="max-height:100px; border:1px solid #dee2e6; background:white;">
+    </div>
+
+    {% else %}
+    <h4 class="text-center mb-3">✍️ Firmar documento</h4>
+    <p class="text-muted text-center small">Complete sus datos y firme con el dedo en el recuadro de abajo.</p>
+
+    <div id="alerta-firma-remota"></div>
+
+    <div class="mb-2">
+        <label>¿Quién firma?</label>
+        <select id="campo-firmante" class="form-select">
+            <option value="Paciente">El paciente</option>
+            <option value="Acudiente/Responsable">Acudiente / Responsable</option>
+        </select>
+    </div>
+    <div class="row mb-2">
+        <div class="col-6"><label>Nombre completo</label><input type="text" id="campo-nombre" class="form-control"></div>
+        <div class="col-6"><label>Documento</label><input type="text" id="campo-documento" class="form-control"></div>
+    </div>
+    <div class="mb-2">
+        <label>Parentesco (si aplica)</label>
+        <input type="text" id="campo-parentesco" class="form-control">
+    </div>
+
+    <label>Su firma</label>
+    <div class="border rounded mb-2">
+        <canvas id="lienzo-firma" width="500" height="200" style="width:100%; height:200px; background:#f8f9fa;"></canvas>
+    </div>
+    <button type="button" class="btn btn-outline-secondary btn-sm mb-3" id="btn-limpiar">Borrar y firmar de nuevo</button>
+    <button type="button" class="btn btn-success w-100" id="btn-enviar">Confirmar firma</button>
+    {% endif %}
+
+</div>
+
+<script>
+{% if solicitud and solicitud.estado != 'Completada' %}
+const lienzo = document.getElementById("lienzo-firma");
+const contexto = lienzo.getContext("2d");
+let dibujando = false;
+
+function posicion(evento) {
+    const rect = lienzo.getBoundingClientRect();
+    const escalaX = lienzo.width / rect.width;
+    const escalaY = lienzo.height / rect.height;
+    const punto = evento.touches ? evento.touches[0] : evento;
+    return { x: (punto.clientX - rect.left) * escalaX, y: (punto.clientY - rect.top) * escalaY };
+}
+
+function iniciar(e) { dibujando = true; const p = posicion(e); contexto.beginPath(); contexto.moveTo(p.x, p.y); e.preventDefault(); }
+function dibujar(e) { if (!dibujando) return; const p = posicion(e); contexto.lineTo(p.x, p.y); contexto.stroke(); e.preventDefault(); }
+function terminar() { dibujando = false; }
+
+lienzo.addEventListener("touchstart", iniciar);
+lienzo.addEventListener("touchmove", dibujar);
+lienzo.addEventListener("touchend", terminar);
+lienzo.addEventListener("mousedown", iniciar);
+lienzo.addEventListener("mousemove", dibujar);
+lienzo.addEventListener("mouseup", terminar);
+
+document.getElementById("btn-limpiar").addEventListener("click", () => {
+    contexto.clearRect(0, 0, lienzo.width, lienzo.height);
+});
+
+document.getElementById("btn-enviar").addEventListener("click", async () => {
+    const cuerpo = {
+        firmante: document.getElementById("campo-firmante").value,
+        nombre_firmante: document.getElementById("campo-nombre").value,
+        documento_firmante: document.getElementById("campo-documento").value,
+        parentesco_firmante: document.getElementById("campo-parentesco").value,
+        firma_base64: lienzo.toDataURL("image/png"),
+    };
+
+    const respuesta = await fetch("/firma-remota/{{ token }}/enviar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cuerpo),
+    });
+    const resultado = await respuesta.json();
+
+    if (resultado.ok) {
+        document.querySelector(".tarjeta").innerHTML = `
+            <div class="text-center">
+                <i class="fa-solid fa-circle-check text-success" style="font-size:50px;"></i>
+                <h4 class="mt-3">¡Firma registrada!</h4>
+                <p class="text-muted">Ya puede cerrar esta ventana.</p>
+            </div>`;
+    } else {
+        document.getElementById("alerta-firma-remota").innerHTML = `<div class="alert alert-danger">${resultado.error}</div>`;
+    }
+});
+{% endif %}
+</script>
+</body>
+</html>

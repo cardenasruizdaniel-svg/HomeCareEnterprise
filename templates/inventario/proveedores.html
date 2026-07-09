@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block titulo %}Proveedores{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-truck text-primary"></i> Proveedores</h2>
+    <a href="/inventario" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver al inventario</a>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h5 class="mb-0">Nuevo proveedor</h5></div>
+                <div class="card-body">
+                    <form method="post" action="/inventario/proveedores/crear">
+                        <div class="mb-2"><label>Nombre / Razón social</label><input type="text" name="nombre" class="form-control" required></div>
+                        <div class="mb-2"><label>NIT</label><input type="text" name="nit" class="form-control"></div>
+                        <div class="mb-2"><label>Persona de contacto</label><input type="text" name="contacto" class="form-control"></div>
+                        <div class="mb-2"><label>Teléfono</label><input type="text" name="telefono" class="form-control"></div>
+                        <div class="mb-2"><label>Correo</label><input type="email" name="correo" class="form-control"></div>
+                        <div class="mb-2"><label>Dirección</label><input type="text" name="direccion" class="form-control"></div>
+                        <button class="btn btn-success w-100">Crear proveedor</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-white"><h5 class="mb-0">Proveedores registrados</h5></div>
+                <div class="card-body">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light"><tr><th>Nombre</th><th>NIT</th><th>Contacto</th><th class="text-center">Estado</th><th></th></tr></thead>
+                        <tbody>
+                            {% for p in proveedores %}
+                            <tr>
+                                <td>{{ p.nombre }}</td>
+                                <td>{{ p.nit or "—" }}</td>
+                                <td>{{ p.contacto or "—" }} {% if p.telefono %}· {{ p.telefono }}{% endif %}</td>
+                                <td class="text-center">
+                                    <span class="badge {% if p.estado == 'Activo' %}bg-success{% else %}bg-secondary{% endif %}">{{ p.estado }}</span>
+                                </td>
+                                <td>
+                                    {% if p.estado == 'Activo' %}
+                                    <a href="/inventario/proveedores/desactivar/{{ p.id }}" class="btn btn-outline-danger btn-sm"
+                                       onclick="return confirm('¿Desactivar este proveedor?');">Desactivar</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="text-center text-muted py-4">Sin proveedores registrados.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

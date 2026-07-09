@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block titulo %}Diagnósticos del Paciente{% endblock %}
+{% block css %}
+<style>
+.hoja-diagnostico { background:white; }
+.editor-observaciones {
+    min-height: 220px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    padding: 14px;
+    font-size: 15px;
+    line-height: 1.6;
+    background: #fff;
+}
+.editor-observaciones:focus { outline: none; border-color: #86b7fe; box-shadow: 0 0 0 .25rem rgba(13,110,253,.25); }
+.editor-observaciones:empty:before {
+    content: attr(data-placeholder);
+    color: #adb5bd;
+}
+.barra-formato .btn { padding: 4px 10px; }
+.tarjeta-diagnostico { border-left: 4px solid #dc3545; }
+.tarjeta-diagnostico.resuelto { border-left-color: #6c757d; opacity: .8; }
+</style>
+{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+
+    {% include "components/volver_paciente.html" %}
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0"><i class="fa-solid fa-stethoscope text-danger"></i> Diagnósticos</h2>
+            <p class="text-muted mb-0">{{ paciente.primer_nombre }} {{ paciente.primer_apellido }} — {{ paciente.tipo_documento }} {{ paciente.documento }}</p>
+        </div>
+        <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#modalNuevoDiagnostico">
+            <i class="fa-solid fa-plus"></i> Nuevo diagnóstico
+        </button>
+    </div>
+
+    <div class="row">
+        {% for d in diagnosticos %}
+        <div class="col-md-6 mb-3">
+            <div class="card shadow-sm tarjeta-diagnostico {% if d.estado != 'Activo' %}resuelto{% endif %}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            {% if d.codigo_cie10 %}<span class="badge bg-danger">{{ d.codigo_cie10 }}</span>{% endif %}
+                            <span class="badge bg-light text-dark">{{ d.tipo }}</span>
+                            {% if d.estado != 'Activo' %}<span class="badge bg-secondary">{{ d.estado }}</span>{% endif %}
+                        </div>
+                        <small class="text-muted">{{ d.fecha_diagnostico }}</small>
+                    </div>
+                    <h5 class="mt-2 mb-1">{{ d.diagnostico }}</h5>
+
+                    {% if d.codigo_cups %}
+                    <div class="small text-muted mb-1">
+                        <i class="fa-solid fa-briefcase-medical"></i> Procedimiento relacionado (CUPS):
+                        <strong>{{ d.codigo_cups }}</strong> — {{ d.descripcion_cups }}
+                    </div>
+                    {% endif %}
+
+                    {% if d.observaciones %}
+                    <div class="border-top pt-2 mt-2 small">{{ d.observaciones | safe }}</div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <small class="text-muted">{{ d.profesional }}{% if d.especialidad %} · {{ d.especialidad }}{% endif %}</small>
+                        {% if d.estado == 'Activo' %}
+                        <a href="/diagnosticos/resolver/{{ d.id }}/{{ paciente_id }}" class="btn btn-outline-success btn-sm">
+                            <i class="fa-solid fa-check"></i> Marcar resuelto
+                        </a>
+                        {% else %}
+                        <a href="/diagnosticos/reactivar/{{ d.id }}/{{ paciente_id }}" class="btn btn-outline-secondary btn-sm">Reactivar</a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body text-center text-muted py-5">
+                    <i class="fa-solid fa-stethoscope fa-2x mb-3 d-block"></i>
+                    Sin diagnósticos registrados todavía. Use el botón "Nuevo diagnóstico" para agregar el primero.
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal de nuevo diagnóstico: pantalla amplia -->
+<div class="modal fade" id="modalNuevoDiagnostico" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content hoja-diagnostico">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title"><i class="fa-solid fa-stethoscope"></i> Nuevo diagnóstico</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="/diagnosticos/asignar" id="form-diagnostico">
+                <div class="modal-body">
+                    <input type="hidden" name="paciente_id" value="{{ paciente_id }}">
+
+                    <div class="row">
+                        <div class="col-md-7 mb-3 position-relative">
+                            <label class="fw-bold">Diagnóstico (CIE-10)</label>
+                            <input type="text" id="buscar-cie10" class="form-control" autocomplete="off"
+                                   placeholder="Escriba el código o el nombre del diagnóstico...">
+                            <div id="resultados-cie10" class="list-group position-absolute w-100" style="z-index:1000; max-height:250px; overflow-y:auto;"></div>
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <label class="fw-bold">Código</label>
+                            <input type="text" name="codigo_cie10" id="campo-codigo-cie10" class="form-control" readonly>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="fw-bold">Tipo</label>
+                            <select name="tipo" class="form-select">
+                                <option value="IMPRESION DIAGNOSTICA">Impresión diagnóstica</option>
+                                <option value="CONFIRMADO">Confirmado</option>
+                                <option value="RELACIONADO">Relacionado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <input type="hidden" name="diagnostico" id="campo-diagnostico" required>
+                    <div id="vista-diagnostico-elegido" class="alert alert-light border small" style="display:none;"></div>
+
+                    <div class="row">
+                        <div class="col-md-7 mb-3 position-relative">
+                            <label class="fw-bold">Procedimiento relacionado (CUPS) <span class="text-muted fw-normal">— opcional</span></label>
+                            <input type="text" id="buscar-cups" class="form-control" autocomplete="off"
+                                   placeholder="Escriba el código o el nombre del procedimiento...">
+                            <div id="resultados-cups" class="list-group position-absolute w-100" style="z-index:1000; max-height:250px; overflow-y:auto;"></div>
+                            <input type="hidden" name="codigo_cups" id="campo-codigo-cups">
+                            <input type="hidden" name="descripcion_cups" id="campo-descripcion-cups">
+                        </div>
+                        <div class="col-md-5 mb-3">
+                            <label class="fw-bold">Fecha del diagnóstico</label>
+                            <input type="date" name="fecha_diagnostico" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="fw-bold">Profesional</label>
+                            <input type="text" name="profesional" class="form-control">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="fw-bold">Especialidad</label>
+                            <input type="text" name="especialidad" class="form-control">
+                        </div>
+                    </div>
+
+                    <label class="fw-bold">Observaciones clínicas</label>
+                    <div class="barra-formato d-flex gap-2 mb-2 flex-wrap">
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatoObs('bold')"><i class="fa-solid fa-bold"></i></button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatoObs('italic')"><i class="fa-solid fa-italic"></i></button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatoObs('underline')"><i class="fa-solid fa-underline"></i></button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatoObs('insertUnorderedList')"><i class="fa-solid fa-list-ul"></i></button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatoObs('insertOrderedList')"><i class="fa-solid fa-list-ol"></i></button>
+                        </div>
+                    </div>
+                    <div id="editor-observaciones" class="editor-observaciones" contenteditable="true"
+                         data-placeholder="Describa hallazgos, plan de manejo, evolución esperada..."></div>
+                    <input type="hidden" name="observaciones" id="campo-observaciones-oculto">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger"><i class="fa-solid fa-check"></i> Guardar diagnóstico</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function formatoObs(comando) {
+    document.execCommand(comando, false, null);
+    document.getElementById("editor-observaciones").focus();
+}
+
+// -------- Buscador CIE-10 --------
+const buscadorCie10 = document.getElementById("buscar-cie10");
+const resultadosCie10 = document.getElementById("resultados-cie10");
+let temporizadorCie10;
+
+buscadorCie10.addEventListener("input", () => {
+    clearTimeout(temporizadorCie10);
+    const texto = buscadorCie10.value.trim();
+    if (texto.length < 2) { resultadosCie10.innerHTML = ""; return; }
+    temporizadorCie10 = setTimeout(async () => {
+        const resp = await fetch(`/diagnosticos/buscar?q=${encodeURIComponent(texto)}`);
+        const datos = await resp.json();
+        resultadosCie10.innerHTML = datos.slice(0, 15).map(d =>
+            `<a href="#" class="list-group-item list-group-item-action" data-codigo="${d.codigo}" data-desc="${d.descripcion}">
+                <strong>${d.codigo}</strong> — ${d.descripcion}
+            </a>`
+        ).join("");
+    }, 300);
+});
+
+resultadosCie10.addEventListener("click", (e) => {
+    e.preventDefault();
+    const item = e.target.closest("[data-codigo]");
+    if (!item) return;
+    document.getElementById("campo-codigo-cie10").value = item.dataset.codigo;
+    document.getElementById("campo-diagnostico").value = item.dataset.desc;
+    buscadorCie10.value = `${item.dataset.codigo} - ${item.dataset.desc}`;
+    resultadosCie10.innerHTML = "";
+    const vista = document.getElementById("vista-diagnostico-elegido");
+    vista.style.display = "block";
+    vista.innerHTML = `<i class="fa-solid fa-check text-success"></i> Diagnóstico seleccionado: <strong>${item.dataset.codigo}</strong> — ${item.dataset.desc}`;
+});
+
+// -------- Buscador CUPS (procedimiento relacionado) --------
+const buscadorCups = document.getElementById("buscar-cups");
+const resultadosCups = document.getElementById("resultados-cups");
+let temporizadorCups;
+
+buscadorCups.addEventListener("input", () => {
+    clearTimeout(temporizadorCups);
+    const texto = buscadorCups.value.trim();
+    if (texto.length < 2) { resultadosCups.innerHTML = ""; return; }
+    temporizadorCups = setTimeout(async () => {
+        const resp = await fetch(`/catalogos/cups/buscar?q=${encodeURIComponent(texto)}`);
+        const datos = await resp.json();
+        resultadosCups.innerHTML = datos.slice(0, 15).map(c =>
+            `<a href="#" class="list-group-item list-group-item-action" data-codigo="${c.codigo}" data-texto="${c.texto}">${c.texto}</a>`
+        ).join("");
+    }, 300);
+});
+
+resultadosCups.addEventListener("click", (e) => {
+    e.preventDefault();
+    const item = e.target.closest("[data-codigo]");
+    if (!item) return;
+    document.getElementById("campo-codigo-cups").value = item.dataset.codigo;
+    document.getElementById("campo-descripcion-cups").value = item.dataset.texto;
+    buscadorCups.value = item.dataset.texto;
+    resultadosCups.innerHTML = "";
+});
+
+document.getElementById("form-diagnostico").addEventListener("submit", (e) => {
+    if (!document.getElementById("campo-diagnostico").value) {
+        e.preventDefault();
+        alert("Debe buscar y seleccionar el diagnóstico (CIE-10) de la lista.");
+        return;
+    }
+    document.getElementById("campo-observaciones-oculto").value = document.getElementById("editor-observaciones").innerHTML;
+});
+</script>
+{% endblock %}

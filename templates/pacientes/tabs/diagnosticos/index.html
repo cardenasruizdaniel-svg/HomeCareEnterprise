@@ -1,0 +1,45 @@
+<div class="container-fluid">
+
+    <!-- ========================================= -->
+    <!-- DIAGNÓSTICO PRINCIPAL -->
+    <!-- ========================================= -->
+
+    {% include "pacientes/tabs/diagnosticos/principal.html" %}
+
+    <div class="row">
+
+        <!-- ========================================= -->
+        <!-- DIAGNÓSTICOS SECUNDARIOS -->
+        <!-- ========================================= -->
+
+        <div class="col-lg-5">
+
+            {% include "pacientes/tabs/diagnosticos/secundarios.html" %}
+
+        </div>
+
+        <!-- ========================================= -->
+        <!-- TIMELINE -->
+        <!-- ========================================= -->
+
+        <div class="col-lg-7">
+
+            {% include "pacientes/tabs/diagnosticos/timeline.html" %}
+
+        </div>
+
+    </div>
+
+    <!-- ========================================= -->
+    <!-- FORMULARIO -->
+    <!-- ========================================= -->
+
+    {% include "pacientes/tabs/diagnosticos/formulario.html" %}
+
+    <!-- ========================================= -->
+    <!-- MODAL CIE10 -->
+    <!-- ========================================= -->
+
+    {% include "pacientes/tabs/diagnosticos/modal_busqueda.html" %}
+
+</div>

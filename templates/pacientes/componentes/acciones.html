@@ -1,0 +1,231 @@
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-dark text-white">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+
+                <i class="fa-solid fa-bolt"></i>
+
+                Acciones Rápidas
+
+            </h5>
+
+            <span class="badge bg-warning text-dark">
+
+                HomeCare IPS
+
+            </span>
+
+        </div>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row g-3">
+
+            <!-- EDITAR -->
+
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+
+                <a href="/pacientes/editar/{{ paciente.id }}"
+                   class="btn btn-warning w-100 py-3">
+
+                    <i class="fa-solid fa-user-pen fa-2x mb-2"></i>
+
+                    <br>
+
+                    Editar
+
+                </a>
+
+            </div>
+
+            <!-- PROGRAMAR -->
+
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+
+                <a href="/programacion/nueva/{{ paciente.id }}"
+                   class="btn btn-primary w-100 py-3">
+
+                    <i class="fa-solid fa-calendar-plus fa-2x mb-2"></i>
+
+                    <br>
+
+                    Programar
+
+                </a>
+
+            </div>
+
+            <!-- VISITA -->
+
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+
+                <a href="/visitas/nueva/{{ paciente.id }}"
+                   class="btn btn-success w-100 py-3">
+
+                    <i class="fa-solid fa-house-medical fa-2x mb-2"></i>
+
+                    <br>
+
+                    Visita
+
+                </a>
+
+            </div>
+
+            <!-- EVOLUCIÓN -->
+
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+
+                <a href="/evoluciones/nueva/{{ paciente.id }}"
+                   class="btn btn-info text-white w-100 py-3">
+
+                    <i class="fa-solid fa-notes-medical fa-2x mb-2"></i>
+
+                    <br>
+
+                    Evolución
+
+                </a>
+
+            </div>
+
+            <!-- SIGNOS -->
+
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+
+                <a href="/signos/nuevo/{{ paciente.id }}"
+                   class="btn btn-danger w-100 py-3">
+
+                    <i class="fa-solid fa-heart-pulse fa-2x mb-2"></i>
+
+                    <br>
+
+                    Signos
+
+                </a>
+
+            </div>
+
+            <!-- MEDICAMENTOS -->
+
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+
+                <a href="/medicamentos/{{ paciente.id }}"
+                   class="btn btn-secondary w-100 py-3">
+
+                    <i class="fa-solid fa-pills fa-2x mb-2"></i>
+
+                    <br>
+
+                    Medicación
+
+                </a>
+
+            </div>
+
+        </div>
+
+        <hr>
+
+        <div class="row g-3 mt-1">
+
+            <!-- DOCUMENTOS -->
+
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+
+                <a href="/documentos/{{ paciente.id }}"
+                   class="btn btn-outline-primary w-100">
+
+                    <i class="fa-solid fa-folder-open"></i>
+
+                    Documentos
+
+                </a>
+
+            </div>
+
+            <!-- FIRMAS -->
+
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+
+                <a href="/firmas/{{ paciente.id }}"
+                   class="btn btn-outline-success w-100">
+
+                    <i class="fa-solid fa-signature"></i>
+
+                    Firmas
+
+                </a>
+
+            </div>
+
+            <!-- MAPA -->
+
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+
+                <a href="/mapa/{{ paciente.id }}"
+                   class="btn btn-outline-danger w-100">
+
+                    <i class="fa-solid fa-location-dot"></i>
+
+                    Ubicación
+
+                </a>
+
+            </div>
+
+            <!-- IMPRIMIR -->
+
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+
+                <a href="/pacientes/imprimir/{{ paciente.id }}"
+                   class="btn btn-outline-dark w-100">
+
+                    <i class="fa-solid fa-print"></i>
+
+                    Imprimir HC
+
+                </a>
+
+            </div>
+
+            <!-- FACTURACIÓN -->
+
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+
+                <a href="/facturacion/{{ paciente.id }}"
+                   class="btn btn-outline-warning w-100">
+
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+
+                    Facturación
+
+                </a>
+
+            </div>
+
+            <!-- AUDITORÍA -->
+
+            <div class="col-xl-2 col-lg-3 col-md-4 col-sm-6">
+
+                <a href="/auditoria/{{ paciente.id }}"
+                   class="btn btn-outline-secondary w-100">
+
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+
+                    Auditoría
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

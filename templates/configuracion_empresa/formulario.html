@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block titulo %}Configuración de la Empresa{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-building text-primary"></i> Configuración de la Empresa</h2>
+    <p class="text-muted">Estos datos aparecen automáticamente en el membrete de todos los reportes impresos: consentimientos informados, informes de historia clínica, y demás documentos oficiales.</p>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+    {% if request.query_params.get('guardado') %}<div class="alert alert-success">Configuración guardada correctamente.</div>{% endif %}
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form method="post" action="/configuracion-empresa/guardar" id="form-config-empresa">
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label class="fw-bold">Razón social <span class="text-danger">*</span></label>
+                                <input type="text" name="razon_social" class="form-control" value="{{ config.razon_social }}" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="fw-bold">NIT</label>
+                                <input type="text" name="nit" class="form-control" value="{{ config.nit or '' }}">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">N.° de resolución de habilitación</label>
+                            <input type="text" name="resolucion_habilitacion" class="form-control" value="{{ config.resolucion_habilitacion or '' }}"
+                                   placeholder="Ej: Resolución 001234 de 2024 - Habilitación de Servicios de Salud">
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Dirección</label>
+                            <input type="text" name="direccion" class="form-control" value="{{ config.direccion or '' }}">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="fw-bold">Ciudad</label>
+                                <input type="text" name="ciudad" class="form-control" value="{{ config.ciudad or '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="fw-bold">Departamento</label>
+                                <input type="text" name="departamento" class="form-control" value="{{ config.departamento or '' }}">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="fw-bold">Teléfono</label>
+                                <input type="text" name="telefono" class="form-control" value="{{ config.telefono or '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="fw-bold">Correo</label>
+                                <input type="email" name="correo" class="form-control" value="{{ config.correo or '' }}">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="fw-bold">Representante legal</label>
+                            <input type="text" name="representante_legal" class="form-control" value="{{ config.representante_legal or '' }}">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="fw-bold">Logo de la empresa</label>
+                            <input type="file" accept="image/*" class="form-control" id="campo-logo-archivo">
+                            <input type="hidden" name="logo_base64" id="campo-logo-oculto">
+                            <small class="text-muted">Solo súbalo si quiere cambiar el logo actual; si lo deja vacío, se conserva el que ya tiene.</small>
+                        </div>
+
+                        <button class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i> Guardar configuración</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow">
+                <div class="card-header bg-white"><h6 class="mb-0">Logo actual</h6></div>
+                <div class="card-body text-center">
+                    {% if config.logo_base64 %}
+                    <img src="{{ config.logo_base64 }}" style="max-width:100%; max-height:200px;">
+                    {% else %}
+                    <p class="text-muted">Sin logo cargado — se usará el logo genérico del sistema.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById("campo-logo-archivo").addEventListener("change", (e) => {
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = () => {
+        document.getElementById("campo-logo-oculto").value = lector.result;
+    };
+    lector.readAsDataURL(archivo);
+});
+</script>
+{% endblock %}

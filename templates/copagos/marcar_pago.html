@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block contenido %}
+<div class="container-fluid">
+
+{% include "components/volver_paciente.html" %}
+
+    <div class="card shadow">
+        <div class="card-header bg-success text-white"><h3 class="mb-0">Registrar pago del copago</h3></div>
+        <div class="card-body">
+            <form method="post" action="/copagos/marcar-pagado/{{ copago_id }}/{{ paciente_id }}">
+                <div class="mb-3">
+                    <label>Método de pago</label>
+                    <select name="metodo_pago" class="form-select" required>
+                        <option>Efectivo</option>
+                        <option>Transferencia</option>
+                        <option>Tarjeta débito</option>
+                        <option>Tarjeta crédito</option>
+                        <option>PSE</option>
+                    </select>
+                </div>
+                <div class="form-check mb-3">
+                    <input type="checkbox" name="generar_factura" value="true" class="form-check-input" id="genfact" checked>
+                    <label class="form-check-label" for="genfact">Generar factura electrónica y enviarla al paciente por correo</label>
+                </div>
+                <button class="btn btn-success"><i class="fa-solid fa-check"></i> Confirmar pago</button>
+                <a href="/copagos/{{ paciente_id }}" class="btn btn-secondary">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,45 @@
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-light">
+        <h5 class="mb-0">
+            <i class="fa-solid fa-user-nurse text-primary"></i>
+            Profesional Asignado
+        </h5>
+    </div>
+
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8 mb-3">
+                <label class="form-label">Profesional</label>
+                <select class="form-select" name="profesional_id" required>
+                    <option value="">-- Seleccione --</option>
+                    {% for p in profesionales %}
+                    <option value="{{ p.id }}">
+                        {{ p.nombre_completo or p.nombre }} — {{ p.especialidad_principal or p.profesion }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Servicio</label>
+                <select class="form-select" name="servicio" required>
+                    <option value="">-- Seleccione --</option>
+                    <option>Enfermería</option>
+                    <option>Medicina General</option>
+                    <option>Medicina Especializada</option>
+                    <option>Cuidador</option>
+                    <option>Fisioterapia</option>
+                    <option>Terapia Respiratoria</option>
+                    <option>Terapia Ocupacional</option>
+                    <option>Fonoaudiología</option>
+                    <option>Psicología</option>
+                    <option>Nutrición y Dietética</option>
+                    <option>Salud Ocupacional</option>
+                    <option>Toma de muestras</option>
+                    <option>Aplicación de medicamentos</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+</div>

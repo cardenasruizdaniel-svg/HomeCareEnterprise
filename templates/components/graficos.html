@@ -1,0 +1,41 @@
+<div class="card shadow">
+
+    <div class="card-header">
+
+        <h5>📈 Actividad General</h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <canvas id="graficoVisitas"></canvas>
+
+    </div>
+
+</div>
+
+<script>
+
+const ctx=document.getElementById("graficoVisitas");
+
+new Chart(ctx,{
+
+type:"bar",
+
+data:{
+
+labels:["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"],
+
+datasets:[{
+
+label:"Visitas",
+
+data:[15,21,18,25,16,10,5]
+
+}]
+
+}
+
+});
+
+</script>

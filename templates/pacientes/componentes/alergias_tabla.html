@@ -1,0 +1,241 @@
+<div class="card shadow border-0">
+
+    <div class="card-header bg-danger text-white">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+
+                <i class="fa-solid fa-list"></i>
+
+                Historial de Alergias
+
+            </h5>
+
+            <input
+                type="text"
+                id="buscarAlergia"
+                class="form-control"
+                style="width:280px"
+                placeholder="Buscar alergia...">
+
+        </div>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="table-responsive">
+
+            <table
+                class="table table-hover align-middle"
+                id="tablaAlergias">
+
+                <thead class="table-light">
+
+                    <tr>
+
+                        <th width="120">Tipo</th>
+
+                        <th>Alérgeno</th>
+
+                        <th width="140">Severidad</th>
+
+                        <th width="120">Estado</th>
+
+                        <th>Reacción</th>
+
+                        <th width="120">Fecha</th>
+
+                        <th width="150">Acciones</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for item in alergias %}
+
+                    <tr>
+
+                        <td>
+
+                            {% if item.tipo=="MED" %}
+                                <span class="badge bg-primary">
+                                    Medicamento
+                                </span>
+
+                            {% elif item.tipo=="ALI" %}
+                                <span class="badge bg-success">
+                                    Alimento
+                                </span>
+
+                            {% elif item.tipo=="LAT" %}
+                                <span class="badge bg-warning text-dark">
+                                    Látex
+                                </span>
+
+                            {% elif item.tipo=="CON" %}
+                                <span class="badge bg-info">
+                                    Contraste
+                                </span>
+
+                            {% elif item.tipo=="PIC" %}
+                                <span class="badge bg-secondary">
+                                    Picadura
+                                </span>
+
+                            {% elif item.tipo=="AMB" %}
+                                <span class="badge bg-dark">
+                                    Ambiental
+                                </span>
+
+                            {% else %}
+                                <span class="badge bg-light text-dark">
+                                    Otro
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            <strong>
+
+                                {{ item.alergeno }}
+
+                            </strong>
+
+                        </td>
+
+                        <td>
+
+                            {% if item.severidad=="Leve" %}
+
+                                <span class="badge bg-success">
+
+                                    🟢 Leve
+
+                                </span>
+
+                            {% elif item.severidad=="Moderada" %}
+
+                                <span class="badge bg-warning text-dark">
+
+                                    🟡 Moderada
+
+                                </span>
+
+                            {% elif item.severidad=="Grave" %}
+
+                                <span class="badge bg-danger">
+
+                                    🟠 Grave
+
+                                </span>
+
+                            {% elif item.severidad=="Anafilaxia" %}
+
+                                <span class="badge bg-dark">
+
+                                    🔴 Anafilaxia
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {% if item.estado=="Activa" %}
+
+                                <span class="badge bg-danger">
+
+                                    Activa
+
+                                </span>
+
+                            {% elif item.estado=="Inactiva" %}
+
+                                <span class="badge bg-secondary">
+
+                                    Inactiva
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-light text-dark">
+
+                                    Descartada
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {{ item.reaccion }}
+
+                        </td>
+
+                        <td>
+
+                            {{ item.fecha_diagnostico }}
+
+                        </td>
+
+                        <td>
+
+                            <a
+
+                                href="/alergias/editar/{{ item.id }}"
+
+                                class="btn btn-warning btn-sm">
+
+                                <i class="fa-solid fa-pen"></i>
+
+                            </a>
+
+                            <a
+
+                                href="/alergias/estado/{{ item.id }}/Inactiva/{{ paciente.id }}"
+
+                                class="btn btn-info btn-sm">
+
+                                <i class="fa-solid fa-power-off"></i>
+
+                            </a>
+
+                            <a
+
+                                href="/alergias/eliminar/{{ item.id }}/{{ paciente.id }}"
+
+                                class="btn btn-danger btn-sm"
+
+                                onclick="return confirm('¿Eliminar esta alergia?')">
+
+                                <i class="fa-solid fa-trash"></i>
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>

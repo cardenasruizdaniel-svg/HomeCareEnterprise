@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block titulo %}Programación Mensual{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-calendar-days text-primary"></i> Programación Mensual (Cuidadores)</h2>
+    <p class="text-muted">
+        Para profesionales con horario fijo variable dentro del mes (por ejemplo, cuidadores que trabajan distintas
+        horas del día, incluso con pacientes distintos el mismo día). Agregue todos los turnos del mes de una vez;
+        las horas se contabilizarán para nómina según lo que el profesional marque realmente al llegar y salir de
+        cada turno.
+    </p>
+
+    <div id="alerta-resultado"></div>
+
+    <div class="card shadow mb-3">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>Profesional (cuidador)</label>
+                    <select id="profesional_id" class="form-select" required>
+                        <option value="">-- Seleccione --</option>
+                        {% for p in profesionales %}
+                        <option value="{{ p.id }}">{{ p.nombre_completo }} ({{ p.especialidad_principal }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-3 d-flex align-items-end">
+                    <button type="button" class="btn btn-primary w-100" id="btn-agregar-turno">
+                        <i class="fa-solid fa-plus"></i> Agregar turno
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle" id="tabla-turnos">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Hora inicio</th>
+                            <th>Hora fin</th>
+                            <th>Paciente</th>
+                            <th>Servicio</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-tabla-turnos"></tbody>
+                </table>
+            </div>
+            <button type="button" class="btn btn-success" id="btn-guardar-mes">
+                <i class="fa-solid fa-floppy-disk"></i> Guardar toda la programación del mes
+            </button>
+            <a href="/programacion" class="btn btn-secondary">Cancelar</a>
+        </div>
+    </div>
+</div>
+
+<datalist id="lista-pacientes">
+    {% for p in pacientes %}
+    <option value="{{ p.documento }} - {{ p.primer_nombre }} {{ p.primer_apellido }}" data-id="{{ p.id }}"></option>
+    {% endfor %}
+</datalist>
+
+<script>
+let contadorFilas = 0;
+
+function agregarFila() {
+    contadorFilas++;
+    const cuerpo = document.getElementById("cuerpo-tabla-turnos");
+    const fila = document.createElement("tr");
+    fila.dataset.fila = contadorFilas;
+    fila.innerHTML = `
+        <td><input type="date" class="form-control form-control-sm campo-fecha" required></td>
+        <td><input type="time" class="form-control form-control-sm campo-hora-inicio" required></td>
+        <td><input type="time" class="form-control form-control-sm campo-hora-fin" required></td>
+        <td>
+            <input type="text" class="form-control form-control-sm campo-paciente-texto" list="lista-pacientes"
+                   placeholder="Documento o nombre..." required>
+            <input type="hidden" class="campo-paciente-id">
+        </td>
+        <td><input type="text" class="form-control form-control-sm campo-servicio" placeholder="Cuidado domiciliario" value="Cuidado domiciliario"></td>
+        <td class="text-center">
+            <button type="button" class="btn btn-outline-danger btn-sm btn-quitar-fila"><i class="fa-solid fa-trash"></i></button>
+        </td>
+    `;
+    cuerpo.appendChild(fila);
+
+    const inputPaciente = fila.querySelector(".campo-paciente-texto");
+    const inputPacienteId = fila.querySelector(".campo-paciente-id");
+
+    inputPaciente.addEventListener("input", () => {
+        const opciones = document.querySelectorAll("#lista-pacientes option");
+        let encontrado = "";
+        opciones.forEach((op) => {
+            if (op.value === inputPaciente.value) {
+                encontrado = op.dataset.id;
+            }
+        });
+        inputPacienteId.value = encontrado;
+    });
+
+    fila.querySelector(".btn-quitar-fila").addEventListener("click", () => fila.remove());
+}
+
+document.getElementById("btn-agregar-turno").addEventListener("click", agregarFila);
+agregarFila(); // arrancar con una fila lista
+
+document.getElementById("btn-guardar-mes").addEventListener("click", async () => {
+    const profesionalId = document.getElementById("profesional_id").value;
+    const alerta = document.getElementById("alerta-resultado");
+
+    if (!profesionalId) {
+        alerta.innerHTML = `<div class="alert alert-danger">Debe seleccionar el profesional.</div>`;
+        return;
+    }
+
+    const filas = document.querySelectorAll("#cuerpo-tabla-turnos tr");
+    const turnos = [];
+
+    for (const fila of filas) {
+        const pacienteId = fila.querySelector(".campo-paciente-id").value;
+        turnos.push({
+            fecha: fila.querySelector(".campo-fecha").value,
+            hora_inicio: fila.querySelector(".campo-hora-inicio").value,
+            hora_fin: fila.querySelector(".campo-hora-fin").value,
+            paciente_id: pacienteId ? parseInt(pacienteId) : null,
+            servicio: fila.querySelector(".campo-servicio").value,
+        });
+    }
+
+    if (turnos.length === 0) {
+        alerta.innerHTML = `<div class="alert alert-danger">Agregue al menos un turno.</div>`;
+        return;
+    }
+
+    const respuesta = await fetch("/programacion/mensual/crear", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profesional_id: profesionalId, turnos: turnos }),
+    });
+
+    const resultado = await respuesta.json();
+
+    if (resultado.error) {
+        alerta.innerHTML = `<div class="alert alert-danger">${resultado.error}</div>`;
+        return;
+    }
+
+    let html = `<div class="alert alert-success">Se crearon ${resultado.creados} de ${resultado.total} turnos correctamente.</div>`;
+
+    if (resultado.errores && resultado.errores.length > 0) {
+        html += `<div class="alert alert-warning"><strong>Turnos con error:</strong><ul class="mb-0">`;
+        resultado.errores.forEach((e) => {
+            html += `<li>Fila ${e.turno} (${e.fecha}): ${e.error}</li>`;
+        });
+        html += `</ul></div>`;
+    }
+
+    alerta.innerHTML = html;
+});
+</script>
+{% endblock %}

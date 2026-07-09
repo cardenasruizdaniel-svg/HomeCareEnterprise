@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+
+{% include "components/volver_paciente.html" %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2>
+
+                <i class="fa-solid fa-users"></i>
+
+                Acudientes
+
+            </h2>
+
+            <small class="text-muted">
+
+                Gestión de responsables del paciente
+
+            </small>
+
+        </div>
+
+        <a
+            href="/acudientes/nuevo/{{ paciente_id }}"
+            class="btn btn-primary">
+
+            <i class="fa-solid fa-user-plus"></i>
+
+            Nuevo Acudiente
+
+        </a>
+
+    </div>
+
+    <div class="card shadow">
+
+        <div class="card-body">
+
+            <table class="table table-hover align-middle">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Principal</th>
+
+                        <th>Nombre</th>
+
+                        <th>Parentesco</th>
+
+                        <th>Teléfono</th>
+
+                        <th>Correo</th>
+
+                        <th>Estado</th>
+
+                        <th width="220">Acciones</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for acudiente in acudientes %}
+
+                    <tr>
+
+                        <td>
+
+                            {% if acudiente.es_principal == 1 %}
+
+                            <span class="badge bg-success">
+
+                                Principal
+
+                            </span>
+
+                            {% else %}
+
+                            <a
+                                href="/acudientes/principal/{{ acudiente.id }}/{{ paciente_id }}"
+                                class="btn btn-outline-success btn-sm">
+
+                                Definir
+
+                            </a>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>{{ acudiente.nombre }}</td>
+
+                        <td>{{ acudiente.parentesco }}</td>
+
+                        <td>{{ acudiente.telefono_principal }}</td>
+
+                        <td>{{ acudiente.correo }}</td>
+
+                        <td>
+
+                            <span class="badge bg-primary">
+
+                                {{ acudiente.estado }}
+
+                            </span>
+
+                        </td>
+
+                        <td>
+
+                            <a
+                                href="/acudientes/editar/{{ acudiente.id }}"
+                                class="btn btn-warning btn-sm">
+
+                                <i class="fa-solid fa-pen"></i>
+
+                            </a>
+
+                            <a
+                                href="/acudientes/eliminar/{{ acudiente.id }}/{{ paciente_id }}"
+                                class="btn btn-danger btn-sm">
+
+                                <i class="fa-solid fa-trash"></i>
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

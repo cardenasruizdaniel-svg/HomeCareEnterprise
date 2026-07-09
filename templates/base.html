@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>{% block titulo %}HomeCare Enterprise{% endblock %}</title>
+
+    <!-- Bootstrap (guardado localmente: en algunas redes/equipos
+         el CDN externo queda bloqueado, y sin esto NINGÚN botón,
+         modal o ventana emergente del programa funciona) -->
+    <link href="/static/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- IMPORTANTE: el JS de Bootstrap se carga aquí, en el <head>,
+         y NO al final de la página. Si se carga al final, las
+         pantallas que usan "new bootstrap.Modal(...)" en su propio
+         script (que se renderiza ANTES, dentro del contenido) fallan
+         con "bootstrap is not defined", porque ese script se
+         ejecuta antes de que Bootstrap termine de cargar. Al
+         ponerlo aquí, sin defer/async, el navegador lo descarga y
+         ejecuta ANTES de dibujar el resto de la página, garantizando
+         que "bootstrap" ya existe para cualquier pantalla. -->
+    <script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
+    <!-- Animate -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+    <!-- Estilos propios -->
+    <link rel="stylesheet" href="/static/css/style.css">
+
+    {% block css %}{% endblock %}
+
+</head>
+<body class="bg-light">
+
+    {% include "components/sidebar.html" %}
+
+    {% include "components/navbar.html" %}
+
+    <div class="contenido-principal">
+
+        {% block contenido %}{% endblock %}
+
+    </div>
+
+    {% include "components/footer.html" %}
+
+    {% include "modales/buscar_paciente.html" %}
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="/static/js/buscar_pacientes.js"></script>
+
+    <script>
+    // Protección: si una pantalla anterior dejó un fondo oscuro de
+    // modal "pegado" (por ejemplo, si se navegó fuera de la página
+    // mientras un modal se estaba cerrando), esto lo limpia al
+    // cargar cada nueva página para que no bloquee los clics.
+    (function () {
+        document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+        document.body.classList.remove("modal-open");
+        document.body.style.removeProperty("overflow");
+        document.body.style.removeProperty("padding-right");
+    })();
+
+    // Salida de emergencia: si algún modal se queda "trabado"
+    // (fondo oscuro sin poder interactuar con nada), presionar
+    // la tecla ESC dos veces seguidas fuerza a cerrarlo y limpiar
+    // la pantalla, sin importar la causa exacta del problema.
+    let _ultimoEscape = 0;
+    document.addEventListener("keydown", function (evento) {
+        if (evento.key !== "Escape") return;
+        const ahora = Date.now();
+        if (ahora - _ultimoEscape < 800) {
+            document.querySelectorAll(".modal").forEach((modal) => {
+                try {
+                    const instancia = bootstrap.Modal.getInstance(modal);
+                    if (instancia) instancia.hide();
+                } catch (error) { /* Bootstrap no disponible, se limpia igual abajo */ }
+                modal.classList.remove("show");
+                modal.style.display = "none";
+                modal.setAttribute("aria-hidden", "true");
+            });
+            document.querySelectorAll(".modal-backdrop").forEach((el) => el.remove());
+            document.body.classList.remove("modal-open");
+            document.body.style.removeProperty("overflow");
+            document.body.style.removeProperty("padding-right");
+        }
+        _ultimoEscape = ahora;
+    });
+    </script>
+
+    {% block javascript %}{% endblock %}
+
+</body>
+</html>

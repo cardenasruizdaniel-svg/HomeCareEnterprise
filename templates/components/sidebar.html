@@ -1,0 +1,187 @@
+<div class="sidebar">
+
+    <div class="sidebar-header">
+        <img src="/static/img/logo_homecare.png" alt="HomeCare del Quindío I.P.S." class="logo">
+        <h4 class="mb-0" style="font-size:16px">
+            <span style="color:#00c2b8">Home</span><span style="color:#ff3399">Care</span>
+        </h4>
+        <small>del Quindío I.P.S.</small>
+    </div>
+
+    <ul class="menu">
+
+        <li>
+            <a href="/">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+
+        <li>
+            <a href="/mi-agenda">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>Mi Agenda</span>
+            </a>
+        </li>
+
+        {% if usuario and (tiene_permiso(usuario.rol, "pacientes") or tiene_permiso(usuario.rol, "programacion")) %}
+        <li class="menu-title">Atención domiciliaria</li>
+        {% endif %}
+
+        {% if usuario and tiene_permiso(usuario.rol, "pacientes") %}
+        <li>
+            <a href="/pacientes">
+                <i class="fa-solid fa-user-injured"></i>
+                <span>Pacientes</span>
+            </a>
+        </li>
+        <li>
+            <a href="/programas-atencion">
+                <i class="fa-solid fa-layer-group"></i>
+                <span>Programas de Atención</span>
+            </a>
+        </li>
+        {% endif %}
+
+        {% if usuario and tiene_permiso(usuario.rol, "programacion") %}
+        <li>
+            <a href="/programacion">
+                <i class="fa-solid fa-calendar-check"></i>
+                <span>Agenda / Programación</span>
+            </a>
+        </li>
+        <li>
+            <a href="/turnos">
+                <i class="fa-solid fa-clock"></i>
+                <span>Calendario de Turnos</span>
+            </a>
+        </li>
+        <li>
+            <a href="/programacion/mensual">
+                <i class="fa-solid fa-calendar-days"></i>
+                <span>Programación Mensual</span>
+            </a>
+        </li>
+        <li>
+            <a href="/plantillas-visita">
+                <i class="fa-solid fa-file-lines"></i>
+                <span>Plantillas de Visita</span>
+            </a>
+        </li>
+        {% if usuario and tiene_permiso(usuario.rol, "inventario") %}
+        <li>
+            <a href="/inventario">
+                <i class="fa-solid fa-boxes-stacked"></i>
+                <span>Inventario de Insumos</span>
+            </a>
+        </li>
+        {% endif %}
+        {% endif %}
+
+        {% if usuario and (tiene_permiso(usuario.rol, "profesionales") or tiene_permiso(usuario.rol, "usuarios")) %}
+        <li class="menu-title">Personal</li>
+        {% endif %}
+
+        {% if usuario and tiene_permiso(usuario.rol, "profesionales") %}
+        <li>
+            <a href="/profesionales">
+                <i class="fa-solid fa-user-nurse"></i>
+                <span>Profesionales</span>
+            </a>
+        </li>
+        {% endif %}
+
+        {% if usuario and tiene_permiso(usuario.rol, "usuarios") %}
+        <li>
+            <a href="/usuarios">
+                <i class="fa-solid fa-users-gear"></i>
+                <span>Usuarios</span>
+            </a>
+        </li>
+        <li>
+            <a href="/configuracion-empresa">
+                <i class="fa-solid fa-building"></i>
+                <span>Configuración de la Empresa</span>
+            </a>
+        </li>
+        {% endif %}
+
+        {% if usuario and tiene_permiso(usuario.rol, "nomina") %}
+        <li class="menu-title">Nómina</li>
+        <li>
+            <a href="/nomina">
+                <i class="fa-solid fa-money-check-dollar"></i>
+                <span>Nómina</span>
+            </a>
+        </li>
+        <li>
+            <a href="/cargos">
+                <i class="fa-solid fa-id-badge"></i>
+                <span>Cargos</span>
+            </a>
+        </li>
+        <li>
+            <a href="/contratos">
+                <i class="fa-solid fa-file-signature"></i>
+                <span>Contratos</span>
+            </a>
+        </li>
+        {% endif %}
+
+        {% if usuario and (tiene_permiso(usuario.rol, "facturacion") or tiene_permiso(usuario.rol, "rips") or tiene_permiso(usuario.rol, "interoperabilidad") or tiene_permiso(usuario.rol, "catalogos")) %}
+        <li class="menu-title">Facturación y Cumplimiento</li>
+        {% endif %}
+
+        {% if usuario and tiene_permiso(usuario.rol, "facturacion") %}
+        <li>
+            <a href="/facturacion">
+                <i class="fa-solid fa-file-invoice"></i>
+                <span>Facturación Electrónica</span>
+            </a>
+        </li>
+        {% endif %}
+
+        {% if usuario and tiene_permiso(usuario.rol, "rips") %}
+        <li>
+            <a href="/rips">
+                <i class="fa-solid fa-file-medical"></i>
+                <span>RIPS</span>
+            </a>
+        </li>
+        {% endif %}
+
+        {% if usuario and tiene_permiso(usuario.rol, "interoperabilidad") %}
+        <li>
+            <a href="/interoperabilidad">
+                <i class="fa-solid fa-share-nodes"></i>
+                <span>Interoperabilidad</span>
+            </a>
+        </li>
+        {% endif %}
+
+        {% if usuario and tiene_permiso(usuario.rol, "catalogos") %}
+        <li>
+            <a href="/catalogos">
+                <i class="fa-solid fa-book"></i>
+                <span>Catálogos Oficiales</span>
+            </a>
+        </li>
+        {% endif %}
+
+        <li class="menu-title">Otros</li>
+        <li>
+            <a href="/app/" target="_blank">
+                <i class="fa-solid fa-mobile-screen"></i>
+                <span>App Móvil de Campo</span>
+            </a>
+        </li>
+        <li>
+            <a href="/logout">
+                <i class="fa-solid fa-right-from-bracket"></i>
+                <span>Cerrar sesión</span>
+            </a>
+        </li>
+
+    </ul>
+
+</div>

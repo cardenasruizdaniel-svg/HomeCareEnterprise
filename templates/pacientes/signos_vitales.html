@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    {% include "pacientes/componentes/signos_vitales_form.html" %}
+
+    {% include "pacientes/componentes/signos_vitales_tabla.html" %}
+
+</div>
+
+{% endblock %}

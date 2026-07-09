@@ -1,0 +1,631 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid mt-4">
+
+    <div class="row mb-4">
+
+        <div class="col-12">
+
+            <h2 class="fw-bold">
+                Dashboard Ejecutivo
+            </h2>
+
+            <p class="text-muted">
+                HomeCare Enterprise
+            </p>
+
+        </div>
+
+        <div class="row g-4">
+
+    <!-- Pacientes -->
+    <div class="col-xl-3 col-md-6">
+
+        <div class="card shadow-sm border-0 rounded-4">
+
+            <div class="card-body">
+
+                <h6 class="text-secondary">
+                    👥 Pacientes
+                </h6>
+
+                <h2 class="fw-bold">
+                    {{ dashboard.indicadores.pacientes.texto }}
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Profesionales -->
+    <div class="col-xl-3 col-md-6">
+
+        <div class="card shadow-sm border-0 rounded-4">
+
+            <div class="card-body">
+
+                <h6 class="text-secondary">
+                    👨‍⚕️ Profesionales
+                </h6>
+
+                <h2 class="fw-bold">
+                    {{ dashboard.indicadores.profesionales.texto }}
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Visitas -->
+    <div class="col-xl-3 col-md-6">
+
+        <div class="card shadow-sm border-0 rounded-4">
+
+            <div class="card-body">
+
+                <h6 class="text-secondary">
+                    📅 Visitas Hoy
+                </h6>
+
+                <h2 class="fw-bold">
+                    {{ dashboard.indicadores.visitas_hoy.texto }}
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Pendientes -->
+    <div class="col-xl-3 col-md-6">
+
+        <div class="card shadow-sm border-0 rounded-4">
+
+            <div class="card-body">
+
+                <h6 class="text-secondary">
+                    🚨 Pendientes
+                </h6>
+
+                <h2 class="fw-bold">
+                    {{ dashboard.indicadores.pendientes.texto }}
+                </h2>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+    </div>
+
+<!-- ===================================================== -->
+<!-- PRODUCCIÓN MENSUAL -->
+<!-- ===================================================== -->
+
+<div class="row mt-4">
+
+    <div class="col-12">
+
+        <div class="card shadow-sm border-0 rounded-4">
+
+            <div class="card-header bg-white">
+
+                <h5 class="mb-0">
+
+                    📈 Producción Mensual
+
+                </h5>
+
+            </div>
+
+            <div class="card-body">
+
+                <canvas id="graficoProduccion"
+                        height="120"></canvas>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+</div>
+
+<!-- ===================================================== -->
+<!-- AGENDA Y ALERTAS -->
+<!-- ===================================================== -->
+
+<div class="row mt-4">
+
+    <!-- Agenda -->
+    <div class="col-lg-8">
+
+        <div class="card shadow-sm border-0 rounded-4">
+
+            <div class="card-header bg-white">
+
+                <h5 class="mb-0">
+                    📅 Agenda del Día
+                </h5>
+
+            </div>
+
+            <div class="card-body">
+
+                {% if dashboard.agenda.datos %}
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Hora</th>
+                                <th>Paciente</th>
+                                <th>Profesional</th>
+                                <th>Estado</th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                        {% for visita in dashboard.agenda.datos %}
+
+                            <tr>
+
+                                <td>{{ visita.hora }}</td>
+
+                                <td>{{ visita.paciente }}</td>
+
+                                <td>{{ visita.profesional }}</td>
+
+                                <td>{{ visita.estado }}</td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+                {% else %}
+
+                <div class="text-center text-muted py-5">
+
+                    No hay visitas programadas para hoy.
+
+                </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Alertas -->
+
+    <div class="col-lg-4">
+
+        <div class="card shadow-sm border-0 rounded-4">
+
+            <div class="card-header bg-white">
+
+                <h5 class="mb-0">
+                    🚨 Alertas
+                </h5>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="mb-4">
+
+                    <h2 class="text-danger">
+
+                        {{ dashboard.alertas.cantidad }}
+
+                    </h2>
+
+                    <small class="text-muted">
+
+                        Alertas activas
+
+                    </small>
+
+                </div>
+
+                <hr>
+
+                <p>
+
+                    <strong>Visitas hoy:</strong>
+
+                    {{ dashboard.alertas.datos.visitas_hoy }}
+
+                </p>
+
+                <p>
+
+                    <strong>Pendientes:</strong>
+
+                    {{ dashboard.alertas.datos.visitas_pendientes }}
+
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- ===================================================== -->
+<!-- PROFESIONALES / FACTURACIÓN / INVENTARIO -->
+<!-- ===================================================== -->
+
+<div class="row mt-4">
+
+    <!-- Profesionales -->
+
+    <div class="col-lg-6">
+
+        <div class="card shadow-sm border-0 rounded-4">
+
+            <div class="card-header bg-white">
+
+                <h5 class="mb-0">
+
+                    👨‍⚕️ Profesionales por Especialidad
+
+                </h5>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="table-responsive">
+
+                    <table class="table table-hover align-middle">
+
+                        <thead>
+
+                            <tr>
+
+                                <th>Especialidad</th>
+
+                                <th class="text-end">
+
+                                    Total
+
+                                </th>
+
+                            </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                        {% for item in dashboard.profesionales %}
+
+                            <tr>
+
+                                <td>
+
+                                    {{ item.profesion }}
+
+                                </td>
+
+                                <td class="text-end">
+
+                                    <strong>
+
+                                        {{ item.total }}
+
+                                    </strong>
+
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Indicadores -->
+
+    <div class="col-lg-6">
+
+        <div class="row g-4">
+
+            <div class="col-md-6">
+
+                <div class="card shadow-sm border-0 rounded-4">
+
+                    <div class="card-body text-center">
+
+                        <h6 class="text-secondary">
+
+                            💰 Facturación
+
+                        </h6>
+
+                        <h2>
+
+                            $ {{ dashboard.facturacion }}
+
+                        </h2>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-6">
+
+                <div class="card shadow-sm border-0 rounded-4">
+
+                    <div class="card-body text-center">
+
+                        <h6 class="text-secondary">
+
+                            📦 Inventario
+
+                        </h6>
+
+                        <h2>
+
+                            {{ dashboard.inventario }}
+
+                        </h2>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="col-12">
+
+                <div class="card shadow-sm border-0 rounded-4">
+
+                    <div class="card-body">
+
+                        <h6>
+
+                            📈 Estado Operativo
+
+                        </h6>
+
+                        <div class="progress mt-3" style="height:25px;">
+
+                            <div
+                                class="progress-bar progress-bar-striped progress-bar-animated"
+                                role="progressbar"
+                                style="width:85%;">
+
+                                Sistema Operativo
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+async function cargarProduccion(){
+
+    const respuesta = await fetch("/dashboard/produccion");
+
+    const datos = await respuesta.json();
+
+    new Chart(
+
+        document.getElementById("graficoProduccion"),
+
+        {
+
+            type: "bar",
+
+            data: {
+
+                labels: datos.labels,
+
+                datasets: [
+
+                    {
+
+                        label: "Visitas",
+
+                        data: datos.values,
+
+                        borderWidth: 1
+
+                    }
+
+                ]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                plugins: {
+
+                    legend: {
+
+                        display: false
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    );
+
+}
+
+cargarProduccion();
+
+</script>
+
+<!-- ============================================= -->
+<!-- PANEL OPERATIVO DEL DÍA -->
+<!-- ============================================= -->
+
+<div class="container-fluid mt-4">
+
+    {% if panel_operativo.servicios_sin_programar %}
+    <div class="card shadow mb-4 border-warning">
+        <div class="card-header bg-warning">
+            <h5 class="mb-0"><i class="fa-solid fa-triangle-exclamation"></i> Pacientes con programa/servicio asignado y visitas SIN programar</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-sm table-hover align-middle">
+                <thead class="table-light">
+                    <tr><th>Paciente</th><th>Programa asignado</th><th>Servicio</th><th>Fecha inicio</th><th class="text-center">Pendientes / Total</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for s in panel_operativo.servicios_sin_programar %}
+                    <tr>
+                        <td><a href="/pacientes/{{ s.paciente_id }}">{{ s.paciente }}</a></td>
+                        <td>
+                            {% if s.programa_nombre %}
+                            {{ s.programa_nombre }} <small class="text-muted">({{ s.programa_fecha_asignacion }})</small>
+                            {% else %}
+                            <span class="text-muted">Sin programa formal</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ s.tipo_servicio }}{% if s.subtipo %} - {{ s.subtipo }}{% endif %}</td>
+                        <td>{{ s.fecha_inicio }}</td>
+                        <td class="text-center">
+                            <span class="badge bg-danger">{{ s.pendientes }} / {{ s.total_visitas }}</span>
+                        </td>
+                        <td><a href="/gestion-visitas/{{ s.servicio_id }}" class="btn btn-outline-warning btn-sm">Programar ahora</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fa-solid fa-calendar-check"></i> Programados hoy ({{ panel_operativo.visitas_hoy|length }})</h6>
+                </div>
+                <div class="card-body p-2" style="max-height:320px; overflow-y:auto;">
+                    {% for v in panel_operativo.visitas_hoy %}
+                    <div class="border-bottom py-1 small">
+                        <strong>{{ v.hora_inicio }}</strong> — {{ v.paciente }}<br>
+                        <span class="text-muted">{{ v.servicio }} · {{ v.profesional or "Sin asignar" }}</span>
+                        <span class="badge {% if v.estado=='Completada' %}bg-success{% elif v.estado=='En Curso' %}bg-info{% else %}bg-warning text-dark{% endif %} float-end">{{ v.estado }}</span>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3 mb-0">Sin visitas programadas hoy.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow mb-4 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0"><i class="fa-solid fa-person-walking-arrow-right"></i> En visita ahora ({{ panel_operativo.en_visita_ahora|length }})</h6>
+                </div>
+                <div class="card-body p-2" style="max-height:320px; overflow-y:auto;">
+                    {% for v in panel_operativo.en_visita_ahora %}
+                    <div class="border-bottom py-1 small">
+                        <strong>{{ v.profesional }}</strong> — {{ v.paciente }}<br>
+                        <span class="text-muted">Ingresó: {{ v.hora_real_inicio }} · {{ v.servicio }}</span>
+                        {% if v.geocerca_inicio_ok is not none %}
+                        <span class="badge {% if v.geocerca_inicio_ok %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if v.geocerca_inicio_ok %}Ubicación OK ({{ v.distancia_inicio_metros }} m){% else %}Fuera de rango ({{ v.distancia_inicio_metros }} m){% endif %}
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3 mb-0">Nadie está en visita en este momento.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow mb-4 border-success">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0"><i class="fa-solid fa-circle-check"></i> Finalizaron hoy ({{ panel_operativo.finalizaron_hoy|length }})</h6>
+                </div>
+                <div class="card-body p-2" style="max-height:320px; overflow-y:auto;">
+                    {% for v in panel_operativo.finalizaron_hoy %}
+                    <div class="border-bottom py-1 small">
+                        <strong>{{ v.profesional }}</strong> — {{ v.paciente }}<br>
+                        <span class="text-muted">{{ v.hora_real_inicio }} a {{ v.hora_real_fin }}
+                        {% if v.horas_trabajadas %}({{ v.horas_trabajadas }} h){% endif %}</span>
+                        {% if v.geocerca_fin_ok is not none %}
+                        <span class="badge {% if v.geocerca_fin_ok %}bg-success{% else %}bg-danger{% endif %}">
+                            {% if v.geocerca_fin_ok %}Ubicación OK{% else %}Fuera de rango{% endif %} ({{ v.distancia_fin_metros }} m)
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3 mb-0">Nadie ha finalizado visitas todavía hoy.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

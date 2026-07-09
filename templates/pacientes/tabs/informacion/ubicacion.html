@@ -1,0 +1,283 @@
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-secondary text-white">
+
+        <h5 class="mb-0">
+
+            <i class="fa-solid fa-location-dot"></i>
+
+            Ubicación y Georreferenciación
+
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <!-- DATOS DE UBICACIÓN -->
+
+            <div class="col-lg-5">
+
+                <div class="card border-0 bg-light">
+
+                    <div class="card-header">
+
+                        <strong>
+
+                            Información Geográfica
+
+                        </strong>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="mb-3">
+
+                            <label class="form-label">
+
+                                Dirección
+
+                            </label>
+
+                            <textarea
+                                class="form-control"
+                                rows="2"
+                                readonly>{{ paciente.direccion }}</textarea>
+
+                        </div>
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+
+                                <label>Barrio</label>
+
+                                <input
+                                    class="form-control"
+                                    value="{{ paciente.barrio }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label>Zona</label>
+
+                                <input
+                                    class="form-control"
+                                    value="{{ paciente.zona }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label>Municipio</label>
+
+                                <input
+                                    class="form-control"
+                                    value="{{ paciente.municipio }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label>Departamento</label>
+
+                                <input
+                                    class="form-control"
+                                    value="{{ paciente.departamento }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label>Latitud</label>
+
+                                <input
+                                    class="form-control"
+                                    value="{{ paciente.latitud }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <label>Longitud</label>
+
+                                <input
+                                    class="form-control"
+                                    value="{{ paciente.longitud }}"
+                                    readonly>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- MAPA -->
+
+            <div class="col-lg-7">
+
+                <div class="card border-0 bg-light h-100">
+
+                    <div class="card-header">
+
+                        <strong>
+
+                            Ubicación del Paciente
+
+                        </strong>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <iframe
+                            width="100%"
+                            height="350"
+                            frameborder="0"
+                            loading="lazy"
+                            src="https://maps.google.com/maps?q={{ paciente.latitud }},{{ paciente.longitud }}&z=16&output=embed">
+
+                        </iframe>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <hr>
+
+        <!-- INFORMACIÓN LOGÍSTICA -->
+
+        <div class="card border-info">
+
+            <div class="card-header bg-info text-white">
+
+                <strong>
+
+                    Información para la Atención Domiciliaria
+
+                </strong>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-3 mb-3">
+
+                        <label>Tiempo estimado</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.tiempo_desplazamiento }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label>Tipo de vivienda</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.tipo_vivienda }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label>Piso</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.piso }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label>Ascensor</label>
+
+                        <input
+                            class="form-control"
+                            value="{{ paciente.ascensor }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label>Referencia para llegar</label>
+
+                        <textarea
+                            class="form-control"
+                            rows="2"
+                            readonly>{{ paciente.referencia }}</textarea>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+
+                        <label>Observaciones del acceso</label>
+
+                        <textarea
+                            class="form-control"
+                            rows="2"
+                            readonly>{{ paciente.observaciones_acceso }}</textarea>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="mt-4 d-flex gap-2 flex-wrap">
+
+            <a
+                href="https://www.google.com/maps/search/?api=1&query={{ paciente.latitud }},{{ paciente.longitud }}"
+                target="_blank"
+                class="btn btn-primary">
+
+                <i class="fa-solid fa-map-location-dot"></i>
+
+                Abrir en Google Maps
+
+            </a>
+
+            <a
+                href="https://waze.com/ul?ll={{ paciente.latitud }},{{ paciente.longitud }}&navigate=yes"
+                target="_blank"
+                class="btn btn-info text-white">
+
+                <i class="fa-brands fa-waze"></i>
+
+                Abrir en Waze
+
+            </a>
+
+        </div>
+
+    </div>
+
+</div>

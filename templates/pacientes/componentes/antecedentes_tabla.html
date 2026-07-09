@@ -1,0 +1,247 @@
+<div class="card shadow border-0">
+
+    <div class="card-header bg-secondary text-white">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+
+                <i class="fa-solid fa-clock-rotate-left"></i>
+
+                Historial de Antecedentes
+
+            </h5>
+
+            <input
+
+                type="text"
+
+                id="buscarAntecedente"
+
+                class="form-control"
+
+                style="width:250px"
+
+                placeholder="Buscar...">
+
+        </div>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="table-responsive">
+
+            <table
+
+                class="table table-hover align-middle"
+
+                id="tablaAntecedentes">
+
+                <thead class="table-light">
+
+                    <tr>
+
+                        <th width="120">
+
+                            Tipo
+
+                        </th>
+
+                        <th>
+
+                            Descripción
+
+                        </th>
+
+                        <th>
+
+                            Observaciones
+
+                        </th>
+
+                        <th width="140">
+
+                            Fecha
+
+                        </th>
+
+                        <th width="120">
+
+                            Estado
+
+                        </th>
+
+                        <th width="150">
+
+                            Acciones
+
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for item in antecedentes %}
+
+                    <tr>
+
+                        <td>
+
+                            {% if item.tipo=="AP" %}
+
+                                <span class="badge bg-primary">
+
+                                    Personales
+
+                                </span>
+
+                            {% elif item.tipo=="AF" %}
+
+                                <span class="badge bg-success">
+
+                                    Familiares
+
+                                </span>
+
+                            {% elif item.tipo=="AQ" %}
+
+                                <span class="badge bg-warning text-dark">
+
+                                    Quirúrgicos
+
+                                </span>
+
+                            {% elif item.tipo=="AH" %}
+
+                                <span class="badge bg-info">
+
+                                    Hospitalizaciones
+
+                                </span>
+
+                            {% elif item.tipo=="AL" %}
+
+                                <span class="badge bg-danger">
+
+                                    Alergias
+
+                                </span>
+
+                            {% elif item.tipo=="HT" %}
+
+                                <span class="badge bg-secondary">
+
+                                    Hábitos
+
+                                </span>
+
+                            {% elif item.tipo=="GO" %}
+
+                                <span class="badge bg-dark">
+
+                                    Gineco
+
+                                </span>
+
+                            {% elif item.tipo=="OC" %}
+
+                                <span class="badge bg-primary">
+
+                                    Ocupacional
+
+                                </span>
+
+                            {% elif item.tipo=="FA" %}
+
+                                <span class="badge bg-success">
+
+                                    Farmacológico
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            {{ item.descripcion }}
+
+                        </td>
+
+                        <td>
+
+                            {{ item.observaciones }}
+
+                        </td>
+
+                        <td>
+
+                            {{ item.fecha_creacion }}
+
+                        </td>
+
+                        <td>
+
+                            {% if item.activo==1 %}
+
+                                <span class="badge bg-success">
+
+                                    Activo
+
+                                </span>
+
+                            {% else %}
+
+                                <span class="badge bg-secondary">
+
+                                    Inactivo
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            <a
+
+                                href="/antecedentes/editar/{{ item.id }}"
+
+                                class="btn btn-warning btn-sm">
+
+                                <i class="fa-solid fa-pen"></i>
+
+                            </a>
+
+                            <a
+
+                                href="/antecedentes/eliminar/{{ item.id }}/{{ paciente.id }}"
+
+                                class="btn btn-danger btn-sm"
+
+                                onclick="return confirm('¿Eliminar este antecedente?')">
+
+                                <i class="fa-solid fa-trash"></i>
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>

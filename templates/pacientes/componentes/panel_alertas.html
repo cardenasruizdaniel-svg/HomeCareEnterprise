@@ -1,0 +1,165 @@
+<div class="card shadow border-0">
+
+    <div class="card-header bg-danger text-white">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+
+                <i class="fa-solid fa-triangle-exclamation"></i>
+
+                Centro de Alertas Clínicas
+
+            </h5>
+
+            <span class="badge bg-light text-dark">
+
+                {{ alertas|length }}
+
+            </span>
+
+        </div>
+
+    </div>
+
+    <div class="card-body">
+
+        {% if alertas %}
+
+            {% for alerta in alertas %}
+
+                {% if alerta.tipo=="alergia" %}
+
+                <div class="card border-danger mb-3">
+
+                    <div class="card-body">
+
+                        <div class="d-flex">
+
+                            <div class="me-3">
+
+                                <i class="fa-solid fa-syringe fa-2x text-danger"></i>
+
+                            </div>
+
+                            <div>
+
+                                <strong>
+
+                                    ALERGIA
+
+                                </strong>
+
+                                <br>
+
+                                {{ alerta.mensaje }}
+
+                                <br>
+
+                                <small class="text-danger">
+
+                                    Prioridad:
+
+                                    {{ alerta.nivel }}
+
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {% elif alerta.tipo=="agenda" %}
+
+                <div class="card border-primary mb-3">
+
+                    <div class="card-body">
+
+                        <div class="d-flex">
+
+                            <div class="me-3">
+
+                                <i class="fa-solid fa-calendar-days fa-2x text-primary"></i>
+
+                            </div>
+
+                            <div>
+
+                                <strong>
+
+                                    PRÓXIMA VISITA
+
+                                </strong>
+
+                                <br>
+
+                                {{ alerta.mensaje }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {% elif alerta.tipo=="diagnostico" %}
+
+                <div class="card border-success mb-3">
+
+                    <div class="card-body">
+
+                        <div class="d-flex">
+
+                            <div class="me-3">
+
+                                <i class="fa-solid fa-stethoscope fa-2x text-success"></i>
+
+                            </div>
+
+                            <div>
+
+                                <strong>
+
+                                    DIAGNÓSTICO
+
+                                </strong>
+
+                                <br>
+
+                                {{ alerta.mensaje }}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {% endif %}
+
+            {% endfor %}
+
+        {% else %}
+
+            <div class="text-center p-5">
+
+                <i class="fa-solid fa-circle-check fa-4x text-success mb-3"></i>
+
+                <h5>
+
+                    Sin alertas clínicas
+
+                </h5>
+
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>

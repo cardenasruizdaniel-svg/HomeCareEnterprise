@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <div class="mb-4">
+        <h2 class="mb-0">
+            <i class="fa-solid fa-file-code text-primary"></i>
+            RIPS - Registro Individual de Prestación de Servicios de Salud
+        </h2>
+        <small class="text-muted">
+            Resolución 948 de 2026 (deroga la Resolución 2275 de 2023) · Soporte de la Factura Electrónica de Venta (FEV)
+        </small>
+    </div>
+
+    <div class="alert alert-warning">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        Este generador produce la <b>estructura JSON</b> del RIPS a partir de las visitas completadas.
+        No sustituye la validación oficial: antes de radicar, el archivo debe pasar por el
+        <b>Mecanismo Único de Validación (MUV)</b> del Ministerio de Salud, lo cual requiere factura
+        electrónica (FEV) validada por la DIAN y el contrato registrado en el SIIFA con su
+        <b>CUCON</b>. Ver <code>docs/RIPS.md</code> para el detalle de lo que falta para una
+        transmisión real.
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Generar RIPS por periodo</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" action="/rips/generar">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label>Fecha inicio</label>
+                        <input type="date" name="fecha_inicio" class="form-control" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Fecha fin</label>
+                        <input type="date" name="fecha_fin" class="form-control" required>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Número de factura</label>
+                        <input type="text" name="numero_factura" class="form-control" placeholder="FEV-0001">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>NIT prestador</label>
+                        <input type="text" name="nit_prestador" class="form-control"
+                               value="{{ nit_configurado }}"
+                               placeholder="Configurar en .env: RIPS_NIT_PRESTADOR">
+                    </div>
+                </div>
+                <button class="btn btn-primary">
+                    <i class="fa-solid fa-gears"></i> Generar RIPS
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% if resultado %}
+    <div class="card shadow">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">
+                Resultado — {{ resultado.total_usuarios }} usuario(s) incluido(s)
+            </h5>
+        </div>
+        <div class="card-body">
+
+            {% if not resultado.nit_prestador_configurado %}
+            <div class="alert alert-danger">
+                No hay NIT del prestador configurado (<code>RIPS_NIT_PRESTADOR</code> en <code>.env</code>,
+                o indíquelo en el formulario). El campo <code>numDocumentoIdObligado</code> quedó vacío.
+            </div>
+            {% endif %}
+
+            {% if resultado.pendientes %}
+            <div class="alert alert-warning">
+                <strong>Datos incompletos detectados ({{ resultado.pendientes|length }}):</strong>
+                <ul class="mb-0">
+                    {% for p in resultado.pendientes[:20] %}
+                    <li>{{ p }}</li>
+                    {% endfor %}
+                    {% if resultado.pendientes|length > 20 %}
+                    <li>... y {{ resultado.pendientes|length - 20 }} más.</li>
+                    {% endif %}
+                </ul>
+            </div>
+            {% else %}
+            <div class="alert alert-success">
+                No se detectaron campos obligatorios faltantes en los datos capturados
+                (esto no reemplaza la validación del MUV).
+            </div>
+            {% endif %}
+
+            <a href="/rips/descargar?ruta={{ archivo_generado }}" class="btn btn-success">
+                <i class="fa-solid fa-download"></i> Descargar RIPS.json
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+{% endblock %}

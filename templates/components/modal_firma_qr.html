@@ -1,0 +1,70 @@
+<!-- Modal de firma remota por QR (reutilizable) -->
+<div class="modal fade" id="modalFirmaQR" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title"><i class="fa-solid fa-qrcode"></i> Firmar desde el celular</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="text-muted">Escanee este código con la cámara del celular de quien va a firmar (paciente, acudiente o profesional).</p>
+                <div id="contenedor-qr" class="d-flex justify-content-center my-3"></div>
+                <div id="estado-firma-qr" class="alert alert-warning">Esperando que se complete la firma...</div>
+                <p class="small text-muted">Esta ventana se actualizará automáticamente cuando la firma se complete.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+let modalFirmaQR = null;
+let temporizadorEstadoQR = null;
+
+async function abrirFirmaQR(tipo, referenciaId, alRecargar) {
+    if (!modalFirmaQR) {
+        modalFirmaQR = new bootstrap.Modal(document.getElementById("modalFirmaQR"));
+    }
+
+    document.getElementById("contenedor-qr").innerHTML = "";
+    document.getElementById("estado-firma-qr").className = "alert alert-warning";
+    document.getElementById("estado-firma-qr").textContent = "Generando código...";
+    modalFirmaQR.show();
+
+    const respuesta = await fetch("/firma-remota/crear", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tipo: tipo, referencia_id: referenciaId }),
+    });
+    const resultado = await respuesta.json();
+
+    if (!resultado.ok) {
+        document.getElementById("estado-firma-qr").className = "alert alert-danger";
+        document.getElementById("estado-firma-qr").textContent = resultado.error;
+        return;
+    }
+
+    new QRCode(document.getElementById("contenedor-qr"), { text: resultado.url, width: 220, height: 220 });
+    document.getElementById("estado-firma-qr").className = "alert alert-warning";
+    document.getElementById("estado-firma-qr").textContent = "Esperando que se complete la firma...";
+
+    clearInterval(temporizadorEstadoQR);
+    temporizadorEstadoQR = setInterval(async () => {
+        const r = await fetch(`/firma-remota/estado/${resultado.token}`);
+        const datos = await r.json();
+        if (datos.estado === "Completada") {
+            clearInterval(temporizadorEstadoQR);
+            document.getElementById("estado-firma-qr").className = "alert alert-success";
+            document.getElementById("estado-firma-qr").textContent = "¡Firma recibida correctamente!";
+            setTimeout(() => {
+                modalFirmaQR.hide();
+                if (alRecargar) alRecargar();
+            }, 1200);
+        }
+    }, 3000);
+}
+
+document.getElementById("modalFirmaQR").addEventListener("hidden.bs.modal", () => {
+    clearInterval(temporizadorEstadoQR);
+});
+</script>

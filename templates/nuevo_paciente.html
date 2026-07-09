@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<h2>➕ Nuevo Paciente</h2>
+
+<form method="post" action="/guardar_paciente_nuevo">
+
+<div class="row">
+
+<div class="col-md-3">
+
+<label>Tipo Documento</label>
+
+<select name="tipo_documento"
+        class="form-control">
+
+<option>CC</option>
+<option>CE</option>
+<option>TI</option>
+
+</select>
+
+</div>
+
+<div class="col-md-3">
+
+<label>Documento</label>
+
+<input name="documento"
+       class="form-control">
+
+</div>
+
+<div class="col-md-3">
+
+<label>Primer Nombre</label>
+
+<input name="primer_nombre"
+       class="form-control">
+
+</div>
+
+<div class="col-md-3">
+
+<label>Primer Apellido</label>
+
+<input name="primer_apellido"
+       class="form-control">
+
+</div>
+
+</div>
+
+<br>
+
+<div class="row">
+
+<div class="col-md-3">
+
+<label>EPS</label>
+
+<input name="eps"
+       class="form-control">
+
+</div>
+
+<div class="col-md-3">
+
+<label>Celular</label>
+
+<input name="celular"
+       class="form-control">
+
+</div>
+
+</div>
+
+<br>
+
+<button class="btn btn-success">
+
+Guardar Paciente
+
+</button>
+
+</form>
+
+{% endblock %}

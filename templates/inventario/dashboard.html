@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block titulo %}Inventario de Insumos{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="fa-solid fa-boxes-stacked text-primary"></i> Inventario de Insumos Médicos</h2>
+        <a href="/inventario/proveedores" class="btn btn-outline-dark"><i class="fa-solid fa-truck"></i> Proveedores</a>
+    </div>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow text-center">
+                <div class="card-body">
+                    <div class="display-6 text-primary">{{ insumos|length }}</div>
+                    <div class="small text-muted">Insumos en catálogo</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow text-center border-danger">
+                <div class="card-body">
+                    <div class="display-6 text-danger">{{ insumos|selectattr("stock_bajo")|list|length }}</div>
+                    <div class="small text-muted">Con stock bajo</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h5 class="mb-0">Nuevo insumo</h5></div>
+                <div class="card-body">
+                    <form method="post" action="/inventario/insumos/crear">
+                        <div class="mb-2"><label>Nombre</label><input type="text" name="nombre" class="form-control" required></div>
+                        <div class="mb-2">
+                            <label>Categoría</label>
+                            <select name="categoria" class="form-select">
+                                {% for c in categorias %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-2"><label>Unidad de medida</label><input type="text" name="unidad_medida" class="form-control" value="Unidad"></div>
+                        <div class="mb-2"><label>Stock mínimo (alerta)</label><input type="number" name="stock_minimo" class="form-control" value="0"></div>
+                        <button class="btn btn-success w-100">Crear insumo</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow mb-3">
+                <div class="card-header bg-success text-white"><h5 class="mb-0">Registrar Entrada (compra)</h5></div>
+                <div class="card-body">
+                    <form method="post" action="/inventario/entrada">
+                        <div class="mb-2">
+                            <label>Insumo</label>
+                            <select name="insumo_id" class="form-select" required>
+                                {% for i in insumos %}<option value="{{ i.id }}">{{ i.nombre }} (stock: {{ i.stock_actual }})</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-2"><label>Cantidad</label><input type="number" name="cantidad" min="1" class="form-control" required></div>
+                        <div class="mb-2">
+                            <label>Proveedor</label>
+                            <select name="proveedor_id" class="form-select" id="select-proveedor-entrada">
+                                <option value="">-- Seleccione --</option>
+                            </select>
+                        </div>
+                        <div class="mb-2"><label>N.° Factura</label><input type="text" name="numero_factura" class="form-control"></div>
+                        <div class="mb-2"><label>Costo unitario</label><input type="number" step="0.01" name="costo_unitario" class="form-control"></div>
+                        <button class="btn btn-success w-100">Registrar entrada</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow mb-3">
+                <div class="card-header bg-warning"><h5 class="mb-0">Registrar Salida (entrega a paciente)</h5></div>
+                <div class="card-body">
+                    <form method="post" action="/inventario/salida">
+                        <div class="mb-2">
+                            <label>Insumo</label>
+                            <select name="insumo_id" class="form-select" required>
+                                {% for i in insumos %}<option value="{{ i.id }}">{{ i.nombre }} (stock: {{ i.stock_actual }})</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-2"><label>Cantidad</label><input type="number" name="cantidad" min="1" class="form-control" required></div>
+                        <div class="mb-2 position-relative">
+                            <label>Paciente</label>
+                            <input type="text" id="buscar-paciente-salida" class="form-control" autocomplete="off" placeholder="Escriba el nombre o documento...">
+                            <input type="hidden" name="paciente_id" id="campo-paciente-id-salida">
+                            <div id="resultados-paciente-salida" class="list-group position-absolute w-100" style="z-index:1000;"></div>
+                        </div>
+                        <div class="mb-2"><label>Motivo</label><input type="text" name="motivo" class="form-control" placeholder="Ej: Curación programada"></div>
+                        <button class="btn btn-warning w-100">Registrar salida</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-white"><h5 class="mb-0">Stock actual por insumo</h5></div>
+                <div class="card-body">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light"><tr><th>Insumo</th><th>Categoría</th><th class="text-center">Stock</th><th class="text-center">Mínimo</th><th></th></tr></thead>
+                        <tbody>
+                            {% for i in insumos %}
+                            <tr class="{% if i.stock_bajo %}table-danger{% endif %}">
+                                <td>{{ i.nombre }}</td>
+                                <td>{{ i.categoria }}</td>
+                                <td class="text-center"><strong>{{ i.stock_actual }}</strong> {{ i.unidad_medida }}</td>
+                                <td class="text-center">{{ i.stock_minimo }}</td>
+                                <td>
+                                    <a href="/inventario/movimientos/{{ i.id }}" class="btn btn-outline-primary btn-sm">Historial</a>
+                                    <a href="/inventario/insumos/desactivar/{{ i.id }}" class="btn btn-outline-danger btn-sm"
+                                       onclick="return confirm('¿Desactivar este insumo?');">Desactivar</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="text-center text-muted py-4">Sin insumos creados.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-white"><h5 class="mb-0">Movimientos recientes</h5></div>
+                <div class="card-body">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead class="table-light"><tr><th>Fecha</th><th>Tipo</th><th>Insumo</th><th class="text-center">Cantidad</th><th>Detalle</th></tr></thead>
+                        <tbody>
+                            {% for m in movimientos_recientes %}
+                            <tr>
+                                <td>{{ m.fecha }}</td>
+                                <td><span class="badge {% if m.tipo == 'Entrada' %}bg-success{% else %}bg-warning text-dark{% endif %}">{{ m.tipo }}</span></td>
+                                <td>{{ m.insumo }}</td>
+                                <td class="text-center">{{ m.cantidad }}</td>
+                                <td class="small text-muted">
+                                    {% if m.tipo == 'Entrada' %}{{ m.proveedor or "—" }}{% else %}{{ m.motivo or "—" }}{% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="text-center text-muted py-4">Sin movimientos registrados.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+async function cargarProveedores() {
+    const respuesta = await fetch("/inventario/api/proveedores-activos");
+    const proveedores = await respuesta.json();
+    const selector = document.getElementById("select-proveedor-entrada");
+    selector.innerHTML = '<option value="">-- Seleccione --</option>' +
+        proveedores.map(p => `<option value="${p.id}">${p.nombre}</option>`).join("");
+}
+cargarProveedores();
+
+const buscadorPaciente = document.getElementById("buscar-paciente-salida");
+const resultadosPaciente = document.getElementById("resultados-paciente-salida");
+let temporizadorPaciente;
+
+buscadorPaciente.addEventListener("input", () => {
+    clearTimeout(temporizadorPaciente);
+    const texto = buscadorPaciente.value.trim();
+    if (texto.length < 2) { resultadosPaciente.innerHTML = ""; return; }
+    temporizadorPaciente = setTimeout(async () => {
+        const resp = await fetch(`/api/pacientes?buscar_texto=${encodeURIComponent(texto)}`);
+        const datos = await resp.json();
+        resultadosPaciente.innerHTML = (datos || []).map(p =>
+            `<button type="button" class="list-group-item list-group-item-action" data-id="${p.id}">${p.nombre} - ${p.documento}</button>`
+        ).join("");
+    }, 300);
+});
+
+resultadosPaciente.addEventListener("click", (e) => {
+    if (e.target.matches("[data-id]")) {
+        document.getElementById("campo-paciente-id-salida").value = e.target.dataset.id;
+        buscadorPaciente.value = e.target.textContent;
+        resultadosPaciente.innerHTML = "";
+    }
+});
+</script>
+{% endblock %}

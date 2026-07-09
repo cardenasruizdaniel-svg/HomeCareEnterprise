@@ -1,0 +1,329 @@
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-warning">
+
+        <h5 class="mb-0">
+
+            <i class="fa-solid fa-clipboard-list"></i>
+
+            Observaciones y Notas del Paciente
+
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="accordion" id="accordionObservaciones">
+
+            <!-- OBSERVACIONES CLÍNICAS -->
+
+            <div class="accordion-item">
+
+                <h2 class="accordion-header">
+
+                    <button class="accordion-button"
+
+                            data-bs-toggle="collapse"
+
+                            data-bs-target="#clinicas">
+
+                        🩺 Observaciones Clínicas
+
+                    </button>
+
+                </h2>
+
+                <div id="clinicas"
+
+                     class="accordion-collapse collapse show"
+
+                     data-bs-parent="#accordionObservaciones">
+
+                    <div class="accordion-body">
+
+                        <textarea
+
+                            class="form-control"
+
+                            rows="5"
+
+                            readonly>{{ paciente.observaciones_clinicas }}</textarea>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- INDICACIONES -->
+
+            <div class="accordion-item">
+
+                <h2 class="accordion-header">
+
+                    <button class="accordion-button collapsed"
+
+                            data-bs-toggle="collapse"
+
+                            data-bs-target="#indicaciones">
+
+                        👨‍⚕️ Indicaciones Médicas
+
+                    </button>
+
+                </h2>
+
+                <div id="indicaciones"
+
+                     class="accordion-collapse collapse"
+
+                     data-bs-parent="#accordionObservaciones">
+
+                    <div class="accordion-body">
+
+                        <textarea
+
+                            class="form-control"
+
+                            rows="5"
+
+                            readonly>{{ paciente.indicaciones_medicas }}</textarea>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- CUIDADOR -->
+
+            <div class="accordion-item">
+
+                <h2 class="accordion-header">
+
+                    <button class="accordion-button collapsed"
+
+                            data-bs-toggle="collapse"
+
+                            data-bs-target="#cuidador">
+
+                        👨‍👩‍👦 Recomendaciones al Cuidador
+
+                    </button>
+
+                </h2>
+
+                <div id="cuidador"
+
+                     class="accordion-collapse collapse"
+
+                     data-bs-parent="#accordionObservaciones">
+
+                    <div class="accordion-body">
+
+                        <textarea
+
+                            class="form-control"
+
+                            rows="5"
+
+                            readonly>{{ paciente.recomendaciones_cuidador }}</textarea>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- DOMICILIO -->
+
+            <div class="accordion-item">
+
+                <h2 class="accordion-header">
+
+                    <button class="accordion-button collapsed"
+
+                            data-bs-toggle="collapse"
+
+                            data-bs-target="#domicilio">
+
+                        🏠 Observaciones del Domicilio
+
+                    </button>
+
+                </h2>
+
+                <div id="domicilio"
+
+                     class="accordion-collapse collapse"
+
+                     data-bs-parent="#accordionObservaciones">
+
+                    <div class="accordion-body">
+
+                        <textarea
+
+                            class="form-control"
+
+                            rows="5"
+
+                            readonly>{{ paciente.observaciones_domicilio }}</textarea>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- PRECAUCIONES -->
+
+            <div class="accordion-item">
+
+                <h2 class="accordion-header">
+
+                    <button class="accordion-button collapsed"
+
+                            data-bs-toggle="collapse"
+
+                            data-bs-target="#precauciones">
+
+                        ⚠ Precauciones Especiales
+
+                    </button>
+
+                </h2>
+
+                <div id="precauciones"
+
+                     class="accordion-collapse collapse"
+
+                     data-bs-parent="#accordionObservaciones">
+
+                    <div class="accordion-body">
+
+                        <textarea
+
+                            class="form-control"
+
+                            rows="5"
+
+                            readonly>{{ paciente.precauciones }}</textarea>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- ADMINISTRATIVAS -->
+
+            <div class="accordion-item">
+
+                <h2 class="accordion-header">
+
+                    <button class="accordion-button collapsed"
+
+                            data-bs-toggle="collapse"
+
+                            data-bs-target="#administrativas">
+
+                        📋 Observaciones Administrativas
+
+                    </button>
+
+                </h2>
+
+                <div id="administrativas"
+
+                     class="accordion-collapse collapse"
+
+                     data-bs-parent="#accordionObservaciones">
+
+                    <div class="accordion-body">
+
+                        <textarea
+
+                            class="form-control"
+
+                            rows="5"
+
+                            readonly>{{ paciente.observaciones_administrativas }}</textarea>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <hr>
+
+        <div class="row">
+
+            <div class="col-md-4">
+
+                <small class="text-muted">
+
+                    Última actualización
+
+                </small>
+
+                <div>
+
+                    <strong>
+
+                        {{ paciente.fecha_actualizacion }}
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <small class="text-muted">
+
+                    Actualizado por
+
+                </small>
+
+                <div>
+
+                    <strong>
+
+                        {{ paciente.usuario_actualizacion }}
+
+                    </strong>
+
+                </div>
+
+            </div>
+
+            <div class="col-md-4">
+
+                <small class="text-muted">
+
+                    Estado del registro
+
+                </small>
+
+                <div>
+
+                    <span class="badge bg-success">
+
+                        Vigente
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

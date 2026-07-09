@@ -1,0 +1,249 @@
+<div class="card shadow border-0 mb-4">
+
+    <div class="card-header bg-danger text-white">
+
+        <h5 class="mb-0">
+
+            <i class="fa-solid fa-triangle-exclamation"></i>
+
+            Registrar Alergia
+
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <form method="post" action="/alergias/guardar">
+
+            <input
+                type="hidden"
+                name="paciente_id"
+                value="{{ paciente.id }}">
+
+            <input
+                type="hidden"
+                name="usuario"
+                value="{{ request.session.get('usuario','Sistema') }}">
+
+            <div class="row">
+
+                <!-- Tipo -->
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+
+                        Tipo
+
+                    </label>
+
+                    <select
+                        class="form-select"
+                        name="tipo"
+                        required>
+
+                        <option value="">Seleccione...</option>
+
+                        <option value="MED">💊 Medicamentos</option>
+
+                        <option value="ALI">🍤 Alimentos</option>
+
+                        <option value="LAT">🧤 Látex</option>
+
+                        <option value="CON">🩻 Contraste</option>
+
+                        <option value="PIC">🐝 Picaduras</option>
+
+                        <option value="AMB">🌿 Ambientales</option>
+
+                        <option value="OTR">📋 Otros</option>
+
+                    </select>
+
+                </div>
+
+                <!-- Alérgeno -->
+
+                <div class="col-md-8 mb-3">
+
+                    <label class="form-label">
+
+                        Alérgeno
+
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        name="alergeno"
+                        placeholder="Ejemplo: Penicilina"
+                        required>
+
+                </div>
+
+            </div>
+
+            <div class="row">
+
+                <!-- Severidad -->
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+
+                        Severidad
+
+                    </label>
+
+                    <select
+                        class="form-select"
+                        name="severidad"
+                        required>
+
+                        <option>Leve</option>
+
+                        <option>Moderada</option>
+
+                        <option>Grave</option>
+
+                        <option>Anafilaxia</option>
+
+                    </select>
+
+                </div>
+
+                <!-- Estado -->
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+
+                        Estado
+
+                    </label>
+
+                    <select
+                        class="form-select"
+                        name="estado">
+
+                        <option selected>
+
+                            Activa
+
+                        </option>
+
+                        <option>
+
+                            Inactiva
+
+                        </option>
+
+                        <option>
+
+                            Descartada
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <!-- Fecha -->
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+
+                        Fecha Diagnóstico
+
+                    </label>
+
+                    <input
+                        type="date"
+                        class="form-control"
+                        name="fecha_diagnostico">
+
+                </div>
+
+            </div>
+
+            <!-- Reacción -->
+
+            <div class="mb-3">
+
+                <label class="form-label">
+
+                    Reacción Presentada
+
+                </label>
+
+                <textarea
+
+                    class="form-control"
+
+                    rows="3"
+
+                    name="reaccion"
+
+                    placeholder="Describa la reacción del paciente...">
+
+                </textarea>
+
+            </div>
+
+            <!-- Observaciones -->
+
+            <div class="mb-3">
+
+                <label class="form-label">
+
+                    Observaciones Clínicas
+
+                </label>
+
+                <textarea
+
+                    class="form-control"
+
+                    rows="4"
+
+                    name="observaciones"
+
+                    placeholder="Observaciones adicionales...">
+
+                </textarea>
+
+            </div>
+
+            <!-- Botones -->
+
+            <div class="text-end">
+
+                <button
+                    type="reset"
+                    class="btn btn-secondary">
+
+                    <i class="fa-solid fa-eraser"></i>
+
+                    Limpiar
+
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn btn-danger">
+
+                    <i class="fa-solid fa-floppy-disk"></i>
+
+                    Guardar Alergia
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>

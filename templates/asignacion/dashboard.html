@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Motor Inteligente de Asignación
+{% endblock %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <!-- ENCABEZADO -->
+
+    <div class="row mb-4">
+
+        <div class="col-md-8">
+
+            <h2 class="fw-bold">
+
+                <i class="fa-solid fa-brain text-primary"></i>
+
+                Motor Inteligente de Asignación
+
+            </h2>
+
+            <p class="text-muted">
+
+                Asignación automática de visitas domiciliarias.
+
+            </p>
+
+        </div>
+
+        <div class="col-md-4 text-end">
+
+            <button
+                id="btnAsignarTodo"
+                class="btn btn-success">
+
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+
+                Ejecutar Asignación
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- KPIs -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-lg-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+
+                        Visitas Pendientes
+
+                    </h6>
+
+                    <h2 id="kpiPendientes">
+
+                        {{ indicadores.visitas_pendientes }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+
+                        Profesionales Disponibles
+
+                    </h6>
+
+                    <h2 id="kpiProfesionales">
+
+                        {{ indicadores.profesionales_disponibles }}
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+
+                        Asignaciones
+
+                    </h6>
+
+                    <h2 id="kpiAsignadas">
+
+                        0
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+
+                        Errores
+
+                    </h6>
+
+                    <h2 id="kpiErrores">
+
+                        0
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- VISITAS -->
+
+    <div class="card shadow-sm">
+
+        <div class="card-header">
+
+            <strong>
+
+                Visitas Pendientes de Asignación
+
+            </strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <table
+                class="table table-hover align-middle">
+
+                <thead>
+
+                    <tr>
+
+                        <th>ID</th>
+
+                        <th>Paciente</th>
+
+                        <th>Servicio</th>
+
+                        <th>Fecha</th>
+
+                        <th>Hora</th>
+
+                        <th>Prioridad</th>
+
+                        <th>Profesional</th>
+
+                        <th>Acción</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody id="tablaPendientes">
+
+                    {% for visita in visitas %}
+
+                    <tr>
+
+                        <td>{{ visita.id }}</td>
+
+                        <td>{{ visita.paciente_id }}</td>
+
+                        <td>{{ visita.servicio }}</td>
+
+                        <td>{{ visita.fecha }}</td>
+
+                        <td>{{ visita.hora_inicio }}</td>
+
+                        <td>
+
+                            <span class="badge bg-warning">
+
+                                {{ visita.prioridad }}
+
+                            </span>
+
+                        </td>
+
+                        <td>
+
+                            {% if visita.profesional_id %}
+
+                                {{ visita.profesional_id }}
+
+                            {% else %}
+
+                                <span class="text-danger">
+
+                                    Sin asignar
+
+                                </span>
+
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            <button
+                                class="btn btn-primary btn-sm btnAsignar"
+                                data-id="{{ visita.id }}">
+
+                                Asignar
+
+                            </button>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+    <!-- RESULTADOS -->
+
+    <div class="card shadow-sm mt-4">
+
+        <div class="card-header">
+
+            <strong>
+
+                Resultado del Motor
+
+            </strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <pre
+                id="resultadoMotor"
+                class="mb-0">
+
+Esperando ejecución...
+
+            </pre>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script src="/static/js/asignacion.js"></script>
+
+{% endblock %}

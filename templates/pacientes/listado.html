@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">
+                <i class="fa-solid fa-users text-primary"></i>
+                {{ titulo or "Pacientes" }}
+            </h2>
+            <small class="text-muted">Total: {{ total_pacientes }}</small>
+        </div>
+        <a href="/pacientes/nuevo" class="btn btn-primary">
+            <i class="fa-solid fa-user-plus"></i> Nuevo Paciente
+        </a>
+        <a href="/pacientes/importar/formulario" class="btn btn-outline-primary">
+            <i class="fa-solid fa-file-import"></i> Importar
+        </a>
+    </div>
+
+    <form method="get" action="/pacientes/" class="mb-3">
+        <div class="input-group">
+            <input type="text" name="q" value="{{ texto_busqueda }}" class="form-control"
+                   placeholder="Buscar por nombre o documento...">
+            <button class="btn btn-outline-primary">
+                <i class="fa-solid fa-magnifying-glass"></i> Buscar
+            </button>
+        </div>
+    </form>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Documento</th>
+                            <th>Nombre</th>
+                            <th>EPS</th>
+                            <th>Municipio</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in pacientes %}
+                        <tr>
+                            <td>{{ p.tipo_documento }} {{ p.documento }}</td>
+                            <td>{{ p.primer_nombre }} {{ p.segundo_nombre }} {{ p.primer_apellido }} {{ p.segundo_apellido }}</td>
+                            <td>{{ p.eps }}</td>
+                            <td>{{ p.municipio }}</td>
+                            <td>
+                                <span class="badge {% if p.estado == 'ACTIVO' %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ p.estado }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <a href="/pacientes/{{ p.id }}" class="btn btn-primary btn-sm">
+                                    <i class="fa-solid fa-folder-open"></i> Ver ficha
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No hay pacientes registrados.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

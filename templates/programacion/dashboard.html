@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Programación de Visitas
+{% endblock %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+
+            <h2>
+
+                <i class="fa-solid fa-calendar-days text-primary"></i>
+
+                Programación HomeCare IPS
+
+            </h2>
+
+            <small class="text-muted">
+
+                Centro de programación de visitas domiciliarias
+
+            </small>
+
+        </div>
+
+        <div>
+
+            <a href="/programacion/nueva"
+               class="btn btn-success">
+
+                <i class="fa-solid fa-plus"></i>
+
+                Nueva Visita
+
+            </a>
+
+        </div>
+
+    </div>
+
+    <!-- Indicadores -->
+
+    <div class="row mb-4">
+
+        <div class="col-lg-3">
+
+            <div class="card shadow border-0">
+
+                <div class="card-body text-center">
+
+                    <h1 class="text-primary">
+
+                        {{ visitas_hoy|default(0) }}
+
+                    </h1>
+
+                    <p class="mb-0">
+
+                        Visitas Hoy
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-3">
+
+            <div class="card shadow border-0">
+
+                <div class="card-body text-center">
+
+                    <h1 class="text-success">
+
+                        {{ profesionales_disponibles|default(0) }}
+
+                    </h1>
+
+                    <p class="mb-0">
+
+                        Profesionales
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-3">
+
+            <div class="card shadow border-0">
+
+                <div class="card-body text-center">
+
+                    <h1 class="text-warning">
+
+                        {{ pendientes|default(0) }}
+
+                    </h1>
+
+                    <p class="mb-0">
+
+                        Pendientes
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-3">
+
+            <div class="card shadow border-0">
+
+                <div class="card-body text-center">
+
+                    <h1 class="text-danger">
+
+                        {{ canceladas|default(0) }}
+
+                    </h1>
+
+                    <p class="mb-0">
+
+                        Canceladas
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Accesos rápidos -->
+
+    <div class="row mb-4">
+
+        <div class="col-md-3">
+
+            <a href="/programacion/dia"
+               class="btn btn-outline-primary w-100 p-4">
+
+                <i class="fa-solid fa-calendar-day fa-2x mb-3"></i>
+
+                <br>
+
+                Agenda del Día
+
+            </a>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <a href="/programacion/semana"
+               class="btn btn-outline-success w-100 p-4">
+
+                <i class="fa-solid fa-calendar-week fa-2x mb-3"></i>
+
+                <br>
+
+                Agenda Semanal
+
+            </a>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <a href="/programacion/mes"
+               class="btn btn-outline-warning w-100 p-4">
+
+                <i class="fa-solid fa-calendar fa-2x mb-3"></i>
+
+                <br>
+
+                Agenda Mensual
+
+            </a>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <a href="/programacion/calendario"
+               class="btn btn-outline-danger w-100 p-4">
+
+                <i class="fa-solid fa-table-cells-large fa-2x mb-3"></i>
+
+                <br>
+
+                Calendario
+
+            </a>
+
+        </div>
+
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <a href="/programacion/mensual" class="btn btn-outline-dark w-100 p-4">
+                <i class="fa-solid fa-calendar-days fa-2x mb-3"></i>
+                <br>
+                Programación Mensual (Cuidadores)
+            </a>
+        </div>
+    </div>
+
+    <!-- Próximas visitas -->
+
+    <div class="card shadow border-0">
+
+        <div class="card-header">
+
+            <h5 class="mb-0">
+
+                Próximas Visitas
+
+            </h5>
+
+        </div>
+
+        <div class="card-body">
+
+            <table class="table table-hover align-middle">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Hora</th>
+                        <th>Paciente</th>
+                        <th>Profesional</th>
+                        <th>Servicio</th>
+                        <th>Ciudad</th>
+                        <th>Estado</th>
+                        <th></th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for visita in visitas %}
+
+                    <tr>
+
+                        <td>{{ visita.hora }}</td>
+
+                        <td>{{ visita.paciente }}</td>
+
+                        <td>{{ visita.profesional }}</td>
+
+                        <td>{{ visita.servicio }}</td>
+
+                        <td>{{ visita.ciudad }}</td>
+
+                        <td>
+
+                            <span class="badge bg-success">
+
+                                {{ visita.estado }}
+
+                            </span>
+
+                        </td>
+
+                        <td>
+
+                            <a href="/programacion/detalle/{{ visita.id }}"
+                               class="btn btn-sm btn-primary">
+
+                                Ver
+
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

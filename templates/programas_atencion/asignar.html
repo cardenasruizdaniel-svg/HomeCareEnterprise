@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+{% block titulo %}Programa de Atención del Paciente{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-layer-group text-primary"></i> Programa de Atención — {{ paciente.primer_nombre }} {{ paciente.primer_apellido }}</h2>
+
+    <div id="alerta-resultado"></div>
+
+    {% if programa_actual %}
+    <div class="alert alert-success">
+        <strong>Programa actual:</strong> {{ programa_actual.programa_nombre }}
+        — asignado el {{ programa_actual.fecha_asignacion }}
+        {% if programa_actual.profesional %}por {{ programa_actual.profesional }}{% endif %}
+    </div>
+    {% else %}
+    <div class="alert alert-warning">
+        Este paciente aún no tiene un programa de atención asignado. Debe asignarse en la primera visita de
+        valoración médica.
+    </div>
+    {% endif %}
+
+    <div class="card shadow mb-3">
+        <div class="card-header bg-white"><h5 class="mb-0">
+            {% if programa_actual %}Cambiar de programa y asignar actividades{% else %}Asignar programa y actividades{% endif %}
+        </h5></div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>Programa de atención</label>
+                    <select id="programa_id" class="form-select" required>
+                        <option value="">-- Seleccione --</option>
+                        {% for p in programas %}
+                        <option value="{{ p.id }}">{{ p.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">¿No encuentra el programa? Puede <a href="/programas-atencion" target="_blank">crear uno nuevo aquí</a>.</small>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Médico que evalúa y asigna</label>
+                    <select id="profesional_medico_id" class="form-select">
+                        <option value="">-- Seleccione --</option>
+                        {% for pr in profesionales %}
+                        <option value="{{ pr.id }}">{{ pr.nombre_completo }} ({{ pr.especialidad_principal }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label>Motivo / observaciones de la valoración</label>
+                <textarea id="motivo" class="form-control" rows="2"></textarea>
+            </div>
+
+            <hr>
+            <h5>Actividades a realizar</h5>
+            <p class="text-muted small">Marque las actividades que necesita este paciente. Por cada una, indique cuántas sesiones (visitas) y el periodo. Después de guardar, podrá programar la fecha exacta de cada visita desde "Gestión de Visitas".</p>
+
+            <table class="table table-sm align-middle" id="tabla-actividades">
+                <thead class="table-light">
+                    <tr>
+                        <th></th><th>Actividad</th><th>Sesiones</th><th>Fecha inicio</th><th>Fecha fin (opcional)</th>
+                        <th>Frecuencia</th><th>Hora</th><th>Profesional (opcional)</th><th>Renovar solo</th>
+                    </tr>
+                </thead>
+                <tbody id="cuerpo-actividades"></tbody>
+            </table>
+
+            <button class="btn btn-success mt-2" id="btn-guardar-todo"><i class="fa-solid fa-check"></i> Guardar programa y actividades</button>
+        </div>
+    </div>
+
+    <div class="card shadow mb-3">
+        <div class="card-header bg-white"><h5 class="mb-0">Historial de programas</h5></div>
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light"><tr><th>Programa</th><th>Desde</th><th>Hasta</th><th>Asignado por</th><th class="text-center">Estado</th></tr></thead>
+                <tbody>
+                    {% for h in historial %}
+                    <tr class="{% if h.es_actual %}table-success{% endif %}">
+                        <td>{{ h.programa_nombre }}</td>
+                        <td>{{ h.fecha_asignacion }}</td>
+                        <td>{{ h.fecha_fin or "—" }}</td>
+                        <td>{{ h.profesional or "—" }}</td>
+                        <td class="text-center">
+                            {% if h.es_actual %}<span class="badge bg-success">Actual</span>
+                            {% else %}<span class="badge bg-secondary">Histórico</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">Sin historial.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <a href="/pacientes/{{ paciente_id }}" class="btn btn-secondary mb-3">Volver a la ficha</a>
+</div>
+
+<script>
+const PACIENTE_ID = {{ paciente_id }};
+const PROFESIONALES = {{ profesionales|tojson }};
+
+let actividadesDisponibles = [];
+
+async function cargarActividades() {
+    const respuesta = await fetch("/programas-atencion/api/actividades");
+    actividadesDisponibles = await respuesta.json();
+
+    const cuerpo = document.getElementById("cuerpo-actividades");
+    cuerpo.innerHTML = actividadesDisponibles.map((a) => `
+        <tr data-actividad-id="${a.id}" data-nombre="${a.nombre}">
+            <td><input type="checkbox" class="chk-actividad"></td>
+            <td>${a.nombre}</td>
+            <td><input type="number" min="1" class="form-control form-control-sm campo-sesiones" style="width:80px" value="10"></td>
+            <td><input type="date" class="form-control form-control-sm campo-fecha-inicio"></td>
+            <td><input type="date" class="form-control form-control-sm campo-fecha-fin"></td>
+            <td>
+                <select class="form-select form-select-sm campo-frecuencia">
+                    <option>Diaria</option>
+                    <option>Interdiaria</option>
+                    <option>1 vez por semana</option>
+                    <option>2 veces por semana</option>
+                    <option>3 veces por semana</option>
+                    <option>Cada 8 días</option>
+                    <option>Cada 15 días</option>
+                    <option>Cada 20 días</option>
+                    <option>1 vez al mes</option>
+                </select>
+            </td>
+            <td>
+                <input type="time" class="form-control form-control-sm campo-hora-inicio" value="08:00" style="width:100px">
+            </td>
+            <td>
+                <select class="form-select form-select-sm campo-profesional">
+                    <option value="">-- Sin asignar --</option>
+                    ${PROFESIONALES.map(p => `<option value="${p.id}">${p.nombre_completo}</option>`).join("")}
+                </select>
+            </td>
+            <td class="text-center"><input type="checkbox" class="campo-renovacion" title="Renovar automáticamente al terminarse las sesiones"></td>
+        </tr>
+    `).join("");
+}
+
+cargarActividades();
+
+document.getElementById("btn-guardar-todo").addEventListener("click", async () => {
+    const boton = document.getElementById("btn-guardar-todo");
+    if (boton.disabled) return; // ya se está procesando, ignora clics repetidos
+    boton.disabled = true;
+    boton.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+
+    const alerta = document.getElementById("alerta-resultado");
+    const programaId = document.getElementById("programa_id").value;
+
+    if (!programaId) {
+        alerta.innerHTML = `<div class="alert alert-danger">Debe seleccionar el programa de atención.</div>`;
+        boton.disabled = false;
+        boton.innerHTML = '<i class="fa-solid fa-check"></i> Guardar programa y actividades';
+        return;
+    }
+
+    const filas = document.querySelectorAll("#cuerpo-actividades tr");
+    const actividades = [];
+
+    filas.forEach((fila) => {
+        if (fila.querySelector(".chk-actividad").checked) {
+            const fechaInicio = fila.querySelector(".campo-fecha-inicio").value;
+            if (!fechaInicio) return;
+            actividades.push({
+                actividad_id: parseInt(fila.dataset.actividadId),
+                nombre_actividad: fila.dataset.nombre,
+                numero_sesiones: parseInt(fila.querySelector(".campo-sesiones").value) || null,
+                fecha_inicio: fechaInicio,
+                fecha_fin: fila.querySelector(".campo-fecha-fin").value || null,
+                frecuencia: fila.querySelector(".campo-frecuencia").value,
+                hora_inicio: fila.querySelector(".campo-hora-inicio").value,
+                profesional_id: fila.querySelector(".campo-profesional").value || null,
+                renovacion_automatica: fila.querySelector(".campo-renovacion").checked,
+            });
+        }
+    });
+
+    if (actividades.length === 0) {
+        alerta.innerHTML = `<div class="alert alert-danger">Marque al menos una actividad y su fecha de inicio.</div>`;
+        boton.disabled = false;
+        boton.innerHTML = '<i class="fa-solid fa-check"></i> Guardar programa y actividades';
+        return;
+    }
+
+    const respuesta = await fetch("/programas-atencion/asignar-completo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            paciente_id: PACIENTE_ID,
+            programa_id: programaId,
+            profesional_id: document.getElementById("profesional_medico_id").value,
+            motivo: document.getElementById("motivo").value,
+            actividades: actividades,
+        }),
+    });
+
+    const resultado = await respuesta.json();
+
+    boton.disabled = false;
+    boton.innerHTML = '<i class="fa-solid fa-check"></i> Guardar programa y actividades';
+
+    if (resultado.error) {
+        alerta.innerHTML = `<div class="alert alert-danger">${resultado.error}</div>`;
+        return;
+    }
+
+    let html = `<div class="alert alert-success">Programa y actividades asignados correctamente.</div>`;
+    resultado.actividades.forEach((a) => {
+        if (a.error) {
+            html += `<div class="alert alert-warning">${a.actividad}: ${a.error}</div>`;
+        } else {
+            html += `<div class="alert alert-light border">${a.actividad}: ${a.total_fechas} visitas tentativas generadas —
+                <a href="/gestion-visitas/${a.servicio_id}">programar fechas exactas</a></div>`;
+        }
+    });
+    alerta.innerHTML = html;
+});
+</script>
+{% endblock %}

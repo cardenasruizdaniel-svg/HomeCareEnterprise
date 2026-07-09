@@ -1,0 +1,263 @@
+<div class="card shadow border-0">
+
+    <div class="card-header bg-light">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+
+                <i class="fa-solid fa-heart-pulse text-danger"></i>
+
+                Historial de Signos Vitales
+
+            </h5>
+
+            <span class="badge bg-primary">
+
+                {{ signos|length }} registros
+
+            </span>
+
+        </div>
+
+    </div>
+
+    <div class="card-body p-0">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover table-striped align-middle mb-0">
+
+                <thead class="table-danger">
+
+                    <tr>
+
+                        <th>Fecha</th>
+
+                        <th>Hora</th>
+
+                        <th>TA</th>
+
+                        <th>FC</th>
+
+                        <th>FR</th>
+
+                        <th>Temp.</th>
+
+                        <th>Sat.</th>
+
+                        <th>Gluc.</th>
+
+                        <th>IMC</th>
+
+                        <th>Dolor</th>
+
+                        <th>Profesional</th>
+
+                        <th width="180">Acciones</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                {% for signo in signos %}
+
+                <tr>
+
+                    <td>{{ signo.fecha }}</td>
+
+                    <td>{{ signo.hora }}</td>
+
+                    <td>
+
+                        {% if signo.presion_sistolica >= 180 or signo.presion_diastolica >= 110 %}
+
+                            <span class="badge bg-danger">
+
+                                {{ signo.presion_sistolica }}/{{ signo.presion_diastolica }}
+
+                            </span>
+
+                        {% elif signo.presion_sistolica >= 140 %}
+
+                            <span class="badge bg-warning text-dark">
+
+                                {{ signo.presion_sistolica }}/{{ signo.presion_diastolica }}
+
+                            </span>
+
+                        {% else %}
+
+                            {{ signo.presion_sistolica }}/{{ signo.presion_diastolica }}
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>{{ signo.frecuencia_cardiaca }}</td>
+
+                    <td>{{ signo.frecuencia_respiratoria }}</td>
+
+                    <td>
+
+                        {% if signo.temperatura >= 38.5 %}
+
+                            <span class="text-danger fw-bold">
+
+                                {{ signo.temperatura }}
+
+                            </span>
+
+                        {% else %}
+
+                            {{ signo.temperatura }}
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>
+
+                        {% if signo.saturacion_oxigeno < 90 %}
+
+                            <span class="badge bg-danger">
+
+                                {{ signo.saturacion_oxigeno }}%
+
+                            </span>
+
+                        {% elif signo.saturacion_oxigeno < 94 %}
+
+                            <span class="badge bg-warning text-dark">
+
+                                {{ signo.saturacion_oxigeno }}%
+
+                            </span>
+
+                        {% else %}
+
+                            {{ signo.saturacion_oxigeno }}%
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>{{ signo.glucemia }}</td>
+
+                    <td>{{ signo.imc }}</td>
+
+                    <td>
+
+                        {% if signo.dolor >= 8 %}
+
+                            <span class="badge bg-danger">
+
+                                {{ signo.dolor }}
+
+                            </span>
+
+                        {% elif signo.dolor >= 5 %}
+
+                            <span class="badge bg-warning text-dark">
+
+                                {{ signo.dolor }}
+
+                            </span>
+
+                        {% else %}
+
+                            <span class="badge bg-success">
+
+                                {{ signo.dolor }}
+
+                            </span>
+
+                        {% endif %}
+
+                    </td>
+
+                    <td>{{ signo.profesional }}</td>
+
+                    <td>
+
+                        <div class="btn-group btn-group-sm">
+
+                            <a
+
+                                href="/signos-vitales/detalle/{{ signo.id }}"
+
+                                class="btn btn-primary"
+
+                                title="Ver">
+
+                                <i class="fa-solid fa-eye"></i>
+
+                            </a>
+
+                            <a
+
+                                href="/signos-vitales/editar/{{ signo.id }}"
+
+                                class="btn btn-warning"
+
+                                title="Editar">
+
+                                <i class="fa-solid fa-pen"></i>
+
+                            </a>
+
+                            <a
+
+                                href="/signos-vitales/eliminar/{{ signo.id }}/{{ paciente.id }}"
+
+                                class="btn btn-danger"
+
+                                onclick="return confirm('¿Eliminar este registro?')"
+
+                                title="Eliminar">
+
+                                <i class="fa-solid fa-trash"></i>
+
+                            </a>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+                {% else %}
+
+                <tr>
+
+                    <td colspan="12">
+
+                        <div class="text-center p-5">
+
+                            <i class="fa-solid fa-heart-pulse fa-3x text-secondary mb-3"></i>
+
+                            <h5>
+
+                                No existen signos vitales registrados.
+
+                            </h5>
+
+                        </div>
+
+                    </td>
+
+                </tr>
+
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>

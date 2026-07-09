@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid mt-4">
+
+<div class="card shadow">
+
+    <div class="card-header bg-primary text-white">
+        <h3 class="mb-0">👥 Registro Integral de Pacientes</h3>
+    </div>
+
+    <div class="card-body">
+
+        <form method="post" action="/guardar_paciente">
+
+            <!-- MENU DE PESTAÑAS -->
+
+            <ul class="nav nav-tabs mb-4" id="pacienteTabs" role="tablist">
+
+                <li class="nav-item">
+                    <button class="nav-link active"
+                            data-bs-toggle="tab"
+                            data-bs-target="#personal"
+                            type="button">
+                        👤 Información Personal
+                    </button>
+                </li>
+
+                <li class="nav-item">
+                    <button class="nav-link"
+                            data-bs-toggle="tab"
+                            data-bs-target="#contacto"
+                            type="button">
+                        🏠 Contacto
+                    </button>
+                </li>
+
+                <li class="nav-item">
+                    <button class="nav-link"
+                            data-bs-toggle="tab"
+                            data-bs-target="#cuidador"
+                            type="button">
+                        👨‍👩‍👧 Cuidador
+                    </button>
+                </li>
+
+                <li class="nav-item">
+                    <button class="nav-link"
+                            data-bs-toggle="tab"
+                            data-bs-target="#clinica"
+                            type="button">
+                        🏥 Clínica
+                    </button>
+                </li>
+
+            </ul>
+
+            <!-- CONTENIDO PESTAÑAS -->
+
+            <div class="tab-content">
+
+                <!-- INFORMACION PERSONAL -->
+
+                <div class="tab-pane fade show active"
+                     id="personal">
+
+                    <div class="row">
+
+                        <div class="col-md-3 mb-3">
+                            <label>Tipo Documento</label>
+                            <select name="tipo_documento"
+                                    class="form-select">
+                                <option value="CC">CC</option>
+                                <option value="TI">TI</option>
+                                <option value="CE">CE</option>
+                                <option value="PA">Pasaporte</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label>Documento</label>
+                            <input type="text"
+                                   name="documento"
+                                   class="form-control">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label>Nombres</label>
+                            <input type="text"
+                                   name="nombre"
+                                   class="form-control">
+                        </div>
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+                            <label>Apellidos</label>
+                            <input type="text"
+                                   name="apellido"
+                                   class="form-control">
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label>Fecha Nacimiento</label>
+                            <input type="date"
+                                   name="fecha_nacimiento"
+                                   class="form-control">
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label>Sexo</label>
+                            <select name="sexo"
+                                    class="form-select">
+                                <option>Masculino</option>
+                                <option>Femenino</option>
+                                <option>Otro</option>
+                            </select>
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- CONTACTO -->
+
+                <div class="tab-pane fade"
+                     id="contacto">
+
+                    <div class="row">
+
+                        <div class="col-md-4 mb-3">
+                            <label>Teléfono</label>
+                            <input type="text"
+                                   name="telefono"
+                                   class="form-control">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label>Correo</label>
+                            <input type="email"
+                                   name="correo"
+                                   class="form-control">
+                        </div>
+
+                        <div class="col-md-4 mb-3">
+                            <label>EPS</label>
+                            <input type="text"
+                                   name="eps"
+                                   class="form-control">
+                        </div>
+
+                    </div>
+
+                    <div class="mb-3">
+                        <label>Dirección</label>
+                        <input type="text"
+                               name="direccion"
+                               class="form-control">
+                    </div>
+
+                </div>
+
+                <!-- CUIDADOR -->
+
+                <div class="tab-pane fade"
+                     id="cuidador">
+
+                    <div class="row">
+
+                        <div class="col-md-6 mb-3">
+                            <label>Nombre Cuidador</label>
+                            <input type="text"
+                                   name="cuidador"
+                                   class="form-control">
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label>Parentesco</label>
+                            <input type="text"
+                                   name="parentesco"
+                                   class="form-control">
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label>Teléfono Cuidador</label>
+                            <input type="text"
+                                   name="telefono_cuidador"
+                                   class="form-control">
+                        </div>
+
+                    </div>
+
+                </div>
+
+                <!-- INFORMACION CLINICA -->
+
+                <div class="tab-pane fade"
+                     id="clinica">
+
+                    <div class="row">
+
+                        <div class="col-md-3 mb-3">
+                            <label>Peso</label>
+                            <input type="number"
+                                   name="peso"
+                                   class="form-control">
+                        </div>
+
+                        <div class="col-md-3 mb-3">
+                            <label>Talla</label>
+                            <input type="number"
+                                   name="talla"
+                                   class="form-control">
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label>Alergias</label>
+                            <input type="text"
+                                   name="alergias"
+                                   class="form-control">
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <hr>
+
+            <button type="submit"
+                    class="btn btn-success btn-lg">
+                💾 Guardar Paciente
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</div>
+
+{% endblock %}

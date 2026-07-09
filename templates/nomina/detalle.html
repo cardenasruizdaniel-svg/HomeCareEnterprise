@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <div class="card shadow border-0">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+                Nómina {{ nomina.periodo_inicio }} a {{ nomina.periodo_fin }}
+            </h4>
+            <span class="badge bg-light text-dark">Total: $ {{ "{:,.0f}".format(nomina.total_pagar) }}</span>
+        </div>
+        <div class="card-body">
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Profesional</th>
+                            <th>Contrato</th>
+                            <th class="text-center">Visitas</th>
+                            <th class="text-center">Horas</th>
+                            <th class="text-end">Valor a pagar</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in detalle %}
+                        <tr>
+                            <td>{{ d.nombre_completo }}<br><small class="text-muted">{{ d.documento }}</small></td>
+                            <td>{{ d.tipo_contrato }}</td>
+                            <td class="text-center">{{ d.numero_visitas }}</td>
+                            <td class="text-center">{{ d.horas_trabajadas }}</td>
+                            <td class="text-end"><strong>$ {{ "{:,.0f}".format(d.valor_a_pagar) }}</strong></td>
+                            <td class="text-center">
+                                <span class="badge {% if d.estado_pago == 'Pagado' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                    {{ d.estado_pago }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                {% if d.estado_pago != 'Pagado' %}
+                                <a href="/nomina/pagar/{{ d.id }}/{{ nomina.id }}" class="btn btn-sm btn-outline-success"
+                                   onclick="return confirm('¿Marcar como pagado?');">
+                                    Marcar pagado
+                                </a>
+                                {% else %}
+                                <small class="text-muted">{{ d.fecha_pago }}</small>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <a href="/nomina" class="btn btn-secondary">
+                <i class="fa-solid fa-arrow-left"></i> Volver
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow mt-3">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fa-solid fa-file-shield"></i> Nómina Electrónica (DSNE - DIAN)</h5>
+            {% if not dsne %}
+            <a href="/nomina/electronica/{{ nomina.id }}" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-gears"></i> Generar documentos soporte
+            </a>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if not dsne %}
+            <p class="text-muted mb-0">Aún no se han generado los documentos soporte de nómina electrónica para este periodo.</p>
+            {% else %}
+            <div class="alert alert-warning small">
+                El CUNE mostrado es una referencia local, no validada por la DIAN. Ver
+                <code>docs/NOMINA_ELECTRONICA.md</code> para lo que falta para transmitir estos documentos realmente.
+            </div>
+            <table class="table table-sm">
+                <thead><tr><th>Profesional</th><th class="text-end">Valor neto</th><th>CUNE (referencia local)</th></tr></thead>
+                <tbody>
+                    {% for d in dsne %}
+                    <tr>
+                        <td>{{ d.nombre_completo }}</td>
+                        <td class="text-end">$ {{ "{:,.0f}".format(d.valor_a_pagar) }}</td>
+                        <td><small class="text-muted">{{ d.cune[:32] }}...</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

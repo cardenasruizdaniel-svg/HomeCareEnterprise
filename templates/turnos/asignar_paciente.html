@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block titulo %}Asignar Turnos{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+
+    {% include "components/volver_paciente.html" %}
+
+    <h2 class="mb-1"><i class="fa-solid fa-user-clock text-primary"></i> Asignar Turnos — {{ paciente.primer_nombre }} {{ paciente.primer_apellido }}</h2>
+    <p class="text-muted">
+        Tipo de cuidado:
+        {% if paciente.tipo_cuidado == 'Ventilado' %}
+        <span class="badge bg-danger">Ventilado — requiere Auxiliar de Enfermería</span>
+        {% else %}
+        <span class="badge bg-success">No Ventilado — lo puede cuidar un Cuidador</span>
+        {% endif %}
+    </p>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+    {% if request.query_params.get('creado') %}<div class="alert alert-success">Se crearon {{ request.query_params.get('creado') }} turno(s) correctamente.</div>{% endif %}
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h5 class="mb-0">Nueva asignación de turno</h5></div>
+                <div class="card-body">
+                    <form method="post" action="/turnos/asignar/{{ paciente_id }}">
+                        <div class="mb-2">
+                            <label>Profesional (Cuidador / Auxiliar)</label>
+                            <select name="profesional_id" class="form-select" required>
+                                <option value="">-- Seleccione --</option>
+                                {% for p in profesionales %}
+                                <option value="{{ p.id }}">{{ p.nombre_completo }} ({{ p.especialidad_principal }})</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-2">
+                            <label>Turno (del catálogo)</label>
+                            <select name="catalogo_turno_id" class="form-select" required>
+                                <option value="">-- Seleccione --</option>
+                                {% for t in catalogo %}
+                                <option value="{{ t.id }}">
+                                    {{ t.nombre }} ({{ t.tramo1_inicio }}-{{ t.tramo1_fin }}{% if t.tramo2_inicio %} y {{ t.tramo2_inicio }}-{{ t.tramo2_fin }}{% endif %})
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <small class="text-muted">¿No existe el turno que necesita? <a href="/turnos/catalogo" target="_blank">Créelo aquí</a>.</small>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-2"><label>Desde</label><input type="date" name="fecha_inicio" class="form-control" required></div>
+                            <div class="col-6 mb-2"><label>Hasta</label><input type="date" name="fecha_fin" class="form-control" required></div>
+                        </div>
+                        <small class="text-muted d-block mb-2">
+                            Para un solo día, use la misma fecha en "Desde" y "Hasta".
+                            Para toda una semana o un mes, indique el rango completo.
+                        </small>
+
+                        <div class="mb-2">
+                            <label>¿Solo días específicos? (opcional — si no marca ninguno, se asignan TODOS los días del rango)</label>
+                            <div class="d-flex gap-2 flex-wrap">
+                                {% for dia in ["Lunes","Martes","Miercoles","Jueves","Viernes","Sabado","Domingo"] %}
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="dias_semana" value="{{ dia }}" id="dia-{{ dia }}">
+                                    <label class="form-check-label" for="dia-{{ dia }}">{{ dia[:3] }}</label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-2"><label>Zona / Barrio (opcional)</label><input type="text" name="zona" class="form-control"></div>
+                        <div class="mb-2"><label>Observaciones</label><textarea name="observaciones" class="form-control" rows="2"></textarea></div>
+
+                        <button class="btn btn-success w-100"><i class="fa-solid fa-calendar-plus"></i> Asignar turnos</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-white"><h5 class="mb-0">Turnos ya asignados (próximos 30 días)</h5></div>
+                <div class="card-body">
+                    <table class="table table-sm table-hover align-middle">
+                        <thead class="table-light"><tr><th>Fecha</th><th>Horario</th><th>Profesional</th><th>Turno</th></tr></thead>
+                        <tbody>
+                            {% for t in turnos_actuales %}
+                            <tr>
+                                <td>{{ t.fecha }}</td>
+                                <td>{{ t.hora_inicio }} - {{ t.hora_fin }}</td>
+                                <td>{{ t.nombre_completo }}</td>
+                                <td>{{ t.turno }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted py-4">Sin turnos asignados todavía.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

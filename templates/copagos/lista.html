@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-hand-holding-dollar text-primary"></i> Copagos — {{ paciente.primer_nombre }} {{ paciente.primer_apellido }}</h2>
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h5 class="mb-0">Registrar copago</h5></div>
+                <div class="card-body">
+                    <form method="post" action="/copagos/guardar">
+                        <input type="hidden" name="paciente_id" value="{{ paciente_id }}">
+                        <div class="mb-3"><label>Concepto</label><input type="text" name="concepto" class="form-control" placeholder="Cuota moderadora consulta enfermería"></div>
+                        <div class="mb-3"><label>Valor a pagar</label><input type="number" step="100" name="valor_copago" class="form-control" required></div>
+                        <div class="mb-3"><label>Observaciones</label><textarea name="observaciones" class="form-control" rows="2"></textarea></div>
+                        <button class="btn btn-success w-100"><i class="fa-solid fa-plus"></i> Registrar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-white"><h5 class="mb-0">Historial de copagos</h5></div>
+                <div class="card-body">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light"><tr><th>Concepto</th><th class="text-end">Valor</th><th class="text-center">Estado</th><th class="text-center">Acción</th></tr></thead>
+                        <tbody>
+                            {% for c in copagos %}
+                            <tr>
+                                <td>{{ c.concepto }}</td>
+                                <td class="text-end">$ {{ "{:,.0f}".format(c.valor_copago) }}</td>
+                                <td class="text-center">
+                                    <span class="badge {% if c.pagado %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                        {% if c.pagado %}Pagado ({{ c.metodo_pago }}){% else %}Pendiente{% endif %}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    {% if not c.pagado %}
+                                    <a href="/copagos/marcar-pagado/{{ c.id }}/{{ paciente_id }}" class="btn btn-outline-success btn-sm">Marcar pagado</a>
+                                    {% elif c.factura_id %}
+                                    <span class="badge bg-info text-dark">Facturado</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted py-4">Sin copagos registrados.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="/pacientes/{{ paciente_id }}" class="btn btn-secondary mt-3">Volver a la ficha</a>
+</div>
+{% endblock %}

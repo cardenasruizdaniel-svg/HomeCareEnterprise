@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+
+{% include "components/volver_paciente.html" %}
+
+    <div class="card shadow">
+        <div class="card-header {% if antecedente %}bg-warning{% else %}bg-primary text-white{% endif %}">
+            <h3 class="mb-0">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                {% if antecedente %}Editar Antecedente{% else %}Nuevo Antecedente{% endif %}
+            </h3>
+        </div>
+        <div class="card-body">
+
+            {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+
+            <form method="post" action="{% if antecedente %}/antecedentes/editar/{{ antecedente.id }}{% else %}/antecedentes/guardar{% endif %}">
+
+                <input type="hidden" name="paciente_id" value="{{ paciente_id }}">
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label>Tipo</label>
+                        <select name="tipo" class="form-select" required>
+                            {% for t in tipos %}
+                            <option value="{{ t }}" {% if antecedente and antecedente.tipo==t %}selected{% endif %}>{{ t }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-8 mb-3">
+                        <label>Descripción</label>
+                        <input type="text" name="descripcion" class="form-control" value="{{ antecedente.descripcion if antecedente else '' }}" required>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label>Observaciones</label>
+                    <textarea name="observaciones" class="form-control" rows="2">{{ antecedente.observaciones if antecedente else '' }}</textarea>
+                </div>
+
+                <hr>
+
+                <button class="btn btn-success">
+                    <i class="fa-solid fa-floppy-disk"></i> Guardar
+                </button>
+                <a href="/antecedentes/{{ paciente_id }}" class="btn btn-secondary">Cancelar</a>
+
+            </form>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

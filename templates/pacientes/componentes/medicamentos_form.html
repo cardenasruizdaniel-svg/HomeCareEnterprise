@@ -1,0 +1,286 @@
+<div class="card shadow border-0 mb-4">
+
+    <div class="card-header bg-success text-white">
+
+        <h5 class="mb-0">
+
+            <i class="fa-solid fa-pills"></i>
+
+            Prescripción de Medicamentos
+
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <form action="/medicamentos/guardar" method="post">
+
+            <input
+                type="hidden"
+                name="paciente_id"
+                value="{{ paciente.id }}">
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+
+                        Medicamento
+
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        name="nombre"
+                        required>
+
+                </div>
+
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+
+                        Principio Activo
+
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        name="principio_activo">
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label>
+
+                        Concentración
+
+                    </label>
+
+                    <input
+                        class="form-control"
+                        name="concentracion">
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label>
+
+                        Presentación
+
+                    </label>
+
+                    <select
+                        class="form-select"
+                        name="presentacion">
+
+                        <option>Tableta</option>
+
+                        <option>Cápsula</option>
+
+                        <option>Ampolla</option>
+
+                        <option>Jarabe</option>
+
+                        <option>Suspensión</option>
+
+                        <option>Gotas</option>
+
+                        <option>Crema</option>
+
+                        <option>Ungüento</option>
+
+                        <option>Inhalador</option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label>
+
+                        Cantidad
+
+                    </label>
+
+                    <input
+                        class="form-control"
+                        type="number"
+                        name="cantidad"
+                        value="1">
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label>
+
+                        Dosis
+
+                    </label>
+
+                    <input
+                        class="form-control"
+                        name="dosis"
+                        placeholder="500 mg">
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label>
+
+                        Frecuencia
+
+                    </label>
+
+                    <select
+                        class="form-select"
+                        name="frecuencia">
+
+                        <option>Cada 6 horas</option>
+
+                        <option>Cada 8 horas</option>
+
+                        <option>Cada 12 horas</option>
+
+                        <option>Cada 24 horas</option>
+
+                        <option>Según necesidad</option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label>
+
+                        Vía
+
+                    </label>
+
+                    <select
+                        class="form-select"
+                        name="via">
+
+                        <option>Oral</option>
+
+                        <option>Intravenosa</option>
+
+                        <option>Intramuscular</option>
+
+                        <option>Subcutánea</option>
+
+                        <option>Tópica</option>
+
+                        <option>Oftálmica</option>
+
+                        <option>Nasal</option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label>
+
+                        Fecha Inicio
+
+                    </label>
+
+                    <input
+                        type="date"
+                        class="form-control"
+                        name="fecha_inicio">
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label>
+
+                        Fecha Fin
+
+                    </label>
+
+                    <input
+                        type="date"
+                        class="form-control"
+                        name="fecha_fin">
+
+                </div>
+
+                <div class="col-md-4 mb-3">
+
+                    <label>
+
+                        Duración
+
+                    </label>
+
+                    <input
+                        class="form-control"
+                        name="duracion"
+                        placeholder="10 días">
+
+                </div>
+
+                <div class="col-md-12 mb-3">
+
+                    <label>
+
+                        Indicaciones
+
+                    </label>
+
+                    <textarea
+                        class="form-control"
+                        rows="3"
+                        name="indicaciones"></textarea>
+
+                </div>
+
+                <div class="col-md-12 mb-3">
+
+                    <label>
+
+                        Observaciones
+
+                    </label>
+
+                    <textarea
+                        class="form-control"
+                        rows="2"
+                        name="observaciones"></textarea>
+
+                </div>
+
+            </div>
+
+            <div class="text-end">
+
+                <button
+                    class="btn btn-success">
+
+                    <i class="fa-solid fa-floppy-disk"></i>
+
+                    Guardar Medicamento
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>

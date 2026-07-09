@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block titulo %}Programar Visitas{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-calendar-check text-primary"></i> Programar Visitas</h2>
+    <p class="text-muted">
+        Este servicio tiene <strong>{{ visitas|length }} sesión(es)</strong> en total.
+        A cada una le puede asignar su fecha (la hora es solo tentativa, no obligatoria).
+        Cuando quede programada, aparecerá en la agenda/calendario del profesional.
+    </p>
+    <p class="text-muted">
+        {{ servicio.tipo_servicio }}{% if servicio.subtipo %} - {{ servicio.subtipo }}{% endif %}
+        — Paciente: {{ paciente.primer_nombre }} {{ paciente.primer_apellido }}
+    </p>
+
+    <div id="alerta-resultado"></div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr><th>Fecha</th><th>Hora</th><th>Profesional</th><th class="text-center">Estado</th><th class="text-center">Acciones</th></tr>
+                </thead>
+                <tbody>
+                    {% for v in visitas %}
+                    <tr data-id="{{ v.id }}">
+                        <td>{{ v.fecha }}</td>
+                        <td>{{ v.hora_inicio }} - {{ v.hora_fin }}</td>
+                        <td>{{ v.profesional or "Sin asignar" }}</td>
+                        <td class="text-center">
+                            <span class="badge {% if v.estado=='Programada' %}bg-success{% elif v.estado=='Cancelada' %}bg-danger{% elif v.estado=='Firmada' %}bg-primary{% else %}bg-warning text-dark{% endif %}">
+                                {{ v.estado }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            {% if v.estado == 'Pendiente' %}
+                            <button class="btn btn-success btn-sm btn-programar"
+                                    data-id="{{ v.id }}" data-fecha="{{ v.fecha }}" data-hi="{{ v.hora_inicio }}" data-hf="{{ v.hora_fin }}" data-prof="{{ v.profesional_id or '' }}">
+                                <i class="fa-solid fa-calendar-plus"></i> Programar
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm btn-cancelar" data-id="{{ v.id }}">Cancelar</button>
+                            {% elif v.estado == 'Programada' %}
+                            <button class="btn btn-outline-warning btn-sm btn-reprogramar"
+                                    data-id="{{ v.id }}" data-fecha="{{ v.fecha }}" data-hi="{{ v.hora_inicio }}" data-hf="{{ v.hora_fin }}" data-prof="{{ v.profesional_id or '' }}">
+                                <i class="fa-solid fa-clock-rotate-left"></i> Reprogramar
+                            </button>
+                            <button class="btn btn-outline-danger btn-sm btn-cancelar" data-id="{{ v.id }}">Cancelar</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">Sin visitas.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <a href="/pacientes/{{ paciente.id }}" class="btn btn-secondary mt-3">Volver a la ficha</a>
+</div>
+
+<!-- Modal de programar/reprogramar -->
+<div class="modal fade" id="modalVisita" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="titulo-modal-visita">Programar visita</h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label>Fecha <span class="text-danger">*</span></label>
+                    <input type="date" id="mv-fecha" class="form-control" required>
+                </div>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <label>Hora inicio <small class="text-muted">(tentativa, opcional)</small></label>
+                        <input type="time" id="mv-hora-inicio" class="form-control">
+                    </div>
+                    <div class="col-6 mb-3">
+                        <label>Hora fin <small class="text-muted">(tentativa, opcional)</small></label>
+                        <input type="time" id="mv-hora-fin" class="form-control">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label>Profesional que atiende</label>
+                    <select id="mv-profesional" class="form-select">
+                        <option value="">-- Seleccione --</option>
+                        {% for p in profesionales %}
+                        <option value="{{ p.id }}">{{ p.nombre_completo }} ({{ p.especialidad_principal }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-success" id="btn-confirmar-modal">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const modalVisita = new bootstrap.Modal(document.getElementById("modalVisita"));
+let planillaIdActual = null;
+let accionActual = null; // "programar" | "reprogramar"
+
+function abrirModal(boton, accion) {
+    planillaIdActual = boton.dataset.id;
+    accionActual = accion;
+    document.getElementById("titulo-modal-visita").textContent = accion === "programar" ? "Programar visita" : "Reprogramar visita";
+    document.getElementById("mv-fecha").value = boton.dataset.fecha;
+    document.getElementById("mv-hora-inicio").value = boton.dataset.hi;
+    document.getElementById("mv-hora-fin").value = boton.dataset.hf;
+    document.getElementById("mv-profesional").value = boton.dataset.prof || "";
+    modalVisita.show();
+}
+
+document.querySelectorAll(".btn-programar").forEach((b) => b.addEventListener("click", () => abrirModal(b, "programar")));
+document.querySelectorAll(".btn-reprogramar").forEach((b) => b.addEventListener("click", () => abrirModal(b, "reprogramar")));
+
+document.getElementById("btn-confirmar-modal").addEventListener("click", async () => {
+    const cuerpo = {
+        fecha: document.getElementById("mv-fecha").value,
+        hora_inicio: document.getElementById("mv-hora-inicio").value,
+        hora_fin: document.getElementById("mv-hora-fin").value,
+        profesional_id: document.getElementById("mv-profesional").value,
+    };
+
+    if (!cuerpo.fecha) {
+        document.getElementById("alerta-resultado").innerHTML = `<div class="alert alert-danger">Debe indicar la fecha.</div>`;
+        return;
+    }
+
+    try {
+        const respuesta = await fetch(`/gestion-visitas/${accionActual}/${planillaIdActual}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(cuerpo),
+        });
+
+        if (!respuesta.ok) {
+            document.getElementById("alerta-resultado").innerHTML =
+                `<div class="alert alert-danger">Error del servidor (código ${respuesta.status}). Verifique que tenga permisos, o contacte soporte.</div>`;
+            return;
+        }
+
+        const resultado = await respuesta.json();
+
+        if (resultado.ok) {
+            modalVisita.hide();
+            location.reload();
+        } else {
+            document.getElementById("alerta-resultado").innerHTML = `<div class="alert alert-danger">${resultado.error}</div>`;
+        }
+    } catch (error) {
+        document.getElementById("alerta-resultado").innerHTML =
+            `<div class="alert alert-danger">No se pudo conectar con el servidor: ${error.message}</div>`;
+    }
+});
+
+document.querySelectorAll(".btn-cancelar").forEach((boton) => {
+    boton.addEventListener("click", async () => {
+        if (!confirm("¿Cancelar esta visita?")) return;
+        const motivo = prompt("Motivo de la cancelación (opcional):") || "";
+
+        try {
+            const respuesta = await fetch(`/gestion-visitas/cancelar/${boton.dataset.id}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ motivo }),
+            });
+
+            if (!respuesta.ok) {
+                document.getElementById("alerta-resultado").innerHTML =
+                    `<div class="alert alert-danger">Error del servidor (código ${respuesta.status}).</div>`;
+                return;
+            }
+
+            const resultado = await respuesta.json();
+
+            if (resultado.ok) {
+                location.reload();
+            } else {
+                document.getElementById("alerta-resultado").innerHTML = `<div class="alert alert-danger">${resultado.error}</div>`;
+            }
+        } catch (error) {
+            document.getElementById("alerta-resultado").innerHTML =
+                `<div class="alert alert-danger">No se pudo conectar con el servidor: ${error.message}</div>`;
+        }
+    });
+});
+</script>
+{% endblock %}

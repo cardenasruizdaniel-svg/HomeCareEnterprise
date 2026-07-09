@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-0">
+                <i class="fa-solid fa-user-doctor text-primary"></i>
+                Equipo Interdisciplinario
+            </h2>
+            <small class="text-muted">
+                Médicos, enfermería, terapeutas, psicología y salud ocupacional
+            </small>
+        </div>
+        <a href="/profesionales/nuevo" class="btn btn-primary">
+            <i class="fa-solid fa-user-plus"></i>
+            Nuevo Profesional
+        </a>
+        <a href="/profesionales/importar/formulario" class="btn btn-outline-primary">
+            <i class="fa-solid fa-file-import"></i>
+            Importar
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Documento</th>
+                            <th>Nombre</th>
+                            <th>Profesión</th>
+                            <th>Municipio</th>
+                            <th>Estado</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in profesionales %}
+                        <tr>
+                            <td>{{ p.documento }}</td>
+                            <td>{{ p.nombre_completo or p.nombre }}</td>
+                            <td>{{ p.especialidad_principal or p.profesion }}</td>
+                            <td>{{ p.municipio }}</td>
+                            <td>
+                                {% if p.estado == "ACTIVO" %}
+                                <span class="badge bg-success">{{ p.estado }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ p.estado }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <a href="/profesionales/editar/{{ p.id }}" class="btn btn-warning btn-sm">
+                                    <i class="fa-solid fa-pen"></i>
+                                </a>
+                                <a href="/documentos-profesional/{{ p.id }}" class="btn btn-outline-secondary btn-sm" title="Documentos">
+                                    <i class="fa-solid fa-folder-open"></i>
+                                </a>
+                                <a href="/turnos/validar/{{ p.id }}" class="btn btn-outline-success btn-sm" title="Validar turnos">
+                                    <i class="fa-solid fa-check-double"></i>
+                                </a>
+                                <a href="/profesionales/eliminar/{{ p.id }}"
+                                   class="btn btn-danger btn-sm"
+                                   onclick="return confirm('¿Está seguro de retirar este profesional?');">
+                                    <i class="fa-solid fa-user-slash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                No hay profesionales registrados.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

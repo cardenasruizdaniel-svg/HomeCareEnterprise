@@ -1,0 +1,284 @@
+<div class="row">
+
+    <!-- FOTO -->
+
+    <div class="col-lg-3">
+
+        <div class="card border-0 shadow-sm">
+
+            <div class="card-body text-center">
+
+                <img
+                    src="/static/img/avatar.png"
+                    id="previewFoto"
+                    class="img-fluid rounded-circle border"
+                    style="width:180px;height:180px;object-fit:cover;">
+
+                <div class="mt-3">
+
+                    <input
+                        type="file"
+                        name="foto"
+                        class="form-control">
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- DATOS -->
+
+    <div class="col-lg-9">
+
+        <div class="row g-3">
+
+            <div class="col-md-3">
+
+                <label class="form-label">
+
+                    Tipo Documento
+
+                </label>
+
+                <select
+                    class="form-select"
+                    name="tipo_documento"
+                    required>
+
+                    <option value="">Seleccione</option>
+
+                    <option>CC</option>
+
+                    <option>TI</option>
+
+                    <option>CE</option>
+
+                    <option>RC</option>
+
+                    <option>PAS</option>
+
+                </select>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <label class="form-label">
+
+                    Documento
+
+                </label>
+
+                <input
+                    type="text"
+                    name="documento"
+                    class="form-control"
+                    required>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <label class="form-label">
+
+                    Primer Nombre
+
+                </label>
+
+                <input
+                    type="text"
+                    name="primer_nombre"
+                    class="form-control"
+                    required>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <label class="form-label">
+
+                    Segundo Nombre
+
+                </label>
+
+                <input
+                    type="text"
+                    name="segundo_nombre"
+                    class="form-control">
+
+            </div>
+
+            <div class="col-md-3">
+
+                <label class="form-label">
+
+                    Primer Apellido
+
+                </label>
+
+                <input
+                    type="text"
+                    name="primer_apellido"
+                    class="form-control"
+                    required>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <label class="form-label">
+
+                    Segundo Apellido
+
+                </label>
+
+                <input
+                    type="text"
+                    name="segundo_apellido"
+                    class="form-control">
+
+            </div>
+
+            <div class="col-md-2">
+
+                <label class="form-label">
+
+                    Sexo
+
+                </label>
+
+                <select
+                    class="form-select"
+                    name="sexo">
+
+                    <option value="">Seleccione</option>
+
+                    <option>Masculino</option>
+
+                    <option>Femenino</option>
+
+                </select>
+
+            </div>
+
+            <div class="col-md-2">
+
+                <label class="form-label">
+
+                    RH
+
+                </label>
+
+                <select
+                    class="form-select"
+                    name="tipo_sangre">
+
+                    <option></option>
+
+                    <option>O+</option>
+                    <option>O-</option>
+                    <option>A+</option>
+                    <option>A-</option>
+                    <option>B+</option>
+                    <option>B-</option>
+                    <option>AB+</option>
+                    <option>AB-</option>
+
+                </select>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <label class="form-label">
+
+                    Estado Civil
+
+                </label>
+
+                <select
+                    class="form-select"
+                    name="estado_civil">
+
+                    <option></option>
+
+                    <option>Soltero(a)</option>
+
+                    <option>Casado(a)</option>
+
+                    <option>Unión Libre</option>
+
+                    <option>Separado(a)</option>
+
+                    <option>Viudo(a)</option>
+
+                </select>
+
+            </div>
+
+            <div class="col-md-3">
+
+                <label class="form-label">
+
+                    Fecha Nacimiento
+
+                </label>
+
+                <input
+                    type="date"
+                    id="fechaNacimiento"
+                    name="fecha_nacimiento"
+                    class="form-control">
+
+            </div>
+
+            <div class="col-md-2">
+
+                <label class="form-label">
+
+                    Edad
+
+                </label>
+
+                <input
+                    type="text"
+                    id="edad"
+                    class="form-control"
+                    readonly>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+document
+.getElementById("fechaNacimiento")
+.addEventListener("change",function(){
+
+    const nacimiento=new Date(this.value);
+
+    const hoy=new Date();
+
+    let edad=hoy.getFullYear()-nacimiento.getFullYear();
+
+    const m=hoy.getMonth()-nacimiento.getMonth();
+
+    if(m<0 || (m===0 && hoy.getDate()<nacimiento.getDate())){
+
+        edad--;
+
+    }
+
+    document.getElementById("edad").value=edad+" años";
+
+});
+
+</script>

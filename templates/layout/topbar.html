@@ -1,0 +1,189 @@
+<header class="topbar">
+
+    <div class="topbar-left">
+
+        <button id="btnMenu" class="btn btn-light">
+
+            <i class="fa-solid fa-bars"></i>
+
+        </button>
+
+        <div class="search-box">
+
+            <i class="fa-solid fa-search"></i>
+
+            <input
+                type="text"
+                class="form-control"
+                placeholder="Buscar paciente, documento, historia clínica...">
+
+        </div>
+
+    </div>
+
+    <div class="topbar-right">
+
+        <!-- Accesos rápidos -->
+
+        <div class="dropdown me-3">
+
+            <button
+                class="btn btn-primary dropdown-toggle"
+                data-bs-toggle="dropdown">
+
+                <i class="fa-solid fa-plus"></i>
+
+                Nuevo
+
+            </button>
+
+            <ul class="dropdown-menu dropdown-menu-end">
+
+                <li>
+
+                    <a class="dropdown-item"
+                       href="/pacientes/nuevo">
+
+                        <i class="fa-solid fa-user-plus"></i>
+
+                        Paciente
+
+                    </a>
+
+                </li>
+
+                <li>
+
+                    <a class="dropdown-item"
+                       href="/programacion/nueva">
+
+                        <i class="fa-solid fa-calendar-plus"></i>
+
+                        Visita
+
+                    </a>
+
+                </li>
+
+                <li>
+
+                    <a class="dropdown-item"
+                       href="/profesionales/nuevo">
+
+                        <i class="fa-solid fa-user-doctor"></i>
+
+                        Profesional
+
+                    </a>
+
+                </li>
+
+            </ul>
+
+        </div>
+
+        <!-- Notificaciones -->
+
+        <button class="btn btn-light position-relative me-3">
+
+            <i class="fa-solid fa-bell fa-lg"></i>
+
+            <span
+                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+
+                {{ total_alertas|default(0) }}
+
+            </span>
+
+        </button>
+
+        <!-- Fecha -->
+
+        <div class="me-4 text-end">
+
+            <strong id="fechaActual"></strong>
+
+            <br>
+
+            <small class="text-muted" id="horaActual"></small>
+
+        </div>
+
+        <!-- Usuario -->
+
+        <div class="dropdown">
+
+            <button
+                class="btn btn-light dropdown-toggle"
+                data-bs-toggle="dropdown">
+
+                <i class="fa-solid fa-circle-user"></i>
+
+                {{ request.session.get("nombre","Usuario") }}
+
+            </button>
+
+            <ul class="dropdown-menu dropdown-menu-end">
+
+                <li>
+
+                    <a class="dropdown-item"
+                       href="/perfil">
+
+                        Mi Perfil
+
+                    </a>
+
+                </li>
+
+                <li>
+
+                    <a class="dropdown-item"
+                       href="/configuracion">
+
+                        Configuración
+
+                    </a>
+
+                </li>
+
+                <li><hr class="dropdown-divider"></li>
+
+                <li>
+
+                    <a class="dropdown-item text-danger"
+                       href="/logout">
+
+                        Cerrar sesión
+
+                    </a>
+
+                </li>
+
+            </ul>
+
+        </div>
+
+    </div>
+
+</header>
+
+<script>
+
+function actualizarFechaHora(){
+
+    const ahora = new Date();
+
+    document.getElementById("fechaActual").innerHTML =
+        ahora.toLocaleDateString();
+
+    document.getElementById("horaActual").innerHTML =
+        ahora.toLocaleTimeString();
+
+}
+
+actualizarFechaHora();
+
+setInterval(actualizarFechaHora,1000);
+
+</script>

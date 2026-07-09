@@ -1,0 +1,193 @@
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-body p-2">
+
+        <ul class="nav nav-pills nav-fill" id="menuPaciente">
+
+            <!-- INFORMACIÓN -->
+
+            <li class="nav-item">
+
+                <button
+                    class="nav-link active"
+                    data-bs-toggle="tab"
+                    data-bs-target="#informacion">
+
+                    <i class="fa-solid fa-id-card"></i>
+
+                    <br>
+
+                    Información
+
+                </button>
+
+            </li>
+
+            <!-- ACUDIENTES -->
+
+            <li class="nav-item">
+
+                <button
+                    class="nav-link"
+                    data-bs-toggle="tab"
+                    data-bs-target="#acudientes">
+
+                    <i class="fa-solid fa-users"></i>
+
+                    <br>
+
+                    Acudientes
+
+                    <span class="badge bg-primary ms-1">
+
+                        {{ acudientes|length }}
+
+                    </span>
+
+                </button>
+
+            </li>
+
+            <!-- DIAGNÓSTICOS -->
+
+            <li class="nav-item">
+
+                <button
+                    class="nav-link"
+                    data-bs-toggle="tab"
+                    data-bs-target="#diagnosticos">
+
+                    <i class="fa-solid fa-stethoscope"></i>
+
+                    <br>
+
+                    Diagnósticos
+
+                    <span class="badge bg-danger ms-1">
+
+                        {{ total_diagnosticos|default(0) }}
+
+                    </span>
+
+                </button>
+
+            </li>
+
+            <!-- TRATAMIENTOS -->
+
+            <li class="nav-item">
+
+                <button
+                    class="nav-link"
+                    data-bs-toggle="tab"
+                    data-bs-target="#tratamientos">
+
+                    <i class="fa-solid fa-syringe"></i>
+
+                    <br>
+
+                    Tratamientos
+
+                    <span class="badge bg-warning text-dark ms-1">
+
+                        {{ total_tratamientos|default(0) }}
+
+                    </span>
+
+                </button>
+
+            </li>
+
+            <!-- MEDICAMENTOS -->
+
+            <li class="nav-item">
+
+                <button
+                    class="nav-link"
+                    data-bs-toggle="tab"
+                    data-bs-target="#medicamentos">
+
+                    <i class="fa-solid fa-pills"></i>
+
+                    <br>
+
+                    Medicamentos
+
+                    <span class="badge bg-success ms-1">
+
+                        {{ total_medicamentos|default(0) }}
+
+                    </span>
+
+                </button>
+
+            </li>
+
+            <!-- VISITAS -->
+
+            <li class="nav-item">
+
+                <button
+                    class="nav-link"
+                    data-bs-toggle="tab"
+                    data-bs-target="#visitas">
+
+                    <i class="fa-solid fa-house-medical"></i>
+
+                    <br>
+
+                    Visitas
+
+                    <span class="badge bg-info text-dark ms-1">
+
+                        {{ visitas_pendientes|default(0) }}
+
+                    </span>
+
+                </button>
+
+            </li>
+
+            <!-- DOCUMENTOS -->
+
+            <li class="nav-item">
+
+                <button
+                    class="nav-link"
+                    data-bs-toggle="tab"
+                    data-bs-target="#documentos">
+
+                    <i class="fa-solid fa-folder-open"></i>
+
+                    <br>
+
+                    Documentos
+
+                </button>
+
+            </li>
+
+            <!-- AUDITORÍA -->
+
+            <li class="nav-item">
+
+                <button
+                    class="nav-link"
+                    data-bs-toggle="tab"
+                    data-bs-target="#auditoria">
+
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+
+                    <br>
+
+                    Auditoría
+
+                </button>
+
+            </li>
+
+        </ul>
+
+    </div>
+
+</div>

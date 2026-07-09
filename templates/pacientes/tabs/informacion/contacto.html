@@ -1,0 +1,329 @@
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-success text-white">
+
+        <h5 class="mb-0">
+
+            <i class="fa-solid fa-address-book"></i>
+
+            Información de Contacto
+
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <!-- CONTACTO PRINCIPAL -->
+
+            <div class="col-lg-6">
+
+                <div class="card border-0 bg-light h-100">
+
+                    <div class="card-header">
+
+                        <strong>
+
+                            Datos de Contacto
+
+                        </strong>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+
+                                    Celular Principal
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.celular }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+
+                                    Teléfono Fijo
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.telefono }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-12 mb-3">
+
+                                <label class="form-label">
+
+                                    Correo Electrónico
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.correo }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-12 mb-3">
+
+                                <label class="form-label">
+
+                                    Dirección
+
+                                </label>
+
+                                <textarea
+                                    class="form-control"
+                                    rows="2"
+                                    readonly>{{ paciente.direccion }}</textarea>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+
+                                    Barrio
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.barrio }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+
+                                    Zona
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.zona }}"
+                                    readonly>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- UBICACIÓN -->
+
+            <div class="col-lg-6">
+
+                <div class="card border-0 bg-light h-100">
+
+                    <div class="card-header">
+
+                        <strong>
+
+                            Ubicación
+
+                        </strong>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+
+                                    Municipio
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.municipio }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+
+                                    Departamento
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.departamento }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+
+                                    Latitud
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.latitud }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">
+
+                                    Longitud
+
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.longitud }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-12">
+
+                                <a
+                                    href="https://www.google.com/maps/search/?api=1&query={{ paciente.latitud }},{{ paciente.longitud }}"
+                                    target="_blank"
+                                    class="btn btn-outline-primary w-100">
+
+                                    <i class="fa-solid fa-location-dot"></i>
+
+                                    Abrir ubicación en Google Maps
+
+                                </a>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <hr>
+
+        <!-- CONTACTO DE EMERGENCIA -->
+
+        <div class="card border-warning">
+
+            <div class="card-header bg-warning">
+
+                <strong>
+
+                    <i class="fa-solid fa-phone-volume"></i>
+
+                    Contacto de Emergencia
+
+                </strong>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Nombre
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.contacto_emergencia }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Parentesco
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.parentesco_emergencia }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+
+                        <label class="form-label">
+
+                            Teléfono
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.telefono_emergencia }}"
+                            readonly>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

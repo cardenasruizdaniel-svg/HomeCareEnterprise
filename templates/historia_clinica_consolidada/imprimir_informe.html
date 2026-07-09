@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block titulo %}Informe N.° {{ informe.consecutivo }}{% endblock %}
+{% block css %}
+<style>
+.hoja-informe { background:white; max-width:850px; margin:0 auto; padding:30px; border:1px solid #dee2e6; }
+.encabezado-informe { display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #212529; padding-bottom:10px; margin-bottom:20px; }
+.datos-paciente { border:1px solid #dee2e6; border-radius:6px; padding:12px 16px; margin-bottom:16px; background:#f8f9fa; }
+.datos-paciente table { width:100%; font-size:14px; }
+.datos-paciente td { padding:2px 6px; vertical-align:top; }
+.texto-nota { white-space:pre-wrap; font-size:15px; line-height:1.6; border:1px solid #dee2e6; border-radius:6px; padding:14px; min-height:120px; }
+.zona-firma-informe { margin-top:25px; border-top:1px solid #dee2e6; padding-top:15px; }
+@media print {
+    .no-imprimir, .sidebar, .topbar { display:none !important; }
+    .contenido-principal { margin:0 !important; padding:0 !important; }
+    .hoja-informe { border:none; }
+}
+</style>
+{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+
+    <div class="no-imprimir mb-3 d-flex gap-2">
+        {% include "components/volver_paciente.html" %}
+        <button class="btn btn-outline-secondary" onclick="window.print()">
+            <i class="fa-solid fa-print"></i> Imprimir este informe
+        </button>
+    </div>
+
+    <div class="hoja-informe shadow-sm">
+        <div class="encabezado-informe">
+            {% if empresa.logo_base64 %}
+            <img src="{{ empresa.logo_base64 }}" style="height:70px;">
+            {% else %}
+            <img src="/static/img/logo_homecare.png" style="height:70px;">
+            {% endif %}
+            <div class="text-end">
+                <strong>{{ empresa.razon_social or "HomeCare Enterprise" }}</strong><br>
+                <small>NIT: {{ empresa.nit or "" }}</small><br>
+                {% if empresa.resolucion_habilitacion %}<small>{{ empresa.resolucion_habilitacion }}</small><br>{% endif %}
+                <small>
+                    {% if informe.tipo_registro == 'NOTA_ACLARATORIA' %}NOTA ACLARATORIA{% else %}INFORME DE VISITA{% endif %}
+                    N.° {{ informe.consecutivo }}
+                </small>
+            </div>
+        </div>
+
+        {% if informe.tipo_registro == 'NOTA_ACLARATORIA' and informe_corregido %}
+        <div class="alert alert-danger py-2">
+            <strong>Esta nota aclara / corrige el Informe N.° {{ informe.nota_aclaratoria_de }}</strong>,
+            registrado el {{ informe_corregido.fecha }}.
+        </div>
+        {% endif %}
+
+        <div class="datos-paciente">
+            <strong>DATOS DE IDENTIFICACIÓN DEL PACIENTE</strong>
+            <table class="mt-1">
+                <tr>
+                    <td><b>Nombre:</b> {{ paciente.primer_nombre }} {{ paciente.segundo_nombre or "" }} {{ paciente.primer_apellido }} {{ paciente.segundo_apellido or "" }}</td>
+                    <td><b>Documento:</b> {{ paciente.tipo_documento }} {{ paciente.documento }}</td>
+                </tr>
+                <tr>
+                    <td><b>Fecha de nacimiento:</b> {{ paciente.fecha_nacimiento or "—" }}{% if edad is not none %} ({{ edad }} años){% endif %}</td>
+                    <td><b>Sexo:</b> {{ paciente.sexo or "—" }}</td>
+                </tr>
+                <tr>
+                    <td><b>EPS:</b> {{ paciente.eps or "—" }}</td>
+                    <td><b>Régimen:</b> {{ paciente.regimen or "—" }}</td>
+                </tr>
+                <tr>
+                    <td colspan="2"><b>Dirección:</b> {{ paciente.direccion or "—" }}{% if paciente.barrio %}, {{ paciente.barrio }}{% endif %} — {{ paciente.municipio or "" }}, {{ paciente.departamento or "" }}</td>
+                </tr>
+                <tr>
+                    <td><b>Teléfono:</b> {{ paciente.celular or paciente.telefono or "—" }}</td>
+                    <td><b>Correo:</b> {{ paciente.correo or "—" }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <table class="w-100 mb-3" style="font-size:14px;">
+            <tr>
+                <td><b>Tipo de nota:</b> {{ informe.tipo_profesional or "—" }}</td>
+                <td class="text-end"><b>Fecha y hora del registro:</b> {{ informe.fecha }}</td>
+            </tr>
+        </table>
+
+        <strong>CONTENIDO DE LA NOTA</strong>
+        <div class="texto-nota mt-1">{{ informe.nota | safe }}</div>
+
+        <div class="zona-firma-informe">
+            <p class="mb-1"><b>Registrado por:</b> {{ informe.profesional_nombre or "—" }}
+               {% if informe.profesional_especialidad %} — {{ informe.profesional_especialidad }}{% endif %}
+            </p>
+            <p class="mb-1 small">
+                {% if informe.profesional_documento %}<b>C.C.:</b> {{ informe.profesional_documento }}{% endif %}
+                {% if informe.registro_profesional %} &nbsp;·&nbsp; <b>Tarjeta profesional:</b> {{ informe.registro_profesional }}{% endif %}
+            </p>
+            {% if informe.firma_profesional_base64 %}
+            <img src="{{ informe.firma_profesional_base64 }}" style="max-height:90px; border:1px solid #dee2e6; background:white;">
+            {% else %}
+            <p class="text-muted small">Este registro no tiene firma digital capturada.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

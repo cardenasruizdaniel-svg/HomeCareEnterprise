@@ -1,0 +1,25 @@
+.card{
+
+    border-radius:14px;
+
+}
+
+.table thead{
+
+    background:#0d6efd;
+
+    color:white;
+
+}
+
+.badge{
+
+    font-size:.85rem;
+
+}
+
+.btn{
+
+    border-radius:10px;
+
+}

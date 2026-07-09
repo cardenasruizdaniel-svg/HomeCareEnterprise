@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+
+{% include "components/volver_paciente.html" %}
+
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">
+                <i class="fa-solid fa-file-circle-plus"></i>
+                Nueva Orden Médica
+            </h3>
+        </div>
+        <div class="card-body">
+
+            {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+            {% endif %}
+
+            {% if resultado %}
+            <div class="alert alert-info">
+                <strong>Orden generada.</strong>
+                Correo:
+                {% if resultado.correo.enviado %}
+                    <span class="text-success">enviado</span>.
+                {% else %}
+                    <span class="text-warning">{{ resultado.correo.motivo or "no enviado" }}</span>.
+                {% endif %}
+                WhatsApp:
+                {% if resultado.whatsapp.enviado %}
+                    <span class="text-success">enviado</span>.
+                {% else %}
+                    <span class="text-warning">{{ resultado.whatsapp.motivo or "no enviado" }}</span>.
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <form method="post" action="/ordenes-medicas/guardar">
+
+                <input type="hidden" name="paciente_id" value="{{ paciente_id }}">
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label>Tipo de orden</label>
+                        <select name="tipo" class="form-select" required>
+                            <option>Medicamento</option>
+                            <option>Examen</option>
+                            <option>Remisión</option>
+                            <option>Procedimiento</option>
+                            <option>Otro</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Profesional</label>
+                        <select name="profesional_id" class="form-select" required>
+                            {% for p in profesionales %}
+                            <option value="{{ p.id }}">{{ p.nombre_completo or p.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Código CUPS (opcional)</label>
+                        <input type="text" name="codigo_cups" class="form-control">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label>Descripción / indicaciones</label>
+                    <textarea name="descripcion" class="form-control" rows="4" required
+                        placeholder="Ej: Acetaminofén 500mg cada 8 horas por 5 días. / Hemograma completo, glucemia en ayunas."></textarea>
+                </div>
+
+                <div class="alert alert-light border">
+                    <i class="fa-solid fa-circle-info"></i>
+                    Al guardar, la orden se enviará automáticamente al paciente por WhatsApp y correo
+                    electrónico, usando los datos de contacto registrados en su ficha.
+                </div>
+
+                <hr>
+
+                <button class="btn btn-success">
+                    <i class="fa-solid fa-paper-plane"></i> Generar y enviar
+                </button>
+                <a href="/ordenes-medicas/{{ paciente_id }}" class="btn btn-secondary">Cancelar</a>
+
+            </form>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

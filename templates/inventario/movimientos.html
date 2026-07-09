@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block titulo %}Historial de Movimientos{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-clock-rotate-left text-primary"></i> Historial — {{ insumo.nombre }}</h2>
+    <p class="text-muted">Stock actual: <strong>{{ stock_actual }} {{ insumo.unidad_medida }}</strong></p>
+    <a href="/inventario" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver al inventario</a>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr><th>Fecha</th><th>Tipo</th><th class="text-center">Cantidad</th><th>Detalle</th></tr>
+                </thead>
+                <tbody>
+                    {% for m in movimientos %}
+                    <tr>
+                        <td>{{ m.fecha }}</td>
+                        <td><span class="badge {% if m.tipo == 'Entrada' %}bg-success{% else %}bg-warning text-dark{% endif %}">{{ m.tipo }}</span></td>
+                        <td class="text-center">{{ m.cantidad }}</td>
+                        <td class="small text-muted">
+                            {% if m.tipo == 'Entrada' %}
+                            Proveedor: {{ m.proveedor or "—" }} {% if m.numero_factura %}· Factura: {{ m.numero_factura }}{% endif %}
+                            {% else %}
+                            {% if m.primer_nombre %}Paciente: {{ m.primer_nombre }} {{ m.primer_apellido }} · {% endif %}{{ m.motivo or "—" }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-center text-muted py-4">Sin movimientos registrados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

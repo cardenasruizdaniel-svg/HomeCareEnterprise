@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-folder-open text-primary"></i> Documentos — {{ profesional.nombre_completo or profesional.nombre }}</h2>
+    <p class="text-muted">Títulos, cursos, certificaciones y demás documentos requeridos para el cargo.</p>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h5 class="mb-0">Agregar documento</h5></div>
+                <div class="card-body">
+                    <form method="post" action="/documentos-profesional/guardar">
+                        <input type="hidden" name="profesional_id" value="{{ profesional_id }}">
+                        <div class="mb-3">
+                            <label>Tipo de documento</label>
+                            <select name="tipo_documento" class="form-select" required>
+                                {% for t in tipos %}<option>{{ t }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3"><label>Nombre / título</label><input type="text" name="nombre" class="form-control"></div>
+                        <div class="mb-3"><label>Número</label><input type="text" name="numero" class="form-control"></div>
+                        <div class="mb-3"><label>Entidad emisora</label><input type="text" name="entidad_emisora" class="form-control"></div>
+                        <div class="row">
+                            <div class="col-6 mb-3"><label>Fecha expedición</label><input type="date" name="fecha_expedicion" class="form-control"></div>
+                            <div class="col-6 mb-3"><label>Fecha vencimiento</label><input type="date" name="fecha_vencimiento" class="form-control"></div>
+                        </div>
+                        <div class="mb-3"><label>Observaciones</label><textarea name="observaciones" class="form-control" rows="2"></textarea></div>
+                        <button class="btn btn-success w-100"><i class="fa-solid fa-plus"></i> Agregar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-white"><h5 class="mb-0">Documentos registrados</h5></div>
+                <div class="card-body">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light"><tr><th>Tipo</th><th>Nombre</th><th>Vence</th><th class="text-center">Acción</th></tr></thead>
+                        <tbody>
+                            {% for d in documentos %}
+                            <tr class="{% if d.vencido %}table-danger{% endif %}">
+                                <td>{{ d.tipo_documento }}</td>
+                                <td>{{ d.nombre }}</td>
+                                <td>
+                                    {{ d.fecha_vencimiento or "—" }}
+                                    {% if d.vencido %}<span class="badge bg-danger ms-1">Vencido</span>{% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <a href="/documentos-profesional/eliminar/{{ d.id }}/{{ profesional_id }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar?');">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted py-4">Sin documentos registrados.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <a href="/profesionales" class="btn btn-secondary mt-3">Volver a profesionales</a>
+</div>
+{% endblock %}

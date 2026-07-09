@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-check-double text-primary"></i> Validación de turnos reportados vs. asignados</h2>
+    <p class="text-muted">Compara la marcación real de ingreso (registrada en cada visita) contra el turno programado.</p>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr><th>Fecha</th><th>Turno asignado</th><th>Horario asignado</th><th class="text-center">Cumplimiento</th><th>Detalle</th></tr>
+                </thead>
+                <tbody>
+                    {% for r in reporte %}
+                    <tr class="{% if r.cumplimiento == 'Ausente' %}table-danger{% elif r.cumplimiento == 'Tarde' %}table-warning{% else %}table-success{% endif %}">
+                        <td>{{ r.fecha }}</td>
+                        <td>{{ r.turno }}</td>
+                        <td>{{ r.hora_inicio }} - {{ r.hora_fin }}</td>
+                        <td class="text-center"><span class="badge {% if r.cumplimiento == 'Ausente' %}bg-danger{% elif r.cumplimiento == 'Tarde' %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ r.cumplimiento }}</span></td>
+                        <td>{{ r.detalle }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">No hay turnos asignados en este periodo para validar.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <a href="/turnos" class="btn btn-secondary mt-3">Volver al calendario</a>
+</div>
+{% endblock %}

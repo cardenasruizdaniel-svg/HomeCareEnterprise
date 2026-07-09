@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <div class="card shadow">
+        <div class="card-header bg-warning">
+            <h3><i class="fa-solid fa-user-pen"></i> Editar Profesional</h3>
+        </div>
+        <div class="card-body">
+            <form method="post" action="/profesionales/actualizar/{{ profesional.id }}">
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label>Rol / Profesión</label>
+                        <select name="especialidad_principal" class="form-select">
+                            {% for r in roles %}
+                            <option value="{{ r }}" {% if profesional.especialidad_principal==r %}selected{% endif %}>{{ r }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Registro profesional</label>
+                        <input type="text" name="registro_profesional" value="{{ profesional.registro_profesional or '' }}" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Estado</label>
+                        <select name="estado" class="form-select">
+                            <option {% if profesional.estado=="ACTIVO" %}selected{% endif %}>ACTIVO</option>
+                            <option {% if profesional.estado=="INACTIVO" %}selected{% endif %}>INACTIVO</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label>Teléfono</label>
+                        <input type="text" name="telefono" value="{{ profesional.telefono or '' }}" class="form-control">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Celular</label>
+                        <input type="text" name="celular" value="{{ profesional.celular or '' }}" class="form-control">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Correo</label>
+                        <input type="email" name="correo" value="{{ profesional.correo or '' }}" class="form-control">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Capacidad diaria</label>
+                        <input type="number" name="capacidad_diaria" value="{{ profesional.capacidad_diaria or 20 }}" class="form-control">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label>Dirección</label>
+                        <input type="text" name="direccion" value="{{ profesional.direccion or '' }}" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Municipio</label>
+                        <input type="text" name="municipio" value="{{ profesional.municipio or '' }}" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Departamento</label>
+                        <input type="text" name="departamento" value="{{ profesional.departamento or '' }}" class="form-control">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label>Radio de cobertura (km)</label>
+                        <input type="number" step="0.1" name="radio_cobertura_km" value="{{ profesional.radio_cobertura_km or 10 }}" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Tiempo promedio de visita (min)</label>
+                        <input type="number" name="tiempo_promedio_visita" value="{{ profesional.tiempo_promedio_visita or 45 }}" class="form-control">
+                    </div>
+                </div>
+
+                <h5 class="text-muted mb-3">Contratación (para nómina)</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label>Tipo de contrato</label>
+                        <select name="tipo_contrato" class="form-select" id="tipo_contrato">
+                            <option value="POR_HORAS" {% if profesional.tipo_contrato=="POR_HORAS" or not profesional.tipo_contrato %}selected{% endif %}>Por horas</option>
+                            <option value="FIJO" {% if profesional.tipo_contrato=="FIJO" %}selected{% endif %}>Fijo (salario mensual)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3" id="campo_valor_hora">
+                        <label>Valor por hora</label>
+                        <input type="number" step="100" name="valor_hora" class="form-control" value="{{ profesional.valor_hora or 0 }}">
+                    </div>
+                    <div class="col-md-4 mb-3" id="campo_salario_fijo">
+                        <label>Salario fijo mensual</label>
+                        <input type="number" step="1000" name="salario_fijo" class="form-control" value="{{ profesional.salario_fijo or 0 }}">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label>Banco</label>
+                        <select name="banco" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            {% for b in lista_bancos %}
+                            <option value="{{ b.nombre }}" {% if profesional.banco == b.nombre %}selected{% endif %}>{{ b.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Tipo de cuenta</label>
+                        <select name="tipo_cuenta" class="form-select">
+                            <option {% if profesional.tipo_cuenta=="Ahorros" %}selected{% endif %}>Ahorros</option>
+                            <option {% if profesional.tipo_cuenta=="Corriente" %}selected{% endif %}>Corriente</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Número de cuenta</label>
+                        <input type="text" name="numero_cuenta" class="form-control" value="{{ profesional.numero_cuenta or '' }}">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label>Observaciones</label>
+                    <textarea name="observaciones" class="form-control" rows="2">{{ profesional.observaciones or '' }}</textarea>
+                </div>
+
+                <h5 class="text-muted mb-3">Acceso a la app móvil</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label>Cuenta de usuario vinculada</label>
+                        <select name="usuario_id" class="form-select">
+                            <option value="">— Sin vincular —</option>
+                            {% for u in usuarios %}
+                            <option value="{{ u.id }}" {% if profesional.usuario_id==u.id %}selected{% endif %}>{{ u.nombre }} ({{ u.usuario }})</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Necesario para que este profesional pueda usar la app móvil de campo.</small>
+                    </div>
+                </div>
+
+                <hr>
+
+                <button class="btn btn-success">
+                    <i class="fa-solid fa-floppy-disk"></i> Actualizar
+                </button>
+                <a href="/profesionales" class="btn btn-secondary">Regresar</a>
+
+            </form>
+
+            <hr>
+
+            <h5><i class="fa-solid fa-signature"></i> Firma digital</h5>
+            <p class="text-muted small">
+                Esta firma quedará asociada a todas las notas de historia clínica que este profesional registre.
+                {% if profesional.firma_base64 %}Ya tiene una firma guardada; puede dibujar una nueva para reemplazarla.{% endif %}
+            </p>
+            {% if profesional.firma_base64 %}
+            <p class="small text-muted">Firma actual:</p>
+            <img src="{{ profesional.firma_base64 }}" style="max-height:80px; border:1px solid #dee2e6; background:white;" class="mb-2 d-block">
+            {% endif %}
+            <div class="border rounded mb-2" style="touch-action:none;">
+                <canvas id="lienzo-firma-profesional" width="600" height="180" style="width:100%; height:180px; background:#f8f9fa;"></canvas>
+            </div>
+            <button type="button" class="btn btn-outline-secondary btn-sm mb-2" id="btn-limpiar-firma-profesional">Borrar</button>
+            <button type="button" class="btn btn-primary btn-sm mb-2" id="btn-guardar-firma-profesional">
+                <i class="fa-solid fa-floppy-disk"></i> Guardar firma
+            </button>
+            <div id="aviso-firma-profesional"></div>
+
+        </div>
+    </div>
+
+</div>
+
+<script>
+(function () {
+    const lienzo = document.getElementById("lienzo-firma-profesional");
+    const contexto = lienzo.getContext("2d");
+    let dibujando = false;
+
+    function posicion(evento) {
+        const rect = lienzo.getBoundingClientRect();
+        const escalaX = lienzo.width / rect.width;
+        const escalaY = lienzo.height / rect.height;
+        const punto = evento.touches ? evento.touches[0] : evento;
+        return { x: (punto.clientX - rect.left) * escalaX, y: (punto.clientY - rect.top) * escalaY };
+    }
+
+    function iniciar(e) { dibujando = true; const p = posicion(e); contexto.beginPath(); contexto.moveTo(p.x, p.y); e.preventDefault(); }
+    function dibujar(e) { if (!dibujando) return; const p = posicion(e); contexto.lineTo(p.x, p.y); contexto.stroke(); e.preventDefault(); }
+    function terminar() { dibujando = false; }
+
+    lienzo.addEventListener("mousedown", iniciar);
+    lienzo.addEventListener("mousemove", dibujar);
+    lienzo.addEventListener("mouseup", terminar);
+    lienzo.addEventListener("touchstart", iniciar);
+    lienzo.addEventListener("touchmove", dibujar);
+    lienzo.addEventListener("touchend", terminar);
+
+    document.getElementById("btn-limpiar-firma-profesional").addEventListener("click", () => {
+        contexto.clearRect(0, 0, lienzo.width, lienzo.height);
+    });
+
+    document.getElementById("btn-guardar-firma-profesional").addEventListener("click", async () => {
+        const firma = lienzo.toDataURL("image/png");
+        const respuesta = await fetch("/profesionales/actualizar-firma/{{ profesional.id }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ firma_base64: firma }),
+        });
+        const resultado = await respuesta.json();
+        const aviso = document.getElementById("aviso-firma-profesional");
+        if (resultado.ok) {
+            aviso.innerHTML = `<div class="alert alert-success mt-2">Firma guardada correctamente.</div>`;
+        } else {
+            aviso.innerHTML = `<div class="alert alert-danger mt-2">${resultado.error}</div>`;
+        }
+    });
+})();
+</script>
+
+<script>
+document.getElementById('tipo_contrato').addEventListener('change', (e) => {
+    const esFijo = e.target.value === 'FIJO';
+    document.getElementById('campo_salario_fijo').classList.toggle('d-none', !esFijo);
+    document.getElementById('campo_valor_hora').classList.toggle('d-none', esFijo);
+});
+document.getElementById('tipo_contrato').dispatchEvent(new Event('change'));
+</script>
+
+{% endblock %}

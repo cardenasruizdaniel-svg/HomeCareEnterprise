@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Contrato — {{ contrato.nombre_completo }}</h4>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-4"><strong>Cargo:</strong> {{ contrato.nombre_cargo }}</div>
+                <div class="col-md-4"><strong>Tipo:</strong> {{ contrato.tipo_contrato }}</div>
+                <div class="col-md-4"><strong>Modalidad:</strong> {{ contrato.modalidad_pago }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-4"><strong>Inicio:</strong> {{ contrato.fecha_inicio }}</div>
+                <div class="col-md-4"><strong>Estado:</strong> {{ contrato.estado }}</div>
+                <div class="col-md-4"><strong>Periodicidad:</strong> {{ contrato.periodicidad_pago }}</div>
+            </div>
+
+            {% if liquidacion %}
+            <hr>
+            <h5>Liquidación prestacional estimada (informativa)</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-sm">
+                        <tr><td>Salario mensual</td><td class="text-end">$ {{ "{:,.0f}".format(liquidacion.salario_mensual) }}</td></tr>
+                        <tr><td>Auxilio de transporte</td><td class="text-end">$ {{ "{:,.0f}".format(liquidacion.auxilio_transporte) }}</td></tr>
+                        <tr class="table-light"><td><strong>Total devengado</strong></td><td class="text-end"><strong>$ {{ "{:,.0f}".format(liquidacion.total_devengado) }}</strong></td></tr>
+                        <tr><td>(-) Salud empleado (4%)</td><td class="text-end">-$ {{ "{:,.0f}".format(liquidacion.descuentos_empleado.salud_empleado) }}</td></tr>
+                        <tr><td>(-) Pensión empleado (4%)</td><td class="text-end">-$ {{ "{:,.0f}".format(liquidacion.descuentos_empleado.pension_empleado) }}</td></tr>
+                        <tr class="table-success"><td><strong>Neto a pagar</strong></td><td class="text-end"><strong>$ {{ "{:,.0f}".format(liquidacion.neto_a_pagar) }}</strong></td></tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-sm">
+                        <tr><td>Salud empleador (8.5%)</td><td class="text-end">$ {{ "{:,.0f}".format(liquidacion.aportes_empleador.salud_empleador) }}</td></tr>
+                        <tr><td>Pensión empleador (12%)</td><td class="text-end">$ {{ "{:,.0f}".format(liquidacion.aportes_empleador.pension_empleador) }}</td></tr>
+                        <tr><td>ARL</td><td class="text-end">$ {{ "{:,.0f}".format(liquidacion.aportes_empleador.arl) }}</td></tr>
+                        <tr><td>Cesantías (8.33%)</td><td class="text-end">$ {{ "{:,.0f}".format(liquidacion.aportes_empleador.cesantias) }}</td></tr>
+                        <tr><td>Intereses cesantías</td><td class="text-end">$ {{ "{:,.0f}".format(liquidacion.aportes_empleador.intereses_cesantias) }}</td></tr>
+                        <tr><td>Prima de servicios (8.33%)</td><td class="text-end">$ {{ "{:,.0f}".format(liquidacion.aportes_empleador.prima_servicios) }}</td></tr>
+                        <tr><td>Vacaciones (4.17%)</td><td class="text-end">$ {{ "{:,.0f}".format(liquidacion.aportes_empleador.vacaciones) }}</td></tr>
+                        <tr class="table-warning"><td><strong>Costo total empleador</strong></td><td class="text-end"><strong>$ {{ "{:,.0f}".format(liquidacion.costo_total_empleador) }}</strong></td></tr>
+                    </table>
+                </div>
+            </div>
+            <div class="alert alert-light border small">
+                Cálculo informativo según normativa laboral colombiana vigente (2026). No reemplaza la liquidación formal
+                del área contable (retención en la fuente, novedades, incapacidades, etc.).
+            </div>
+            {% endif %}
+
+            <a href="/contratos" class="btn btn-secondary">Volver</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

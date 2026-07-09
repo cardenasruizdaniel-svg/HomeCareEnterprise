@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Despacho del Profesional
+{% endblock %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <!-- ENCABEZADO -->
+
+    <div class="row mb-4">
+
+        <div class="col-lg-8">
+
+            <h2 class="fw-bold">
+
+                <i class="fa-solid fa-user-doctor text-success"></i>
+
+                Despacho del Profesional
+
+            </h2>
+
+            <p class="text-muted">
+
+                Planeación diaria de visitas domiciliarias.
+
+            </p>
+
+        </div>
+
+        <div class="col-lg-4 text-end">
+
+            <button
+                id="btnActualizarRuta"
+                class="btn btn-success">
+
+                <i class="fas fa-arrows-rotate"></i>
+
+                Actualizar Ruta
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- INFORMACIÓN GENERAL -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+
+                        Profesional
+
+                    </h6>
+
+                    <h5 id="nombreProfesional">
+
+                        -
+
+                    </h5>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+
+                        Visitas
+
+                    </h6>
+
+                    <h2 id="totalVisitas">
+
+                        0
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+
+                        Pendientes
+
+                    </h6>
+
+                    <h2 id="pendientes">
+
+                        0
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-3">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+
+                        Tiempo Estimado
+
+                    </h6>
+
+                    <h5 id="tiempoTotal">
+
+                        00:00
+
+                    </h5>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- MAPA -->
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header">
+
+            <strong>
+
+                <i class="fas fa-map-location-dot"></i>
+
+                Ruta del Día
+
+            </strong>
+
+        </div>
+
+        <div class="card-body p-0">
+
+            <div
+                id="mapaRuta"
+                style="height:500px">
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- TABLA -->
+
+    <div class="card shadow-sm">
+
+        <div class="card-header">
+
+            <strong>
+
+                Agenda del Profesional
+
+            </strong>
+
+        </div>
+
+        <div class="card-body">
+
+            <table class="table table-hover align-middle">
+
+                <thead>
+
+                <tr>
+
+                    <th>#</th>
+
+                    <th>Hora</th>
+
+                    <th>Paciente</th>
+
+                    <th>Dirección</th>
+
+                    <th>Estado</th>
+
+                    <th>Tiempo</th>
+
+                    <th>Acciones</th>
+
+                </tr>
+
+                </thead>
+
+                <tbody id="tablaProfesional">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script src="/static/js/despacho.js"></script>
+
+{% endblock %}

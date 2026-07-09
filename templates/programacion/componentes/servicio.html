@@ -1,0 +1,60 @@
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-light">
+        <h5 class="mb-0">
+            <i class="fa-solid fa-notes-medical text-primary"></i>
+            Procedimiento
+        </h5>
+    </div>
+
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8 mb-3 position-relative">
+                <label class="form-label">Procedimiento (código CUPS — para el RIPS)</label>
+                <input type="text" class="form-control" id="cups_busqueda" autocomplete="off"
+                       placeholder="Ej: consulta enfermería, curación...">
+                <input type="hidden" name="codigo_cups" id="codigo_cups_visita">
+                <div id="cups_resultados" class="list-group position-absolute w-100" style="z-index:1000;"></div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="form-label">Valor del servicio</label>
+                <input type="number" step="100" class="form-control" name="valor_servicio" placeholder="0">
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Detalle adicional del procedimiento</label>
+            <input type="text" class="form-control" name="procedimiento" placeholder="Ej: Curación grado II, terapia respiratoria...">
+        </div>
+        <input type="hidden" name="diagnostico_id" id="diagnostico_id_visita">
+    </div>
+
+</div>
+
+<script>
+const buscadorCups = document.getElementById('cups_busqueda');
+const resultadosCups = document.getElementById('cups_resultados');
+const codigoCups = document.getElementById('codigo_cups_visita');
+
+let temporizadorCups;
+buscadorCups.addEventListener('input', () => {
+    clearTimeout(temporizadorCups);
+    const texto = buscadorCups.value.trim();
+    codigoCups.value = '';
+    if (texto.length < 3) { resultadosCups.innerHTML = ''; return; }
+    temporizadorCups = setTimeout(async () => {
+        const resp = await fetch(`/catalogos/cups/buscar?q=${encodeURIComponent(texto)}`);
+        const datos = await resp.json();
+        resultadosCups.innerHTML = datos.map(d =>
+            `<button type="button" class="list-group-item list-group-item-action" data-codigo="${d.codigo}">${d.texto}</button>`
+        ).join('');
+    }, 300);
+});
+
+resultadosCups.addEventListener('click', (e) => {
+    if (e.target.matches('[data-codigo]')) {
+        codigoCups.value = e.target.dataset.codigo;
+        buscadorCups.value = e.target.textContent;
+        resultadosCups.innerHTML = '';
+    }
+});
+</script>

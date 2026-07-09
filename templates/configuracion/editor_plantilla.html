@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Diseñador de Plantillas
+{% endblock %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <div class="row">
+
+        <!-- COMPONENTES -->
+
+        <div class="col-lg-3">
+
+            <div class="card shadow">
+
+                <div class="card-header">
+
+                    <strong>
+
+                        Componentes
+
+                    </strong>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div class="list-group">
+
+                        <button class="list-group-item">
+
+                            📝 Texto
+
+                        </button>
+
+                        <button class="list-group-item">
+
+                            📄 Área de texto
+
+                        </button>
+
+                        <button class="list-group-item">
+
+                            🔢 Número
+
+                        </button>
+
+                        <button class="list-group-item">
+
+                            📅 Fecha
+
+                        </button>
+
+                        <button class="list-group-item">
+
+                            🕒 Hora
+
+                        </button>
+
+                        <button class="list-group-item">
+
+                            ☑ CheckBox
+
+                        </button>
+
+                        <button class="list-group-item">
+
+                            🔘 Radio
+
+                        </button>
+
+                        <button class="list-group-item">
+
+                            📷 Fotografía
+
+                        </button>
+
+                        <button class="list-group-item">
+
+                            🎤 Audio
+
+                        </button>
+
+                        <button class="list-group-item">
+
+                            ✍ Firma
+
+                        </button>
+
+                        <button class="list-group-item">
+
+                            📍 GPS
+
+                        </button>
+
+                        <button class="list-group-item">
+
+                            💊 Medicamentos
+
+                        </button>
+
+                        <button class="list-group-item">
+
+                            🩺 Diagnóstico CIE10
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- ZONA CENTRAL -->
+
+        <div class="col-lg-6">
+
+            <div class="card shadow">
+
+                <div class="card-header">
+
+                    <strong>
+
+                        Área de Diseño
+
+                    </strong>
+
+                </div>
+
+                <div class="card-body">
+
+                    <div
+                        id="canvas"
+                        class="border rounded p-5 text-center">
+
+                        <h5 class="text-muted">
+
+                            Arrastre aquí los componentes
+
+                        </h5>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- PROPIEDADES -->
+
+        <div class="col-lg-3">
+
+            <div class="card shadow">
+
+                <div class="card-header">
+
+                    <strong>
+
+                        Propiedades
+
+                    </strong>
+
+                </div>
+
+                <div class="card-body">
+
+                    <p class="text-muted">
+
+                        Seleccione un componente para editar sus propiedades.
+
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block javascript %}
+
+<script src="/static/js/disenador.js"></script>
+
+{% endblock %}

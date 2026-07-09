@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0d6efd">
+<title>HomeCare - App de Campo</title>
+<link rel="manifest" href="/app/manifest.json">
+<link rel="apple-touch-icon" href="/app/icons/icon-192.png">
+<link rel="stylesheet" href="/app/estilos.css">
+</head>
+<body>
+
+<div class="topbar">
+  <h1 id="titulo-pantalla">HomeCare</h1>
+  <span id="estado-conexion" class="estado-conexion">...</span>
+</div>
+
+<div class="contenedor" id="contenedor"></div>
+
+<nav class="bottom-nav oculto" id="nav-inferior">
+  <button data-vista="agenda"><span class="icono">📅</span>Agenda</button>
+  <button data-vista="pacientes"><span class="icono">🧑‍⚕️</span>Pacientes</button>
+  <button data-vista="pendientes"><span class="icono">📤</span>Por enviar</button>
+  <button data-vista="perfil"><span class="icono">👤</span>Perfil</button>
+</nav>
+
+<script src="/app/app.js"></script>
+</body>
+</html>

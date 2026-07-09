@@ -1,0 +1,1 @@
+console.log('Diagnósticos CIE10');

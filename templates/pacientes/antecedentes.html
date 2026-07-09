@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Antecedentes Clínicos
+{% endblock %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <h2 class="mb-4">
+
+        <i class="fa-solid fa-file-medical"></i>
+
+        Antecedentes Clínicos
+
+    </h2>
+
+    {% include "pacientes/componentes/antecedentes_form.html" %}
+
+    {% include "pacientes/componentes/antecedentes_tabla.html" %}
+
+</div>
+
+{% endblock %}

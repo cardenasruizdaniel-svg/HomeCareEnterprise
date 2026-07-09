@@ -1,0 +1,10 @@
+ROLES=[
+"Administrador",
+"Coordinador",
+"Medico",
+"Enfermeria",
+"Terapeuta",
+"Auxiliar",
+"Auditor",
+"Facturacion"
+]

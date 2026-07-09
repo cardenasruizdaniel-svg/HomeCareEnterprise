@@ -1,0 +1,303 @@
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-info text-white">
+
+        <h5 class="mb-0">
+
+            <i class="fa-solid fa-file-shield"></i>
+
+            Aseguramiento y Programa de Atención
+
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <div class="row">
+
+            <!-- DATOS DE ASEGURAMIENTO -->
+
+            <div class="col-lg-6">
+
+                <div class="card border-0 bg-light h-100">
+
+                    <div class="card-header">
+
+                        <strong>
+
+                            Información del Asegurador
+
+                        </strong>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">EPS</label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.eps }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">Régimen</label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.regimen }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">Tipo de Afiliación</label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.tipo_afiliacion }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">Estado de Afiliación</label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.estado_afiliacion }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-12 mb-3">
+
+                                <label class="form-label">Convenio</label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.convenio }}"
+                                    readonly>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- INFORMACIÓN DEL PROGRAMA -->
+
+            <div class="col-lg-6">
+
+                <div class="card border-0 bg-light h-100">
+
+                    <div class="card-header">
+
+                        <strong>
+
+                            Programa de Atención
+
+                        </strong>
+
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="row">
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">Programa</label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.programa }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">Modalidad</label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.modalidad }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">Sede</label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.sede }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">Ciudad de Atención</label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.ciudad_atencion }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">Copago</label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.copago }}"
+                                    readonly>
+
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+
+                                <label class="form-label">Estado del Programa</label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    value="{{ paciente.estado_programa }}"
+                                    readonly>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <hr>
+
+        <!-- AUTORIZACIONES -->
+
+        <div class="card border-warning">
+
+            <div class="card-header bg-warning">
+
+                <strong>
+
+                    <i class="fa-solid fa-file-circle-check"></i>
+
+                    Autorizaciones
+
+                </strong>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="row">
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            Número
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.numero_autorizacion }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            Fecha Inicio
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.fecha_inicio_autorizacion }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            Fecha Final
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.fecha_fin_autorizacion }}"
+                            readonly>
+
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+
+                        <label class="form-label">
+
+                            Estado
+
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            value="{{ paciente.estado_autorizacion }}"
+                            readonly>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

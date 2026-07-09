@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block titulo %}Plantillas de Visita{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-file-lines text-primary"></i> Plantillas de Visita</h2>
+    <p class="text-muted">Texto precargado por tipo de servicio para agilizar la digitación de la nota de evolución. Las de "Administración" las ve cualquier profesional de ese tipo de servicio; las personales solo las ve quien las creó.</p>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h5 class="mb-0">Nueva plantilla</h5></div>
+                <div class="card-body">
+                    <form method="post" action="/plantillas-visita/guardar">
+                        <div class="mb-3">
+                            <label>Nombre de la plantilla</label>
+                            <input type="text" name="nombre" class="form-control" placeholder="Ej: Curación estándar de úlcera" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Tipo de servicio (opcional)</label>
+                            <select name="tipo_servicio" class="form-select">
+                                {% for t in tipos_servicio %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>¿Para qué perfil/rol es esta plantilla?</label>
+                            <select name="rol_destinatario" class="form-select" required>
+                                {% for r in roles %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
+                            </select>
+                            <small class="text-muted">"Todos" la muestra a cualquier profesional; si elige un rol específico (Cuidador, Enfermero, etc.), solo la verán quienes tengan ese perfil.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label>Subtipo (opcional, ej. cuál terapia)</label>
+                            <input type="text" name="subtipo" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label>Contenido (texto que se precargará)</label>
+                            <textarea name="contenido" class="form-control" rows="5" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label>Origen</label>
+                            <select name="origen" id="select-origen" class="form-select">
+                                <option value="administracion">De uso general (Administración)</option>
+                                <option value="profesional">Solo para un profesional específico</option>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="contenedor-profesional" style="display:none;">
+                            <label>Profesional</label>
+                            <select name="profesional_id" class="form-select">
+                                <option value="">-- Seleccione --</option>
+                                {% for p in profesionales %}<option value="{{ p.id }}">{{ p.nombre_completo }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <button class="btn btn-success w-100"><i class="fa-solid fa-plus"></i> Guardar plantilla</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-white"><h5 class="mb-0">Plantillas existentes</h5></div>
+                <div class="card-body">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light"><tr><th>Nombre</th><th>Rol</th><th>Servicio</th><th>Origen</th><th></th></tr></thead>
+                        <tbody>
+                            {% for p in plantillas %}
+                            <tr>
+                                <td>{{ p.nombre }}</td>
+                                <td><span class="badge bg-info text-dark">{{ p.rol_destinatario or "Todos" }}</span></td>
+                                <td>{{ p.tipo_servicio }}{% if p.subtipo %} - {{ p.subtipo }}{% endif %}</td>
+                                <td>
+                                    {% if p.creado_por_administracion %}
+                                    <span class="badge bg-primary">Administración</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">{{ p.profesional }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="/plantillas-visita/desactivar/{{ p.id }}" class="btn btn-outline-danger btn-sm"
+                                       onclick="return confirm('¿Desactivar esta plantilla?');">Desactivar</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted py-4">Sin plantillas creadas.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.getElementById("select-origen").addEventListener("change", (e) => {
+    document.getElementById("contenedor-profesional").style.display = e.target.value === "profesional" ? "block" : "none";
+});
+</script>
+{% endblock %}

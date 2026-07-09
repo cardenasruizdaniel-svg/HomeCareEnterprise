@@ -1,0 +1,5 @@
+TABLA_PROFESIONALES = """
+CREATE TABLE IF NOT EXISTS profesionales(
+...
+)
+"""

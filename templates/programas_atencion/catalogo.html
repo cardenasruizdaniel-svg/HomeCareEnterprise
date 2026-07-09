@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block titulo %}Programas de Atención{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+
+{% include "components/volver_paciente.html" %}
+
+    <h2 class="mb-1"><i class="fa-solid fa-layer-group text-primary"></i> Programas de Atención</h2>
+    <p class="text-muted">Catálogo de programas a los que se puede asignar un paciente. No es una lista cerrada: puede crear los que necesite.</p>
+
+    <div class="row mb-4">
+        {% for c in conteo %}
+        <div class="col-md-3 mb-3">
+            <div class="card shadow text-center h-100">
+                <div class="card-body">
+                    <div class="display-6 text-primary">{{ c.total_pacientes }}</div>
+                    <div class="small">{{ c.tipo }}</div>
+                    <div class="small text-muted">{{ c.subtipo or "" }}</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h5 class="mb-0">Nuevo programa</h5></div>
+                <div class="card-body">
+                    <form method="post" action="/programas-atencion/crear">
+                        <div class="mb-3">
+                            <label>Nombre completo del programa</label>
+                            <input type="text" name="nombre" class="form-control" placeholder="Ej: Paciente Oncológico Paliativo" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Tipo (categoría general)</label>
+                            <input type="text" name="tipo" class="form-control" placeholder="Ej: Crónico Complejidad Alta" required>
+                        </div>
+                        <div class="mb-3">
+                            <label>Subtipo (opcional)</label>
+                            <input type="text" name="subtipo" class="form-control" placeholder="Ej: Con Traqueostomía">
+                        </div>
+                        <div class="mb-3">
+                            <label>Descripción</label>
+                            <textarea name="descripcion" class="form-control" rows="2"></textarea>
+                        </div>
+                        <button class="btn btn-success w-100"><i class="fa-solid fa-plus"></i> Crear programa</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-white"><h5 class="mb-0">Programas existentes</h5></div>
+                <div class="card-body">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light"><tr><th>Tipo</th><th>Subtipo</th><th>Descripción</th><th></th></tr></thead>
+                        <tbody>
+                            {% for p in programas %}
+                            <tr>
+                                <td>{{ p.tipo }}</td>
+                                <td>{{ p.subtipo or "—" }}</td>
+                                <td class="small text-muted">{{ p.descripcion }}</td>
+                                <td>
+                                    <a href="/programas-atencion/desactivar/{{ p.id }}" class="btn btn-outline-danger btn-sm"
+                                       onclick="return confirm('¿Desactivar este programa?');">Desactivar</a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted py-4">Sin programas creados.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

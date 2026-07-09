@@ -1,0 +1,115 @@
+<div class="modal fade"
+
+     id="modalBusquedaCIE10"
+
+     tabindex="-1">
+
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+
+        <div class="modal-content">
+
+            <div class="modal-header bg-primary text-white">
+
+                <h4>
+
+                    <i class="fa-solid fa-magnifying-glass"></i>
+
+                    Buscador Inteligente CIE-10
+
+                </h4>
+
+                <button
+
+                    class="btn-close btn-close-white"
+
+                    data-bs-dismiss="modal">
+
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row mb-4">
+
+                    <div class="col-md-9">
+
+                        <input
+
+                            type="text"
+
+                            id="buscarCIE10"
+
+                            class="form-control form-control-lg"
+
+                            placeholder="Buscar por código o diagnóstico...">
+
+                    </div>
+
+                    <div class="col-md-3">
+
+                        <button
+
+                            class="btn btn-primary w-100 btn-lg"
+
+                            onclick="buscarCIE10()">
+
+                            Buscar
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+                <table class="table table-hover">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th width="120">
+
+                                Código
+
+                            </th>
+
+                            <th>
+
+                                Diagnóstico
+
+                            </th>
+
+                            <th width="120">
+
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody id="resultadoCIE10">
+
+                        <tr>
+
+                            <td colspan="3"
+
+                                class="text-center text-muted">
+
+                                Escriba un código o un diagnóstico para iniciar la búsqueda.
+
+                            </td>
+
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

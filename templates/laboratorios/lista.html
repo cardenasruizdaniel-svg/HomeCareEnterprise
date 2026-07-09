@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block titulo %}Laboratorio Clínico{% endblock %}
+{% block css %}
+<style>
+.fila-item-lab td { vertical-align: middle; }
+.badge-alto { background:#c71c22; color:#fff; }
+.badge-bajo { background:#dd5600; color:#fff; }
+.badge-normal { background:#73a839; color:#fff; }
+</style>
+{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+
+    {% include "components/volver_paciente.html" %}
+
+    <h2 class="mb-1"><i class="fa-solid fa-vial-circle-check text-primary"></i> Laboratorio Clínico — {{ paciente.primer_nombre }} {{ paciente.primer_apellido }}</h2>
+    <p class="text-muted">Registre cada parámetro medible del examen (ej. Glóbulos rojos, Hemoglobina) con su valor y el rango normal — el sistema marca automáticamente si quedó alto o bajo. Cada resultado queda también en la Historia Clínica.</p>
+
+    <div id="alerta-lab"></div>
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h5 class="mb-0">Nuevo resultado de examen</h5></div>
+                <div class="card-body">
+                    <div class="mb-2"><label>Examen</label><input type="text" id="campo-examen" class="form-control" placeholder="Ej: Hemograma completo, Parcial de orina..." required></div>
+                    <div class="mb-2"><label>Laboratorio que lo realizó</label><input type="text" id="campo-lab-realizo" class="form-control"></div>
+                    <div class="row">
+                        <div class="col-6 mb-2"><label>Fecha de la orden</label><input type="date" id="campo-fecha-orden" class="form-control"></div>
+                        <div class="col-6 mb-2"><label>Fecha del resultado</label><input type="date" id="campo-fecha-resultado" class="form-control"></div>
+                    </div>
+                    <div class="mb-2">
+                        <label>Profesional que registra</label>
+                        <select id="campo-profesional" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            {% for p in profesionales %}
+                            <option value="{{ p.id }}">{{ p.nombre_completo }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <label class="fw-bold mt-2">Parámetros medidos</label>
+                    <table class="table table-sm" id="tabla-items-lab">
+                        <thead class="table-light">
+                            <tr><th>Parámetro</th><th>Valor</th><th>Unidad</th><th>Rango mín.</th><th>Rango máx.</th><th></th></tr>
+                        </thead>
+                        <tbody id="cuerpo-items-lab"></tbody>
+                    </table>
+                    <button type="button" class="btn btn-outline-primary btn-sm mb-3" id="btn-agregar-item">
+                        <i class="fa-solid fa-plus"></i> Agregar parámetro
+                    </button>
+
+                    <div class="mb-2"><label>Observaciones generales</label><textarea id="campo-observaciones" class="form-control" rows="2"></textarea></div>
+                    <div class="mb-2">
+                        <label>Foto del resultado (para constancia)</label>
+                        <input type="file" accept="image/*" class="form-control" id="campo-foto-resultado">
+                        <img id="vista-previa-foto-lab" style="max-height:150px; display:none;" class="mt-2 border rounded">
+                    </div>
+                    <button class="btn btn-success w-100" id="btn-guardar-lab"><i class="fa-solid fa-check"></i> Guardar resultado</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            {% for r in resultados %}
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <h5 class="mb-1">{{ r.nombre_examen }}</h5>
+                        <small class="text-muted">{{ r.fecha_resultado or r.fecha_creacion }}</small>
+                    </div>
+                    <p class="mb-2 small text-muted">
+                        {% if r.laboratorio_realizo %}Laboratorio: <strong>{{ r.laboratorio_realizo }}</strong>{% endif %}
+                        {% if r.profesional %} · Registrado por: {{ r.profesional }}{% endif %}
+                        {% if r.origen == 'MOVIL' %} · <span class="badge bg-info text-dark">Desde la app de campo</span>{% endif %}
+                    </p>
+
+                    {% if r['items'] %}
+                    <table class="table table-sm">
+                        <thead class="table-light"><tr><th>Parámetro</th><th>Valor</th><th>Rango normal</th><th></th></tr></thead>
+                        <tbody>
+                            {% for i in r['items'] %}
+                            <tr>
+                                <td>{{ i.nombre_parametro }}</td>
+                                <td>{{ i.valor_obtenido }} {{ i.unidad }}</td>
+                                <td>{% if i.rango_min is not none %}{{ i.rango_min }} - {{ i.rango_max }}{% endif %}</td>
+                                <td>
+                                    {% if i.interpretacion == 'Alto' %}<span class="badge badge-alto">Alto</span>
+                                    {% elif i.interpretacion == 'Bajo' %}<span class="badge badge-bajo">Bajo</span>
+                                    {% elif i.interpretacion == 'Normal' %}<span class="badge badge-normal">Normal</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+
+                    {% if r.resultado_texto %}<p class="mb-2 small">{{ r.resultado_texto }}</p>{% endif %}
+                    {% if r.foto_resultado_base64 %}
+                    <img src="{{ r.foto_resultado_base64 }}" style="max-width:200px; max-height:200px; border:1px solid #dee2e6;" class="d-block mb-2">
+                    {% endif %}
+                    <a href="/laboratorios/eliminar/{{ r.id }}/{{ paciente_id }}" class="btn btn-outline-danger btn-sm no-imprimir"
+                       onclick="return confirm('¿Eliminar este resultado?');">Eliminar</a>
+                </div>
+            </div>
+            {% else %}
+            <div class="card shadow-sm">
+                <div class="card-body text-center text-muted py-5">Sin resultados de laboratorio registrados todavía.</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+let fotoLabBase64 = null;
+
+document.getElementById("campo-foto-resultado").addEventListener("change", (e) => {
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = () => {
+        fotoLabBase64 = lector.result;
+        const vista = document.getElementById("vista-previa-foto-lab");
+        vista.src = lector.result;
+        vista.style.display = "block";
+    };
+    lector.readAsDataURL(archivo);
+});
+
+function agregarFilaItem() {
+    const fila = document.createElement("tr");
+    fila.className = "fila-item-lab";
+    fila.innerHTML = `
+        <td><input type="text" class="form-control form-control-sm campo-nombre-parametro" placeholder="Ej: Glóbulos rojos"></td>
+        <td><input type="text" class="form-control form-control-sm campo-valor-obtenido" placeholder="Ej: 4.8"></td>
+        <td><input type="text" class="form-control form-control-sm campo-unidad" placeholder="mill/mm3"></td>
+        <td><input type="number" step="any" class="form-control form-control-sm campo-rango-min" placeholder="4.5"></td>
+        <td><input type="number" step="any" class="form-control form-control-sm campo-rango-max" placeholder="5.5"></td>
+        <td><button type="button" class="btn btn-outline-danger btn-sm btn-quitar-item">✕</button></td>
+    `;
+    document.getElementById("cuerpo-items-lab").appendChild(fila);
+    fila.querySelector(".btn-quitar-item").addEventListener("click", () => fila.remove());
+}
+
+document.getElementById("btn-agregar-item").addEventListener("click", agregarFilaItem);
+agregarFilaItem(); // ya arranca con una fila lista para diligenciar
+
+document.getElementById("btn-guardar-lab").addEventListener("click", async () => {
+    const examen = document.getElementById("campo-examen").value.trim();
+    if (!examen) {
+        document.getElementById("alerta-lab").innerHTML = `<div class="alert alert-danger">Debe indicar el nombre del examen.</div>`;
+        return;
+    }
+
+    const items = [];
+    document.querySelectorAll(".fila-item-lab").forEach((fila) => {
+        const nombre = fila.querySelector(".campo-nombre-parametro").value.trim();
+        if (!nombre) return;
+        items.push({
+            nombre_parametro: nombre,
+            valor_obtenido: fila.querySelector(".campo-valor-obtenido").value.trim(),
+            unidad: fila.querySelector(".campo-unidad").value.trim(),
+            rango_min: fila.querySelector(".campo-rango-min").value || null,
+            rango_max: fila.querySelector(".campo-rango-max").value || null,
+        });
+    });
+
+    const cuerpo = {
+        paciente_id: {{ paciente_id }},
+        nombre_examen: examen,
+        laboratorio_realizo: document.getElementById("campo-lab-realizo").value,
+        fecha_orden: document.getElementById("campo-fecha-orden").value,
+        fecha_resultado: document.getElementById("campo-fecha-resultado").value,
+        profesional_id: document.getElementById("campo-profesional").value,
+        resultado_texto: document.getElementById("campo-observaciones").value,
+        foto_resultado_base64: fotoLabBase64,
+        items: items,
+    };
+
+    const respuesta = await fetch("/laboratorios/registrar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cuerpo),
+    });
+    const resultado = await respuesta.json();
+
+    if (resultado.ok) {
+        location.reload();
+    } else {
+        document.getElementById("alerta-lab").innerHTML = `<div class="alert alert-danger">${resultado.error}</div>`;
+    }
+});
+</script>
+{% endblock %}

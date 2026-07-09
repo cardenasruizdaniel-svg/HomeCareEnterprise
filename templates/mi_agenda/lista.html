@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block titulo %}Mi Agenda{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-calendar-check text-primary"></i> Mi Agenda — {{ profesional.nombre_completo }}</h2>
+    <p class="text-muted">{{ profesional.especialidad_principal }}</p>
+
+    <form method="get" class="d-flex gap-2 mb-3">
+        <input type="date" name="fecha" value="{{ fecha }}" class="form-control" style="max-width:200px;">
+        <button class="btn btn-primary">Ver</button>
+        <a href="/mi-agenda" class="btn btn-outline-secondary">Hoy</a>
+    </form>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-white"><h5 class="mb-0">Visitas del {{ fecha }}</h5></div>
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light"><tr><th>Hora</th><th>Paciente</th><th>Servicio</th><th>Dirección</th><th class="text-center">Estado</th><th></th></tr></thead>
+                <tbody>
+                    {% for v in visitas %}
+                    <tr>
+                        <td>{{ v.hora_inicio }} - {{ v.hora_fin }}</td>
+                        <td>{{ v.paciente }}</td>
+                        <td>{{ v.servicio }}</td>
+                        <td>{{ v.direccion }}, {{ v.barrio }}</td>
+                        <td class="text-center">
+                            <span class="badge {% if v.estado=='Completada' %}bg-success{% elif v.estado=='Cancelada' %}bg-danger{% else %}bg-warning text-dark{% endif %}">{{ v.estado }}</span>
+                        </td>
+                        <td><a href="/programacion/detalle/{{ v.id }}" class="btn btn-outline-primary btn-sm">Ver</a></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">Sin visitas programadas este día.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-white"><h5 class="mb-0">Mis pacientes activos</h5></div>
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light"><tr><th>Documento</th><th>Nombre</th><th>Celular</th><th></th></tr></thead>
+                <tbody>
+                    {% for p in pacientes_activos %}
+                    <tr>
+                        <td>{{ p.documento }}</td>
+                        <td>{{ p.primer_nombre }} {{ p.primer_apellido }}</td>
+                        <td>{{ p.celular }}</td>
+                        <td><a href="/pacientes/{{ p.id }}" class="btn btn-outline-primary btn-sm">Ver ficha</a></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-center text-muted py-4">Sin pacientes con servicios activos asignados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

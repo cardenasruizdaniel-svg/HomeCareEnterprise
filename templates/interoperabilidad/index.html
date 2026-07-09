@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <div class="mb-4">
+        <h2 class="mb-0">
+            <i class="fa-solid fa-diagram-project text-primary"></i>
+            Interoperabilidad de la Historia Clínica Electrónica (IHCE)
+        </h2>
+        <small class="text-muted">
+            Resolución 866 de 2021 y Resolución 1888 de 2025 · Resumen Digital de Atención en Salud (RDA) · HL7 FHIR R4
+        </small>
+    </div>
+
+    <div class="alert alert-info">
+        Cada paciente puede exportar su Resumen Digital de Atención en Salud (RDA) como un
+        <code>Bundle</code> FHIR R4, y verificar qué tan completo está su conjunto de datos
+        clínicos relevantes según el anexo técnico de la Resolución 866 de 2021.
+        El envío al mecanismo nacional de interoperabilidad del Ministerio de Salud requiere
+        credenciales (API Key + Subscription Key) que la IPS debe solicitar directamente al Ministerio.
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">Pacientes</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Documento</th>
+                            <th>Nombre</th>
+                            <th class="text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in pacientes %}
+                        <tr>
+                            <td>{{ p.documento }}</td>
+                            <td>{{ p.primer_nombre }} {{ p.primer_apellido }}</td>
+                            <td class="text-center">
+                                <a href="/interoperabilidad/rda/{{ p.id }}" target="_blank" class="btn btn-primary btn-sm">
+                                    <i class="fa-solid fa-file-export"></i>
+                                    RDA (FHIR)
+                                </a>
+                                <a href="/interoperabilidad/completitud/{{ p.id }}" target="_blank" class="btn btn-outline-secondary btn-sm">
+                                    <i class="fa-solid fa-list-check"></i>
+                                    Completitud
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">
+                                No hay pacientes registrados.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

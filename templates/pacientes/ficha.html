@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-0">
+                <i class="fa-solid fa-user text-primary"></i>
+                {{ paciente.primer_nombre }} {{ paciente.segundo_nombre }} {{ paciente.primer_apellido }} {{ paciente.segundo_apellido }}
+            </h2>
+            <small class="text-muted">
+                {{ paciente.tipo_documento }} {{ paciente.documento }} ·
+                {{ paciente.eps }} · {{ paciente.municipio }}, {{ paciente.departamento }}
+            </small>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="/pacientes/" class="btn btn-outline-secondary">
+                <i class="fa-solid fa-arrow-left"></i> Volver al listado
+            </a>
+            <a href="/pacientes/editar/{{ paciente.id }}" class="btn btn-outline-warning">
+                <i class="fa-solid fa-user-pen"></i> Editar datos
+            </a>
+        </div>
+    </div>
+
+    {# =====================================================
+       BANNER DE SEGURIDAD - se ve de inmediato al entrar
+       ===================================================== #}
+
+    {% if programa_paciente %}
+    <div class="alert alert-primary shadow-sm d-flex justify-content-between align-items-center">
+        <div>
+            <i class="fa-solid fa-layer-group"></i>
+            <strong>Programa de atención:</strong> {{ programa_paciente.programa_nombre }}
+            <small class="text-muted">(desde {{ programa_paciente.fecha_asignacion }})</small>
+        </div>
+        <a href="/programas-atencion/paciente/{{ paciente.id }}" class="btn btn-sm btn-outline-primary">Ver / Cambiar</a>
+    </div>
+    {% else %}
+    <div class="alert alert-warning shadow-sm d-flex justify-content-between align-items-center">
+        <div><i class="fa-solid fa-triangle-exclamation"></i> Este paciente aún no tiene un programa de atención asignado.</div>
+        <a href="/programas-atencion/paciente/{{ paciente.id }}" class="btn btn-sm btn-warning">Asignar ahora</a>
+    </div>
+    {% endif %}
+
+    {% if resumen_seguridad.tiene_alergias %}
+    <div class="alert {% if resumen_seguridad.tiene_alergias_criticas %}alert-danger{% else %}alert-warning{% endif %} shadow-sm">
+        <div class="d-flex align-items-start gap-2">
+            <i class="fa-solid fa-triangle-exclamation fa-lg mt-1"></i>
+            <div>
+                <strong>
+                    {% if resumen_seguridad.tiene_alergias_criticas %}
+                    ⚠ ALERGIAS GRAVES REGISTRADAS
+                    {% else %}
+                    Alergias registradas
+                    {% endif %}
+                </strong>
+                <ul class="mb-0 mt-1">
+                    {% for a in resumen_seguridad.alergias %}
+                    <li>
+                        <strong>{{ a.alergeno }}</strong>
+                        ({{ a.tipo }}, severidad: {{ a.severidad }})
+                        {% if a.reaccion %} — reacción: {{ a.reaccion }}{% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-success py-2">
+        <i class="fa-solid fa-circle-check"></i>
+        Sin alergias activas registradas.
+    </div>
+    {% endif %}
+
+    {% if resumen_seguridad.total_medicamentos > 0 %}
+    <div class="alert alert-primary shadow-sm">
+        <div class="d-flex align-items-start gap-2">
+            <i class="fa-solid fa-pills fa-lg mt-1"></i>
+            <div>
+                <strong>Medicamentos que el paciente está tomando actualmente</strong>
+                <ul class="mb-0 mt-1">
+                    {% for m in resumen_seguridad.medicamentos %}
+                    <li>
+                        <strong>{{ m.nombre }}</strong>
+                        {% if m.dosis %} — {{ m.dosis }}{% endif %}
+                        {% if m.frecuencia %} · {{ m.frecuencia }}{% endif %}
+                        {% if m.via %} · vía {{ m.via }}{% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if resumen_seguridad.tiene_copagos_pendientes %}
+    <div class="alert alert-danger shadow-sm">
+        <div class="d-flex align-items-start gap-2">
+            <i class="fa-solid fa-hand-holding-dollar fa-lg mt-1"></i>
+            <div>
+                <strong>
+                    Copagos pendientes de pago — Total: $ {{ "{:,.0f}".format(resumen_seguridad.total_copagos_pendientes) }}
+                </strong>
+                <ul class="mb-1 mt-1">
+                    {% for c in resumen_seguridad.copagos_pendientes %}
+                    <li>{{ c.concepto or "Copago" }} — $ {{ "{:,.0f}".format(c.valor_copago) }}</li>
+                    {% endfor %}
+                </ul>
+                <a href="/copagos/{{ paciente.id }}" class="btn btn-sm btn-danger">
+                    <i class="fa-solid fa-money-bill-wave"></i> Registrar el pago
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {# ===================================================== #}
+
+    <div class="row mb-4">
+        <div class="col-md-3 mb-2">
+            <a href="/alergias/{{ paciente.id }}" class="btn btn-outline-danger w-100 p-3">
+                <i class="fa-solid fa-triangle-exclamation fa-lg"></i><br>Alergias
+            </a>
+        </div>
+        <div class="col-md-3 mb-2">
+            <a href="/antecedentes/{{ paciente.id }}" class="btn btn-outline-secondary w-100 p-3">
+                <i class="fa-solid fa-clock-rotate-left fa-lg"></i><br>Antecedentes
+            </a>
+        </div>
+        <div class="col-md-3 mb-2">
+            <a href="/ordenes-medicas/{{ paciente.id }}" class="btn btn-outline-primary w-100 p-3">
+                <i class="fa-solid fa-file-prescription fa-lg"></i><br>Órdenes Médicas
+            </a>
+        </div>
+        <div class="col-md-3 mb-2">
+            <a href="/historia-clinica/{{ paciente.id }}" class="btn btn-primary w-100 p-3">
+                <i class="fa-solid fa-book-medical fa-lg"></i><br>Historia Clínica Completa
+            </a>
+        </div>
+        <div class="col-md-3 mb-2">
+            <a href="/acudientes/{{ paciente.id }}" class="btn btn-outline-success w-100 p-3">
+                <i class="fa-solid fa-user-group fa-lg"></i><br>Acudientes
+            </a>
+        </div>
+        <div class="col-md-3 mb-2">
+            <a href="/copagos/{{ paciente.id }}" class="btn btn-outline-warning w-100 p-3">
+                <i class="fa-solid fa-hand-holding-dollar fa-lg"></i><br>Copagos
+            </a>
+        </div>
+        <div class="col-md-3 mb-2">
+            <a href="/historial-documentos/{{ paciente.id }}" class="btn btn-outline-dark w-100 p-3">
+                <i class="fa-solid fa-id-card fa-lg"></i><br>Historial de Documentos
+            </a>
+        </div>
+        <div class="col-md-3 mb-2">
+            <a href="/servicios-paciente/{{ paciente.id }}" class="btn btn-outline-info w-100 p-3">
+                <i class="fa-solid fa-briefcase-medical fa-lg"></i><br>Servicios Asignados
+            </a>
+        </div>
+        <div class="col-md-3 mb-2">
+            <a href="/programas-atencion/paciente/{{ paciente.id }}" class="btn btn-outline-primary w-100 p-3">
+                <i class="fa-solid fa-layer-group fa-lg"></i><br>Programa de Atención
+            </a>
+        </div>
+        <div class="col-md-3 mb-2">
+            <a href="/fotos-procedimientos/{{ paciente.id }}" class="btn btn-outline-secondary w-100 p-3">
+                <i class="fa-solid fa-camera fa-lg"></i><br>Fotos de Procedimientos
+            </a>
+        </div>
+        <div class="col-md-3 mb-2">
+            <a href="/diagnosticos/paciente/{{ paciente.id }}" class="btn btn-outline-danger w-100 p-3">
+                <i class="fa-solid fa-stethoscope fa-lg"></i><br>Diagnósticos
+            </a>
+        </div>
+        <div class="col-md-3 mb-2">
+            <a href="/consentimientos/paciente/{{ paciente.id }}" class="btn btn-outline-dark w-100 p-3">
+                <i class="fa-solid fa-file-signature fa-lg"></i><br>Consentimientos Informados
+            </a>
+        </div>
+        <div class="col-md-3 mb-2">
+            <a href="/signos-vitales/paciente/{{ paciente.id }}" class="btn btn-outline-danger w-100 p-3">
+                <i class="fa-solid fa-heart-pulse fa-lg"></i><br>Signos Vitales
+            </a>
+        </div>
+        <div class="col-md-3 mb-2">
+            <a href="/inventario/paciente/{{ paciente.id }}" class="btn btn-outline-dark w-100 p-3">
+                <i class="fa-solid fa-box-open fa-lg"></i><br>Insumos Entregados
+            </a>
+        </div>
+        <div class="col-md-3 mb-2">
+            <a href="/historia-clinica/cuidador/{{ paciente.id }}" class="btn btn-outline-info w-100 p-3">
+                <i class="fa-solid fa-hands-holding-child fa-lg"></i><br>Informes del Cuidador
+            </a>
+        </div>
+        <div class="col-md-3 mb-2">
+            <a href="/turnos/asignar/{{ paciente.id }}" class="btn btn-outline-primary w-100 p-3">
+                <i class="fa-solid fa-user-clock fa-lg"></i><br>Asignar Turnos
+            </a>
+        </div>
+        <div class="col-md-3 mb-2">
+            <a href="/laboratorios/paciente/{{ paciente.id }}" class="btn btn-outline-success w-100 p-3">
+                <i class="fa-solid fa-vial-circle-check fa-lg"></i><br>Laboratorio Clínico
+            </a>
+        </div>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- RESUMEN CLÍNICO: diagnósticos, equipo de atención, y   -->
+    <!-- el último informe de cada tipo de profesional          -->
+    <!-- ===================================================== -->
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-danger text-white"><h6 class="mb-0"><i class="fa-solid fa-stethoscope"></i> Diagnósticos activos ({{ resumen_clinico.diagnosticos_activos|length }})</h6></div>
+                <div class="card-body p-2" style="max-height:260px; overflow-y:auto;">
+                    {% for d in resumen_clinico.diagnosticos_activos %}
+                    <div class="border-bottom py-1 small">
+                        <strong>{{ d.codigo_cie10 or "" }}</strong> {{ d.diagnostico }}
+                        <br><span class="text-muted">{{ d.fecha_diagnostico }} · {{ d.especialidad or d.profesional }}</span>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3 mb-0 small">Sin diagnósticos activos.</p>
+                    {% endfor %}
+                </div>
+                <div class="card-footer text-end">
+                    <a href="/diagnosticos/paciente/{{ paciente.id }}" class="btn btn-sm btn-outline-danger">Ver / agregar</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-primary text-white"><h6 class="mb-0"><i class="fa-solid fa-user-group"></i> Equipo de atención ({{ resumen_clinico.equipo_atencion|length }})</h6></div>
+                <div class="card-body p-2" style="max-height:260px; overflow-y:auto;">
+                    {% for e in resumen_clinico.equipo_atencion %}
+                    <div class="border-bottom py-1 small">
+                        {{ e.nombre_completo }}
+                        <span class="badge bg-light text-dark">{{ e.especialidad_principal }}</span>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3 mb-0 small">Sin profesionales con servicios activos.</p>
+                    {% endfor %}
+                </div>
+                <div class="card-footer text-end">
+                    <a href="/servicios-paciente/{{ paciente.id }}" class="btn btn-sm btn-outline-primary">Ver servicios</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow h-100">
+                <div class="card-header bg-secondary text-white"><h6 class="mb-0"><i class="fa-solid fa-notes-medical"></i> Último informe por profesional</h6></div>
+                <div class="card-body p-2" style="max-height:260px; overflow-y:auto;">
+                    {% for i in resumen_clinico.ultimos_informes %}
+                    <div class="border-bottom py-1 small">
+                        <span class="badge bg-dark">{{ i.tipo_profesional }}</span>
+                        <span class="badge bg-light text-dark">N.° {{ i.consecutivo }}</span>
+                        <br>{{ i.nota[:100] }}{% if i.nota|length > 100 %}...{% endif %}
+                        <br><span class="text-muted">{{ i.fecha }} · {{ i.profesional }}</span>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3 mb-0 small">Sin informes registrados todavía.</p>
+                    {% endfor %}
+                </div>
+                <div class="card-footer text-end">
+                    <a href="/historia-clinica/{{ paciente.id }}" class="btn btn-sm btn-outline-secondary">Ver historia completa</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-white">
+            <h5 class="mb-0">
+                <i class="fa-solid fa-bell"></i>
+                Todas las alertas clínicas
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if alertas %}
+            <div class="list-group">
+                {% for a in alertas %}
+                <div class="list-group-item d-flex align-items-center gap-2">
+                    <span class="badge bg-{{ a.color }}">
+                        <i class="fa-solid {{ a.icono }}"></i>
+                    </span>
+                    <div>
+                        <small class="text-muted">{{ a.categoria }}</small><br>
+                        {{ a.mensaje }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">Sin alertas registradas para este paciente.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow">
+        <div class="card-header {% if cargo %}bg-warning{% else %}bg-primary text-white{% endif %}">
+            <h3 class="mb-0">{% if cargo %}Editar{% else %}Nuevo{% endif %} Cargo</h3>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{% if cargo %}/cargos/editar/{{ cargo.id }}{% else %}/cargos/guardar{% endif %}">
+                <div class="mb-3">
+                    <label>Nombre del cargo</label>
+                    <input type="text" list="sugeridos" name="nombre" class="form-control" value="{{ cargo.nombre if cargo else '' }}" required>
+                    <datalist id="sugeridos">
+                        {% for s in sugeridos %}<option value="{{ s }}">{% endfor %}
+                    </datalist>
+                </div>
+                <div class="mb-3">
+                    <label>Descripción</label>
+                    <textarea name="descripcion" class="form-control" rows="2">{{ cargo.descripcion if cargo else '' }}</textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label>Tipo de contrato sugerido</label>
+                        <select name="tipo_contrato_sugerido" class="form-select" id="tipo_contrato_sugerido">
+                            <option value="POR_HORAS" {% if cargo and cargo.tipo_contrato_sugerido=="POR_HORAS" %}selected{% endif %}>Por horas</option>
+                            <option value="FIJO" {% if cargo and cargo.tipo_contrato_sugerido=="FIJO" %}selected{% endif %}>Fijo (salario mensual)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3" id="campo_salario">
+                        <label>Salario base mensual</label>
+                        <input type="number" step="1000" name="salario_base" class="form-control" value="{{ cargo.salario_base if cargo else 0 }}">
+                    </div>
+                    <div class="col-md-3 mb-3" id="campo_valor_hora">
+                        <label>Valor hora base</label>
+                        <input type="number" step="100" name="valor_hora_base" class="form-control" value="{{ cargo.valor_hora_base if cargo else 0 }}">
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label>Periodicidad de pago</label>
+                        <select name="periodicidad_pago" class="form-select">
+                            <option value="MENSUAL" {% if cargo and cargo.periodicidad_pago=="MENSUAL" %}selected{% endif %}>Mensual</option>
+                            <option value="QUINCENAL" {% if cargo and cargo.periodicidad_pago=="QUINCENAL" %}selected{% endif %}>Quincenal</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label>Nivel de riesgo ARL</label>
+                        <select name="nivel_riesgo_arl" class="form-select">
+                            {% for n in ["I","II","III","IV","V"] %}
+                            <option value="{{ n }}" {% if cargo and cargo.nivel_riesgo_arl==n %}selected{% endif %}>Nivel {{ n }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-8 mb-3">
+                        <label>Documentos requeridos (separados por coma)</label>
+                        <input type="text" name="documentos_requeridos" class="form-control"
+                               value="{{ cargo.documentos_requeridos if cargo else '' }}"
+                               placeholder="Título profesional, Tarjeta profesional, RETHUS">
+                    </div>
+                </div>
+                <hr>
+                <button class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                <a href="/cargos" class="btn btn-secondary">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+function alternar() {
+    const esFijo = document.getElementById('tipo_contrato_sugerido').value === 'FIJO';
+    document.getElementById('campo_salario').classList.toggle('d-none', !esFijo);
+    document.getElementById('campo_valor_hora').classList.toggle('d-none', esFijo);
+}
+document.getElementById('tipo_contrato_sugerido').addEventListener('change', alternar);
+alternar();
+</script>
+{% endblock %}

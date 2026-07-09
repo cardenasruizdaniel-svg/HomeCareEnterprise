@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block titulo %}Agenda Mensual{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="fa-solid fa-calendar text-warning"></i> Agenda Mensual — {{ nombre_mes }} {{ anio }}</h2>
+    </div>
+
+    <div class="d-flex gap-2 mb-3">
+        {% set mes_anterior = mes - 1 if mes > 1 else 12 %}
+        {% set anio_anterior = anio if mes > 1 else anio - 1 %}
+        {% set mes_siguiente = mes + 1 if mes < 12 else 1 %}
+        {% set anio_siguiente = anio if mes < 12 else anio + 1 %}
+        <a href="/programacion/mes?anio={{ anio_anterior }}&mes={{ mes_anterior }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fa-solid fa-chevron-left"></i> Mes anterior
+        </a>
+        <a href="/programacion" class="btn btn-outline-primary btn-sm">Hoy</a>
+        <a href="/programacion/mes?anio={{ anio_siguiente }}&mes={{ mes_siguiente }}" class="btn btn-outline-secondary btn-sm">
+            Mes siguiente <i class="fa-solid fa-chevron-right"></i>
+        </a>
+        <a href="/programacion/calendario?anio={{ anio }}&mes={{ mes }}" class="btn btn-outline-danger btn-sm ms-auto">
+            <i class="fa-solid fa-table-cells-large"></i> Ver en calendario
+        </a>
+    </div>
+
+    <div class="card shadow border-0">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr><th>Fecha</th><th>Hora</th><th>Paciente</th><th>Profesional</th><th>Servicio</th><th>Estado</th></tr>
+                </thead>
+                <tbody>
+                    {% for v in visitas %}
+                    <tr>
+                        <td>{{ v.fecha }}</td>
+                        <td>{{ v.hora_inicio }} - {{ v.hora_fin }}</td>
+                        <td>{{ v.paciente }}</td>
+                        <td>{{ v.profesional }}</td>
+                        <td>{{ v.servicio }}</td>
+                        <td>
+                            <span class="badge {% if v.estado=='Completada' %}bg-success{% elif v.estado=='Cancelada' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                {{ v.estado }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">No hay visitas programadas este mes.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

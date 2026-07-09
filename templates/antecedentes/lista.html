@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+
+{% include "components/volver_paciente.html" %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="fa-solid fa-clock-rotate-left text-primary"></i>
+            Antecedentes del paciente
+        </h2>
+        <a href="/antecedentes/nuevo/{{ paciente_id }}" class="btn btn-primary">
+            <i class="fa-solid fa-plus"></i> Nuevo antecedente
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                        <th>Observaciones</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in antecedentes %}
+                    <tr>
+                        <td><span class="badge bg-secondary">{{ a.tipo }}</span></td>
+                        <td>{{ a.descripcion }}</td>
+                        <td>{{ a.observaciones }}</td>
+                        <td class="text-center">
+                            <a href="/antecedentes/editar/{{ a.id }}" class="btn btn-warning btn-sm">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            <a href="/antecedentes/eliminar/{{ a.id }}/{{ paciente_id }}"
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm('¿Eliminar este antecedente?');">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" class="text-center text-muted py-4">
+                            Sin antecedentes registrados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

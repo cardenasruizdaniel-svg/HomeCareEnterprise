@@ -1,0 +1,1566 @@
+[mi‚ 08/07/2026 21:37:41.63] Iniciando HomeCare Enterprise en el puerto 8088... 
+INFO:     Started server process [5172]
+INFO:     Waiting for application startup.
+
+====================================
+ HOMECARE ENTERPRISE
+ Inicializando sistema...
+====================================
+
+=======================================================
+HomeCare Enterprise Database
+=======================================================
+[OK] acudientes
+[OK] administracion_medicamentos
+[OK] alergias
+[OK] antecedentes
+[OK] auditoria
+[OK] cargos
+[OK] catalogo_actividades
+[OK] catalogo_bancos
+[OK] catalogo_eps
+[OK] cie10
+[OK] configuracion_empresa
+[OK] consentimientos_informados
+[OK] contratos
+[OK] copagos
+[OK] cum
+[OK] cups
+[OK] diagnosticos
+[OK] divipola
+[OK] documentos_profesional
+[OK] evoluciones
+[OK] facturas_electronicas
+[OK] fotos_procedimientos
+[OK] historial_documentos_paciente
+[OK] historias_clinicas
+[OK] insumos
+[OK] inventario_movimientos
+[OK] medicamentos
+[OK] nomina
+[OK] nomina_detalle
+[OK] nomina_electronica
+[OK] ordenes_medicas
+[OK] paciente_programas
+[OK] pacientes
+[OK] planilla_visitas
+[OK] plantilla_componentes
+[OK] plantilla_versiones
+[OK] plantillas
+[OK] plantillas_visita
+[OK] profesionales
+[OK] programaciones
+[OK] programas_atencion
+[OK] proveedores
+[OK] servicios_paciente
+[OK] signos_vitales
+[OK] solicitudes_firma
+[OK] sqlite_sequence
+[OK] turnos_programados
+[OK] usuarios
+=======================================================
+
+[OK] Usuario administrador creado.
+Catalogos sembrados: DIVIPOLA=1122, CUPS=26, CUM=10, CIE10=73
+
+[OK] Sistema listo.
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8088 (Press CTRL+C to quit)
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [5172]
+[mi‚ 08/07/2026 21:39:52.02] Iniciando HomeCare Enterprise en el puerto 8088... 
+INFO:     Started server process [9420]
+INFO:     Waiting for application startup.
+
+====================================
+ HOMECARE ENTERPRISE
+ Inicializando sistema...
+====================================
+
+=======================================================
+HomeCare Enterprise Database
+=======================================================
+[OK] acudientes
+[OK] administracion_medicamentos
+[OK] alergias
+[OK] antecedentes
+[OK] auditoria
+[OK] cargos
+[OK] catalogo_actividades
+[OK] catalogo_bancos
+[OK] catalogo_eps
+[OK] cie10
+[OK] configuracion_empresa
+[OK] consentimientos_informados
+[OK] contratos
+[OK] copagos
+[OK] cum
+[OK] cups
+[OK] diagnosticos
+[OK] divipola
+[OK] documentos_profesional
+[OK] evoluciones
+[OK] facturas_electronicas
+[OK] fotos_procedimientos
+[OK] historial_documentos_paciente
+[OK] historias_clinicas
+[OK] insumos
+[OK] inventario_movimientos
+[OK] medicamentos
+[OK] nomina
+[OK] nomina_detalle
+[OK] nomina_electronica
+[OK] ordenes_medicas
+[OK] paciente_programas
+[OK] pacientes
+[OK] planilla_visitas
+[OK] plantilla_componentes
+[OK] plantilla_versiones
+[OK] plantillas
+[OK] plantillas_visita
+[OK] profesionales
+[OK] programaciones
+[OK] programas_atencion
+[OK] proveedores
+[OK] schema_version
+[OK] servicios_paciente
+[OK] signos_vitales
+[OK] solicitudes_firma
+[OK] sqlite_sequence
+[OK] turnos_programados
+[OK] usuarios
+=======================================================
+
+
+[OK] Sistema listo.
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8088 (Press CTRL+C to quit)
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9420]
+[mi‚ 08/07/2026 21:41:15.43] Iniciando HomeCare Enterprise en el puerto 8088... 
+INFO:     Started server process [10496]
+INFO:     Waiting for application startup.
+
+====================================
+ HOMECARE ENTERPRISE
+ Inicializando sistema...
+====================================
+
+=======================================================
+HomeCare Enterprise Database
+=======================================================
+[OK] acudientes
+[OK] administracion_medicamentos
+[OK] alergias
+[OK] antecedentes
+[OK] auditoria
+[OK] cargos
+[OK] catalogo_actividades
+[OK] catalogo_bancos
+[OK] catalogo_eps
+[OK] cie10
+[OK] configuracion_empresa
+[OK] consentimientos_informados
+[OK] contratos
+[OK] copagos
+[OK] cum
+[OK] cups
+[OK] diagnosticos
+[OK] divipola
+[OK] documentos_profesional
+[OK] evoluciones
+[OK] facturas_electronicas
+[OK] fotos_procedimientos
+[OK] historial_documentos_paciente
+[OK] historias_clinicas
+[OK] insumos
+[OK] inventario_movimientos
+[OK] medicamentos
+[OK] nomina
+[OK] nomina_detalle
+[OK] nomina_electronica
+[OK] ordenes_medicas
+[OK] paciente_programas
+[OK] pacientes
+[OK] planilla_visitas
+[OK] plantilla_componentes
+[OK] plantilla_versiones
+[OK] plantillas
+[OK] plantillas_visita
+[OK] profesionales
+[OK] programaciones
+[OK] programas_atencion
+[OK] proveedores
+[OK] schema_version
+[OK] servicios_paciente
+[OK] signos_vitales
+[OK] solicitudes_firma
+[OK] sqlite_sequence
+[OK] turnos_programados
+[OK] usuarios
+=======================================================
+
+
+[OK] Sistema listo.
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8088 (Press CTRL+C to quit)
+INFO:     127.0.0.1:46908 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46908 - "GET /favicon.ico HTTP/1.1" 302 Found
+INFO:     127.0.0.1:46908 - "GET /login HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [10496]
+[mi‚ 08/07/2026 21:45:57.63] Iniciando HomeCare Enterprise en el puerto 8088... 
+INFO:     Started server process [11928]
+INFO:     Waiting for application startup.
+
+====================================
+ HOMECARE ENTERPRISE
+ Inicializando sistema...
+====================================
+
+=======================================================
+HomeCare Enterprise Database
+=======================================================
+[OK] acudientes
+[OK] administracion_medicamentos
+[OK] alergias
+[OK] antecedentes
+[OK] auditoria
+[OK] cargos
+[OK] catalogo_actividades
+[OK] catalogo_bancos
+[OK] catalogo_eps
+[OK] cie10
+[OK] configuracion_empresa
+[OK] consentimientos_informados
+[OK] contratos
+[OK] copagos
+[OK] cum
+[OK] cups
+[OK] diagnosticos
+[OK] divipola
+[OK] documentos_profesional
+[OK] evoluciones
+[OK] facturas_electronicas
+[OK] fotos_procedimientos
+[OK] historial_documentos_paciente
+[OK] historias_clinicas
+[OK] insumos
+[OK] inventario_movimientos
+[OK] medicamentos
+[OK] nomina
+[OK] nomina_detalle
+[OK] nomina_electronica
+[OK] ordenes_medicas
+[OK] paciente_programas
+[OK] pacientes
+[OK] planilla_visitas
+[OK] plantilla_componentes
+[OK] plantilla_versiones
+[OK] plantillas
+[OK] plantillas_visita
+[OK] profesionales
+[OK] programaciones
+[OK] programas_atencion
+[OK] proveedores
+[OK] schema_version
+[OK] servicios_paciente
+[OK] signos_vitales
+[OK] solicitudes_firma
+[OK] sqlite_sequence
+[OK] turnos_programados
+[OK] usuarios
+=======================================================
+
+
+[OK] Sistema listo.
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8088 (Press CTRL+C to quit)
+INFO:     127.0.0.1:58711 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58711 - "GET /static/img/logo_homecare.png HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:58711 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:58711 - "POST /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57976 - "POST /login HTTP/1.1" 302 Found
+INFO:     127.0.0.1:57976 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57976 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:57976 - "GET /static/js/buscar_pacientes.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:57976 - "GET /dashboard/produccion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48935 - "GET /programas-atencion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48935 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:48935 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48935 - "GET /pacientes/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48935 - "GET /servicios-paciente/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48935 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48935 - "GET /gestion-visitas/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51358 - "GET /programas-atencion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51358 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51358 - "GET /programacion/detalle/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51358 - "GET /plantillas-visita/api/tipos-nota HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38336 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54518 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44325 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:44325 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44325 - "GET /pacientes/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44325 - "GET /servicios-paciente/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44325 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44325 - "GET /gestion-visitas/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44325 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:57945 - "GET /pacientes/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57945 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57945 - "GET /programacion/detalle/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57945 - "GET /plantillas-visita/api/tipos-nota HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54993 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:54993 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54993 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57845 - "GET /historia-clinica/cuidador/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45405 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45405 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49401 - "GET /programacion/detalle/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49401 - "GET /plantillas-visita/api/tipos-nota HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49401 - "GET /plantillas-visita/api/mis-plantillas?rol=Enfermero HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59637 - "GET /programacion/cancelar/3 HTTP/1.1" 303 See Other
+INFO:     127.0.0.1:59637 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39850 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:39850 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60592 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:60592 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60592 - "GET /programas-atencion HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [11928]
+[jue 09/07/2026  7:57:18.01] Iniciando HomeCare Enterprise en el puerto 8088... 
+INFO:     Started server process [13044]
+INFO:     Waiting for application startup.
+
+====================================
+ HOMECARE ENTERPRISE
+ Inicializando sistema...
+====================================
+
+=======================================================
+HomeCare Enterprise Database
+=======================================================
+[OK] acudientes
+[OK] administracion_medicamentos
+[OK] alergias
+[OK] antecedentes
+[OK] auditoria
+[OK] cargos
+[OK] catalogo_actividades
+[OK] catalogo_bancos
+[OK] catalogo_eps
+[OK] cie10
+[OK] configuracion_empresa
+[OK] consentimientos_informados
+[OK] contratos
+[OK] copagos
+[OK] cum
+[OK] cups
+[OK] diagnosticos
+[OK] divipola
+[OK] documentos_profesional
+[OK] evoluciones
+[OK] facturas_electronicas
+[OK] fotos_procedimientos
+[OK] historial_documentos_paciente
+[OK] historias_clinicas
+[OK] insumos
+[OK] inventario_movimientos
+[OK] medicamentos
+[OK] nomina
+[OK] nomina_detalle
+[OK] nomina_electronica
+[OK] ordenes_medicas
+[OK] paciente_programas
+[OK] pacientes
+[OK] planilla_visitas
+[OK] plantilla_componentes
+[OK] plantilla_versiones
+[OK] plantillas
+[OK] plantillas_visita
+[OK] profesionales
+[OK] programaciones
+[OK] programas_atencion
+[OK] proveedores
+[OK] schema_version
+[OK] servicios_paciente
+[OK] signos_vitales
+[OK] solicitudes_firma
+[OK] sqlite_sequence
+[OK] turnos_programados
+[OK] usuarios
+=======================================================
+
+
+[OK] Sistema listo.
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8088 (Press CTRL+C to quit)
+INFO:     127.0.0.1:47721 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47721 - "GET /static/img/logo_homecare.png HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:47721 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44343 - "POST /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38804 - "POST /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32835 - "POST /login HTTP/1.1" 302 Found
+INFO:     127.0.0.1:32835 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32835 - "GET /static/vendor/bootstrap/css/bootstrap.min.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34746 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:34746 - "GET /static/vendor/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:32835 - "GET /static/js/buscar_pacientes.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:32835 - "GET /dashboard/produccion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43828 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:43828 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43828 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43828 - "GET /servicios-paciente/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43828 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43828 - "GET /gestion-visitas/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39365 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48113 - "GET /servicios-paciente/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48113 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53093 - "GET /gestion-visitas/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44787 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44787 - "GET /static/vendor/bootstrap/js/bootstrap.bundle.min.js.map HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44787 - "GET /static/vendor/bootstrap/css/bootstrap.min.css.map HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:34991 - "GET /gestion-visitas/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34991 - "GET /static/vendor/bootstrap/css/bootstrap.min.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33252 - "GET /static/css/style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33252 - "GET /static/img/logo_homecare.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34991 - "GET /static/vendor/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34991 - "GET /static/js/buscar_pacientes.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34991 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56228 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56228 - "GET /static/vendor/bootstrap/js/bootstrap.bundle.min.js.map HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56228 - "GET /static/vendor/bootstrap/css/bootstrap.min.css.map HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:37278 - "GET /gestion-visitas/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37278 - "GET /static/vendor/bootstrap/css/bootstrap.min.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51705 - "GET /static/css/style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37278 - "GET /static/vendor/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51705 - "GET /static/img/logo_homecare.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51705 - "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:37278 - "GET /static/js/buscar_pacientes.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37278 - "GET /static/vendor/bootstrap/css/bootstrap.min.css.map HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:37278 - "GET /static/vendor/bootstrap/js/bootstrap.bundle.min.js.map HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:37278 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [13044]
+[jue 09/07/2026  8:24:20.29] Iniciando HomeCare Enterprise en el puerto 8088... 
+INFO:     Started server process [16704]
+INFO:     Waiting for application startup.
+
+====================================
+ HOMECARE ENTERPRISE
+ Inicializando sistema...
+====================================
+
+=======================================================
+HomeCare Enterprise Database
+=======================================================
+[OK] acudientes
+[OK] administracion_medicamentos
+[OK] alergias
+[OK] antecedentes
+[OK] auditoria
+[OK] cargos
+[OK] catalogo_actividades
+[OK] catalogo_bancos
+[OK] catalogo_eps
+[OK] cie10
+[OK] configuracion_empresa
+[OK] consentimientos_informados
+[OK] contratos
+[OK] copagos
+[OK] cum
+[OK] cups
+[OK] diagnosticos
+[OK] divipola
+[OK] documentos_profesional
+[OK] evoluciones
+[OK] facturas_electronicas
+[OK] fotos_procedimientos
+[OK] historial_documentos_paciente
+[OK] historias_clinicas
+[OK] insumos
+[OK] inventario_movimientos
+[OK] medicamentos
+[OK] nomina
+[OK] nomina_detalle
+[OK] nomina_electronica
+[OK] ordenes_medicas
+[OK] paciente_programas
+[OK] pacientes
+[OK] planilla_visitas
+[OK] plantilla_componentes
+[OK] plantilla_versiones
+[OK] plantillas
+[OK] plantillas_visita
+[OK] profesionales
+[OK] programaciones
+[OK] programas_atencion
+[OK] proveedores
+[OK] schema_version
+[OK] servicios_paciente
+[OK] signos_vitales
+[OK] solicitudes_firma
+[OK] sqlite_sequence
+[OK] turnos_programados
+[OK] usuarios
+=======================================================
+
+
+[OK] Sistema listo.
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8088 (Press CTRL+C to quit)
+INFO:     127.0.0.1:59181 - "GET /gestion-visitas/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59181 - "GET /static/vendor/bootstrap/css/bootstrap.min.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45171 - "GET /static/css/style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53482 - "GET /static/vendor/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59181 - "GET /static/img/logo_homecare.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53482 - "GET /static/js/buscar_pacientes.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53482 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+[jue 09/07/2026  8:28:42.10] El servidor se detuvo. Reintentando en 10 segundos... 
+[jue 09/07/2026  8:29:30.82] Iniciando HomeCare Enterprise en el puerto 8088... 
+INFO:     Started server process [11524]
+INFO:     Waiting for application startup.
+
+====================================
+ HOMECARE ENTERPRISE
+ Inicializando sistema...
+====================================
+
+=======================================================
+HomeCare Enterprise Database
+=======================================================
+[OK] acudientes
+[OK] administracion_medicamentos
+[OK] alergias
+[OK] antecedentes
+[OK] auditoria
+[OK] cargos
+[OK] catalogo_actividades
+[OK] catalogo_bancos
+[OK] catalogo_eps
+[OK] cie10
+[OK] configuracion_empresa
+[OK] consentimientos_informados
+[OK] contratos
+[OK] copagos
+[OK] cum
+[OK] cups
+[OK] diagnosticos
+[OK] divipola
+[OK] documentos_profesional
+[OK] evoluciones
+[OK] facturas_electronicas
+[OK] fotos_procedimientos
+[OK] historial_documentos_paciente
+[OK] historias_clinicas
+[OK] insumos
+[OK] inventario_movimientos
+[OK] medicamentos
+[OK] nomina
+[OK] nomina_detalle
+[OK] nomina_electronica
+[OK] ordenes_medicas
+[OK] paciente_programas
+[OK] pacientes
+[OK] planilla_visitas
+[OK] plantilla_componentes
+[OK] plantilla_versiones
+[OK] plantillas
+[OK] plantillas_visita
+[OK] profesionales
+[OK] programaciones
+[OK] programas_atencion
+[OK] proveedores
+[OK] schema_version
+[OK] servicios_paciente
+[OK] signos_vitales
+[OK] solicitudes_firma
+[OK] sqlite_sequence
+[OK] turnos_programados
+[OK] usuarios
+=======================================================
+
+
+[OK] Sistema listo.
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8088 (Press CTRL+C to quit)
+INFO:     127.0.0.1:45219 - "GET /gestion-visitas/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40129 - "GET /static/css/style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33436 - "GET /static/vendor/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45219 - "GET /static/vendor/bootstrap/css/bootstrap.min.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40129 - "GET /static/img/logo_homecare.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33436 - "GET /static/js/buscar_pacientes.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33436 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+Error enviando correo a andres.perez@homecare.test
+Traceback (most recent call last):
+  File "D:\HomeCareEnterprise\services\notificaciones_service.py", line 120, in enviar_email
+    servidor.login(SMTP_USER, SMTP_PASSWORD)
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 750, in login
+    raise last_exception
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 739, in login
+    (code, resp) = self.auth(
+                   ^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 662, in auth
+    raise SMTPAuthenticationError(code, resp)
+smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials ada2fe7eead31-744d6a3e6a1sm3429616137.1 - gsmtp')
+INFO:     127.0.0.1:54341 - "POST /gestion-visitas/programar/10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54341 - "GET /gestion-visitas/7 HTTP/1.1" 200 OK
+Error enviando correo a andres.perez@homecare.test
+Traceback (most recent call last):
+  File "D:\HomeCareEnterprise\services\notificaciones_service.py", line 120, in enviar_email
+    servidor.login(SMTP_USER, SMTP_PASSWORD)
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 750, in login
+    raise last_exception
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 739, in login
+    (code, resp) = self.auth(
+                   ^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 662, in auth
+    raise SMTPAuthenticationError(code, resp)
+smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 71dfb90a1353d-5bf6f8ed2adsm3335071e0c.16 - gsmtp')
+INFO:     127.0.0.1:42497 - "POST /gestion-visitas/reprogramar/9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42497 - "GET /gestion-visitas/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56432 - "POST /gestion-visitas/cancelar/10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56432 - "GET /gestion-visitas/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53206 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:53206 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53206 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53206 - "GET /servicios-paciente/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53206 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [11524]
+[jue 09/07/2026  8:38:15.51] Iniciando HomeCare Enterprise en el puerto 8088... 
+INFO:     Started server process [8316]
+INFO:     Waiting for application startup.
+
+====================================
+ HOMECARE ENTERPRISE
+ Inicializando sistema...
+====================================
+
+=======================================================
+HomeCare Enterprise Database
+=======================================================
+[OK] acudientes
+[OK] administracion_medicamentos
+[OK] alergias
+[OK] antecedentes
+[OK] auditoria
+[OK] cargos
+[OK] catalogo_actividades
+[OK] catalogo_bancos
+[OK] catalogo_eps
+[OK] cie10
+[OK] configuracion_empresa
+[OK] consentimientos_informados
+[OK] contratos
+[OK] copagos
+[OK] cum
+[OK] cups
+[OK] diagnosticos
+[OK] divipola
+[OK] documentos_profesional
+[OK] evoluciones
+[OK] facturas_electronicas
+[OK] fotos_procedimientos
+[OK] historial_documentos_paciente
+[OK] historias_clinicas
+[OK] insumos
+[OK] inventario_movimientos
+[OK] medicamentos
+[OK] nomina
+[OK] nomina_detalle
+[OK] nomina_electronica
+[OK] ordenes_medicas
+[OK] paciente_programas
+[OK] pacientes
+[OK] planilla_visitas
+[OK] plantilla_componentes
+[OK] plantilla_versiones
+[OK] plantillas
+[OK] plantillas_visita
+[OK] profesionales
+[OK] programaciones
+[OK] programas_atencion
+[OK] proveedores
+[OK] schema_version
+[OK] servicios_paciente
+[OK] signos_vitales
+[OK] solicitudes_firma
+[OK] sqlite_sequence
+[OK] turnos_programados
+[OK] usuarios
+=======================================================
+
+
+[OK] Sistema listo.
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8088 (Press CTRL+C to quit)
+INFO:     127.0.0.1:45334 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45334 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54404 - "POST /login HTTP/1.1" 302 Found
+INFO:     127.0.0.1:54404 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54404 - "GET /dashboard/produccion HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [8316]
+[jue 09/07/2026  8:41:59.25] Iniciando HomeCare Enterprise en el puerto 8088... 
+INFO:     Started server process [9924]
+INFO:     Waiting for application startup.
+
+====================================
+ HOMECARE ENTERPRISE
+ Inicializando sistema...
+====================================
+
+=======================================================
+HomeCare Enterprise Database
+=======================================================
+[OK] acudientes
+[OK] administracion_medicamentos
+[OK] alergias
+[OK] antecedentes
+[OK] auditoria
+[OK] cargos
+[OK] catalogo_actividades
+[OK] catalogo_bancos
+[OK] catalogo_eps
+[OK] cie10
+[OK] configuracion_empresa
+[OK] consentimientos_informados
+[OK] contratos
+[OK] copagos
+[OK] cum
+[OK] cups
+[OK] diagnosticos
+[OK] divipola
+[OK] documentos_profesional
+[OK] evoluciones
+[OK] facturas_electronicas
+[OK] fotos_procedimientos
+[OK] historial_documentos_paciente
+[OK] historias_clinicas
+[OK] insumos
+[OK] inventario_movimientos
+[OK] medicamentos
+[OK] nomina
+[OK] nomina_detalle
+[OK] nomina_electronica
+[OK] ordenes_medicas
+[OK] paciente_programas
+[OK] pacientes
+[OK] planilla_visitas
+[OK] plantilla_componentes
+[OK] plantilla_versiones
+[OK] plantillas
+[OK] plantillas_visita
+[OK] profesionales
+[OK] programaciones
+[OK] programas_atencion
+[OK] proveedores
+[OK] schema_version
+[OK] servicios_paciente
+[OK] signos_vitales
+[OK] solicitudes_firma
+[OK] sqlite_sequence
+[OK] turnos_programados
+[OK] usuarios
+=======================================================
+
+
+[OK] Sistema listo.
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8088 (Press CTRL+C to quit)
+INFO:     127.0.0.1:35747 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "POST /login HTTP/1.1" 302 Found
+INFO:     127.0.0.1:57662 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /dashboard/produccion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57662 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /servicios-paciente/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /gestion-visitas/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /servicios-paciente/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /pacientes/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /servicios-paciente/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /pacientes/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /pacientes/6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /servicios-paciente/6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /gestion-visitas/6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /pacientes/6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /servicios-paciente/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /gestion-visitas/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /servicios-paciente/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57662 - "GET /gestion-visitas/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50351 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48534 - "GET /api/movil/agenda/3?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48534 - "GET /app/sw.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:34172 - "POST /api/movil/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41140 - "GET /profesionales HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:38609 - "GET /alergias/4 HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:38609 - "GET /antecedentes/4 HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:38609 - "GET /ordenes-medicas/4 HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:38609 - "GET /acudientes/4 HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:38609 - "GET /programas-atencion HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:38609 - "GET /pacientes/4 HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:38609 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:38609 - "GET /pacientes/4 HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:38609 - "GET / HTTP/1.1" 303 See Other
+INFO:     127.0.0.1:38609 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37333 - "POST /login HTTP/1.1" 302 Found
+INFO:     127.0.0.1:37333 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37333 - "GET /dashboard/produccion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37333 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:37333 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37333 - "GET /profesionales HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38816 - "GET /profesionales/editar/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59676 - "GET /profesionales HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59676 - "GET /usuarios HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56103 - "POST /api/movil/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56103 - "GET /api/movil/perfil HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56103 - "GET /api/movil/agenda/2?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56103 - "GET /api/movil/agenda/2?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56103 - "GET /api/movil/paciente/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41686 - "GET /api/movil/agenda/2?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41686 - "GET /api/movil/paciente/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41686 - "GET /api/movil/agenda/2?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41686 - "GET /programas-atencion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41686 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45383 - "GET /programacion/detalle/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45383 - "GET /plantillas-visita/api/tipos-nota HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45383 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42111 - "POST /api/movil/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40444 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:40444 - "GET /app/sw.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:33379 - "GET /logout HTTP/1.1" 302 Found
+INFO:     127.0.0.1:33379 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42734 - "POST /login HTTP/1.1" 302 Found
+INFO:     127.0.0.1:42734 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42734 - "GET /dashboard/produccion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42734 - "GET /usuarios HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46168 - "GET /profesionales HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46168 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35129 - "GET /usuarios HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51789 - "POST /api/movil/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51789 - "GET /api/movil/perfil HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51789 - "GET /api/movil/agenda/1?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39885 - "GET /api/movil/paciente/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34332 - "GET /api/movil/paciente/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34332 - "GET /api/movil/agenda/1?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34332 - "GET /api/movil/agenda/1?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56269 - "GET /api/movil/agenda/1?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36926 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36926 - "GET /programacion/mensual HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36926 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36382 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:36382 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36382 - "GET /pacientes/6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36382 - "GET /servicios-paciente/6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36382 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39790 - "GET /pacientes/6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39790 - "GET /antecedentes/6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39790 - "GET /pacientes/6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39790 - "GET /diagnosticos/paciente/6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35218 - "GET /mi-agenda HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58937 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:58937 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38102 - "GET /programas-atencion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38102 - "GET /static/vendor/bootstrap/css/bootstrap.min.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:38102 - "GET /static/vendor/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:38102 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59174 - "GET /api/movil/agenda/1?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34971 - "GET /turnos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39543 - "GET /programas-atencion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39543 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:39543 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39543 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39543 - "GET /servicios-paciente/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39543 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53660 - "GET /api/movil/agenda/1?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57677 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40122 - "GET /profesionales HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46360 - "GET /usuarios HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60730 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:60730 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60730 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60730 - "GET /servicios-paciente/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60730 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60730 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60730 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60730 - "GET /pacientes/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60730 - "GET /servicios-paciente/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60730 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60730 - "GET /pacientes/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60730 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60730 - "GET /pacientes/6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60730 - "GET /servicios-paciente/6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60730 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37004 - "GET /pacientes/6 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37004 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37004 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37004 - "GET /servicios-paciente/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37004 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34337 - "GET /programas-atencion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37166 - "POST /programas-atencion/crear HTTP/1.1" 303 See Other
+INFO:     127.0.0.1:37166 - "GET /programas-atencion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46673 - "GET /programas-atencion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41850 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41850 - "GET /programacion/mensual HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39497 - "GET /api/movil/paciente/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41836 - "POST /programacion/mensual/crear HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48667 - "POST /programacion/mensual/crear HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48667 - "POST /programacion/mensual/crear HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37065 - "GET /programas-atencion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37065 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:37065 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37065 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37065 - "GET /servicios-paciente/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37065 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37065 - "GET /gestion-visitas/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55319 - "POST /gestion-visitas/programar/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49008 - "POST /gestion-visitas/programar/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49008 - "POST /gestion-visitas/programar/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49008 - "POST /gestion-visitas/programar/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49008 - "POST /gestion-visitas/programar/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49008 - "POST /gestion-visitas/programar/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49008 - "POST /gestion-visitas/programar/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49008 - "POST /gestion-visitas/programar/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51096 - "POST /gestion-visitas/programar/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51096 - "POST /gestion-visitas/programar/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51096 - "POST /gestion-visitas/programar/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51096 - "POST /gestion-visitas/programar/4 HTTP/1.1" 200 OK
+Error enviando correo a andres.perez@homecare.test
+Traceback (most recent call last):
+  File "D:\HomeCareEnterprise\services\notificaciones_service.py", line 120, in enviar_email
+    servidor.login(SMTP_USER, SMTP_PASSWORD)
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 750, in login
+    raise last_exception
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 739, in login
+    (code, resp) = self.auth(
+                   ^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 662, in auth
+    raise SMTPAuthenticationError(code, resp)
+smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials a1e0cc1a2514c-96ecf790293sm3068222241.0 - gsmtp')
+INFO:     127.0.0.1:52105 - "POST /gestion-visitas/programar/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52105 - "GET /gestion-visitas/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49532 - "GET /api/movil/agenda/1?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35020 - "GET /api/movil/agenda/1?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49974 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42870 - "GET /historia-clinica/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48004 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [9924]
+[jue 09/07/2026  9:33:42.14] Iniciando HomeCare Enterprise en el puerto 8088... 
+INFO:     Started server process [15372]
+INFO:     Waiting for application startup.
+
+====================================
+ HOMECARE ENTERPRISE
+ Inicializando sistema...
+====================================
+
+=======================================================
+HomeCare Enterprise Database
+=======================================================
+[OK] acudientes
+[OK] administracion_medicamentos
+[OK] alergias
+[OK] antecedentes
+[OK] auditoria
+[OK] cargos
+[OK] catalogo_actividades
+[OK] catalogo_bancos
+[OK] catalogo_eps
+[OK] catalogo_turnos
+[OK] cie10
+[OK] configuracion_empresa
+[OK] consentimientos_informados
+[OK] contratos
+[OK] copagos
+[OK] cum
+[OK] cups
+[OK] diagnosticos
+[OK] divipola
+[OK] documentos_profesional
+[OK] evoluciones
+[OK] facturas_electronicas
+[OK] fotos_procedimientos
+[OK] historial_documentos_paciente
+[OK] historias_clinicas
+[OK] insumos
+[OK] inventario_movimientos
+[OK] medicamentos
+[OK] nomina
+[OK] nomina_detalle
+[OK] nomina_electronica
+[OK] ordenes_medicas
+[OK] paciente_programas
+[OK] pacientes
+[OK] planilla_visitas
+[OK] plantilla_componentes
+[OK] plantilla_versiones
+[OK] plantillas
+[OK] plantillas_visita
+[OK] profesionales
+[OK] programaciones
+[OK] programas_atencion
+[OK] proveedores
+[OK] schema_version
+[OK] servicios_paciente
+[OK] signos_vitales
+[OK] solicitudes_firma
+[OK] sqlite_sequence
+[OK] turnos_programados
+[OK] usuarios
+=======================================================
+
+
+[OK] Sistema listo.
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8088 (Press CTRL+C to quit)
+INFO:     127.0.0.1:51065 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51065 - "GET /static/vendor/bootstrap/css/bootstrap.min.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50486 - "GET /static/vendor/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51065 - "GET /static/css/style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:51065 - "GET /static/img/logo_homecare.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50486 - "GET /static/js/buscar_pacientes.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50486 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:49713 - "GET /app/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50057 - "GET /app/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49713 - "GET /app/estilos.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50057 - "GET /api/movil/agenda/1?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49713 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44001 - "GET /app/manifest.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49713 - "GET /app/icons/icon-192.png HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:46049 - "GET /api/movil/agenda/1?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39484 - "GET /pacientes/editar/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39484 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:60932 - "POST /pacientes/actualizar/4 HTTP/1.1" 303 See Other
+INFO:     127.0.0.1:60932 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60932 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:60932 - "GET /programas-atencion/paciente/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60932 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:60932 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37449 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37449 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:37449 - "GET /servicios-paciente/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37449 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:37449 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59071 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59071 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:59071 - "GET /diagnosticos/paciente/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59071 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:59071 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59071 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:59071 - "GET /fotos-procedimientos/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59071 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:59071 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59071 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:59071 - "GET /inventario/paciente/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59071 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:59071 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59071 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:59071 - "GET /programas-atencion/paciente/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59071 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:59071 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53419 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53419 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:53419 - "GET /antecedentes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53419 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:53419 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53419 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:53419 - "GET /ordenes-medicas/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53419 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:53419 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53419 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:53419 - "GET /alergias/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53419 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:53419 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53419 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:53419 - "GET /historia-clinica/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53419 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:37464 - "GET /pacientes/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37464 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:37464 - "GET /programas-atencion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37464 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:44743 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:44743 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44743 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:44743 - "GET /pacientes/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44743 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:44743 - "GET /servicios-paciente/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44743 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:44743 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44743 - "GET /pacientes/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44743 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:44743 - "GET /programas-atencion/paciente/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44743 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:44743 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44743 - "GET /pacientes/1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44743 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:45606 - "GET /facturacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45606 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:57978 - "GET /facturacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57978 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:38801 - "GET /facturacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38801 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:56469 - "GET /usuarios HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56469 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:37254 - "GET /usuarios/nuevo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37254 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+(trapped) error reading bcrypt version
+Traceback (most recent call last):
+  File "D:\HomeCareEnterprise\venv\Lib\site-packages\passlib\handlers\bcrypt.py", line 620, in _load_backend_mixin
+    version = _bcrypt.__about__.__version__
+              ^^^^^^^^^^^^^^^^^
+AttributeError: module 'bcrypt' has no attribute '__about__'
+INFO:     127.0.0.1:37762 - "POST /usuarios/guardar HTTP/1.1" 303 See Other
+INFO:     127.0.0.1:37762 - "GET /usuarios HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37762 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:37690 - "GET /profesionales HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37690 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:37690 - "GET /profesionales/nuevo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37690 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:42464 - "POST /profesionales/guardar HTTP/1.1" 303 See Other
+INFO:     127.0.0.1:42464 - "GET /profesionales HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42464 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:58036 - "GET /profesionales/editar/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58036 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:44746 - "POST /profesionales/actualizar/7 HTTP/1.1" 303 See Other
+INFO:     127.0.0.1:44746 - "GET /profesionales HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44746 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:41487 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:41487 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41487 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:41487 - "GET /pacientes/nuevo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41487 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:46296 - "GET /catalogos/divipola/buscar?q=ARMENIA HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46296 - "GET /catalogos/divipola/buscar?q=ARMENI HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46296 - "GET /catalogos/divipola/buscar?q=armen HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46296 - "GET /catalogos/divipola/buscar?q=armenia HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52505 - "POST /pacientes/guardar HTTP/1.1" 303 See Other
+INFO:     127.0.0.1:52505 - "GET /pacientes/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52505 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:52505 - "GET /servicios-paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52505 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:52505 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [15372]
+[jue 09/07/2026 10:06:33.90] Iniciando HomeCare Enterprise en el puerto 8088... 
+INFO:     Started server process [17052]
+INFO:     Waiting for application startup.
+
+====================================
+ HOMECARE ENTERPRISE
+ Inicializando sistema...
+====================================
+
+=======================================================
+HomeCare Enterprise Database
+=======================================================
+[OK] acudientes
+[OK] administracion_medicamentos
+[OK] alergias
+[OK] antecedentes
+[OK] auditoria
+[OK] cargos
+[OK] catalogo_actividades
+[OK] catalogo_bancos
+[OK] catalogo_eps
+[OK] catalogo_turnos
+[OK] cie10
+[OK] configuracion_empresa
+[OK] consentimientos_informados
+[OK] contratos
+[OK] copagos
+[OK] cum
+[OK] cups
+[OK] diagnosticos
+[OK] divipola
+[OK] documentos_profesional
+[OK] evoluciones
+[OK] facturas_electronicas
+[OK] fotos_procedimientos
+[OK] historial_documentos_paciente
+[OK] historias_clinicas
+[OK] insumos
+[OK] inventario_movimientos
+[OK] laboratorios_resultados
+[OK] medicamentos
+[OK] nomina
+[OK] nomina_detalle
+[OK] nomina_electronica
+[OK] ordenes_medicas
+[OK] paciente_programas
+[OK] pacientes
+[OK] planilla_visitas
+[OK] plantilla_componentes
+[OK] plantilla_versiones
+[OK] plantillas
+[OK] plantillas_visita
+[OK] profesionales
+[OK] programaciones
+[OK] programas_atencion
+[OK] proveedores
+[OK] schema_version
+[OK] servicios_paciente
+[OK] signos_vitales
+[OK] solicitudes_firma
+[OK] sqlite_sequence
+[OK] turnos_programados
+[OK] usuarios
+=======================================================
+
+
+[OK] Sistema listo.
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8088 (Press CTRL+C to quit)
+INFO:     127.0.0.1:59461 - "GET /servicios-paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48661 - "GET /static/css/style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44340 - "GET /static/vendor/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59461 - "GET /static/vendor/bootstrap/css/bootstrap.min.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:48661 - "GET /static/img/logo_homecare.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44340 - "GET /static/js/buscar_pacientes.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44340 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44340 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44340 - "GET /facturacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44340 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:41919 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:41919 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41919 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:41919 - "GET /pacientes/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41919 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:41919 - "GET /laboratorios/paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41919 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:43382 - "GET /pacientes/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43382 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:52088 - "GET /api/movil/agenda/1?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 302 Found
+INFO:     127.0.0.1:52088 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50133 - "GET /api/movil/paciente/4 HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:44764 - "GET /plantillas-visita/api/mis-plantillas?rol=M%C3%A9dico HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:50585 - "GET /plantillas-visita HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50585 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:36098 - "GET /plantillas-visita/api/mis-plantillas?rol=Curaciones HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:42657 - "GET /api/movil/paciente/4/informes HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:42657 - "GET /api/movil/paciente/4/informes HTTP/1.1" 401 Unauthorized
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [17052]
+[jue 09/07/2026 10:18:35.91] Iniciando HomeCare Enterprise en el puerto 8088... 
+INFO:     Started server process [9088]
+INFO:     Waiting for application startup.
+
+====================================
+ HOMECARE ENTERPRISE
+ Inicializando sistema...
+====================================
+
+=======================================================
+HomeCare Enterprise Database
+=======================================================
+[OK] acudientes
+[OK] administracion_medicamentos
+[OK] alergias
+[OK] antecedentes
+[OK] auditoria
+[OK] cargos
+[OK] catalogo_actividades
+[OK] catalogo_bancos
+[OK] catalogo_eps
+[OK] catalogo_turnos
+[OK] cie10
+[OK] configuracion_empresa
+[OK] consentimientos_informados
+[OK] contratos
+[OK] copagos
+[OK] cum
+[OK] cups
+[OK] diagnosticos
+[OK] divipola
+[OK] documentos_profesional
+[OK] evoluciones
+[OK] facturas_electronicas
+[OK] fotos_procedimientos
+[OK] historial_documentos_paciente
+[OK] historias_clinicas
+[OK] insumos
+[OK] inventario_movimientos
+[OK] laboratorio_items
+[OK] laboratorios_resultados
+[OK] medicamentos
+[OK] nomina
+[OK] nomina_detalle
+[OK] nomina_electronica
+[OK] ordenes_medicas
+[OK] paciente_programas
+[OK] pacientes
+[OK] planilla_visitas
+[OK] plantilla_componentes
+[OK] plantilla_versiones
+[OK] plantillas
+[OK] plantillas_visita
+[OK] profesionales
+[OK] programaciones
+[OK] programas_atencion
+[OK] proveedores
+[OK] schema_version
+[OK] servicios_paciente
+[OK] signos_vitales
+[OK] solicitudes_firma
+[OK] sqlite_sequence
+[OK] turnos_programados
+[OK] usuarios
+=======================================================
+
+
+[OK] Sistema listo.
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8088 (Press CTRL+C to quit)
+INFO:     127.0.0.1:39535 - "GET /plantillas-visita HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39535 - "GET /static/vendor/bootstrap/css/bootstrap.min.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46337 - "GET /static/vendor/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38470 - "GET /static/css/style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38470 - "GET /static/img/logo_homecare.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46337 - "GET /static/js/buscar_pacientes.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46337 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:46337 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:46337 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46337 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:46337 - "GET /pacientes/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46337 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:46337 - "GET /laboratorios/paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46337 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:60990 - "GET /pacientes/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60990 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:43617 - "GET /plantillas-visita/api/mis-plantillas?rol=Enfermero HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:55909 - "GET /plantillas-visita HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55909 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:39354 - "POST /plantillas-visita/guardar HTTP/1.1" 303 See Other
+INFO:     127.0.0.1:39354 - "GET /plantillas-visita HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39354 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:44630 - "GET /app/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44630 - "GET /app/estilos.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55601 - "GET /app/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55601 - "GET /api/movil/agenda/1?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:55601 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:43649 - "GET /app/manifest.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55601 - "GET /api/movil/paciente/4/laboratorios HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:38924 - "GET /plantillas-visita/api/mis-plantillas?rol=Cuidador HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:38924 - "GET /plantillas-visita/api/mis-plantillas?rol=Curaciones HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:55973 - "GET /api/movil/agenda/1?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:33591 - "GET /plantillas-visita/api/mis-plantillas?rol=Cuidador HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:33591 - "GET /api/movil/paciente/4/informes HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:38362 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:38362 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38362 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:38362 - "GET /pacientes/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38362 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:33475 - "GET /servicios-paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33475 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:33475 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33475 - "GET /gestion-visitas/11 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33475 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+Error enviando correo a cardenasruizdaniel@gmail.com
+Traceback (most recent call last):
+  File "D:\HomeCareEnterprise\services\notificaciones_service.py", line 120, in enviar_email
+    servidor.login(SMTP_USER, SMTP_PASSWORD)
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 750, in login
+    raise last_exception
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 739, in login
+    (code, resp) = self.auth(
+                   ^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 662, in auth
+    raise SMTPAuthenticationError(code, resp)
+smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials a1e0cc1a2514c-96ed25847e5sm3130006241.2 - gsmtp')
+Error enviando correo a cardenasruizdaniel@gmail.com
+Traceback (most recent call last):
+  File "D:\HomeCareEnterprise\services\notificaciones_service.py", line 120, in enviar_email
+    servidor.login(SMTP_USER, SMTP_PASSWORD)
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 750, in login
+    raise last_exception
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 739, in login
+    (code, resp) = self.auth(
+                   ^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 662, in auth
+    raise SMTPAuthenticationError(code, resp)
+smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials a1e0cc1a2514c-96ed25847e5sm3130031241.2 - gsmtp')
+INFO:     127.0.0.1:44039 - "POST /gestion-visitas/programar/22 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44039 - "GET /gestion-visitas/11 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44039 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:41747 - "GET /usuarios HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41747 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:36188 - "GET /api/movil/agenda/1?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:36188 - "POST /api/movil/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43882 - "POST /api/movil/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43882 - "GET /api/movil/perfil HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43882 - "GET /api/movil/agenda/7?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33179 - "GET /api/movil/agenda/7?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33179 - "GET /api/movil/paciente/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33179 - "GET /api/movil/agenda/7?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33179 - "GET /api/movil/paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33179 - "GET /api/movil/agenda/7?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40129 - "GET /api/movil/agenda/7?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60031 - "GET /api/movil/paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36881 - "GET /api/movil/agenda/7?fecha_inicio=2026-07-09&fecha_fin=2026-07-09 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39201 - "GET /api/movil/paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43446 - "GET /plantillas-visita/api/mis-plantillas?rol=Cuidador HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35170 - "GET /plantillas-visita/api/mis-plantillas?rol=M%C3%A9dico HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42025 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:42025 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42025 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:42025 - "GET /programas-atencion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42025 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:34261 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:34261 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34261 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:34261 - "GET /pacientes/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34261 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:34261 - "GET /servicios-paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34261 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:34261 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39436 - "GET /pacientes/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39436 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:36650 - "GET /programas-atencion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36650 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:36650 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36650 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:33868 - "GET /programacion/detalle/3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33868 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:33868 - "GET /plantillas-visita/api/tipos-nota HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58753 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58753 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:56606 - "GET /programacion/dia HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56606 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:56606 - "GET /programacion/semana HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56606 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:59268 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59268 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:59268 - "GET /programacion/semana HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59268 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:59268 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59268 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:59268 - "GET /programacion/mes HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59268 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:42830 - "GET /programacion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42830 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:42830 - "GET /turnos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42830 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:59143 - "GET /programacion/mensual HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59143 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:33355 - "GET /programacion/mensual HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33355 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:33355 - "GET /turnos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33355 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:46268 - "GET /turnos/catalogo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46268 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:34440 - "GET /turnos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34440 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:34440 - "GET /turnos/catalogo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34440 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:50469 - "GET /turnos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50469 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:56283 - "GET /turnos/catalogo HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56283 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:59829 - "GET /turnos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59829 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:57158 - "GET /mi-agenda HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57158 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:57158 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:57158 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57158 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:44482 - "GET /pacientes/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44482 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:44482 - "GET /servicios-paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44482 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:44482 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40014 - "GET /gestion-visitas/11 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40014 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:40014 - "GET /pacientes/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40014 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:40014 - "GET /servicios-paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40014 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:40014 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40724 - "GET /gestion-visitas/11 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40724 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:40177 - "GET /pacientes/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40177 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:40177 - "GET /servicios-paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40177 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:40177 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57266 - "GET /servicios-paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57266 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:57266 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57266 - "GET /planilla-visitas/11 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57266 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:57689 - "GET /servicios-paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57689 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:57689 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59652 - "GET /gestion-visitas/11 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59652 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:60053 - "GET /pacientes/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60053 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:60053 - "GET /servicios-paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60053 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:60053 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38345 - "GET /gestion-visitas/11 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38345 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:38345 - "GET /pacientes/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38345 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:38345 - "GET /servicios-paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38345 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:38345 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38345 - "GET /pacientes/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38345 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:38345 - "GET /programas-atencion/paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38345 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:38345 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47194 - "GET /pacientes/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47194 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:47194 - "GET /servicios-paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47194 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:47194 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47194 - "GET /pacientes/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47194 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified

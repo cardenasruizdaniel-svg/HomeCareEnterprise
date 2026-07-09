@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-calendar-days text-primary"></i> Calendario de Turnos</h2>
+    <p class="text-muted">Programación de turnos para enfermería, cuidadores y demás profesionales de la salud.</p>
+    <a href="/turnos/catalogo" class="btn btn-outline-primary mb-3"><i class="fa-solid fa-list"></i> Catálogo de turnos (patrones de horario)</a>
+
+    <form method="get" class="row align-items-end mb-4">
+        <div class="col-md-3"><label>Desde</label><input type="date" name="fecha_inicio" value="{{ fecha_inicio }}" class="form-control"></div>
+        <div class="col-md-3"><label>Hasta</label><input type="date" name="fecha_fin" value="{{ fecha_fin }}" class="form-control"></div>
+        <div class="col-md-3"><button class="btn btn-outline-primary">Ver rango</button></div>
+    </form>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h5 class="mb-0">Asignar turno</h5></div>
+                <div class="card-body">
+                    <form method="post" action="/turnos/guardar">
+                        <div class="mb-3">
+                            <label>Profesional</label>
+                            <select name="profesional_id" class="form-select" required>
+                                {% for p in profesionales %}
+                                <option value="{{ p.id }}">{{ p.nombre_completo or p.nombre }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3"><label>Fecha</label><input type="date" name="fecha" class="form-control" required></div>
+                        <div class="mb-3">
+                            <label>Turno</label>
+                            <select name="turno" class="form-select">
+                                <option>Mañana</option>
+                                <option>Tarde</option>
+                                <option>Noche</option>
+                                <option>24 horas</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3"><label>Hora inicio</label><input type="time" name="hora_inicio" class="form-control" required></div>
+                            <div class="col-6 mb-3"><label>Hora fin</label><input type="time" name="hora_fin" class="form-control" required></div>
+                        </div>
+                        <div class="mb-3"><label>Zona / sector</label><input type="text" name="zona" class="form-control"></div>
+                        <div class="mb-3"><label>Observaciones</label><textarea name="observaciones" class="form-control" rows="2"></textarea></div>
+                        <button class="btn btn-success w-100"><i class="fa-solid fa-plus"></i> Asignar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-white"><h5 class="mb-0">Turnos del periodo</h5></div>
+                <div class="card-body">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light"><tr><th>Fecha</th><th>Profesional</th><th>Paciente</th><th>Turno</th><th>Horario</th><th>Zona</th><th class="text-center">Acción</th></tr></thead>
+                        <tbody>
+                            {% for t in turnos %}
+                            <tr>
+                                <td>{{ t.fecha }}</td>
+                                <td>{{ t.nombre_completo }}<br><small class="text-muted">{{ t.especialidad_principal }}</small></td>
+                                <td>
+                                    {% if t.paciente_nombre %}
+                                    {{ t.paciente_nombre }}
+                                    {% if t.paciente_tipo_cuidado == 'Ventilado' %}<span class="badge bg-danger">Ventilado</span>{% endif %}
+                                    {% else %}
+                                    <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td><span class="badge bg-info text-dark">{{ t.turno }}</span></td>
+                                <td>{{ t.hora_inicio }} - {{ t.hora_fin }}</td>
+                                <td>{{ t.zona }}</td>
+                                <td class="text-center">
+                                    <a href="/turnos/validar/{{ t.profesional_id }}" class="btn btn-outline-success btn-sm" title="Validar cumplimiento">
+                                        <i class="fa-solid fa-check-double"></i>
+                                    </a>
+                                    <a href="/turnos/eliminar/{{ t.id }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar turno?');">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="6" class="text-center text-muted py-4">No hay turnos programados en este rango.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

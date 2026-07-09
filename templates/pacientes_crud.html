@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<h2>👥 Gestión de Pacientes</h2>
+
+<div class="row mb-3">
+
+    <div class="col-md-6">
+        <input
+            type="text"
+            class="form-control"
+            placeholder="🔍 Buscar paciente">
+    </div>
+
+    <div class="col-md-6 text-end">
+
+        <a href="/nuevo_paciente"
+           class="btn btn-success">
+
+            ➕ Nuevo Paciente
+
+        </a>
+
+    </div>
+
+</div>
+
+<table class="table table-hover table-striped">
+
+    <thead>
+
+        <tr>
+
+            <th>ID</th>
+            <th>Documento</th>
+            <th>Nombre</th>
+            <th>EPS</th>
+
+            <th>Acciones</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+        {% for paciente in pacientes %}
+
+        <tr>
+
+            <td>{{ paciente[0] }}</td>
+
+            <td>{{ paciente[2] }}</td>
+
+            <td>
+                {{ paciente[3] }}
+                {{ paciente[5] }}
+            </td>
+
+            <td>{{ paciente[8] }}</td>
+
+            <td>
+
+                <a href="/editar_paciente/{{ paciente[0] }}"
+                   class="btn btn-warning btn-sm">
+
+                   ✏️
+
+                </a>
+
+                <a href="/eliminar_paciente/{{ paciente[0] }}"
+                   class="btn btn-danger btn-sm">
+
+                   🗑️
+
+                </a>
+
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    </tbody>
+
+</table>
+
+{% endblock %}

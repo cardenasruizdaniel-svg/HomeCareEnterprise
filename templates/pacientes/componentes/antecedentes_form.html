@@ -1,0 +1,179 @@
+<div class="card shadow border-0 mb-4">
+
+    <div class="card-header bg-primary text-white">
+
+        <h5 class="mb-0">
+
+            <i class="fa-solid fa-file-medical"></i>
+
+            Registrar Antecedente Clínico
+
+        </h5>
+
+    </div>
+
+    <div class="card-body">
+
+        <form method="post" action="/antecedentes/guardar">
+
+            <input
+                type="hidden"
+                name="paciente_id"
+                value="{{ paciente.id }}">
+
+            <input
+                type="hidden"
+                name="usuario"
+                value="{{ request.session.get('usuario','Sistema') }}">
+
+            <div class="row">
+
+                <!-- Tipo -->
+
+                <div class="col-md-4 mb-3">
+
+                    <label class="form-label">
+
+                        Tipo de Antecedente
+
+                    </label>
+
+                    <select
+                        class="form-select"
+                        name="tipo"
+                        required>
+
+                        <option value="">Seleccione...</option>
+
+                        <option value="AP">
+
+                            Antecedentes Personales
+
+                        </option>
+
+                        <option value="AF">
+
+                            Antecedentes Familiares
+
+                        </option>
+
+                        <option value="AQ">
+
+                            Antecedentes Quirúrgicos
+
+                        </option>
+
+                        <option value="AH">
+
+                            Hospitalizaciones
+
+                        </option>
+
+                        <option value="AL">
+
+                            Alergias
+
+                        </option>
+
+                        <option value="HT">
+
+                            Hábitos
+
+                        </option>
+
+                        <option value="GO">
+
+                            Gineco-Obstétricos
+
+                        </option>
+
+                        <option value="OC">
+
+                            Ocupacionales
+
+                        </option>
+
+                        <option value="FA">
+
+                            Farmacológicos
+
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <!-- Descripción -->
+
+                <div class="col-md-8 mb-3">
+
+                    <label class="form-label">
+
+                        Descripción
+
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        name="descripcion"
+                        placeholder="Ejemplo: Diabetes Mellitus tipo II"
+                        required>
+
+                </div>
+
+            </div>
+
+            <!-- Observaciones -->
+
+            <div class="mb-3">
+
+                <label class="form-label">
+
+                    Observaciones
+
+                </label>
+
+                <textarea
+
+                    class="form-control"
+
+                    rows="4"
+
+                    name="observaciones"
+
+                    placeholder="Información adicional...">
+
+                </textarea>
+
+            </div>
+
+            <div class="text-end">
+
+                <button
+                    type="reset"
+                    class="btn btn-secondary">
+
+                    <i class="fa-solid fa-xmark"></i>
+
+                    Limpiar
+
+                </button>
+
+                <button
+                    type="submit"
+                    class="btn btn-primary">
+
+                    <i class="fa-solid fa-floppy-disk"></i>
+
+                    Guardar Antecedente
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>

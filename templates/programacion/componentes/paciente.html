@@ -1,0 +1,240 @@
+<div class="card shadow-sm border-0 mb-4">
+
+    <div class="card-header bg-light">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+
+                <i class="fa-solid fa-user-group text-primary"></i>
+
+                Paciente
+
+            </h5>
+
+           <button
+
+    		type="button"
+
+   	 	class="btn btn-primary btn-sm"
+
+    		data-bs-toggle="modal"
+
+    		data-bs-target="#modalPaciente">
+
+   		 <i class="fa-solid fa-magnifying-glass"></i>
+
+   		 Buscar Paciente
+
+	</button>
+
+        </div>
+
+    </div>
+
+    <div class="card-body">
+
+        <input
+            type="hidden"
+            id="paciente_id"
+            name="paciente_id">
+
+        <div class="row">
+
+            <div class="col-md-3 mb-3">
+
+                <label class="form-label">
+
+                    Documento
+
+                </label>
+
+                <input
+
+                    id="paciente_documento"
+
+                    class="form-control"
+
+                    readonly>
+
+            </div>
+
+            <div class="col-md-5 mb-3">
+
+                <label class="form-label">
+
+                    Nombre Completo
+
+                </label>
+
+                <input
+
+                    id="paciente_nombre"
+
+                    class="form-control"
+
+                    readonly>
+
+            </div>
+
+            <div class="col-md-2 mb-3">
+
+                <label class="form-label">
+
+                    Edad
+
+                </label>
+
+                <input
+
+                    id="paciente_edad"
+
+                    class="form-control"
+
+                    readonly>
+
+            </div>
+
+            <div class="col-md-2 mb-3">
+
+                <label class="form-label">
+
+                    Sexo
+
+                </label>
+
+                <input
+
+                    id="paciente_sexo"
+
+                    class="form-control"
+
+                    readonly>
+
+            </div>
+
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-3 mb-3">
+
+                <label class="form-label">
+
+                    EPS
+
+                </label>
+
+                <input
+
+                    id="paciente_eps"
+
+                    class="form-control"
+
+                    readonly>
+
+            </div>
+
+            <div class="col-md-5 mb-3">
+
+                <label class="form-label">
+
+                    Dirección
+
+                </label>
+
+                <input
+
+                    id="paciente_direccion"
+
+                    class="form-control"
+
+                    readonly>
+
+            </div>
+
+            <div class="col-md-2 mb-3">
+
+                <label class="form-label">
+
+                    Ciudad
+
+                </label>
+
+                <input
+
+                    id="paciente_ciudad"
+
+                    class="form-control"
+
+                    readonly>
+
+            </div>
+
+            <div class="col-md-2 mb-3">
+
+                <label class="form-label">
+
+                    Teléfono
+
+                </label>
+
+                <input
+
+                    id="paciente_telefono"
+
+                    class="form-control"
+
+                    readonly>
+
+            </div>
+
+        </div>
+
+        <div class="alert alert-info mb-0">
+
+            <div class="row">
+
+                <div class="col-md-6">
+
+                    <strong>
+
+                        Diagnóstico Principal
+
+                    </strong>
+
+                    <br>
+
+                    <span id="diagnostico_principal">
+
+                        Sin seleccionar
+
+                    </span>
+
+                </div>
+
+                <div class="col-md-6">
+
+                    <strong>
+
+                        Observaciones Clínicas
+
+                    </strong>
+
+                    <br>
+
+                    <span id="alertas_clinicas">
+
+                        Ninguna
+
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

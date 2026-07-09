@@ -1,0 +1,199 @@
+<div class="card shadow border-0 mb-4">
+
+    <div class="card-header bg-dark text-white">
+
+        <div class="d-flex justify-content-between align-items-center">
+
+            <h5 class="mb-0">
+
+                <i class="fa-solid fa-clock-rotate-left"></i>
+
+                Cronología Clínica
+
+            </h5>
+
+            <span class="badge bg-light text-dark">
+
+                {{ diagnosticos|length }} eventos
+
+            </span>
+
+        </div>
+
+    </div>
+
+    <div class="card-body">
+
+        {% if diagnosticos %}
+
+        <div class="timeline">
+
+            {% for d in diagnosticos %}
+
+            <div class="timeline-item mb-4">
+
+                <div class="timeline-icon">
+
+                    {% if d.estado=="Activo" %}
+
+                        <i class="fa-solid fa-circle-check text-success"></i>
+
+                    {% elif d.estado=="Resuelto" %}
+
+                        <i class="fa-solid fa-circle text-primary"></i>
+
+                    {% elif d.estado=="Suspendido" %}
+
+                        <i class="fa-solid fa-circle-xmark text-secondary"></i>
+
+                    {% else %}
+
+                        <i class="fa-solid fa-circle-exclamation text-warning"></i>
+
+                    {% endif %}
+
+                </div>
+
+                <div class="timeline-content card shadow-sm">
+
+                    <div class="card-body">
+
+                        <div class="d-flex justify-content-between">
+
+                            <div>
+
+                                <h5 class="text-danger">
+
+                                    {{ d.codigo_cie10 }}
+
+                                </h5>
+
+                                <strong>
+
+                                    {{ d.diagnostico }}
+
+                                </strong>
+
+                            </div>
+
+                            <div>
+
+                                <span class="badge bg-info">
+
+                                    {{ d.tipo }}
+
+                                </span>
+
+                            </div>
+
+                        </div>
+
+                        <hr>
+
+                        <div class="row">
+
+                            <div class="col-md-6">
+
+                                <small class="text-muted">
+
+                                    Fecha Diagnóstico
+
+                                </small>
+
+                                <div>
+
+                                    {{ d.fecha_diagnostico }}
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6">
+
+                                <small class="text-muted">
+
+                                    Estado
+
+                                </small>
+
+                                <div>
+
+                                    {{ d.estado }}
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6 mt-3">
+
+                                <small class="text-muted">
+
+                                    Profesional
+
+                                </small>
+
+                                <div>
+
+                                    {{ d.profesional }}
+
+                                </div>
+
+                            </div>
+
+                            <div class="col-md-6 mt-3">
+
+                                <small class="text-muted">
+
+                                    Especialidad
+
+                                </small>
+
+                                <div>
+
+                                    {{ d.especialidad }}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        {% if d.observaciones %}
+
+                        <div class="alert alert-light mt-3 mb-0">
+
+                            {{ d.observaciones }}
+
+                        </div>
+
+                        {% endif %}
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        </div>
+
+        {% else %}
+
+        <div class="text-center py-5">
+
+            <i class="fa-solid fa-clock fa-5x text-secondary mb-4"></i>
+
+            <h4>
+
+                No existe historial clínico de diagnósticos.
+
+            </h4>
+
+        </div>
+
+        {% endif %}
+
+    </div>
+
+</div>

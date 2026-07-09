@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block titulo %}Catálogo de Turnos{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-clock text-primary"></i> Catálogo de Turnos</h2>
+    <p class="text-muted">Defina aquí los patrones de horario que se puedan reutilizar al asignar cuidadores o auxiliares a un paciente (ej. "Turno 1: partido 8am-12m y 2pm-6pm").</p>
+    <a href="/turnos" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver al calendario</a>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h5 class="mb-0">Nuevo turno</h5></div>
+                <div class="card-body">
+                    <form method="post" action="/turnos/catalogo/crear">
+                        <div class="mb-2"><label>Nombre</label><input type="text" name="nombre" class="form-control" placeholder="Ej: Turno 1 (partido)" required></div>
+                        <div class="row">
+                            <div class="col-6 mb-2"><label>Tramo 1 - Inicio</label><input type="time" name="tramo1_inicio" class="form-control" required></div>
+                            <div class="col-6 mb-2"><label>Tramo 1 - Fin</label><input type="time" name="tramo1_fin" class="form-control" required></div>
+                        </div>
+                        <small class="text-muted d-block mb-2">Si el turno es partido (dos bloques en el día), complete también el tramo 2. Si no, déjelo vacío.</small>
+                        <div class="row">
+                            <div class="col-6 mb-2"><label>Tramo 2 - Inicio (opcional)</label><input type="time" name="tramo2_inicio" class="form-control"></div>
+                            <div class="col-6 mb-2"><label>Tramo 2 - Fin (opcional)</label><input type="time" name="tramo2_fin" class="form-control"></div>
+                        </div>
+                        <div class="mb-2">
+                            <label>¿Para qué tipo de paciente aplica?</label>
+                            <select name="tipo_cuidado_aplica" class="form-select">
+                                <option value="Ambos">Ambos (Ventilado y No Ventilado)</option>
+                                <option value="Ventilado">Solo Ventilado</option>
+                                <option value="No Ventilado">Solo No Ventilado</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-success w-100">Crear turno</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-white"><h5 class="mb-0">Turnos definidos</h5></div>
+                <div class="card-body">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light"><tr><th>Nombre</th><th>Horario</th><th>Aplica a</th><th></th></tr></thead>
+                        <tbody>
+                            {% for t in turnos %}
+                            <tr>
+                                <td>{{ t.nombre }}</td>
+                                <td>
+                                    {{ t.tramo1_inicio }} - {{ t.tramo1_fin }}
+                                    {% if t.tramo2_inicio %} y {{ t.tramo2_inicio }} - {{ t.tramo2_fin }}{% endif %}
+                                </td>
+                                <td><span class="badge bg-secondary">{{ t.tipo_cuidado_aplica }}</span></td>
+                                <td><a href="/turnos/catalogo/desactivar/{{ t.id }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Desactivar este turno?');">Desactivar</a></td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted py-4">Sin turnos definidos.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

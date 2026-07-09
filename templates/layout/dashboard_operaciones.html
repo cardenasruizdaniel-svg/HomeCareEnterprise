@@ -1,0 +1,179 @@
+<div class="row mt-4">
+
+    <!-- Estado profesionales -->
+
+    <div class="col-lg-6 mb-4">
+
+        <div class="card shadow border-0">
+
+            <div class="card-header bg-success text-white">
+
+                <h5 class="mb-0">
+
+                    <i class="fa-solid fa-user-doctor"></i>
+
+                    Estado de Profesionales
+
+                </h5>
+
+            </div>
+
+            <div class="card-body">
+
+                <table class="table align-middle">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>Profesional</th>
+
+                            <th>Estado</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {% if profesionales %}
+
+                            {% for profesional in profesionales %}
+
+                            <tr>
+
+                                <td>
+
+                                    {{ profesional.nombre }}
+
+                                </td>
+
+                                <td>
+
+                                    {% if profesional.estado=="Disponible" %}
+
+                                        <span class="badge bg-success">
+
+                                            Disponible
+
+                                        </span>
+
+                                    {% elif profesional.estado=="En Visita" %}
+
+                                        <span class="badge bg-warning text-dark">
+
+                                            En Visita
+
+                                        </span>
+
+                                    {% else %}
+
+                                        <span class="badge bg-secondary">
+
+                                            {{ profesional.estado }}
+
+                                        </span>
+
+                                    {% endif %}
+
+                                </td>
+
+                            </tr>
+
+                            {% endfor %}
+
+                        {% else %}
+
+                            <tr>
+
+                                <td colspan="2" class="text-center">
+
+                                    No hay profesionales registrados.
+
+                                </td>
+
+                            </tr>
+
+                        {% endif %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Próximas visitas -->
+
+    <div class="col-lg-6 mb-4">
+
+        <div class="card shadow border-0">
+
+            <div class="card-header bg-info text-white">
+
+                <h5 class="mb-0">
+
+                    <i class="fa-solid fa-clock"></i>
+
+                    Próximas Visitas
+
+                </h5>
+
+            </div>
+
+            <div class="card-body">
+
+                {% if agenda %}
+
+                    {% for visita in agenda[:5] %}
+
+                    <div class="border rounded p-3 mb-3">
+
+                        <div class="fw-bold">
+
+                            {{ visita.hora_inicio }}
+
+                        </div>
+
+                        <div>
+
+                            👤 {{ visita.paciente }}
+
+                        </div>
+
+                        <div>
+
+                            👨‍⚕️ {{ visita.profesional }}
+
+                        </div>
+
+                        <div>
+
+                            💉 {{ visita.servicio }}
+
+                        </div>
+
+                    </div>
+
+                    {% endfor %}
+
+                {% else %}
+
+                    <div class="text-center py-4">
+
+                        No hay visitas programadas.
+
+                    </div>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>

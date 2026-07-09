@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+
+<h2>👨‍⚕️ Profesionales</h2>
+
+<form method="post" action="/guardar_profesional">
+
+<div class="row">
+
+<div class="col-md-4">
+<input class="form-control"
+       name="nombre"
+       placeholder="Nombre">
+</div>
+
+<div class="col-md-3">
+<input class="form-control"
+       name="cargo"
+       placeholder="Cargo">
+</div>
+
+<div class="col-md-3">
+<input class="form-control"
+       name="telefono"
+       placeholder="Teléfono">
+</div>
+
+<div class="col-md-2">
+<button class="btn btn-success">
+Guardar
+</button>
+</div>
+
+</div>
+
+</form>
+
+{% endblock %}

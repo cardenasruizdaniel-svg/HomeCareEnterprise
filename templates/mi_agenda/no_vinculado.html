@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block titulo %}Mi Agenda{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <div class="alert alert-warning">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        Su usuario todavía no está vinculado a un registro de profesional. Pídale al administrador que lo
+        vincule desde <b>Profesionales → Editar → Cuenta vinculada</b> para poder ver aquí su propia agenda.
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% block titulo %}Fotos de Procedimientos{% endblock %}
+{% block css %}
+<style>
+@media print {
+    .no-imprimir, .sidebar, .topbar { display:none !important; }
+    .contenido-principal { margin:0 !important; padding:0 !important; }
+}
+</style>
+{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+
+    {% include "components/volver_paciente.html" %}
+
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 class="mb-1"><i class="fa-solid fa-camera text-primary"></i> Fotos de Procedimientos — {{ paciente.primer_nombre }} {{ paciente.primer_apellido }}</h2>
+        <button class="btn btn-outline-secondary no-imprimir" onclick="window.print()">
+            <i class="fa-solid fa-print"></i> Imprimir listado
+        </button>
+    </div>
+    <p class="text-muted">Registro fotográfico de los procedimientos realizados al paciente.</p>
+
+    <div class="card shadow mb-4 no-imprimir">
+        <div class="card-header bg-white"><h5 class="mb-0">Subir nueva foto</h5></div>
+        <div class="card-body">
+            <form method="post" action="/fotos-procedimientos/subir" enctype="multipart/form-data" id="form-subir-foto">
+                <input type="hidden" name="paciente_id" value="{{ paciente_id }}">
+                <input type="hidden" name="foto_base64" id="campo-foto-oculto">
+                <div class="row">
+                    <div class="col-md-5 mb-3">
+                        <label>Foto (desde archivo o cámara)</label>
+                        <input type="file" accept="image/*" capture="environment" class="form-control" id="campo-archivo-foto" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Profesional que la tomó</label>
+                        <select name="profesional_id" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            {% for p in profesionales %}<option value="{{ p.id }}">{{ p.nombre_completo }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success w-100"><i class="fa-solid fa-upload"></i> Subir</button>
+                    </div>
+                </div>
+                <div class="mb-2">
+                    <label>Descripción del procedimiento</label>
+                    <input type="text" name="descripcion" class="form-control" placeholder="Ej: Curación de úlcera en talón derecho, antes del procedimiento">
+                </div>
+                <img id="vista-previa-foto" style="max-height:150px; display:none;" class="mb-2 border rounded">
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for f in fotos %}
+        <div class="col-md-3 mb-4">
+            <div class="card shadow h-100">
+                <img src="{{ f.foto_base64 }}" class="card-img-top" style="height:180px; object-fit:cover;">
+                <div class="card-body">
+                    <p class="small mb-1">{{ f.descripcion or "Sin descripción" }}</p>
+                    <p class="small text-muted mb-1">{{ f.fecha }}</p>
+                    {% if f.profesional %}<p class="small text-muted mb-2">Por: {{ f.profesional }}</p>{% endif %}
+                    <a href="/fotos-procedimientos/eliminar/{{ f.id }}/{{ paciente_id }}" class="btn btn-outline-danger btn-sm no-imprimir"
+                       onclick="return confirm('¿Eliminar esta foto?');">
+                        <i class="fa-solid fa-trash"></i> Eliminar
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <p class="text-muted text-center py-4">Sin fotos registradas todavía.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+document.getElementById("campo-archivo-foto").addEventListener("change", (e) => {
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = () => {
+        document.getElementById("campo-foto-oculto").value = lector.result;
+        const vista = document.getElementById("vista-previa-foto");
+        vista.src = lector.result;
+        vista.style.display = "block";
+    };
+    lector.readAsDataURL(archivo);
+});
+</script>
+{% endblock %}

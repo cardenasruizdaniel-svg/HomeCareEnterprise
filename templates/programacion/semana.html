@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block titulo %}Agenda Semanal{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="fa-solid fa-calendar-week text-success"></i> Agenda Semanal</h2>
+        <div>
+            <span class="badge bg-secondary fs-6">{{ inicio_semana }} — {{ fin_semana }}</span>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mb-3">
+        <a href="/programacion/semana?fecha={{ inicio_semana }}" class="btn btn-outline-secondary btn-sm" id="btn-semana-anterior">
+            <i class="fa-solid fa-chevron-left"></i> Semana anterior
+        </a>
+        <a href="/programacion" class="btn btn-outline-primary btn-sm">Hoy</a>
+        <a href="#" class="btn btn-outline-secondary btn-sm" id="btn-semana-siguiente">
+            Semana siguiente <i class="fa-solid fa-chevron-right"></i>
+        </a>
+    </div>
+
+    <div class="card shadow border-0">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr><th>Fecha</th><th>Hora</th><th>Paciente</th><th>Profesional</th><th>Servicio</th><th>Estado</th></tr>
+                </thead>
+                <tbody>
+                    {% for v in visitas %}
+                    <tr>
+                        <td>{{ v.fecha }}</td>
+                        <td>{{ v.hora_inicio }} - {{ v.hora_fin }}</td>
+                        <td>{{ v.paciente }}</td>
+                        <td>{{ v.profesional }}</td>
+                        <td>{{ v.servicio }}</td>
+                        <td>
+                            <span class="badge {% if v.estado=='Completada' %}bg-success{% elif v.estado=='Cancelada' %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                {{ v.estado }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">No hay visitas programadas esta semana.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+// calcular la fecha de la semana anterior/siguiente en el navegador
+const inicioSemana = new Date("{{ inicio_semana }}T00:00:00");
+const anterior = new Date(inicioSemana); anterior.setDate(anterior.getDate() - 7);
+const siguiente = new Date(inicioSemana); siguiente.setDate(siguiente.getDate() + 7);
+function formatear(d) { return d.toISOString().slice(0,10); }
+document.getElementById("btn-semana-anterior").href = "/programacion/semana?fecha=" + formatear(anterior);
+document.getElementById("btn-semana-siguiente").href = "/programacion/semana?fecha=" + formatear(siguiente);
+</script>
+{% endblock %}

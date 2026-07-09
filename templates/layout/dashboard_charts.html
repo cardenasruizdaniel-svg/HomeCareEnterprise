@@ -1,0 +1,141 @@
+<div class="row mt-4">
+
+    <!-- Visitas por estado -->
+
+    <div class="col-lg-6 mb-4">
+
+        <div class="card shadow border-0">
+
+            <div class="card-header">
+
+                <h5>
+
+                    <i class="fa-solid fa-chart-pie"></i>
+
+                    Visitas por Estado
+
+                </h5>
+
+            </div>
+
+            <div class="card-body">
+
+                <canvas id="graficoEstados"></canvas>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Productividad -->
+
+    <div class="col-lg-6 mb-4">
+
+        <div class="card shadow border-0">
+
+            <div class="card-header">
+
+                <h5>
+
+                    <i class="fa-solid fa-chart-column"></i>
+
+                    Productividad
+
+                </h5>
+
+            </div>
+
+            <div class="card-body">
+
+                <canvas id="graficoProductividad"></canvas>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+new Chart(document.getElementById("graficoEstados"),{
+
+    type:"doughnut",
+
+    data:{
+
+        labels:[
+
+            "Programadas",
+
+            "En Curso",
+
+            "Completadas",
+
+            "Canceladas"
+
+        ],
+
+        datasets:[{
+
+            data:[
+
+                {{ visitas_programadas }},
+
+                {{ visitas_en_curso }},
+
+                {{ visitas_completadas }},
+
+                {{ visitas_canceladas }}
+
+            ]
+
+        }]
+
+    }
+
+});
+
+new Chart(document.getElementById("graficoProductividad"),{
+
+    type:"bar",
+
+    data:{
+
+        labels:[
+
+            "Pacientes",
+
+            "Profesionales",
+
+            "Programadas",
+
+            "Completadas"
+
+        ],
+
+        datasets:[{
+
+            label:"Indicadores",
+
+            data:[
+
+                {{ total_pacientes }},
+
+                {{ total_profesionales }},
+
+                {{ visitas_programadas }},
+
+                {{ visitas_completadas }}
+
+            ]
+
+        }]
+
+    }
+
+});
+
+</script>

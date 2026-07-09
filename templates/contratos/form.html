@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block contenido %}
+<div class="container-fluid">
+    <div class="card shadow">
+        <div class="card-header bg-primary text-white"><h3 class="mb-0">Nuevo Contrato</h3></div>
+        <div class="card-body">
+            <form method="post" action="/contratos/guardar">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label>Profesional</label>
+                        <select name="profesional_id" class="form-select" required>
+                            {% for p in profesionales %}
+                            <option value="{{ p.id }}">{{ p.nombre_completo or p.nombre }} — {{ p.documento }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Cargo</label>
+                        <select name="cargo_id" class="form-select" id="cargo_id" required>
+                            {% for c in cargos %}
+                            <option value="{{ c.id }}" data-tipo="{{ c.tipo_contrato_sugerido }}"
+                                    data-salario="{{ c.salario_base }}" data-hora="{{ c.valor_hora_base }}"
+                                    data-riesgo="{{ c.nivel_riesgo_arl }}" data-periodicidad="{{ c.periodicidad_pago }}">
+                                {{ c.nombre }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label>Tipo de contrato (legal)</label>
+                        <select name="tipo_contrato" class="form-select">
+                            {% for t in tipos_contrato %}<option>{{ t }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Modalidad de pago</label>
+                        <select name="modalidad_pago" id="modalidad_pago" class="form-select">
+                            <option value="POR_HORAS">Por horas</option>
+                            <option value="FIJO">Fijo (salario mensual)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Periodicidad de pago</label>
+                        <select name="periodicidad_pago" id="periodicidad_pago" class="form-select">
+                            <option value="MENSUAL">Mensual</option>
+                            <option value="QUINCENAL">Quincenal</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label>Salario mensual</label>
+                        <input type="number" step="1000" name="salario_mensual" id="salario_mensual" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Valor hora</label>
+                        <input type="number" step="100" name="valor_hora" id="valor_hora" class="form-control">
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Fecha de inicio</label>
+                        <input type="date" name="fecha_inicio" class="form-control" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label>Nivel de riesgo ARL</label>
+                        <select name="nivel_riesgo_arl" id="nivel_riesgo_arl" class="form-select">
+                            {% for n in ["I","II","III","IV","V"] %}<option value="{{ n }}">Nivel {{ n }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3"><label>EPS</label><input type="text" name="eps" class="form-control"></div>
+                    <div class="col-md-3 mb-3"><label>Fondo de pensión</label><input type="text" name="fondo_pension" class="form-control"></div>
+                    <div class="col-md-3 mb-3"><label>Fondo de cesantías</label><input type="text" name="fondo_cesantias" class="form-control"></div>
+                </div>
+                <div class="mb-3">
+                    <label>Caja de compensación</label>
+                    <input type="text" name="caja_compensacion" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>Observaciones</label>
+                    <textarea name="observaciones" class="form-control" rows="2"></textarea>
+                </div>
+                <hr>
+                <button class="btn btn-success"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                <a href="/contratos" class="btn btn-secondary">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+document.getElementById('cargo_id').addEventListener('change', (e) => {
+    const opt = e.target.selectedOptions[0];
+    document.getElementById('modalidad_pago').value = opt.dataset.tipo;
+    document.getElementById('salario_mensual').value = opt.dataset.salario;
+    document.getElementById('valor_hora').value = opt.dataset.hora;
+    document.getElementById('nivel_riesgo_arl').value = opt.dataset.riesgo;
+    document.getElementById('periodicidad_pago').value = opt.dataset.periodicidad;
+});
+document.getElementById('cargo_id').dispatchEvent(new Event('change'));
+</script>
+{% endblock %}

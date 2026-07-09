@@ -1,0 +1,6 @@
+{% set _pid = paciente_id or (paciente.id if paciente else None) %}
+{% if _pid %}
+<a href="/pacientes/{{ _pid }}" class="btn btn-outline-secondary mb-3">
+    <i class="fa-solid fa-arrow-left"></i> Volver a la ficha del paciente
+</a>
+{% endif %}

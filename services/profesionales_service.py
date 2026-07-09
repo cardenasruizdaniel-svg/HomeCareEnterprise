@@ -1,0 +1,115 @@
+"""
+=========================================================
+HomeCare Enterprise
+Servicio: Profesionales (equipo interdisciplinario)
+
+Envuelve ProfesionalesRepository con la logica minima de
+negocio (generacion de nombre_completo/uuid, valores por
+defecto) para que el router no dependa de detalles del
+repositorio.
+=========================================================
+"""
+
+import uuid as uuid_lib
+
+from repositories.profesionales_repository import ProfesionalesRepository
+
+
+def listar():
+    return ProfesionalesRepository.listar()
+
+
+def obtener(profesional_id: int):
+    return ProfesionalesRepository.obtener(profesional_id)
+
+
+def activos():
+    return ProfesionalesRepository.activos()
+
+
+def _nombre_completo(datos: dict) -> str:
+    return " ".join(
+        x for x in [
+            datos.get("primer_nombre"),
+            datos.get("segundo_nombre"),
+            datos.get("primer_apellido"),
+            datos.get("segundo_apellido"),
+        ] if x
+    )
+
+
+def crear(datos: dict, usuario_id=None) -> int:
+
+    datos = dict(datos)
+
+    for campo in ("documento", "primer_nombre", "primer_apellido", "especialidad_principal"):
+        if not datos.get(campo):
+            raise ValueError(f"El campo '{campo}' es obligatorio para crear un profesional.")
+
+    datos.setdefault("uuid", str(uuid_lib.uuid4()))
+    datos.setdefault("tipo_documento", "CC")
+    datos.setdefault("segundo_nombre", "")
+    datos.setdefault("segundo_apellido", "")
+    datos.setdefault("profesion", datos.get("especialidad_principal", ""))
+    datos.setdefault("telefono", "")
+    datos.setdefault("celular", "")
+    datos.setdefault("correo", "")
+    datos.setdefault("direccion", "")
+    datos.setdefault("municipio", "")
+    datos.setdefault("departamento", "")
+    datos["nombre_completo"] = _nombre_completo(datos)
+    datos.setdefault("estado", "ACTIVO")
+    datos.setdefault("disponible", 1)
+    datos.setdefault("acepta_urgencias", 0)
+    datos.setdefault("capacidad_diaria", 20)
+    datos.setdefault("tiempo_promedio_visita", 45)
+    datos.setdefault("radio_cobertura_km", 10)
+    datos.setdefault("latitud", None)
+    datos.setdefault("longitud", None)
+    datos.setdefault("observaciones", "")
+    datos.setdefault("registro_profesional", "")
+    datos.setdefault("tipo_contrato", "POR_HORAS")
+    datos.setdefault("valor_hora", 0)
+    datos.setdefault("salario_fijo", 0)
+    datos.setdefault("banco", "")
+    datos.setdefault("tipo_cuenta", "")
+    datos.setdefault("numero_cuenta", "")
+    datos.setdefault("usuario_id", None)
+    datos.setdefault("firma_base64", None)
+    datos["usuario_creacion"] = usuario_id
+
+    return ProfesionalesRepository.crear(datos)
+
+
+def actualizar(profesional_id: int, datos: dict, usuario_id=None):
+
+    datos = dict(datos)
+
+    if "latitud" not in datos or "longitud" not in datos:
+        fila = ProfesionalesRepository.obtener(profesional_id)
+        actual = dict(fila) if fila else {}
+        datos.setdefault("latitud", actual.get("latitud"))
+        datos.setdefault("longitud", actual.get("longitud"))
+
+    if "usuario_id" not in datos:
+        fila = ProfesionalesRepository.obtener(profesional_id)
+        actual = dict(fila) if fila else {}
+        datos["usuario_id"] = actual.get("usuario_id")
+
+    datos["usuario_actualizacion"] = usuario_id
+
+    return ProfesionalesRepository.actualizar(profesional_id, datos)
+
+
+def actualizar_firma(profesional_id: int, firma_base64: str):
+    if not firma_base64:
+        raise ValueError("Debe capturar la firma antes de guardarla.")
+    ProfesionalesRepository.actualizar_firma(profesional_id, firma_base64)
+
+
+def cambiar_estado(profesional_id: int, estado: str):
+    return ProfesionalesRepository.cambiar_estado(profesional_id, estado)
+
+
+def eliminar(profesional_id: int):
+    return ProfesionalesRepository.eliminar(profesional_id)

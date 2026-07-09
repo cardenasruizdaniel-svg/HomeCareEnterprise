@@ -1,0 +1,1 @@
+document.getElementById('buscar')?.addEventListener('input',e=>console.log(e.target.value));

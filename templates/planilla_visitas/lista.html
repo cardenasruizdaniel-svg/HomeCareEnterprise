@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+{% block titulo %}Planilla de Visitas{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+
+{% include "components/volver_paciente.html" %}
+
+    <h2 class="mb-1"><i class="fa-solid fa-file-signature text-primary"></i> Planilla de Visitas</h2>
+    <p class="text-muted">
+        {{ servicio.tipo_servicio }}{% if servicio.subtipo %} - {{ servicio.subtipo }}{% endif %}
+        — Paciente: {{ paciente.primer_nombre }} {{ paciente.primer_apellido }}
+    </p>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Fecha</th><th>Hora</th><th>Acompañante</th><th>Firmante</th>
+                        <th class="text-center">Estado</th><th class="text-center">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fila in filas %}
+                    <tr>
+                        <td>{{ fila.fecha }}</td>
+                        <td>{{ fila.hora_inicio }} - {{ fila.hora_fin }}</td>
+                        <td>{{ fila.nombre_acompanante or "—" }}</td>
+                        <td>{{ fila.firmante or "—" }}</td>
+                        <td class="text-center">
+                            <span class="badge {% if fila.estado == 'Firmada' %}bg-success{% else %}bg-warning text-dark{% endif %}">
+                                {{ fila.estado }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            {% if fila.estado != 'Firmada' %}
+                            <button class="btn btn-primary btn-sm btn-abrir-firma" data-id="{{ fila.id }}" data-fecha="{{ fila.fecha }}">
+                                <i class="fa-solid fa-signature"></i> Firmar visita
+                            </button>
+                            <button class="btn btn-outline-dark btn-sm btn-generar-qr" data-id="{{ fila.id }}" data-tipo="planilla_visita">
+                                <i class="fa-solid fa-qrcode"></i> QR
+                            </button>
+                            {% else %}
+                            <button class="btn btn-outline-secondary btn-sm btn-ver-firma" data-id="{{ fila.id }}"
+                                    data-firma="{{ fila.firma_base64 }}" data-foto="{{ fila.foto_base64 or '' }}">
+                                <i class="fa-solid fa-eye"></i> Ver firma
+                            </button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">Sin visitas en esta planilla.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <a href="/servicios-paciente/{{ servicio.paciente_id }}" class="btn btn-secondary mt-3">Volver</a>
+</div>
+
+<!-- Modal de firma -->
+<div class="modal fade" id="modalFirma" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title"><i class="fa-solid fa-signature"></i> Confirmar visita — <span id="fecha-firma"></span></h5>
+                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label>¿Quién firma?</label>
+                    <select id="campo-firmante" class="form-select">
+                        <option value="Paciente">El paciente</option>
+                        <option value="Acompañante">Un acompañante</option>
+                    </select>
+                </div>
+                <div class="mb-3" id="contenedor-acompanante" style="display:none;">
+                    <label>Nombre del acompañante</label>
+                    <input type="text" id="campo-nombre-acompanante" class="form-control">
+                </div>
+
+                <label>Firma digital</label>
+                <div class="border rounded mb-2" style="touch-action:none;">
+                    <canvas id="lienzo-firma" width="600" height="200" style="width:100%; height:200px; background:#f8f9fa;"></canvas>
+                </div>
+                <button type="button" class="btn btn-outline-secondary btn-sm mb-3" id="btn-limpiar-firma">Borrar firma</button>
+
+                <div class="mb-3">
+                    <label>Foto de la visita (opcional pero recomendada)</label>
+                    <input type="file" accept="image/*" capture="environment" id="campo-foto" class="form-control">
+                </div>
+
+                <div id="estado-ubicacion" class="small text-muted"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button class="btn btn-success" id="btn-guardar-firma"><i class="fa-solid fa-check"></i> Confirmar visita</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let planillaIdActual = null;
+const modalFirma = new bootstrap.Modal(document.getElementById("modalFirma"));
+const lienzo = document.getElementById("lienzo-firma");
+const contexto = lienzo.getContext("2d");
+let dibujando = false;
+let ubicacionActual = { lat: null, lon: null };
+
+function posicionRelativa(evento) {
+    const rect = lienzo.getBoundingClientRect();
+    const escalaX = lienzo.width / rect.width;
+    const escalaY = lienzo.height / rect.height;
+    const punto = evento.touches ? evento.touches[0] : evento;
+    return { x: (punto.clientX - rect.left) * escalaX, y: (punto.clientY - rect.top) * escalaY };
+}
+
+function iniciarDibujo(evento) {
+    dibujando = true;
+    const p = posicionRelativa(evento);
+    contexto.beginPath();
+    contexto.moveTo(p.x, p.y);
+    evento.preventDefault();
+}
+
+function dibujar(evento) {
+    if (!dibujando) return;
+    const p = posicionRelativa(evento);
+    contexto.lineTo(p.x, p.y);
+    contexto.stroke();
+    evento.preventDefault();
+}
+
+function terminarDibujo() { dibujando = false; }
+
+lienzo.addEventListener("mousedown", iniciarDibujo);
+lienzo.addEventListener("mousemove", dibujar);
+lienzo.addEventListener("mouseup", terminarDibujo);
+lienzo.addEventListener("touchstart", iniciarDibujo);
+lienzo.addEventListener("touchmove", dibujar);
+lienzo.addEventListener("touchend", terminarDibujo);
+
+document.getElementById("btn-limpiar-firma").addEventListener("click", () => {
+    contexto.clearRect(0, 0, lienzo.width, lienzo.height);
+});
+
+document.getElementById("campo-firmante").addEventListener("change", (e) => {
+    document.getElementById("contenedor-acompanante").style.display = e.target.value === "Acompañante" ? "block" : "none";
+});
+
+document.querySelectorAll(".btn-abrir-firma").forEach((boton) => {
+    boton.addEventListener("click", () => {
+        planillaIdActual = boton.dataset.id;
+        document.getElementById("fecha-firma").textContent = boton.dataset.fecha;
+        contexto.clearRect(0, 0, lienzo.width, lienzo.height);
+        document.getElementById("estado-ubicacion").textContent = "Obteniendo ubicación...";
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    ubicacionActual = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+                    document.getElementById("estado-ubicacion").textContent = "Ubicación capturada correctamente.";
+                },
+                () => {
+                    ubicacionActual = { lat: null, lon: null };
+                    document.getElementById("estado-ubicacion").textContent = "No se pudo obtener la ubicación (revise el permiso).";
+                }
+            );
+        }
+
+        modalFirma.show();
+    });
+});
+
+document.querySelectorAll(".btn-ver-firma").forEach((boton) => {
+    boton.addEventListener("click", () => {
+        const ventana = window.open("", "_blank");
+        ventana.document.write(`<img src="${boton.dataset.firma}" style="max-width:100%"><br>`);
+        if (boton.dataset.foto) {
+            ventana.document.write(`<img src="${boton.dataset.foto}" style="max-width:100%">`);
+        }
+    });
+});
+
+function leerArchivoComoBase64(archivo) {
+    return new Promise((resolve) => {
+        if (!archivo) { resolve(null); return; }
+        const lector = new FileReader();
+        lector.onload = () => resolve(lector.result);
+        lector.readAsDataURL(archivo);
+    });
+}
+
+document.getElementById("btn-guardar-firma").addEventListener("click", async () => {
+    const firmaBase64 = lienzo.toDataURL("image/png");
+    const archivoFoto = document.getElementById("campo-foto").files[0];
+    const fotoBase64 = await leerArchivoComoBase64(archivoFoto);
+
+    const cuerpo = {
+        firmante: document.getElementById("campo-firmante").value,
+        nombre_acompanante: document.getElementById("campo-nombre-acompanante").value,
+        firma_base64: firmaBase64,
+        foto_base64: fotoBase64,
+        latitud: ubicacionActual.lat,
+        longitud: ubicacionActual.lon,
+    };
+
+    const respuesta = await fetch(`/planilla-visitas/firmar/${planillaIdActual}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cuerpo),
+    });
+
+    const resultado = await respuesta.json();
+
+    if (resultado.ok) {
+        modalFirma.hide();
+        location.reload();
+    } else {
+        alert(resultado.error || "No se pudo guardar la firma.");
+    }
+});
+
+document.querySelectorAll(".btn-generar-qr").forEach((boton) => {
+    boton.addEventListener("click", () => {
+        abrirFirmaQR(boton.dataset.tipo, boton.dataset.id, () => location.reload());
+    });
+});
+</script>
+
+{% include "components/modal_firma_qr.html" %}
+{% endblock %}

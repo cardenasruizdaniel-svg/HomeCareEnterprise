@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block titulo %}Consentimientos Informados{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+
+    {% include "components/volver_paciente.html" %}
+
+    <h2 class="mb-1"><i class="fa-solid fa-file-signature text-primary"></i> Consentimientos Informados — {{ paciente.primer_nombre }} {{ paciente.primer_apellido }}</h2>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="row">
+        <div class="col-md-5">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h5 class="mb-0">Generar nuevo consentimiento</h5></div>
+                <div class="card-body">
+                    <form method="post" action="/consentimientos/crear" id="form-consentimiento">
+                        <input type="hidden" name="paciente_id" value="{{ paciente_id }}">
+                        <div class="mb-3">
+                            <label>Tipo de consentimiento</label>
+                            <select name="tipo" id="select-tipo" class="form-select" required>
+                                <option value="">-- Seleccione --</option>
+                                {% for t in tipos %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label>Contenido (se genera automáticamente, puede ajustarlo)</label>
+                            <textarea name="contenido_texto" id="campo-contenido" class="form-control" rows="14"></textarea>
+                        </div>
+                        <button class="btn btn-success w-100"><i class="fa-solid fa-check"></i> Generar documento</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card shadow">
+                <div class="card-header bg-white"><h5 class="mb-0">Consentimientos generados</h5></div>
+                <div class="card-body">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light"><tr><th>Tipo</th><th>Fecha</th><th class="text-center">Firmado</th><th></th></tr></thead>
+                        <tbody>
+                            {% for c in consentimientos %}
+                            <tr>
+                                <td>{{ c.tipo }}</td>
+                                <td>{{ c.fecha_diligenciamiento }}</td>
+                                <td class="text-center">
+                                    {% if c.firma_base64 %}
+                                    <span class="badge bg-success">Firmado</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">Pendiente de firma</span>
+                                    {% endif %}
+                                </td>
+                                <td><a href="/consentimientos/ver/{{ c.id }}" class="btn btn-outline-primary btn-sm">Ver / Firmar</a></td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted py-4">Sin consentimientos generados.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById("select-tipo").addEventListener("change", async (e) => {
+    if (!e.target.value) return;
+    const respuesta = await fetch(`/consentimientos/generar-texto/{{ paciente_id }}?tipo=${encodeURIComponent(e.target.value)}`);
+    const datos = await respuesta.json();
+    document.getElementById("campo-contenido").value = datos.texto;
+});
+</script>
+{% endblock %}

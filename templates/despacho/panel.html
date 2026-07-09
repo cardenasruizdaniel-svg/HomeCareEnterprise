@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+
+{% block titulo %}
+Centro de Despacho Inteligente
+{% endblock %}
+
+{% block contenido %}
+
+<div class="container-fluid">
+
+    <div class="row mb-4">
+
+        <div class="col-md-8">
+
+            <h2 class="fw-bold">
+                <i class="fas fa-truck-medical text-primary"></i>
+                Centro de Despacho Inteligente
+            </h2>
+
+            <p class="text-muted mb-0">
+                Control operativo de las visitas domiciliarias.
+            </p>
+
+        </div>
+
+        <div class="col-md-4 text-end">
+
+            <a href="/agenda"
+               class="btn btn-outline-primary">
+
+                <i class="fas fa-calendar-days"></i>
+
+                Agenda
+
+            </a>
+
+            <button
+                class="btn btn-success"
+                id="btnActualizar">
+
+                <i class="fas fa-rotate"></i>
+
+                Actualizar
+
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- KPIs -->
+
+    <div class="row g-3 mb-4">
+
+        <div class="col-lg-2">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6>Pendientes</h6>
+
+                    <h2 id="kpiPendientes">0</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-2">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6>En Ruta</h6>
+
+                    <h2 id="kpiRuta">0</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-2">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6>Atención</h6>
+
+                    <h2 id="kpiAtencion">0</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-2">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6>Finalizadas</h6>
+
+                    <h2 id="kpiFinalizadas">0</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-2">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6>Retrasadas</h6>
+
+                    <h2 id="kpiRetrasadas">0</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-2">
+
+            <div class="card shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6>Profesionales</h6>
+
+                    <h2 id="kpiProfesionales">0</h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Filtros -->
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-body">
+
+            <div class="row">
+
+                <div class="col-md-3">
+
+                    <label>Municipio</label>
+
+                    <select
+                        class="form-select"
+                        id="municipioFiltro">
+                    </select>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <label>Profesional</label>
+
+                    <select
+                        class="form-select"
+                        id="profesionalFiltro">
+                    </select>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <label>Estado</label>
+
+                    <select
+                        class="form-select"
+                        id="estadoFiltro">
+
+                        <option value="">
+                            Todos
+                        </option>
+
+                    </select>
+
+                </div>
+
+                <div class="col-md-3">
+
+                    <label>Buscar</label>
+
+                    <input
+                        id="buscarDespacho"
+                        class="form-control">
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Tabla -->
+
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <table
+                class="table table-hover align-middle">
+
+                <thead>
+
+                <tr>
+
+                    <th>Hora</th>
+
+                    <th>Paciente</th>
+
+                    <th>Profesional</th>
+
+                    <th>Municipio</th>
+
+                    <th>Estado</th>
+
+                    <th>Prioridad</th>
+
+                    <th></th>
+
+                </tr>
+
+                </thead>
+
+                <tbody id="tablaDespacho">
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<script src="/static/js/despacho.js"></script>
+
+{% endblock %}
