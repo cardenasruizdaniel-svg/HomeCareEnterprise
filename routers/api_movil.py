@@ -200,6 +200,12 @@ async def ultima_nota_medica_paciente(
     return ultima_nota_medica(paciente_id)
 
 
+@router.get("/programa-atencion/catalogo")
+async def catalogo_programa_atencion(usuario=Depends(requiere_permiso("pacientes"))):
+    """Catálogo de programas y actividades, para armar el formulario de asignación en la app."""
+    return movil_service.catalogo_programa_atencion()
+
+
 @router.get("/visita/{programacion_id}/informes")
 async def informes_de_visita(
     programacion_id: int,
@@ -364,6 +370,12 @@ def _procesar_accion(tipo: str, p: dict, usuario: dict):
             p["paciente_id"], p.get("profesional_id"), p.get("tipo_orden"),
             p.get("descripcion"), p.get("codigo_cups"),
             usuario.get("id") if isinstance(usuario, dict) else None,
+        )
+
+    if tipo == "asignar_programa_atencion":
+        return movil_service.asignar_programa_paciente(
+            p["paciente_id"], p.get("programa_id"), p.get("profesional_id"), p.get("motivo"),
+            p.get("actividades", []), usuario.get("id") if isinstance(usuario, dict) else None,
         )
 
     raise ValueError(f"Tipo de acción desconocido: {tipo}")

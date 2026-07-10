@@ -676,6 +676,7 @@ async function renderDetalleVisita(visitaId) {
     <button class="btn btn-secondary btn-block" id="btn-laboratorio">🧪 Resultados de laboratorio</button>
     <button class="btn btn-secondary btn-block" id="btn-ordenes">📋 Órdenes Médicas</button>
     <button class="btn btn-secondary btn-block" id="btn-ultima-nota-medica">🩺 Última Nota Médica</button>
+    <button class="btn btn-secondary btn-block" id="btn-programa-atencion">📑 Programa de Atención</button>
     `}
     ${visita.planilla_id && visita.planilla_estado !== "Firmada" ? `
     <button class="btn btn-primary btn-block" id="btn-firmar-planilla">✍️ Firmar planilla de visita</button>
@@ -719,6 +720,7 @@ async function renderDetalleVisita(visitaId) {
     document.getElementById("btn-laboratorio").addEventListener("click", () => renderLaboratorio(visita));
     document.getElementById("btn-ordenes").addEventListener("click", () => renderOrdenMedica(visita));
     document.getElementById("btn-ultima-nota-medica").addEventListener("click", () => renderUltimaNotaMedica(visita));
+    document.getElementById("btn-programa-atencion").addEventListener("click", () => renderProgramaAtencion(visita));
   }
 }
 
@@ -1270,6 +1272,117 @@ async function renderUltimaNotaMedica(visita) {
     </div>
     <button class="btn btn-secondary btn-block" onclick="irA('detalle_visita', ${visita.id})">← Volver</button>
   `;
+}
+
+async function renderProgramaAtencion(visita) {
+  titulo("Programa de Atención");
+  const nombrePaciente = [visita.primer_nombre, visita.primer_apellido].filter(Boolean).join(" ");
+  contenedor().innerHTML = `<p class="text-center">Cargando catálogo...</p>`;
+
+  let catalogo = { programas: [], actividades: [] };
+  try {
+    catalogo = await apiGet("/api/movil/programa-atencion/catalogo");
+  } catch (error) {
+    contenedor().innerHTML = `<div class="alerta alerta-danger">No se pudo cargar el catálogo. Necesita conexión para esta pantalla.</div>
+      <button class="btn btn-secondary btn-block" onclick="irA('detalle_visita', ${visita.id})">← Volver</button>`;
+    return;
+  }
+
+  let html = `
+    <div class="card">
+      <h3>📑 Programa de Atención</h3>
+      <small>${nombrePaciente}</small>
+
+      <div class="form-group" style="margin-top:10px;">
+        <label>Programa</label>
+        <select id="pa-programa">
+          <option value="">-- Seleccione --</option>
+          ${catalogo.programas.map(p => `<option value="${p.id}">${p.nombre}</option>`).join("")}
+        </select>
+      </div>
+      <div class="form-group"><label>Motivo / diagnóstico de ingreso al programa</label><textarea id="pa-motivo" rows="2"></textarea></div>
+
+      <label style="font-weight:bold; margin-top:10px; display:block;">Servicios / actividades a asignar</label>
+      <div id="pa-items-contenedor"></div>
+      <button type="button" class="btn btn-secondary w-100" id="btn-agregar-actividad-pa" style="margin-bottom:10px;">+ Agregar actividad</button>
+
+      <button class="btn btn-success w-100" id="btn-guardar-programa">Guardar programa y actividades</button>
+    </div>
+    <button class="btn btn-secondary btn-block" onclick="irA('detalle_visita', ${visita.id})">← Volver</button>
+  `;
+
+  contenedor().innerHTML = html;
+
+  function agregarFilaActividad() {
+    const fila = document.createElement("div");
+    fila.className = "fila-actividad-pa";
+    fila.style.cssText = "border:1px solid #dee2e6; border-radius:6px; padding:8px; margin-bottom:8px;";
+    fila.innerHTML = `
+      <select class="campo-actividad">
+        <option value="">-- Actividad --</option>
+        ${catalogo.actividades.map(a => `<option value="${a.id}" data-nombre="${a.nombre}">${a.nombre}</option>`).join("")}
+      </select>
+      <div style="display:flex; gap:4px; margin-top:4px;">
+        <input type="number" class="campo-sesiones" placeholder="N.° sesiones" style="flex:1;">
+        <input type="date" class="campo-fecha-inicio" style="flex:1;">
+      </div>
+      <select class="campo-frecuencia" style="margin-top:4px;">
+        <option value="Diaria">Diaria</option>
+        <option value="Interdiaria">Interdiaria</option>
+        <option value="1 vez por semana">1 vez por semana</option>
+        <option value="2 veces por semana">2 veces por semana</option>
+        <option value="3 veces por semana">3 veces por semana</option>
+        <option value="Cada 8 días">Cada 8 días</option>
+        <option value="Cada 15 días">Cada 15 días</option>
+        <option value="1 vez al mes">1 vez al mes</option>
+      </select>
+      <button type="button" class="btn btn-secondary btn-quitar-actividad-pa" style="margin-top:4px; width:100%;">Quitar</button>
+    `;
+    document.getElementById("pa-items-contenedor").appendChild(fila);
+    fila.querySelector(".btn-quitar-actividad-pa").addEventListener("click", () => fila.remove());
+  }
+
+  document.getElementById("btn-agregar-actividad-pa").addEventListener("click", agregarFilaActividad);
+  agregarFilaActividad();
+
+  document.getElementById("btn-guardar-programa").addEventListener("click", async () => {
+    const programaId = document.getElementById("pa-programa").value;
+    if (!programaId) {
+      alert("Debe seleccionar el programa de atención.");
+      return;
+    }
+
+    const actividades = [];
+    document.querySelectorAll(".fila-actividad-pa").forEach((fila) => {
+      const select = fila.querySelector(".campo-actividad");
+      const actividadId = select.value;
+      if (!actividadId) return;
+      actividades.push({
+        actividad_id: actividadId,
+        nombre_actividad: select.selectedOptions[0].dataset.nombre,
+        numero_sesiones: fila.querySelector(".campo-sesiones").value || null,
+        fecha_inicio: fila.querySelector(".campo-fecha-inicio").value || new Date().toISOString().slice(0, 10),
+        frecuencia: fila.querySelector(".campo-frecuencia").value,
+        profesional_id: perfil.profesional_id,
+      });
+    });
+
+    if (actividades.length === 0) {
+      alert("Debe agregar al menos una actividad/servicio.");
+      return;
+    }
+
+    await encolarAccion("asignar_programa_atencion", {
+      paciente_id: visita.paciente_id,
+      programa_id: programaId,
+      profesional_id: perfil.profesional_id,
+      motivo: document.getElementById("pa-motivo").value,
+      actividades: actividades,
+    });
+
+    alert("Programa y actividades guardados. Se sincronizarán cuando haya conexión.");
+    irA("detalle_visita", visita.id);
+  });
 }
 
 function esPerfilCuidador() {

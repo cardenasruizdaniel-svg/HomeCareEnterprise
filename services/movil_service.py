@@ -262,6 +262,52 @@ def crear_orden_medica(paciente_id, profesional_id, tipo, descripcion, codigo_cu
     )
 
 
+def asignar_programa_paciente(paciente_id, programa_id, profesional_id, motivo, actividades, usuario_id) -> dict:
+    """
+    Permite que el médico, durante la visita de valoración
+    (o cualquier otra visita), asigne desde la app de campo el
+    programa de atención Y los servicios/actividades que va a
+    tener el paciente -- lo mismo que se hace desde la web en
+    "Programas de Atención", sin tener que ir a la oficina.
+    """
+
+    from services.programas_atencion_service import asignar_programa_con_actividades
+
+    if not programa_id:
+        raise ValueError("Debe seleccionar el programa de atención.")
+    if not actividades:
+        raise ValueError("Debe indicar al menos una actividad/servicio para el paciente.")
+
+    programa_id = int(programa_id)
+    profesional_id = int(profesional_id) if profesional_id else None
+
+    actividades_normalizadas = []
+    for actividad in actividades:
+        actividad = dict(actividad)
+        if actividad.get("numero_sesiones") not in (None, ""):
+            actividad["numero_sesiones"] = int(actividad["numero_sesiones"])
+        else:
+            actividad["numero_sesiones"] = None
+        if actividad.get("profesional_id") not in (None, ""):
+            actividad["profesional_id"] = int(actividad["profesional_id"])
+        actividades_normalizadas.append(actividad)
+
+    return asignar_programa_con_actividades(
+        paciente_id, programa_id, profesional_id, motivo or "", actividades_normalizadas, usuario_id,
+    )
+
+
+def catalogo_programa_atencion():
+    """Catálogo de programas y actividades disponibles, para armar el formulario en la app."""
+    from services.programas_atencion_service import listar_programas_activos
+    from repositories.catalogo_actividades_repository import CatalogoActividadesRepository
+
+    return {
+        "programas": [dict(p) for p in listar_programas_activos()],
+        "actividades": [dict(a) for a in CatalogoActividadesRepository.listar_activas()],
+    }
+
+
 def registrar_evolucion(paciente_id, programacion_id, profesional_id, tipo_profesional, nota,
                           latitud=None, longitud=None, usuario_id=None,
                           tipo_registro="INFORME", nota_aclaratoria_de=None) -> dict:
