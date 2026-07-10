@@ -13,8 +13,9 @@ pero ese modulo solo expone la clase ProgramacionRepository
 import uuid as uuid_lib
 from datetime import datetime
 
-from database.database import consultar_todos, consultar_escalar, consultar_uno
+from database.database import consultar_todos, consultar_escalar, consultar_uno, ejecutar
 from repositories.programacion_repository import ProgramacionRepository
+from repositories.servicios_paciente_repository import ServiciosPacienteRepository
 
 _repo = ProgramacionRepository()
 
@@ -331,6 +332,14 @@ def crear_programacion_mensual(profesional_id: int, turnos: list, usuario) -> di
     fecha, hora_inicio, hora_fin, paciente_id, servicio,
     codigo_cups (opcional), procedimiento (opcional).
 
+    IMPORTANTE: cada paciente distinto de la lista queda con su
+    propio registro en "Servicios Asignados" (agrupando todos
+    sus turnos del mes en un solo servicio), y cada turno queda
+    programado en la agenda real -- exactamente como si se
+    hubiera hecho paso a paso desde Servicios Asignados, para
+    que todo se vea reflejado alli, en el calendario web, y en
+    la app de campo del cuidador.
+
     Las horas contabilizadas para nomina siguen siendo las
     que el profesional marque realmente (ingreso/salida) en
     cada uno de estos turnos, exactamente igual que con una
@@ -340,60 +349,135 @@ def crear_programacion_mensual(profesional_id: int, turnos: list, usuario) -> di
     if not turnos:
         raise ValueError("Debe agregar al menos un turno.")
 
+    from services.gestion_visitas_service import programar_visita
+
+    # Agrupar los turnos por (paciente, nombre del servicio),
+    # para crear UN SOLO servicio_paciente por combinacion,
+    # en vez de uno por cada turno individual.
+    grupos = {}
+    for indice, turno in enumerate(turnos, start=1):
+        if not turno.get("paciente_id") or not turno.get("fecha"):
+            continue
+        clave = (turno["paciente_id"], turno.get("servicio") or "Cuidado domiciliario")
+        grupos.setdefault(clave, []).append(turno)
+
     creados = []
     errores = []
+    indice_global = 0
 
-    for indice, turno in enumerate(turnos, start=1):
+    for (paciente_id, nombre_servicio), turnos_grupo in grupos.items():
 
-        try:
-            if not turno.get("paciente_id"):
-                raise ValueError("falta seleccionar el paciente")
-            if not turno.get("fecha"):
-                raise ValueError("falta la fecha")
-            if not turno.get("hora_inicio") or not turno.get("hora_fin"):
-                raise ValueError("falta la hora de inicio o fin")
+        fechas_grupo = sorted(t["fecha"] for t in turnos_grupo if t.get("fecha"))
+        if not fechas_grupo:
+            continue
 
-            paciente = consultar_uno(
-                "SELECT direccion, barrio, municipio, departamento FROM pacientes WHERE id=?",
-                (turno["paciente_id"],),
-            )
-            paciente = dict(paciente) if paciente else {}
+        servicio_id = ServiciosPacienteRepository.crear({
+            "paciente_id": paciente_id,
+            "tipo_servicio": nombre_servicio,
+            "subtipo": None,
+            "profesional_id": profesional_id,
+            "frecuencia": "Mensual (variable)",
+            "fecha_inicio": fechas_grupo[0],
+            "fecha_fin": fechas_grupo[-1],
+            "hora_inicio": turnos_grupo[0].get("hora_inicio") or "08:00",
+            "hora_fin": turnos_grupo[0].get("hora_fin") or "09:00",
+            "indicaciones": "",
+            "usuario_creacion": usuario,
+        })
+        ejecutar(
+            "UPDATE servicios_paciente SET numero_sesiones=? WHERE id=?",
+            (len(turnos_grupo), servicio_id),
+        )
 
-            hora_inicio_dt = datetime.strptime(turno["hora_inicio"], "%H:%M")
-            hora_fin_dt = datetime.strptime(turno["hora_fin"], "%H:%M")
-            duracion = int((hora_fin_dt - hora_inicio_dt).total_seconds() / 60)
+        for turno in turnos_grupo:
+            indice_global += 1
+            try:
+                if not turno.get("hora_inicio") or not turno.get("hora_fin"):
+                    raise ValueError("falta la hora de inicio o fin")
 
-            if duracion <= 0:
-                raise ValueError("la hora de fin debe ser posterior a la de inicio")
+                hora_inicio_dt = datetime.strptime(turno["hora_inicio"], "%H:%M")
+                hora_fin_dt = datetime.strptime(turno["hora_fin"], "%H:%M")
+                if (hora_fin_dt - hora_inicio_dt).total_seconds() <= 0:
+                    raise ValueError("la hora de fin debe ser posterior a la de inicio")
 
-            nuevo_id = crear_visita(
-                paciente_id=turno["paciente_id"],
-                profesional_id=profesional_id,
-                diagnostico_id=None,
-                fecha=turno["fecha"],
-                hora_inicio=turno["hora_inicio"],
-                hora_fin=turno["hora_fin"],
-                duracion=duracion,
-                servicio=turno.get("servicio") or "Cuidado domiciliario",
-                procedimiento=turno.get("procedimiento", ""),
-                codigo_cups=turno.get("codigo_cups", ""),
-                valor_servicio=turno.get("valor_servicio") or 0,
-                prioridad="Normal",
-                direccion=paciente.get("direccion", ""),
-                barrio=paciente.get("barrio", ""),
-                ciudad=paciente.get("municipio", ""),
-                departamento=paciente.get("departamento", ""),
-                telefono_contacto="",
-                nombre_contacto="",
-                observaciones=turno.get("observaciones", ""),
-                usuario=usuario,
-            )
-            creados.append(nuevo_id)
+                planilla_id = ejecutar(
+                    """
+                    INSERT INTO planilla_visitas(
+                        servicio_paciente_id, paciente_id, fecha, hora_inicio, hora_fin,
+                        profesional_id, estado
+                    ) VALUES (?, ?, ?, ?, ?, ?, 'Pendiente')
+                    """,
+                    (servicio_id, paciente_id, turno["fecha"], turno["hora_inicio"], turno["hora_fin"], profesional_id),
+                )
 
-        except Exception as error:
-            errores.append({"turno": indice, "fecha": turno.get("fecha", ""), "error": str(error)})
+                resultado_programar = programar_visita(
+                    planilla_id, turno["fecha"], turno["hora_inicio"], turno["hora_fin"],
+                    profesional_id, usuario,
+                )
+                creados.append(resultado_programar)
+
+            except Exception as error:
+                errores.append({"turno": indice_global, "fecha": turno.get("fecha", ""), "error": str(error)})
 
     return {"creados": len(creados), "errores": errores, "total": len(creados) + len(errores)}
+
+
+def historial_programacion_profesional(profesional_id: int) -> list:
+    """
+    Resumen mes a mes de todo lo que se le ha programado a un
+    profesional (agrupado por mes), para que la oficina vea de
+    un vistazo qué tanto se le ha programado antes de armar un
+    mes nuevo.
+    """
+    filas = consultar_todos(
+        """
+        SELECT strftime('%Y-%m', fecha) AS mes,
+               COUNT(*) AS total_visitas,
+               COUNT(DISTINCT paciente_id) AS total_pacientes,
+               SUM(CASE WHEN estado='Cancelada' THEN 1 ELSE 0 END) AS canceladas
+        FROM programaciones
+        WHERE profesional_id=?
+        GROUP BY mes
+        ORDER BY mes DESC
+        """,
+        (profesional_id,),
+    )
+    return [dict(f) for f in filas]
+
+
+def cronograma_mensual(profesional_id: int, anio: int, mes: int) -> dict:
+    """
+    Cronograma de un profesional para un mes especifico, dia a
+    dia, listo para mostrar en pantalla o imprimir -- un
+    calendario de actividades por cuidador/profesional.
+    """
+    mes_texto = f"{anio:04d}-{mes:02d}"
+
+    filas = consultar_todos(
+        """
+        SELECT pr.fecha, pr.hora_inicio, pr.hora_fin, pr.servicio, pr.estado,
+               p.primer_nombre, p.primer_apellido, p.direccion, p.zona_ciudad
+        FROM programaciones pr
+        JOIN pacientes p ON p.id = pr.paciente_id
+        WHERE pr.profesional_id=? AND strftime('%Y-%m', pr.fecha) = ?
+        ORDER BY pr.fecha, pr.hora_inicio
+        """,
+        (profesional_id, mes_texto),
+    )
+
+    por_dia = {}
+    for f in filas:
+        f = dict(f)
+        por_dia.setdefault(f["fecha"], []).append(f)
+
+    profesional = consultar_uno("SELECT nombre_completo, especialidad_principal FROM profesionales WHERE id=?", (profesional_id,))
+
+    return {
+        "profesional": dict(profesional) if profesional else {},
+        "anio": anio, "mes": mes,
+        "por_dia": por_dia,
+        "total_visitas": len(filas),
+    }
 
 
 # ==========================================

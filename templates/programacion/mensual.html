@@ -12,6 +12,23 @@
 
     <div id="alerta-resultado"></div>
 
+    <div class="card shadow mb-3" id="card-historial" style="display:none;">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="fa-solid fa-clock-rotate-left"></i> Historial de programaciones anteriores</h6>
+            <a href="#" id="link-ver-cronograma" class="btn btn-outline-primary btn-sm no-imprimir">
+                <i class="fa-solid fa-print"></i> Ver / Imprimir cronograma de este mes
+            </a>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead class="table-light"><tr><th>Mes</th><th class="text-center">Visitas</th><th class="text-center">Pacientes distintos</th><th class="text-center">Canceladas</th></tr></thead>
+                <tbody id="cuerpo-historial"></tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+
     <div class="card shadow mb-3">
         <div class="card-body">
             <div class="row">
@@ -58,13 +75,13 @@
     </div>
 </div>
 
-<datalist id="lista-pacientes">
-    {% for p in pacientes %}
-    <option value="{{ p.documento }} - {{ p.primer_nombre }} {{ p.primer_apellido }}" data-id="{{ p.id }}"></option>
-    {% endfor %}
-</datalist>
-
 <script>
+const OPCIONES_PACIENTES = `
+    {% for p in pacientes %}
+    <option value="{{ p.id }}">{{ p.documento }} - {{ p.primer_nombre }} {{ p.primer_apellido }}</option>
+    {% endfor %}
+`;
+
 let contadorFilas = 0;
 
 function agregarFila() {
@@ -77,9 +94,10 @@ function agregarFila() {
         <td><input type="time" class="form-control form-control-sm campo-hora-inicio" required></td>
         <td><input type="time" class="form-control form-control-sm campo-hora-fin" required></td>
         <td>
-            <input type="text" class="form-control form-control-sm campo-paciente-texto" list="lista-pacientes"
-                   placeholder="Documento o nombre..." required>
-            <input type="hidden" class="campo-paciente-id">
+            <select class="form-select form-select-sm campo-paciente-id" required>
+                <option value="">-- Seleccione el paciente --</option>
+                ${OPCIONES_PACIENTES}
+            </select>
         </td>
         <td><input type="text" class="form-control form-control-sm campo-servicio" placeholder="Cuidado domiciliario" value="Cuidado domiciliario"></td>
         <td class="text-center">
@@ -88,25 +106,47 @@ function agregarFila() {
     `;
     cuerpo.appendChild(fila);
 
-    const inputPaciente = fila.querySelector(".campo-paciente-texto");
-    const inputPacienteId = fila.querySelector(".campo-paciente-id");
-
-    inputPaciente.addEventListener("input", () => {
-        const opciones = document.querySelectorAll("#lista-pacientes option");
-        let encontrado = "";
-        opciones.forEach((op) => {
-            if (op.value === inputPaciente.value) {
-                encontrado = op.dataset.id;
-            }
-        });
-        inputPacienteId.value = encontrado;
-    });
-
     fila.querySelector(".btn-quitar-fila").addEventListener("click", () => fila.remove());
 }
 
 document.getElementById("btn-agregar-turno").addEventListener("click", agregarFila);
 agregarFila(); // arrancar con una fila lista
+
+document.getElementById("profesional_id").addEventListener("change", async (evento) => {
+    const profesionalId = evento.target.value;
+    const cardHistorial = document.getElementById("card-historial");
+    const cuerpoHistorial = document.getElementById("cuerpo-historial");
+    const linkCronograma = document.getElementById("link-ver-cronograma");
+
+    if (!profesionalId) {
+        cardHistorial.style.display = "none";
+        return;
+    }
+
+    const hoy = new Date();
+    linkCronograma.href = `/programacion/mensual/cronograma/${profesionalId}/${hoy.getFullYear()}/${hoy.getMonth() + 1}`;
+
+    try {
+        const respuesta = await fetch(`/programacion/mensual/historial/${profesionalId}`);
+        const historial = await respuesta.json();
+
+        if (historial.length === 0) {
+            cuerpoHistorial.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Sin programaciones anteriores para este profesional.</td></tr>`;
+        } else {
+            cuerpoHistorial.innerHTML = historial.map((h) => `
+                <tr>
+                    <td>${h.mes}</td>
+                    <td class="text-center">${h.total_visitas}</td>
+                    <td class="text-center">${h.total_pacientes}</td>
+                    <td class="text-center">${h.canceladas || 0}</td>
+                </tr>
+            `).join("");
+        }
+        cardHistorial.style.display = "block";
+    } catch (error) {
+        cardHistorial.style.display = "none";
+    }
+});
 
 document.getElementById("btn-guardar-mes").addEventListener("click", async () => {
     const profesionalId = document.getElementById("profesional_id").value;

@@ -186,6 +186,23 @@ async def programacion_mensual_formulario(
     )
 
 
+@router.get("/mensual/historial/{profesional_id}")
+async def historial_profesional(profesional_id: int, usuario=Depends(requiere_permiso("programacion"))):
+    return programacion_service.historial_programacion_profesional(profesional_id)
+
+
+@router.get("/mensual/cronograma/{profesional_id}/{anio}/{mes}", response_class=HTMLResponse)
+async def ver_cronograma(
+    request: Request, profesional_id: int, anio: int, mes: int,
+    usuario=Depends(requiere_permiso("programacion")),
+):
+    datos = programacion_service.cronograma_mensual(profesional_id, anio, mes)
+    return templates.TemplateResponse(
+        request=request, name="programacion/cronograma_mensual.html",
+        context={"usuario": usuario, **datos},
+    )
+
+
 @router.post("/mensual/crear")
 async def programacion_mensual_crear(
     request: Request,

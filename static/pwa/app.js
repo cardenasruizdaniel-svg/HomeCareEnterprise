@@ -555,36 +555,117 @@ function renderLogin() {
 
 // ---------------- AGENDA ----------------
 
+let vistaAgendaActual = "dia";
+let fechaReferenciaAgenda = new Date();
+
+function _formatoFechaISO(fecha) {
+  return fecha.toISOString().slice(0, 10);
+}
+
+function _rangoDeVista(vista, fechaRef) {
+  const inicio = new Date(fechaRef);
+  const fin = new Date(fechaRef);
+
+  if (vista === "dia") {
+    // inicio y fin ya son el mismo dia
+  } else if (vista === "semana") {
+    const diaSemana = inicio.getDay(); // 0=domingo
+    const offsetLunes = diaSemana === 0 ? -6 : 1 - diaSemana;
+    inicio.setDate(inicio.getDate() + offsetLunes);
+    fin.setTime(inicio.getTime());
+    fin.setDate(fin.getDate() + 6);
+  } else if (vista === "mes") {
+    inicio.setDate(1);
+    fin.setMonth(fin.getMonth() + 1);
+    fin.setDate(0);
+  }
+
+  return { inicio: _formatoFechaISO(inicio), fin: _formatoFechaISO(fin) };
+}
+
 async function renderAgenda() {
   titulo("Mi Agenda");
   contenedor().innerHTML = `<p class="text-center">Cargando...</p>`;
 
-  const hoy = new Date().toISOString().slice(0, 10);
-  const visitas = await obtenerAgenda(hoy, hoy);
+  const { inicio, fin } = _rangoDeVista(vistaAgendaActual, fechaReferenciaAgenda);
+  const visitas = await obtenerAgenda(inicio, fin);
+
+  const etiquetaPeriodo = vistaAgendaActual === "dia"
+    ? new Date(fechaReferenciaAgenda).toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long" })
+    : `${inicio} — ${fin}`;
+
+  let html = `
+    <div class="card">
+      <div style="display:flex; gap:4px; margin-bottom:8px;">
+        <button class="btn ${vistaAgendaActual === "dia" ? "btn-primary" : "btn-secondary"}" style="flex:1;" id="btn-vista-dia">Día</button>
+        <button class="btn ${vistaAgendaActual === "semana" ? "btn-primary" : "btn-secondary"}" style="flex:1;" id="btn-vista-semana">Semana</button>
+        <button class="btn ${vistaAgendaActual === "mes" ? "btn-primary" : "btn-secondary"}" style="flex:1;" id="btn-vista-mes">Mes</button>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <button class="btn btn-secondary" id="btn-periodo-anterior">←</button>
+        <strong style="text-transform:capitalize;">${etiquetaPeriodo}</strong>
+        <button class="btn btn-secondary" id="btn-periodo-siguiente">→</button>
+      </div>
+    </div>
+  `;
 
   if (!visitas.length) {
-    contenedor().innerHTML = `<div class="alerta alerta-info">No tiene visitas asignadas hoy.</div>`;
-    return;
+    html += `<div class="alerta alerta-info">No tiene visitas asignadas en este periodo.</div>`;
+  } else if (vistaAgendaActual === "dia") {
+    html += visitas.map((v) => _tarjetaVisitaAgenda(v)).join("");
+  } else {
+    // Semana o mes: agrupar por fecha, para ver dia a dia
+    const porFecha = {};
+    visitas.forEach((v) => {
+      porFecha[v.fecha] = porFecha[v.fecha] || [];
+      porFecha[v.fecha].push(v);
+    });
+    Object.keys(porFecha).sort().forEach((fecha) => {
+      const fechaLegible = new Date(fecha + "T00:00:00").toLocaleDateString("es-CO", { weekday: "short", day: "numeric", month: "short" });
+      html += `<h5 class="mt-2" style="text-transform:capitalize;">${fechaLegible}</h5>`;
+      html += porFecha[fecha].map((v) => _tarjetaVisitaAgenda(v)).join("");
+    });
   }
 
-  contenedor().innerHTML = visitas
-    .map((v) => {
-      const nombrePaciente = [v.primer_nombre, v.primer_apellido].filter(Boolean).join(" ");
-      let estadoBadge = "badge-secondary";
-      if (v.hora_real_fin) estadoBadge = "badge-success";
-      else if (v.hora_real_inicio) estadoBadge = "badge-warning";
+  contenedor().innerHTML = html;
 
-      return `
-      <div class="card" onclick="irA('detalle_visita', ${v.id})">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <h3>${nombrePaciente}</h3>
-          <span class="badge ${estadoBadge}">${v.hora_real_fin ? "Completada" : v.hora_real_inicio ? "En curso" : "Pendiente"}</span>
-        </div>
-        <small>${v.hora_inicio} · ${v.servicio}</small><br>
-        <small>${v.direccion || ""} ${v.barrio || ""}</small>
-      </div>`;
-    })
-    .join("");
+  document.getElementById("btn-vista-dia").addEventListener("click", () => { vistaAgendaActual = "dia"; renderAgenda(); });
+  document.getElementById("btn-vista-semana").addEventListener("click", () => { vistaAgendaActual = "semana"; renderAgenda(); });
+  document.getElementById("btn-vista-mes").addEventListener("click", () => { vistaAgendaActual = "mes"; renderAgenda(); });
+
+  document.getElementById("btn-periodo-anterior").addEventListener("click", () => {
+    _moverPeriodo(-1);
+    renderAgenda();
+  });
+  document.getElementById("btn-periodo-siguiente").addEventListener("click", () => {
+    _moverPeriodo(1);
+    renderAgenda();
+  });
+}
+
+function _moverPeriodo(direccion) {
+  const nueva = new Date(fechaReferenciaAgenda);
+  if (vistaAgendaActual === "dia") nueva.setDate(nueva.getDate() + direccion);
+  else if (vistaAgendaActual === "semana") nueva.setDate(nueva.getDate() + direccion * 7);
+  else if (vistaAgendaActual === "mes") nueva.setMonth(nueva.getMonth() + direccion);
+  fechaReferenciaAgenda = nueva;
+}
+
+function _tarjetaVisitaAgenda(v) {
+  const nombrePaciente = [v.primer_nombre, v.primer_apellido].filter(Boolean).join(" ");
+  let estadoBadge = "badge-secondary";
+  if (v.hora_real_fin) estadoBadge = "badge-success";
+  else if (v.hora_real_inicio) estadoBadge = "badge-warning";
+
+  return `
+  <div class="card" onclick="irA('detalle_visita', ${v.id})">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h3>${nombrePaciente}</h3>
+      <span class="badge ${estadoBadge}">${v.hora_real_fin ? "Completada" : v.hora_real_inicio ? "En curso" : "Pendiente"}</span>
+    </div>
+    <small>${v.hora_inicio} · ${v.servicio}</small><br>
+    <small>${v.direccion || ""} ${v.barrio || ""}</small>
+  </div>`;
 }
 
 // ---------------- DETALLE DE VISITA ----------------

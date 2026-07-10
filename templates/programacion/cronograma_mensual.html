@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block titulo %}Cronograma Mensual{% endblock %}
+{% block css %}
+<style>
+@media print {
+    .no-imprimir, .sidebar, .topbar { display:none !important; }
+    .contenido-principal { margin:0 !important; padding:0 !important; }
+}
+.dia-cronograma { border:1px solid #dee2e6; border-radius:6px; padding:10px; margin-bottom:10px; }
+.dia-cronograma h6 { text-transform:capitalize; border-bottom:1px solid #dee2e6; padding-bottom:4px; }
+</style>
+{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <div class="no-imprimir mb-3 d-flex gap-2">
+        <a href="/programacion/mensual" class="btn btn-outline-secondary"><i class="fa-solid fa-arrow-left"></i> Volver</a>
+        <button class="btn btn-outline-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimir cronograma</button>
+    </div>
+
+    <h2 class="mb-1"><i class="fa-solid fa-calendar-days text-primary"></i> Cronograma Mensual</h2>
+    <p class="text-muted">
+        {{ profesional.nombre_completo }} — {{ profesional.especialidad_principal }} —
+        {{ mes }}/{{ anio }} — {{ total_visitas }} visita(s) programadas en el mes.
+    </p>
+
+    {% if por_dia %}
+    {% for fecha, visitas in por_dia.items()|sort %}
+    <div class="dia-cronograma">
+        <h6>{{ fecha }}</h6>
+        <table class="table table-sm mb-0">
+            <thead class="table-light"><tr><th>Hora</th><th>Paciente</th><th>Servicio</th><th>Zona</th><th>Dirección</th><th>Estado</th></tr></thead>
+            <tbody>
+                {% for v in visitas %}
+                <tr>
+                    <td>{{ v.hora_inicio }} - {{ v.hora_fin }}</td>
+                    <td>{{ v.primer_nombre }} {{ v.primer_apellido }}</td>
+                    <td>{{ v.servicio }}</td>
+                    <td>{{ v.zona_ciudad or "—" }}</td>
+                    <td>{{ v.direccion or "—" }}</td>
+                    <td>
+                        {% if v.estado == 'Cancelada' %}<span class="badge bg-secondary">Cancelada</span>
+                        {% else %}<span class="badge bg-success">{{ v.estado }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="card shadow-sm"><div class="card-body text-center text-muted py-5">Sin visitas programadas para este profesional en este mes.</div></div>
+    {% endif %}
+</div>
+{% endblock %}
