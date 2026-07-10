@@ -52,6 +52,70 @@ DIAS_SEMANA_ISO = {
 }
 
 
+def _notificar_lote_turnos(profesional_id: int, paciente_id: int, fechas_generadas: list, nombre_turno: str, hora_inicio: str, hora_fin: str):
+    """
+    Avisa por WhatsApp y correo al profesional (cuidador o
+    quien sea) que se le asignó un lote de turnos, y le
+    adjunta por correo un archivo de calendario (.ics) con
+    TODOS los turnos generados, para que los agregue de una
+    vez a su Google Calendar/Outlook/Apple Calendar. Si
+    WhatsApp/correo no estan configurados, no falla la
+    asignacion -- solo queda sin notificar.
+    """
+
+    try:
+        from core.calendario_ics import generar_ics_lote_turnos
+        from services.notificaciones_service import enviar_email, enviar_whatsapp
+        from database.database import consultar_uno
+
+        profesional = consultar_uno(
+            "SELECT nombre_completo, celular, correo FROM profesionales WHERE id=?", (profesional_id,)
+        )
+        paciente = consultar_uno(
+            "SELECT primer_nombre, primer_apellido FROM pacientes WHERE id=?", (paciente_id,)
+        )
+        profesional = dict(profesional) if profesional else {}
+        paciente = dict(paciente) if paciente else {}
+
+        if not profesional:
+            return
+
+        nombre_paciente = f"{paciente.get('primer_nombre','')} {paciente.get('primer_apellido','')}".strip()
+        nombre_profesional = profesional.get("nombre_completo", "")
+
+        turnos_para_ics = [
+            {"fecha": f, "hora_inicio": hora_inicio, "hora_fin": hora_fin, "turno": nombre_turno}
+            for f in fechas_generadas
+        ]
+        ics_contenido = generar_ics_lote_turnos(turnos_para_ics, nombre_paciente, nombre_profesional)
+
+        ruta_ics = None
+        try:
+            import tempfile
+            archivo_temporal = tempfile.NamedTemporaryFile(mode="w", suffix=".ics", delete=False, encoding="utf-8")
+            archivo_temporal.write(ics_contenido)
+            archivo_temporal.close()
+            ruta_ics = archivo_temporal.name
+        except Exception:
+            ruta_ics = None
+
+        mensaje = (
+            f"Hola {nombre_profesional}, HomeCare le informa que se le asignaron {len(fechas_generadas)} "
+            f"turno(s) ({nombre_turno}) para el paciente {nombre_paciente}, desde el {fechas_generadas[0]} "
+            f"hasta el {fechas_generadas[-1]}. Recuerde abrir y cerrar cada turno desde la app."
+        )
+        enviar_whatsapp(profesional.get("celular"), mensaje)
+
+        if profesional.get("correo"):
+            enviar_email(
+                profesional["correo"], "HomeCare - Nuevos turnos asignados",
+                f"<p>{mensaje}</p><p>Adjunto encontrará todos los turnos para agregarlos a su calendario.</p>",
+                ruta_ics,
+            )
+    except Exception:
+        pass  # la notificacion nunca debe impedir que el turno quede asignado
+
+
 def asignar_turno_paciente(paciente_id, profesional_id, catalogo_turno_id, fecha_inicio, fecha_fin,
                              dias_semana, zona, observaciones, usuario) -> dict:
     """
@@ -86,10 +150,12 @@ def asignar_turno_paciente(paciente_id, profesional_id, catalogo_turno_id, fecha
         tramos.append((turno_catalogo["tramo2_inicio"], turno_catalogo["tramo2_fin"]))
 
     creados = 0
+    fechas_generadas = []
     actual = inicio
 
     while actual <= fin:
         if dias_permitidos is None or actual.isoweekday() in dias_permitidos:
+            fechas_generadas.append(actual.isoformat())
             for hora_inicio, hora_fin in tramos:
                 TurnosRepository.crear({
                     "profesional_id": profesional_id,
@@ -105,6 +171,12 @@ def asignar_turno_paciente(paciente_id, profesional_id, catalogo_turno_id, fecha
                 })
                 creados += 1
         actual += timedelta(days=1)
+
+    if fechas_generadas:
+        _notificar_lote_turnos(
+            profesional_id, paciente_id, fechas_generadas, turno_catalogo["nombre"],
+            tramos[0][0], tramos[0][1],
+        )
 
     return {"turnos_creados": creados, "turno_nombre": turno_catalogo["nombre"]}
 

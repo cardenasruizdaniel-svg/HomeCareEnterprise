@@ -35,6 +35,7 @@ def agenda_profesional(profesional_id: int, fecha_inicio: str, fecha_fin: str):
             p.id AS paciente_id, p.documento, p.primer_nombre, p.segundo_nombre,
             p.primer_apellido, p.segundo_apellido, p.celular, p.telefono,
             p.direccion AS direccion_paciente, p.latitud AS lat_paciente, p.longitud AS lon_paciente,
+            p.radio_geocerca_metros,
             p.ubicacion_confirmada,
             pv.id AS planilla_id, pv.estado AS planilla_estado
         FROM programaciones pr

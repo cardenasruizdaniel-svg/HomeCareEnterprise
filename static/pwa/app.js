@@ -264,6 +264,172 @@ function obtenerUbicacion() {
 }
 
 // ==========================================================
+// RECORDATORIOS DE ABRIR/CERRAR TURNO (10 minutos antes)
+//
+// Revisa cada minuto, mientras la app este abierta, si hay
+// alguna visita a punto de empezar (sin ingreso marcado) o a
+// punto de terminar (con ingreso pero sin salida), y avisa
+// con una notificacion del navegador 10 minutos antes.
+// ==========================================================
+
+const _yaAvisados = new Set();
+
+function _minutosHasta(fechaHoraTexto) {
+  const objetivo = new Date(fechaHoraTexto.replace(" ", "T"));
+  return (objetivo.getTime() - Date.now()) / 60000;
+}
+
+function _mostrarRecordatorio(titulo, cuerpo) {
+  if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+    new Notification(titulo, { body: cuerpo, icon: "/app/icons/icon-192.png" });
+  } else {
+    // Si no hay permiso de notificaciones del sistema, al menos se avisa dentro de la app
+    console.log(`[Recordatorio] ${titulo}: ${cuerpo}`);
+  }
+}
+
+async function _revisarRecordatoriosDeTurno() {
+  try {
+    const todas = await leerTodoDeStore("agenda_cache");
+    const hoyISO = new Date().toISOString().slice(0, 10);
+
+    todas
+      .filter((v) => v.fecha === hoyISO)
+      .forEach((v) => {
+        const nombrePaciente = [v.primer_nombre, v.primer_apellido].filter(Boolean).join(" ");
+
+        // Recordatorio de ABRIR turno
+        if (!v.hora_real_inicio && v.hora_inicio) {
+          const minutos = _minutosHasta(`${v.fecha} ${v.hora_inicio}:00`);
+          const clave = `abrir-${v.id}`;
+          if (minutos > 0 && minutos <= 10 && !_yaAvisados.has(clave)) {
+            _yaAvisados.add(clave);
+            _mostrarRecordatorio(
+              "⏰ Recuerde abrir turno",
+              `Su visita a ${nombrePaciente} empieza en ${Math.round(minutos)} minutos. No olvide registrar el ingreso.`
+            );
+          }
+        }
+
+        // Recordatorio de CERRAR turno
+        if (v.hora_real_inicio && !v.hora_real_fin && v.hora_fin) {
+          const minutos = _minutosHasta(`${v.fecha} ${v.hora_fin}:00`);
+          const clave = `cerrar-${v.id}`;
+          if (minutos > 0 && minutos <= 10 && !_yaAvisados.has(clave)) {
+            _yaAvisados.add(clave);
+            _mostrarRecordatorio(
+              "⏰ Recuerde cerrar turno",
+              `Su turno con ${nombrePaciente} termina en ${Math.round(minutos)} minutos. No olvide registrar la salida.`
+            );
+          }
+        }
+      });
+  } catch (error) {
+    // sin cache todavia, no hay nada que revisar
+  }
+}
+
+function iniciarRecordatoriosDeTurno() {
+  if (typeof Notification !== "undefined" && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
+  _revisarRecordatoriosDeTurno();
+  setInterval(_revisarRecordatoriosDeTurno, 60000); // cada minuto
+}
+
+// ==========================================================
+// MONITOREO DEL TURNO ACTIVO
+//
+// Mientras el usuario tiene una visita con ingreso marcado
+// pero sin salida (turno "abierto"), esto: 1) avisa con un
+// mensaje del navegador si intenta cerrar la pestaña/app sin
+// haber cerrado el turno, y 2) vigila su ubicacion cada cierto
+// tiempo -- si se aleja demasiado del domicilio del paciente,
+// cierra el turno automaticamente (registra la salida sola).
+// ==========================================================
+
+let _idVigilanciaUbicacion = null;
+let _visitaEnMonitoreo = null;
+const MARGEN_SALIDA_AUTOMATICA = 1.5; // 50% mas del radio normal, para no cerrar por un rebote del GPS
+
+function _avisoAntesDeCerrar(evento) {
+  evento.preventDefault();
+  evento.returnValue = "Tiene un turno abierto. No cierre la aplicación hasta registrar la salida.";
+  return evento.returnValue;
+}
+
+function iniciarMonitoreoTurno(visita) {
+  detenerMonitoreoTurno(); // por si ya habia uno corriendo, para no duplicar
+
+  _visitaEnMonitoreo = visita;
+  window.addEventListener("beforeunload", _avisoAntesDeCerrar);
+
+  if (!navigator.geolocation || visita.lat_paciente == null || visita.lon_paciente == null) {
+    return; // sin geolocalizacion o sin coordenadas del paciente, no se puede vigilar
+  }
+
+  _idVigilanciaUbicacion = navigator.geolocation.watchPosition(
+    async (posicion) => {
+      const distancia = calcularDistanciaMetros(
+        posicion.coords.latitude, posicion.coords.longitude,
+        _visitaEnMonitoreo.lat_paciente, _visitaEnMonitoreo.lon_paciente
+      );
+      const limite = (_visitaEnMonitoreo.radio_geocerca_metros || 150) * MARGEN_SALIDA_AUTOMATICA;
+
+      if (distancia !== null && distancia > limite) {
+        await _cerrarTurnoAutomaticamente(_visitaEnMonitoreo, posicion.coords.latitude, posicion.coords.longitude);
+      }
+    },
+    () => {}, // si falla una lectura puntual del GPS, se ignora y se sigue vigilando
+    { enableHighAccuracy: true, maximumAge: 30000, timeout: 20000 }
+  );
+}
+
+function detenerMonitoreoTurno() {
+  if (_idVigilanciaUbicacion !== null) {
+    navigator.geolocation.clearWatch(_idVigilanciaUbicacion);
+    _idVigilanciaUbicacion = null;
+  }
+  window.removeEventListener("beforeunload", _avisoAntesDeCerrar);
+  _visitaEnMonitoreo = null;
+}
+
+async function _cerrarTurnoAutomaticamente(visita, lat, lon) {
+  detenerMonitoreoTurno();
+
+  await encolarAccion("salida", {
+    visita_id: visita.id, lat: lat, lon: lon,
+    foto_base64: null, marca_tiempo_offline: new Date().toISOString(),
+    motivo: "Cierre automático: el profesional se alejó del domicilio del paciente.",
+  });
+
+  visita.hora_real_fin = new Date().toISOString().replace("T", " ").slice(0, 19);
+  await guardarEnStore("agenda_cache", visita);
+
+  alert(
+    "⚠ Se detectó que se alejó del domicilio del paciente, así que el sistema cerró " +
+    "el turno automáticamente. Si esto fue un error, contacte a la oficina."
+  );
+
+  if (document.getElementById("titulo-pantalla")) {
+    renderDetalleVisita(visita.id);
+  }
+}
+
+// Si la app se cierra y se vuelve a abrir mientras un turno
+// seguia abierto (ingreso marcado, salida sin marcar), esto
+// retoma la vigilancia automaticamente al cargar la agenda.
+async function reanudarMonitoreoSiHayTurnoAbierto() {
+  try {
+    const todas = await leerTodoDeStore("agenda_cache");
+    const abierta = todas.find((v) => v.hora_real_inicio && !v.hora_real_fin);
+    if (abierta) iniciarMonitoreoTurno(abierta);
+  } catch (error) {
+    // sin cache todavia, no hay nada que reanudar
+  }
+}
+
+// ==========================================================
 // RENDERIZADO DE PANTALLAS
 // ==========================================================
 
@@ -343,6 +509,8 @@ function renderLogin() {
 
       mostrarNav(true);
       irA("agenda");
+      reanudarMonitoreoSiHayTurnoAbierto();
+      iniciarRecordatoriosDeTurno();
     } catch (error) {
       errorEl.innerHTML = `<div class="alerta alerta-danger">No hay conexión. Debe iniciar sesión la primera vez con internet.</div>`;
     }
@@ -423,6 +591,29 @@ async function renderDetalleVisita(visitaId) {
     return;
   }
 
+  if (!visita.hora_real_inicio) {
+    // Todavia NO se ha registrado el ingreso a labores: la
+    // pantalla queda BLOQUEADA, solo se puede marcar el
+    // ingreso (con foto + ubicacion). El resto de opciones
+    // (historia clinica, evolucion, signos, firmar planilla,
+    // etc.) se habilitan recien despues de entrar.
+    contenedor().innerHTML = `
+      <div class="card">
+        <h3>${nombrePaciente}</h3>
+        <small>${visita.servicio} · ${visita.hora_inicio} - ${visita.hora_fin}</small><br>
+        <small>${visita.direccion || ""} ${visita.barrio || ""}, ${visita.municipio || ""}</small>
+        <div class="alerta alerta-info mt-2">
+          🔒 Para ver la historia clínica y registrar cualquier información de este paciente,
+          primero debe registrar su ingreso a labores (con foto y ubicación).
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" id="btn-ingreso">▶ Registrar ingreso a labores</button>
+      <button class="btn btn-secondary btn-block" onclick="irA('agenda')">← Volver a la agenda</button>
+    `;
+    document.getElementById("btn-ingreso").addEventListener("click", () => renderCapturaFotoIngreso(visita, "ingreso"));
+    return;
+  }
+
   contenedor().innerHTML = `
     <div class="card">
       <h3>${nombrePaciente}</h3>
@@ -434,10 +625,7 @@ async function renderDetalleVisita(visitaId) {
       </p>
     </div>
 
-    <button class="btn btn-primary btn-block" id="btn-ingreso" ${visita.hora_real_inicio ? "disabled" : ""}>
-      ▶ Registrar ingreso a labores
-    </button>
-    <button class="btn btn-success btn-block" id="btn-salida" ${!visita.hora_real_inicio || visita.hora_real_fin ? "disabled" : ""}>
+    <button class="btn btn-success btn-block" id="btn-salida" ${visita.hora_real_fin ? "disabled" : ""}>
       ⏹ Finalizar labores
     </button>
     <button class="btn btn-secondary btn-block" onclick="irAFichaPacienteDesdeVisita(${visita.paciente_id}, ${visita.id})">
@@ -484,8 +672,6 @@ async function renderDetalleVisita(visitaId) {
     alert("Ubicación del paciente guardada. Se sincronizará cuando haya conexión.");
   });
   }
-
-  document.getElementById("btn-ingreso").addEventListener("click", () => renderCapturaFotoIngreso(visita, "ingreso"));
 
   document.getElementById("btn-salida").addEventListener("click", () => renderCapturaFotoIngreso(visita, "salida"));
 
@@ -1111,6 +1297,16 @@ async function renderVerReporte(visita) {
   }
 }
 
+function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
+  if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return null;
+  const R = 6371000; // radio de la Tierra en metros
+  const rad = (g) => (g * Math.PI) / 180;
+  const dLat = rad(lat2 - lat1);
+  const dLon = rad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(rad(lat1)) * Math.cos(rad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 function renderCapturaFotoIngreso(visita, accion) {
   const titulo = accion === "ingreso" ? "Registrar ingreso" : "Finalizar labores";
 
@@ -1152,6 +1348,32 @@ function renderCapturaFotoIngreso(visita, accion) {
     document.getElementById("foto-ingreso-estado").textContent = "Obteniendo ubicación...";
     const ubicacion = await obtenerUbicacion();
 
+    if (ubicacion.lat === null) {
+      alert("No se pudo obtener su ubicación GPS. Active el permiso de ubicación e intente de nuevo.");
+      document.getElementById("foto-ingreso-estado").textContent = "";
+      return;
+    }
+
+    // Validacion OBLIGATORIA: si el paciente ya tiene una
+    // ubicacion registrada, el celular debe estar dentro del
+    // radio de su geocerca para poder marcar ingreso/salida.
+    // Se calcula aqui mismo en el celular (no depende de
+    // internet) comparando contra las coordenadas que ya
+    // trae guardadas la agenda.
+    if (visita.lat_paciente != null && visita.lon_paciente != null) {
+      const distancia = calcularDistanciaMetros(ubicacion.lat, ubicacion.lon, visita.lat_paciente, visita.lon_paciente);
+      const radioPermitido = visita.radio_geocerca_metros || 150;
+
+      if (distancia !== null && distancia > radioPermitido) {
+        document.getElementById("foto-ingreso-estado").innerHTML =
+          `<span style="color:#c71c22; font-weight:bold;">
+            ⚠ No puede ${accion === "ingreso" ? "ingresar" : "finalizar"} porque no está en la ubicación del paciente
+            (está a ${Math.round(distancia)} metros; el máximo permitido es ${radioPermitido} metros).
+          </span>`;
+        return;
+      }
+    }
+
     await encolarAccion(accion, {
       visita_id: visita.id, lat: ubicacion.lat, lon: ubicacion.lon,
       foto_base64: fotoCapturada, marca_tiempo_offline: new Date().toISOString(),
@@ -1159,8 +1381,10 @@ function renderCapturaFotoIngreso(visita, accion) {
 
     if (accion === "ingreso") {
       visita.hora_real_inicio = new Date().toISOString().replace("T", " ").slice(0, 19);
+      iniciarMonitoreoTurno(visita);
     } else {
       visita.hora_real_fin = new Date().toISOString().replace("T", " ").slice(0, 19);
+      detenerMonitoreoTurno();
     }
     await guardarEnStore("agenda_cache", visita);
 
@@ -1355,6 +1579,8 @@ async function iniciar() {
   if (perfil && perfil.profesional_id) {
     mostrarNav(true);
     irA("agenda");
+    reanudarMonitoreoSiHayTurnoAbierto();
+    iniciarRecordatoriosDeTurno();
   } else {
     renderLogin();
   }

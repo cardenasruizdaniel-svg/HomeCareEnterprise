@@ -20,6 +20,59 @@ import uuid
 from datetime import datetime, timedelta
 
 
+def generar_ics_lote_turnos(turnos: list, nombre_paciente: str, nombre_profesional: str) -> str:
+    """
+    Igual que generar_ics_visita, pero para un LOTE de varios
+    turnos de una vez (ej. cuando se le asignan a un cuidador
+    todos los turnos de un mes de una sola vez) -- un solo
+    archivo .ics con un evento por cada turno, para que se
+    agreguen todos juntos al calendario personal.
+    """
+
+    def _formatear(dt):
+        return dt.strftime("%Y%m%dT%H%M%S")
+
+    dtstamp = _formatear(datetime.now())
+
+    eventos = []
+    for turno in turnos:
+        inicio_dt = datetime.strptime(f"{turno['fecha']} {turno['hora_inicio']}", "%Y-%m-%d %H:%M")
+        fin_dt = datetime.strptime(f"{turno['fecha']} {turno['hora_fin']}", "%Y-%m-%d %H:%M")
+        uid = f"{uuid.uuid4()}@homecare-enterprise"
+
+        resumen = f"HomeCare - {turno.get('turno', 'Turno')} - {nombre_paciente}".replace(",", "\\,")
+        descripcion = f"Turno: {turno.get('turno','')}\\nPaciente: {nombre_paciente}\\nProfesional: {nombre_profesional}"
+
+        eventos.append("\r\n".join([
+            "BEGIN:VEVENT",
+            f"UID:{uid}",
+            f"DTSTAMP:{dtstamp}",
+            f"DTSTART:{_formatear(inicio_dt)}",
+            f"DTEND:{_formatear(fin_dt)}",
+            f"SUMMARY:{resumen}",
+            f"DESCRIPTION:{descripcion}",
+            "STATUS:CONFIRMED",
+            "BEGIN:VALARM",
+            "TRIGGER:-PT10M",
+            "ACTION:DISPLAY",
+            "DESCRIPTION:Recordatorio de turno HomeCare",
+            "END:VALARM",
+            "END:VEVENT",
+        ]))
+
+    contenido = "\r\n".join([
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//HomeCare Enterprise//Turnos//ES",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
+        *eventos,
+        "END:VCALENDAR",
+    ])
+
+    return contenido
+
+
 def generar_ics_visita(visita: dict, nombre_paciente: str, nombre_profesional: str) -> str:
     """
     Genera el contenido de un archivo .ics para una visita
