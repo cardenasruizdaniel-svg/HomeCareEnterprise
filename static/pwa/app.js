@@ -88,6 +88,35 @@ function borrarDeStore(nombreStore, clave) {
   });
 }
 
+function limpiarStore(nombreStore) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(nombreStore, "readwrite");
+    tx.objectStore(nombreStore).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// Borra TODO lo que se guardó en el celular sobre pacientes,
+// agenda y plantillas de la sesión de la persona que estaba
+// usando la app -- necesario al cerrar sesión, para que si
+// otro profesional entra despues en el MISMO celular/tablet
+// (algo comun en atencion domiciliaria, donde varios
+// comparten un mismo dispositivo) no seguir viendo pacientes,
+// historias clinicas ni citas de la persona anterior.
+// La cola de sincronizacion pendiente (cola_offline) SI se
+// conserva a proposito, para no perder informacion que
+// todavia no ha llegado al servidor.
+async function limpiarDatosDeSesion() {
+  try {
+    await limpiarStore("agenda_cache");
+    await limpiarStore("pacientes_cache");
+    await limpiarStore("plantillas_cache");
+  } catch (error) {
+    console.error("No se pudo limpiar la caché local:", error);
+  }
+}
+
 // ==========================================================
 // COLA OFFLINE (acciones pendientes de sincronizar)
 // ==========================================================
@@ -498,6 +527,13 @@ function renderLogin() {
 
       const datosLogin = await respuesta.json();
       const perfilDatos = await apiGet("/api/movil/perfil");
+
+      // Se limpia cualquier dato guardado de una sesion anterior
+      // ANTES de guardar el perfil nuevo -- asi, si este celular
+      // lo uso otra persona antes (comun quando se comparte un
+      // mismo dispositivo entre varios profesionales), no queda
+      // nada de esa sesion anterior mezclado con la nueva.
+      await limpiarDatosDeSesion();
 
       perfil = {
         usuario_id: datosLogin.usuario.id,
@@ -1582,6 +1618,7 @@ function renderPerfil() {
     try {
       await fetch("/api/movil/logout", { method: "POST", credentials: "same-origin" });
     } catch (e) {}
+    await limpiarDatosDeSesion();
     localStorage.removeItem("homecare_perfil");
     perfil = null;
     mostrarNav(false);
