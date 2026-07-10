@@ -19,6 +19,7 @@ class Paciente:
     sexo:str=""
     eps:str=""
     regimen:str=""
+    zona_ciudad:str=""
     tipo_cuidado:str="No Ventilado"
     telefono:str=""
     celular:str=""

@@ -22,12 +22,20 @@ async def listado(request: Request, servicio_id: int, usuario=Depends(requiere_p
         "SELECT id, nombre_completo, especialidad_principal FROM profesionales WHERE estado='ACTIVO' ORDER BY nombre_completo"
     )
 
+    sugerencia_medicos = []
+    es_servicio_medico = "édic" in (servicio.get("tipo_servicio") or "")
+    if es_servicio_medico:
+        from services.sugerencia_medico_service import sugerir_medicos
+        sugerencia_medicos = sugerir_medicos()
+
     return templates.TemplateResponse(
         request=request, name="gestion_visitas/lista.html",
         context={
             "usuario": usuario, "servicio": servicio, "servicio_id": servicio_id,
             "paciente": paciente, "profesionales": profesionales,
             "visitas": gestion_visitas_service.listar_visitas_de_servicio(servicio_id),
+            "es_servicio_medico": es_servicio_medico,
+            "sugerencia_medicos": sugerencia_medicos,
         },
     )
 

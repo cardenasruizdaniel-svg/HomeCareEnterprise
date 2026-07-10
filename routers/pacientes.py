@@ -67,6 +67,7 @@ async def nuevo(
     usuario=Depends(requiere_permiso("pacientes")),
 ):
     from repositories.catalogo_eps_repository import CatalogoEPSRepository
+    from core.zonas import ZONAS_CIUDAD
 
     return templates.TemplateResponse(
         request=request,
@@ -74,6 +75,7 @@ async def nuevo(
         context={
             "usuario": usuario,
             "lista_eps": [dict(e) for e in CatalogoEPSRepository.listar_activas()],
+            "zonas_ciudad": ZONAS_CIUDAD,
         },
     )
 
@@ -92,6 +94,7 @@ async def guardar(
     eps: str = Form(""),
     regimen: str = Form(""),
     tipo_cuidado: str = Form("No Ventilado"),
+    zona_ciudad: str = Form(""),
     telefono: str = Form(""),
     celular: str = Form(""),
     correo: str = Form(""),
@@ -116,6 +119,7 @@ async def guardar(
         "eps": eps,
         "regimen": regimen,
         "tipo_cuidado": tipo_cuidado,
+        "zona_ciudad": zona_ciudad,
         "telefono": telefono,
         "celular": celular,
         "correo": correo,
@@ -162,6 +166,7 @@ async def editar(
         return RedirectResponse(url="/pacientes/", status_code=303)
 
     from repositories.catalogo_eps_repository import CatalogoEPSRepository
+    from core.zonas import ZONAS_CIUDAD
 
     return templates.TemplateResponse(
         request=request,
@@ -169,6 +174,7 @@ async def editar(
         context={
             "usuario": usuario, "paciente": paciente,
             "lista_eps": [dict(e) for e in CatalogoEPSRepository.listar_activas()],
+            "zonas_ciudad": ZONAS_CIUDAD,
         },
     )
 
@@ -188,6 +194,7 @@ async def actualizar(
     eps: str = Form(""),
     regimen: str = Form(""),
     tipo_cuidado: str = Form("No Ventilado"),
+    zona_ciudad: str = Form(""),
     telefono: str = Form(""),
     celular: str = Form(""),
     correo: str = Form(""),
@@ -213,6 +220,7 @@ async def actualizar(
         "eps": eps,
         "regimen": regimen,
         "tipo_cuidado": tipo_cuidado,
+        "zona_ciudad": zona_ciudad,
         "telefono": telefono,
         "celular": celular,
         "correo": correo,

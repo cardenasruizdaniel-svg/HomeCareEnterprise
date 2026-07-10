@@ -11,7 +11,35 @@
     <p class="text-muted">
         {{ servicio.tipo_servicio }}{% if servicio.subtipo %} - {{ servicio.subtipo }}{% endif %}
         — Paciente: {{ paciente.primer_nombre }} {{ paciente.primer_apellido }}
+        {% if paciente.zona_ciudad %}
+        <span class="badge bg-info text-dark"><i class="fa-solid fa-map-location-dot"></i> Zona: {{ paciente.zona_ciudad }}</span>
+        {% else %}
+        <span class="badge bg-light text-dark">Sin zona asignada</span>
+        {% endif %}
     </p>
+
+    <div class="alert alert-light border">
+        <i class="fa-solid fa-lightbulb text-warning"></i>
+        Para una atención más eficiente, intente programar el mismo día las visitas de pacientes
+        de la <strong>misma zona</strong> de la ciudad con el mismo profesional.
+    </div>
+
+    {% if es_servicio_medico and sugerencia_medicos %}
+    <div class="card shadow-sm mb-3 border-primary">
+        <div class="card-header bg-primary text-white"><h6 class="mb-0"><i class="fa-solid fa-user-doctor"></i> Sugerencia de reparto entre médicos</h6></div>
+        <div class="card-body">
+            <p class="text-muted small mb-2">Según la cantidad de visitas médicas que tiene asignadas cada uno ahora mismo (de menos a más carga):</p>
+            <div class="d-flex flex-wrap gap-2">
+                {% for m in sugerencia_medicos %}
+                <span class="badge {% if m.es_sugerido %}bg-success{% else %}bg-light text-dark{% endif %}" style="font-size:0.9rem;">
+                    {% if m.es_sugerido %}⭐ {% endif %}{{ m.nombre_completo }} — {{ m.visitas_asignadas }} visita(s)
+                </span>
+                {% endfor %}
+            </div>
+            <small class="text-muted d-block mt-2">Es solo una sugerencia — puede asignar a cualquier otro médico si el caso lo amerita.</small>
+        </div>
+    </div>
+    {% endif %}
 
     <div id="alerta-resultado"></div>
 

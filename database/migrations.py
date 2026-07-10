@@ -713,6 +713,7 @@ class MigrationManager:
                         "radio_geocerca_metros": "radio_geocerca_metros INTEGER DEFAULT 150",
                         "ubicacion_confirmada": "ubicacion_confirmada INTEGER DEFAULT 0",
                         "tipo_cuidado": "tipo_cuidado TEXT DEFAULT 'No Ventilado'",
+                        "zona_ciudad": "zona_ciudad TEXT",
                     },
                 )
             )

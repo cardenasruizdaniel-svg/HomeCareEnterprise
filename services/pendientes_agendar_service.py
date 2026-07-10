@@ -16,7 +16,7 @@ def pacientes_sin_primera_visita() -> list:
     filas = consultar_todos(
         """
         SELECT p.id AS paciente_id, p.primer_nombre, p.primer_apellido, p.documento,
-               p.celular, sp.id AS servicio_id, sp.fecha_inicio, sp.tipo_servicio
+               p.celular, p.zona_ciudad, sp.id AS servicio_id, sp.fecha_inicio, sp.tipo_servicio
         FROM servicios_paciente sp
         JOIN pacientes p ON p.id = sp.paciente_id
         WHERE sp.tipo_servicio LIKE 'Visita de valoración médica inicial%'
@@ -39,7 +39,7 @@ def pacientes_con_visitas_pendientes() -> list:
     filas = consultar_todos(
         """
         SELECT p.id AS paciente_id, p.primer_nombre, p.primer_apellido, p.documento, p.celular,
-               sp.id AS servicio_id, sp.tipo_servicio, sp.frecuencia, sp.fecha_inicio, sp.fecha_fin,
+               p.zona_ciudad, sp.id AS servicio_id, sp.tipo_servicio, sp.frecuencia, sp.fecha_inicio, sp.fecha_fin,
                COUNT(pv.id) AS sesiones_totales,
                SUM(CASE WHEN pv.programacion_id IS NULL THEN 1 ELSE 0 END) AS sesiones_pendientes
         FROM servicios_paciente sp
@@ -63,4 +63,28 @@ def resumen_pendientes() -> dict:
         "total_sin_primera_visita": len(sin_primera),
         "con_visitas_pendientes": con_pendientes,
         "total_con_visitas_pendientes": len(con_pendientes),
+        "por_zona": agrupar_pendientes_por_zona(sin_primera, con_pendientes),
     }
+
+
+def agrupar_pendientes_por_zona(sin_primera: list, con_pendientes: list) -> list:
+    """
+    Junta ambos listados de pendientes y los agrupa por zona
+    de la ciudad -- para que la oficina pueda ver de un vistazo
+    qué pacientes de una misma zona hace falta agendar, y así
+    programarlos juntos el mismo día con el mismo profesional.
+    """
+    from core.zonas import ZONAS_CIUDAD
+
+    zonas = {z: [] for z in ZONAS_CIUDAD}
+    zonas["Sin zona asignada"] = []
+
+    for p in sin_primera:
+        zona = p.get("zona_ciudad") or "Sin zona asignada"
+        zonas.setdefault(zona, []).append({**p, "motivo": "Primera visita (valoración)"})
+
+    for p in con_pendientes:
+        zona = p.get("zona_ciudad") or "Sin zona asignada"
+        zonas.setdefault(zona, []).append({**p, "motivo": p["tipo_servicio"]})
+
+    return [{"zona": zona, "pacientes": pacientes} for zona, pacientes in zonas.items() if pacientes]

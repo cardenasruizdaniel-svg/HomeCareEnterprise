@@ -25,6 +25,36 @@
     </div>
 
     <div class="card shadow mb-4">
+        <div class="card-header bg-info text-dark"><h5 class="mb-0"><i class="fa-solid fa-map-location-dot"></i> Pendientes agrupados por Zona de la Ciudad</h5></div>
+        <div class="card-body">
+            <p class="text-muted small">
+                Para una atención más eficiente: programe el mismo día, con el mismo profesional,
+                a los pacientes de una misma zona.
+            </p>
+            <div class="row">
+                {% for grupo in por_zona %}
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 {% if grupo.zona == 'Sin zona asignada' %}border-secondary{% else %}border-info{% endif %}">
+                        <div class="card-header {% if grupo.zona == 'Sin zona asignada' %}bg-light{% else %}bg-info text-dark{% endif %}">
+                            <strong>{{ grupo.zona }}</strong>
+                            <span class="badge bg-dark">{{ grupo.pacientes|length }}</span>
+                        </div>
+                        <div class="card-body p-2">
+                            {% for p in grupo.pacientes %}
+                            <div class="small border-bottom py-1">
+                                <a href="/gestion-visitas/{{ p.servicio_id }}">{{ p.primer_nombre }} {{ p.primer_apellido }}</a>
+                                <br><span class="text-muted">{{ p.motivo }}</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
         <div class="card-header bg-danger text-white"><h5 class="mb-0">Pacientes SIN la primera visita agendada</h5></div>
         <div class="card-body">
             <p class="text-muted small">Estos pacientes tienen la visita de valoración médica inicial asignada, pero todavía nadie le ha puesto fecha.</p>

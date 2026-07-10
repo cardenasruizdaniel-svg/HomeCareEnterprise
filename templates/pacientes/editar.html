@@ -104,6 +104,15 @@
                         <span class="badge bg-secondary">Aún no confirmada desde el campo</span>
                         {% endif %}
                     </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Zona de la ciudad</label>
+                        <select name="zona_ciudad" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            {% for z in zonas_ciudad %}
+                            <option value="{{ z }}" {% if paciente.zona_ciudad == z %}selected{% endif %}>{{ z }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 </div>
 
                 <h5 class="text-muted mb-3">Contacto</h5>

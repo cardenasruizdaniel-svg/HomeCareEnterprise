@@ -102,6 +102,18 @@
                             Esto determina qué tipo de profesional se le puede asignar al programar sus turnos.
                         </small>
                     </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Zona de la ciudad</label>
+                        <select name="zona_ciudad" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            {% for z in zonas_ciudad %}
+                            <option value="{{ z }}">{{ z }}</option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">
+                            Ayuda a programar en un mismo día visitas de una misma zona (más eficiente).
+                        </small>
+                    </div>
                 </div>
 
                 <h5 class="text-muted mb-3">Contacto</h5>
