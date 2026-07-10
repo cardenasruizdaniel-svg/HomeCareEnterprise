@@ -1385,6 +1385,84 @@ async function renderProgramaAtencion(visita) {
   });
 }
 
+async function renderProgramarMiAgenda() {
+  titulo("Programar Mi Agenda");
+  contenedor().innerHTML = `<p class="text-center">Cargando sesiones...</p>`;
+
+  let sesiones = [];
+  try {
+    sesiones = await apiGet("/api/movil/mi-agenda-programable");
+  } catch (error) {
+    contenedor().innerHTML = `<div class="alerta alerta-danger">No se pudo cargar. Necesita conexión para esta pantalla.</div>
+      <button class="btn btn-secondary btn-block" onclick="renderPerfil()">← Volver</button>`;
+    return;
+  }
+
+  let html = `<div class="card"><h3>📅 Programar Mi Agenda</h3><small>Sesiones pendientes o ya programadas de sus pacientes asignados.</small></div>`;
+
+  if (sesiones.length === 0) {
+    html += `<div class="alerta alerta-info">No tiene sesiones pendientes ni programadas por ahora.</div>`;
+  } else {
+    sesiones.forEach((s) => {
+      const nombrePaciente = [s.primer_nombre, s.primer_apellido].filter(Boolean).join(" ");
+      const yaProgramada = !!s.programacion_id;
+      html += `
+        <div class="card" style="${yaProgramada ? 'border-left:4px solid #0d6efd;' : 'border-left:4px solid #dd5600;'}">
+          <strong>${nombrePaciente}</strong> — ${s.tipo_servicio}${s.subtipo ? " - " + s.subtipo : ""}<br>
+          <small>${s.direccion || ""}, ${s.municipio || ""}</small><br>
+          ${yaProgramada
+            ? `<span class="badge" style="background:#0d6efd; color:white;">Programada: ${s.fecha_programada} ${s.hora_programada || ""}</span>`
+            : `<span class="badge" style="background:#dd5600; color:white;">Pendiente de programar</span>`}
+
+          <div style="display:flex; gap:4px; margin-top:8px;">
+            <input type="date" class="campo-fecha-pa" data-planilla="${s.planilla_id}" style="flex:1;" value="${yaProgramada ? s.fecha_programada : ''}">
+            <input type="time" class="campo-hora-pa" data-planilla="${s.planilla_id}" style="flex:1;" value="${yaProgramada ? s.hora_programada : ''}">
+          </div>
+          <button type="button" class="btn ${yaProgramada ? 'btn-secondary' : 'btn-success'} w-100 btn-guardar-pa" style="margin-top:6px;"
+                  data-planilla="${s.planilla_id}" data-paciente="${s.paciente_id}">
+            ${yaProgramada ? "🔄 Reprogramar" : "✅ Programar"}
+          </button>
+        </div>
+      `;
+    });
+  }
+
+  html += `<button class="btn btn-secondary btn-block" onclick="renderPerfil()">← Volver</button>`;
+  contenedor().innerHTML = html;
+
+  document.querySelectorAll(".btn-guardar-pa").forEach((boton) => {
+    boton.addEventListener("click", async () => {
+      const planillaId = boton.dataset.planilla;
+      const pacienteId = boton.dataset.paciente;
+      const fecha = document.querySelector(`.campo-fecha-pa[data-planilla="${planillaId}"]`).value;
+      const hora = document.querySelector(`.campo-hora-pa[data-planilla="${planillaId}"]`).value;
+
+      if (!fecha) {
+        alert("Debe indicar la fecha.");
+        return;
+      }
+
+      await encolarAccion("programar_visita_movil", {
+        planilla_id: planillaId,
+        paciente_id: pacienteId,
+        fecha: fecha,
+        hora_inicio: hora || "08:00",
+        hora_fin: hora ? sumarUnaHora(hora) : "09:00",
+        profesional_id: perfil.profesional_id,
+      });
+
+      alert("Guardado. Se sincronizará cuando haya conexión.");
+      renderProgramarMiAgenda();
+    });
+  });
+}
+
+function sumarUnaHora(horaTexto) {
+  const [horas, minutos] = horaTexto.split(":").map(Number);
+  const total = (horas + 1) % 24;
+  return `${String(total).padStart(2, "0")}:${String(minutos).padStart(2, "0")}`;
+}
+
 function esPerfilCuidador() {
   return !!(perfil && perfil.rol && perfil.rol.toLowerCase().includes("cuidador"));
 }
@@ -1723,8 +1801,15 @@ function renderPerfil() {
       <h3>${perfil.nombre}</h3>
       <small>${perfil.rol}</small>
     </div>
+    ${esPerfilCuidador() ? "" : `
+    <button class="btn btn-primary btn-block" id="btn-programar-mi-agenda">📅 Programar Mi Agenda</button>
+    `}
     <button class="btn btn-danger btn-block" id="btn-logout">Cerrar sesión</button>
   `;
+
+  if (!esPerfilCuidador()) {
+    document.getElementById("btn-programar-mi-agenda").addEventListener("click", () => renderProgramarMiAgenda());
+  }
 
   document.getElementById("btn-logout").addEventListener("click", async () => {
     if (!confirm("¿Cerrar sesión? Los datos pendientes de enviar se conservarán.")) return;

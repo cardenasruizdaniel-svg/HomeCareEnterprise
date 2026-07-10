@@ -206,6 +206,19 @@ async def catalogo_programa_atencion(usuario=Depends(requiere_permiso("pacientes
     return movil_service.catalogo_programa_atencion()
 
 
+@router.get("/mi-agenda-programable")
+async def mi_agenda_programable(usuario=Depends(requiere_permiso("programacion"))):
+    """
+    Sesiones pendientes o ya programadas de los pacientes que
+    tiene asignados el profesional que hace la consulta -- para
+    que pueda armar/ajustar su propia agenda desde la app.
+    """
+    profesional = consultar_uno("SELECT id FROM profesionales WHERE usuario_id=?", (usuario.get("id"),))
+    if not profesional:
+        raise HTTPException(status_code=403, detail="Su usuario no está vinculado a ningún profesional.")
+    return movil_service.listar_sesiones_programables(dict(profesional)["id"])
+
+
 @router.get("/visita/{programacion_id}/informes")
 async def informes_de_visita(
     programacion_id: int,
@@ -376,6 +389,12 @@ def _procesar_accion(tipo: str, p: dict, usuario: dict):
         return movil_service.asignar_programa_paciente(
             p["paciente_id"], p.get("programa_id"), p.get("profesional_id"), p.get("motivo"),
             p.get("actividades", []), usuario.get("id") if isinstance(usuario, dict) else None,
+        )
+
+    if tipo == "programar_visita_movil":
+        return movil_service.programar_visita_movil(
+            p["planilla_id"], p.get("fecha"), p.get("hora_inicio"), p.get("hora_fin"),
+            p.get("profesional_id"), usuario.get("id") if isinstance(usuario, dict) else None,
         )
 
     raise ValueError(f"Tipo de acción desconocido: {tipo}")

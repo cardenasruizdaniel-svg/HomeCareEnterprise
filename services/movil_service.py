@@ -15,7 +15,7 @@ ordenes medicas).
 
 from datetime import datetime
 
-from database.database import consultar, consultar_uno, ejecutar
+from database.database import consultar, consultar_todos, consultar_uno, ejecutar
 
 from services import programacion_service
 from services.alertas_service import obtener_resumen_seguridad
@@ -306,6 +306,53 @@ def catalogo_programa_atencion():
         "programas": [dict(p) for p in listar_programas_activos()],
         "actividades": [dict(a) for a in CatalogoActividadesRepository.listar_activas()],
     }
+
+
+def listar_sesiones_programables(profesional_id: int):
+    """
+    Para la pantalla "Programar Mi Agenda" en la app: todas las
+    sesiones (Pendientes o ya Programadas) de los pacientes que
+    tiene asignados este profesional -- para que terapeutas,
+    psicólogos, etc. puedan armar y ajustar su propia agenda
+    sin depender de la oficina.
+    """
+    filas = consultar_todos(
+        """
+        SELECT pv.id AS planilla_id, pv.fecha, pv.hora_inicio, pv.hora_fin, pv.estado,
+               pv.programacion_id, sp.tipo_servicio, sp.subtipo,
+               pg.fecha AS fecha_programada, pg.hora_inicio AS hora_programada,
+               p.id AS paciente_id, p.primer_nombre, p.primer_apellido, p.direccion, p.municipio
+        FROM planilla_visitas pv
+        JOIN servicios_paciente sp ON sp.id = pv.servicio_paciente_id
+        JOIN pacientes p ON p.id = pv.paciente_id
+        LEFT JOIN programaciones pg ON pg.id = pv.programacion_id
+        WHERE pv.estado IN ('Pendiente', 'Programada')
+          AND (
+              sp.profesional_id = :prof
+              OR pv.programacion_id IN (SELECT id FROM programaciones WHERE profesional_id = :prof)
+          )
+        ORDER BY p.primer_apellido, pv.id
+        """,
+        {"prof": profesional_id},
+    )
+    return [dict(f) for f in filas]
+
+
+def programar_visita_movil(planilla_id, fecha, hora_inicio, hora_fin, profesional_id, usuario_id) -> dict:
+    from services.gestion_visitas_service import programar_visita, reprogramar_visita
+    from repositories.planilla_visitas_repository import PlanillaVisitasRepository
+
+    fila = PlanillaVisitasRepository.obtener(planilla_id)
+    if not fila:
+        raise ValueError("La visita no existe.")
+
+    if dict(fila).get("programacion_id"):
+        return reprogramar_visita(
+            planilla_id, fecha, hora_inicio, hora_fin,
+            nuevo_profesional_id=profesional_id, usuario_id=usuario_id,
+        )
+
+    return programar_visita(planilla_id, fecha, hora_inicio, hora_fin, profesional_id, usuario_id)
 
 
 def registrar_evolucion(paciente_id, programacion_id, profesional_id, tipo_profesional, nota,
