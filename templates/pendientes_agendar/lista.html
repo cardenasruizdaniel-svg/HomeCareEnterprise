@@ -28,6 +28,7 @@
         <div class="card-header bg-danger text-white"><h5 class="mb-0">Pacientes SIN la primera visita agendada</h5></div>
         <div class="card-body">
             <p class="text-muted small">Estos pacientes tienen la visita de valoración médica inicial asignada, pero todavía nadie le ha puesto fecha.</p>
+            <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead class="table-light"><tr><th>Paciente</th><th>Documento</th><th>Celular</th><th>Desde</th><th class="text-center">Acción</th></tr></thead>
                 <tbody>
@@ -46,6 +47,7 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 
@@ -53,6 +55,7 @@
         <div class="card-header bg-warning"><h5 class="mb-0">Pacientes con OTRAS visitas pendientes de programar</h5></div>
         <div class="card-body">
             <p class="text-muted small">Servicios activos (terapias, curaciones, etc.) que ya tuvieron su primera visita, pero les faltan sesiones por programar.</p>
+            <div class="table-responsive">
             <table class="table table-hover align-middle">
                 <thead class="table-light"><tr><th>Paciente</th><th>Servicio</th><th>Frecuencia</th><th class="text-center">Sesiones pendientes</th><th class="text-center">Acción</th></tr></thead>
                 <tbody>
@@ -71,6 +74,7 @@
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
 </div>

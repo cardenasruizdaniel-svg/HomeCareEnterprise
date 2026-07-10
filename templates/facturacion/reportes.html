@@ -35,6 +35,7 @@
             <div class="card shadow mb-4">
                 <div class="card-header bg-white"><h5 class="mb-0">Facturado por Paciente</h5></div>
                 <div class="card-body">
+                    <div class="table-responsive">
                     <table class="table table-sm table-hover">
                         <thead class="table-light"><tr><th>Paciente</th><th>EPS</th><th class="text-center">Facturas</th><th class="text-end">Total</th></tr></thead>
                         <tbody>
@@ -50,6 +51,7 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -58,6 +60,7 @@
             <div class="card shadow mb-4">
                 <div class="card-header bg-white"><h5 class="mb-0">Facturado por EPS</h5></div>
                 <div class="card-body">
+                    <div class="table-responsive">
                     <table class="table table-sm table-hover">
                         <thead class="table-light"><tr><th>EPS</th><th class="text-center">Facturas</th><th class="text-end">Total</th></tr></thead>
                         <tbody>
@@ -72,6 +75,7 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
 
@@ -79,6 +83,7 @@
             <div class="card shadow">
                 <div class="card-header bg-white"><h5 class="mb-0">Facturado por Fecha</h5></div>
                 <div class="card-body">
+                    <div class="table-responsive">
                     <table class="table table-sm table-hover">
                         <thead class="table-light"><tr><th>Fecha</th><th class="text-center">Facturas</th><th class="text-end">Total</th></tr></thead>
                         <tbody>
@@ -87,6 +92,7 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
             {% endif %}

@@ -40,12 +40,14 @@
                     </div>
 
                     <label class="fw-bold mt-2">Parámetros medidos</label>
+                    <div class="table-responsive">
                     <table class="table table-sm" id="tabla-items-lab">
                         <thead class="table-light">
                             <tr><th>Parámetro</th><th>Valor</th><th>Unidad</th><th>Rango mín.</th><th>Rango máx.</th><th></th></tr>
                         </thead>
                         <tbody id="cuerpo-items-lab"></tbody>
                     </table>
+                    </div>
                     <button type="button" class="btn btn-outline-primary btn-sm mb-3" id="btn-agregar-item">
                         <i class="fa-solid fa-plus"></i> Agregar parámetro
                     </button>
@@ -76,6 +78,7 @@
                     </p>
 
                     {% if r['items'] %}
+                    <div class="table-responsive">
                     <table class="table table-sm">
                         <thead class="table-light"><tr><th>Parámetro</th><th>Valor</th><th>Rango normal</th><th></th></tr></thead>
                         <tbody>
@@ -94,6 +97,7 @@
                             {% endfor %}
                         </tbody>
                     </table>
+                    </div>
                     {% endif %}
 
                     {% if r.resultado_texto %}<p class="mb-2 small">{{ r.resultado_texto }}</p>{% endif %}
