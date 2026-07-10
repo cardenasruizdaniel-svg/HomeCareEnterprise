@@ -8,8 +8,8 @@ formularios, y de importacion masiva desde CSV oficial.
 =========================================================
 """
 
-from fastapi import APIRouter, Depends, File, UploadFile
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
+from fastapi.responses import HTMLResponse, RedirectResponse
 
 from core.dependencies import requiere_permiso
 from core.templates import templates
@@ -61,9 +61,56 @@ async def buscar_divipola(q: str = ""):
             "texto": f"{f['nombre_municipio']} ({f['nombre_departamento']}) - {f['codigo_municipio']}",
             "municipio": f["nombre_municipio"],
             "departamento": f["nombre_departamento"],
+            "codigo_postal": f["codigo_postal"],
         }
         for f in filas
     ]
+
+
+# ==========================================
+# CONFIGURACIÓN: CIUDADES Y DEPARTAMENTOS
+# (para poder crear municipios nuevos y
+# asignarles su código postal)
+# ==========================================
+
+@router.get("/ciudades", response_class=HTMLResponse)
+async def ciudades_departamentos(request: Request, q: str = "", usuario=Depends(requiere_permiso("catalogos"))):
+    return templates.TemplateResponse(
+        request=request, name="catalogos/ciudades.html",
+        context={
+            "usuario": usuario, "texto_busqueda": q,
+            "ciudades": [dict(c) for c in DivipolaRepository.listar_todos(q)],
+        },
+    )
+
+
+@router.post("/ciudades/crear")
+async def crear_ciudad(
+    codigo_departamento: str = Form(...),
+    nombre_departamento: str = Form(...),
+    codigo_municipio: str = Form(...),
+    nombre_municipio: str = Form(...),
+    codigo_postal: str = Form(""),
+    usuario=Depends(requiere_permiso("catalogos")),
+):
+    DivipolaRepository.crear(codigo_departamento, nombre_departamento, codigo_municipio, nombre_municipio, codigo_postal)
+    return RedirectResponse(url="/catalogos/ciudades", status_code=303)
+
+
+@router.post("/ciudades/actualizar-codigo-postal/{codigo_municipio}")
+async def actualizar_codigo_postal(
+    codigo_municipio: str,
+    codigo_postal: str = Form(""),
+    usuario=Depends(requiere_permiso("catalogos")),
+):
+    DivipolaRepository.actualizar_codigo_postal(codigo_municipio, codigo_postal)
+    return RedirectResponse(url="/catalogos/ciudades", status_code=303)
+
+
+@router.get("/ciudades/eliminar/{codigo_municipio}")
+async def eliminar_ciudad(codigo_municipio: str, usuario=Depends(requiere_permiso("catalogos"))):
+    DivipolaRepository.eliminar(codigo_municipio)
+    return RedirectResponse(url="/catalogos/ciudades", status_code=303)
 
 
 @router.get("/cups/buscar")

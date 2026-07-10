@@ -172,7 +172,7 @@ async def programacion_mensual_formulario(
     )
     pacientes = consultar_todos(
         "SELECT id, documento, primer_nombre, primer_apellido FROM pacientes "
-        "WHERE estado='Activo' ORDER BY primer_nombre"
+        "WHERE UPPER(estado)='ACTIVO' ORDER BY primer_nombre"
     )
 
     return templates.TemplateResponse(

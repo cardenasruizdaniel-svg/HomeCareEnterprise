@@ -537,6 +537,17 @@ class MigrationManager:
     # transacción sin modificar la operación clínica diaria.
     # =====================================================
 
+    def migrar_divipola_codigo_postal(self):
+        cambios = []
+        if self.existe_tabla("divipola"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "divipola",
+                    {"codigo_postal": "codigo_postal TEXT"},
+                )
+            )
+        return cambios
+
     def migrar_documentos_profesional_archivo(self):
         cambios = []
         if self.existe_tabla("documentos_profesional"):
@@ -1484,6 +1495,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_laboratorio_items()
+        )
+
+        cambios.extend(
+            self.migrar_divipola_codigo_postal()
         )
 
         cambios.extend(

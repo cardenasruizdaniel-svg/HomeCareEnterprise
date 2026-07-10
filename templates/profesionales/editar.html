@@ -59,11 +59,21 @@
                     </div>
                     <div class="col-md-4 mb-3">
                         <label>Municipio</label>
-                        <input type="text" name="municipio" value="{{ profesional.municipio or '' }}" class="form-control">
+                        <input type="text" name="municipio" id="campo-municipio-texto" value="{{ profesional.municipio or '' }}" class="form-control">
                     </div>
                     <div class="col-md-4 mb-3">
                         <label>Departamento</label>
-                        <input type="text" name="departamento" value="{{ profesional.departamento or '' }}" class="form-control">
+                        <input type="text" name="departamento" id="campo-departamento-texto" value="{{ profesional.departamento or '' }}" class="form-control">
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8 mb-3 position-relative">
+                        <label>Buscar municipio (DIVIPOLA)</label>
+                        <input type="text" id="divipola_busqueda" class="form-control" autocomplete="off"
+                               placeholder="Escriba el municipio, ej: Armenia">
+                        <div id="divipola_resultados" class="list-group position-absolute w-100" style="z-index:1000;"></div>
+                        <small class="text-muted">Busque y haga clic para actualizar el municipio y el departamento de arriba.</small>
                     </div>
                 </div>
 
@@ -261,6 +271,34 @@ document.getElementById('tipo_contrato').addEventListener('change', (e) => {
     document.getElementById('campo_valor_hora').classList.toggle('d-none', esFijo);
 });
 document.getElementById('tipo_contrato').dispatchEvent(new Event('change'));
+</script>
+
+<script>
+const buscadorDivipola = document.getElementById('divipola_busqueda');
+const resultadosDivipola = document.getElementById('divipola_resultados');
+
+let temporizadorDivipola;
+buscadorDivipola.addEventListener('input', () => {
+    clearTimeout(temporizadorDivipola);
+    const texto = buscadorDivipola.value.trim();
+    if (texto.length < 3) { resultadosDivipola.innerHTML = ''; return; }
+    temporizadorDivipola = setTimeout(async () => {
+        const resp = await fetch(`/catalogos/divipola/buscar?q=${encodeURIComponent(texto)}`);
+        const datos = await resp.json();
+        resultadosDivipola.innerHTML = datos.map(d =>
+            `<button type="button" class="list-group-item list-group-item-action" data-municipio="${d.municipio}" data-departamento="${d.departamento}">${d.texto}</button>`
+        ).join('');
+    }, 300);
+});
+
+resultadosDivipola.addEventListener('click', (e) => {
+    if (e.target.matches('[data-municipio]')) {
+        buscadorDivipola.value = e.target.textContent;
+        document.getElementById('campo-municipio-texto').value = e.target.dataset.municipio;
+        document.getElementById('campo-departamento-texto').value = e.target.dataset.departamento;
+        resultadosDivipola.innerHTML = '';
+    }
+});
 </script>
 
 {% endblock %}

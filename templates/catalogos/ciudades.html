@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block titulo %}Ciudades y Departamentos{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-city text-primary"></i> Ciudades y Departamentos (DIVIPOLA)</h2>
+    <p class="text-muted">
+        Catálogo oficial de municipios de Colombia, usado en los formularios de Paciente y Profesional.
+        Ya viene sembrado completo — aquí puede agregar municipios que falten y asignar el código postal de cada uno.
+    </p>
+    <a href="/catalogos" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver a Catálogos</a>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h6 class="mb-0">Agregar municipio</h6></div>
+                <div class="card-body">
+                    <form method="post" action="/catalogos/ciudades/crear">
+                        <div class="mb-2"><label>Código del departamento (DIVIPOLA)</label><input type="text" name="codigo_departamento" class="form-control" placeholder="Ej: 63" required></div>
+                        <div class="mb-2"><label>Nombre del departamento</label><input type="text" name="nombre_departamento" class="form-control" placeholder="Ej: Quindío" required></div>
+                        <div class="mb-2"><label>Código del municipio (DIVIPOLA)</label><input type="text" name="codigo_municipio" class="form-control" placeholder="Ej: 63001" required></div>
+                        <div class="mb-2"><label>Nombre del municipio</label><input type="text" name="nombre_municipio" class="form-control" placeholder="Ej: Armenia" required></div>
+                        <div class="mb-2"><label>Código postal (opcional)</label><input type="text" name="codigo_postal" class="form-control" placeholder="Ej: 630001"></div>
+                        <button class="btn btn-success w-100"><i class="fa-solid fa-plus"></i> Agregar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-white">
+                    <form method="get" class="d-flex gap-2">
+                        <input type="text" name="q" class="form-control" placeholder="Buscar municipio o departamento..." value="{{ texto_busqueda }}">
+                        <button class="btn btn-primary">Buscar</button>
+                    </form>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                    <table class="table table-hover align-middle table-sm">
+                        <thead class="table-light"><tr><th>Municipio</th><th>Departamento</th><th>Código DIVIPOLA</th><th>Código Postal</th><th class="text-center">Acción</th></tr></thead>
+                        <tbody>
+                            {% for c in ciudades %}
+                            <tr>
+                                <td>{{ c.nombre_municipio }}</td>
+                                <td>{{ c.nombre_departamento }}</td>
+                                <td><small class="text-muted">{{ c.codigo_municipio }}</small></td>
+                                <td>
+                                    <form method="post" action="/catalogos/ciudades/actualizar-codigo-postal/{{ c.codigo_municipio }}" class="d-flex gap-1">
+                                        <input type="text" name="codigo_postal" class="form-control form-control-sm" value="{{ c.codigo_postal or '' }}" style="max-width:110px;">
+                                        <button class="btn btn-outline-primary btn-sm">Guardar</button>
+                                    </form>
+                                </td>
+                                <td class="text-center">
+                                    <a href="/catalogos/ciudades/eliminar/{{ c.codigo_municipio }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar este municipio del catálogo?');">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="text-center text-muted py-4">Sin resultados.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    </div>
+                    {% if not texto_busqueda %}
+                    <small class="text-muted">Mostrando los primeros 500 — use el buscador para encontrar un municipio específico.</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

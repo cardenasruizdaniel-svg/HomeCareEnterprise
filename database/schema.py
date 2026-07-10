@@ -840,10 +840,14 @@ CREATE TABLE IF NOT EXISTS divipola(
 
     nombre_municipio TEXT NOT NULL,
 
-    nombre_normalizado TEXT
+    nombre_normalizado TEXT,
+
+    codigo_postal TEXT
 
 );
-""",
+"""
+
+,
 
 """
 CREATE TABLE IF NOT EXISTS cups(

@@ -18,7 +18,7 @@ import csv
 import io
 
 from core.texto_utils import normalizar
-from database.database import consultar, consultar_escalar, consultar_uno, ejecutarmany
+from database.database import consultar, consultar_escalar, consultar_uno, ejecutar, ejecutarmany
 
 
 def _condicion_por_palabras(columna: str, texto: str):
@@ -89,6 +89,41 @@ class DivipolaRepository:
             filas,
         )
         return len(filas)
+
+    @staticmethod
+    def listar_todos(texto: str = ""):
+        if texto:
+            condicion, parametros = _condicion_por_palabras("nombre_normalizado", texto)
+            return consultar(
+                f"SELECT * FROM divipola WHERE {condicion} ORDER BY nombre_departamento, nombre_municipio",
+                tuple(parametros),
+            )
+        return consultar(
+            "SELECT * FROM divipola ORDER BY nombre_departamento, nombre_municipio LIMIT 500"
+        )
+
+    @staticmethod
+    def crear(codigo_departamento, nombre_departamento, codigo_municipio, nombre_municipio, codigo_postal=None):
+        ejecutar(
+            """
+            INSERT INTO divipola(codigo_departamento, nombre_departamento, codigo_municipio,
+                                  nombre_municipio, nombre_normalizado, codigo_postal)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (codigo_departamento, nombre_departamento, codigo_municipio, nombre_municipio,
+             normalizar(f"{nombre_departamento} {nombre_municipio}"), codigo_postal or None),
+        )
+
+    @staticmethod
+    def actualizar_codigo_postal(codigo_municipio: str, codigo_postal: str):
+        ejecutar(
+            "UPDATE divipola SET codigo_postal=? WHERE codigo_municipio=?",
+            (codigo_postal or None, codigo_municipio),
+        )
+
+    @staticmethod
+    def eliminar(codigo_municipio: str):
+        ejecutar("DELETE FROM divipola WHERE codigo_municipio=?", (codigo_municipio,))
 
 
 # ==========================================================
