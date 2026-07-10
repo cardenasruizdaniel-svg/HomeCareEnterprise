@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block titulo %}Pendientes de Agendar{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-calendar-xmark text-danger"></i> Pacientes Pendientes de Agendar</h2>
+    <p class="text-muted">Pacientes a los que hace falta programarles alguna visita — para no dejar a nadie sin atención por olvido.</p>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card shadow-sm border-danger">
+                <div class="card-body text-center">
+                    <h1 class="text-danger mb-0">{{ total_sin_primera_visita }}</h1>
+                    <small class="text-muted">Sin primera visita agendada</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm border-warning">
+                <div class="card-body text-center">
+                    <h1 class="text-warning mb-0">{{ total_con_visitas_pendientes }}</h1>
+                    <small class="text-muted">Con otras visitas sin programar</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-danger text-white"><h5 class="mb-0">Pacientes SIN la primera visita agendada</h5></div>
+        <div class="card-body">
+            <p class="text-muted small">Estos pacientes tienen la visita de valoración médica inicial asignada, pero todavía nadie le ha puesto fecha.</p>
+            <table class="table table-hover align-middle">
+                <thead class="table-light"><tr><th>Paciente</th><th>Documento</th><th>Celular</th><th>Desde</th><th class="text-center">Acción</th></tr></thead>
+                <tbody>
+                    {% for p in sin_primera_visita %}
+                    <tr>
+                        <td>{{ p.primer_nombre }} {{ p.primer_apellido }}</td>
+                        <td>{{ p.documento }}</td>
+                        <td>{{ p.celular or "—" }}</td>
+                        <td>{{ p.fecha_inicio }}</td>
+                        <td class="text-center">
+                            <a href="/gestion-visitas/{{ p.servicio_id }}" class="btn btn-outline-danger btn-sm">Programar ahora</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">Ningún paciente pendiente — todos tienen su primera visita agendada.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-warning"><h5 class="mb-0">Pacientes con OTRAS visitas pendientes de programar</h5></div>
+        <div class="card-body">
+            <p class="text-muted small">Servicios activos (terapias, curaciones, etc.) que ya tuvieron su primera visita, pero les faltan sesiones por programar.</p>
+            <table class="table table-hover align-middle">
+                <thead class="table-light"><tr><th>Paciente</th><th>Servicio</th><th>Frecuencia</th><th class="text-center">Sesiones pendientes</th><th class="text-center">Acción</th></tr></thead>
+                <tbody>
+                    {% for p in con_visitas_pendientes %}
+                    <tr>
+                        <td>{{ p.primer_nombre }} {{ p.primer_apellido }}</td>
+                        <td>{{ p.tipo_servicio }}</td>
+                        <td>{{ p.frecuencia }}</td>
+                        <td class="text-center"><span class="badge bg-warning text-dark">{{ p.sesiones_pendientes }} de {{ p.sesiones_totales }}</span></td>
+                        <td class="text-center">
+                            <a href="/gestion-visitas/{{ p.servicio_id }}" class="btn btn-outline-warning btn-sm">Programar</a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">Ningún servicio con sesiones pendientes por programar.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

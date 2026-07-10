@@ -78,7 +78,11 @@ def obtener_agenda_mes(anio: int, mes: int):
 
 
 def obtener_agenda_profesional(profesional_id, fecha):
-    return ProgramacionRepository.agenda_profesional(profesional_id, fecha)
+    # Aqui SI se incluyen las canceladas (para que se vean
+    # tachadas en el calendario, por transparencia); la que NO
+    # las incluye es la verificacion de conflictos de horario
+    # al crear una visita nueva, mas abajo en este archivo.
+    return ProgramacionRepository.agenda_profesional(profesional_id, fecha, incluir_canceladas=True)
 
 
 def obtener_agenda_paciente(paciente_id):

@@ -372,13 +372,17 @@ class ProgramacionRepository(BaseRepository):
 
         fecha: str,
 
+        incluir_canceladas: bool = False,
+
     ):
 
         conexion = get_connection()
 
         cursor = conexion.cursor()
 
-        cursor.execute("""
+        condicion_estado = "" if incluir_canceladas else "AND estado != 'Cancelada'"
+
+        cursor.execute(f"""
 
             SELECT *
 
@@ -387,6 +391,8 @@ class ProgramacionRepository(BaseRepository):
             WHERE profesional_id=?
 
             AND fecha=?
+
+            {condicion_estado}
 
             ORDER BY hora_inicio
 

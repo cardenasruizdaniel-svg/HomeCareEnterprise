@@ -537,6 +537,67 @@ class MigrationManager:
     # transacción sin modificar la operación clínica diaria.
     # =====================================================
 
+    def migrar_calidad(self):
+        cambios = []
+        if not self.existe_tabla("calidad_pqr"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS calidad_pqr(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    tipo TEXT NOT NULL DEFAULT 'PQR',
+                    paciente_id INTEGER,
+                    asunto TEXT NOT NULL,
+                    descripcion TEXT,
+                    prioridad TEXT DEFAULT 'Media',
+                    estado TEXT DEFAULT 'Abierto',
+                    responsable_id INTEGER,
+                    respuesta TEXT,
+                    fecha_cierre TEXT,
+                    usuario_creacion INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
+                    FOREIGN KEY(responsable_id) REFERENCES profesionales(id)
+                );
+            """)
+            cambios.append("Se creó la tabla calidad_pqr")
+
+        if not self.existe_tabla("calidad_planificacion"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS calidad_planificacion(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    titulo TEXT NOT NULL,
+                    descripcion TEXT,
+                    responsable_id INTEGER,
+                    fecha_inicio TEXT,
+                    fecha_limite TEXT,
+                    prioridad TEXT DEFAULT 'Media',
+                    estado TEXT DEFAULT 'Pendiente',
+                    usuario_creacion INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(responsable_id) REFERENCES profesionales(id)
+                );
+            """)
+            cambios.append("Se creó la tabla calidad_planificacion")
+
+        if not self.existe_tabla("calidad_evaluaciones"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS calidad_evaluaciones(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    paciente_id INTEGER NOT NULL,
+                    profesional_id INTEGER,
+                    calificacion INTEGER NOT NULL,
+                    aspectos_evaluados TEXT,
+                    comentario TEXT,
+                    usuario_registro INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
+                    FOREIGN KEY(profesional_id) REFERENCES profesionales(id)
+                );
+            """)
+            cambios.append("Se creó la tabla calidad_evaluaciones")
+
+        self.connection.commit()
+        return cambios
+
     def migrar_laboratorio_items(self):
         cambios = []
         if not self.existe_tabla("laboratorio_items"):
@@ -1390,6 +1451,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_laboratorio_items()
+        )
+
+        cambios.extend(
+            self.migrar_calidad()
         )
 
         cambios.extend(

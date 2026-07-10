@@ -125,6 +125,16 @@ def asignar_servicio(paciente_id, tipo_servicio, subtipo, profesional_id, frecue
             "duplicado_evitado": True,
         }
 
+    fechas = _generar_fechas(fecha_inicio, fecha_fin, frecuencia, numero_sesiones)
+
+    # Si no se indico fecha de fin a mano, se calcula una de
+    # REFERENCIA automaticamente (la fecha de la ultima sesion
+    # generada, segun el numero de sesiones y la periodicidad),
+    # para que quede un dato util en pantalla sin obligar al
+    # usuario a calcularla el mismo. Igual se puede modificar
+    # despues si se indica una fecha de fin manual.
+    fecha_fin_guardar = fecha_fin or (fechas[-1] if fechas else "")
+
     servicio_id = ServiciosPacienteRepository.crear({
         "paciente_id": paciente_id,
         "tipo_servicio": tipo_servicio,
@@ -132,7 +142,7 @@ def asignar_servicio(paciente_id, tipo_servicio, subtipo, profesional_id, frecue
         "profesional_id": profesional_id or None,
         "frecuencia": frecuencia,
         "fecha_inicio": fecha_inicio,
-        "fecha_fin": fecha_fin or "",
+        "fecha_fin": fecha_fin_guardar,
         "hora_inicio": hora_inicio or "08:00",
         "hora_fin": hora_fin or "09:00",
         "indicaciones": indicaciones or "",
@@ -144,8 +154,6 @@ def asignar_servicio(paciente_id, tipo_servicio, subtipo, profesional_id, frecue
         "renovacion_automatica=? WHERE id=?",
         (actividad_id, numero_sesiones, paciente_programa_id, 1 if renovacion_automatica else 0, servicio_id),
     )
-
-    fechas = _generar_fechas(fecha_inicio, fecha_fin, frecuencia, numero_sesiones)
 
     # Todas las visitas quedan TENTATIVAS (Pendiente): no se
     # toca la agenda real todavia. Se guarda el profesional

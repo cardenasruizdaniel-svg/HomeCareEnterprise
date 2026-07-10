@@ -36,6 +36,12 @@
             </a>
         </li>
         <li>
+            <a href="/pendientes-agendar">
+                <i class="fa-solid fa-calendar-xmark"></i>
+                <span>Pendientes de Agendar</span>
+            </a>
+        </li>
+        <li>
             <a href="/programas-atencion">
                 <i class="fa-solid fa-layer-group"></i>
                 <span>Programas de Atención</span>
@@ -93,6 +99,15 @@
             <a href="/configuracion-empresa">
                 <i class="fa-solid fa-building"></i>
                 <span>Configuración de la Empresa</span>
+            </a>
+        </li>
+        {% endif %}
+
+        {% if usuario and tiene_permiso(usuario.rol, "calidad") %}
+        <li>
+            <a href="/calidad">
+                <i class="fa-solid fa-award"></i>
+                <span>Calidad</span>
             </a>
         </li>
         {% endif %}

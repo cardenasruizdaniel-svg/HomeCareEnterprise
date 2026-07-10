@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block titulo %}Calidad{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-award text-primary"></i> Módulo de Calidad</h2>
+    <p class="text-muted">PQR y solicitudes, planificación de trabajo con responsables, y evaluación de la atención al paciente.</p>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-danger"><div class="card-body text-center">
+                <h2 class="text-danger mb-0">{{ dashboard.pqr.abiertos }}</h2><small class="text-muted">PQR abiertos</small>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-success"><div class="card-body text-center">
+                <h2 class="text-success mb-0">{{ dashboard.pqr.cerrados }}</h2><small class="text-muted">PQR cerrados</small>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-warning"><div class="card-body text-center">
+                <h2 class="text-warning mb-0">{{ dashboard.planificacion_pendientes }}</h2><small class="text-muted">Tareas pendientes</small>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-primary"><div class="card-body text-center">
+                <h2 class="text-primary mb-0">{{ dashboard.promedio_evaluacion or "—" }} / 5</h2>
+                <small class="text-muted">Evaluación promedio ({{ dashboard.total_evaluaciones }} evaluaciones)</small>
+            </div></div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" id="tabsCalidad">
+        <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#pqr">PQR / Solicitudes</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#planificacion">Planificación de Trabajo</a></li>
+        <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#evaluaciones">Evaluación de Atención</a></li>
+    </ul>
+
+    <div class="tab-content">
+
+        <!-- ============ PQR ============ -->
+        <div class="tab-pane fade show active" id="pqr">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card shadow mb-3">
+                        <div class="card-header bg-white"><h6 class="mb-0">Nuevo PQR / Solicitud</h6></div>
+                        <div class="card-body">
+                            <form method="post" action="/calidad/pqr/crear">
+                                <div class="mb-2"><label>Tipo</label>
+                                    <select name="tipo" class="form-select">
+                                        {% for t in tipos_pqr %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-2"><label>Paciente (opcional)</label>
+                                    <select name="paciente_id" class="form-select">
+                                        <option value="">-- No aplica --</option>
+                                        {% for p in pacientes %}<option value="{{ p.id }}">{{ p.primer_nombre }} {{ p.primer_apellido }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-2"><label>Asunto</label><input type="text" name="asunto" class="form-control" required></div>
+                                <div class="mb-2"><label>Descripción</label><textarea name="descripcion" class="form-control" rows="3"></textarea></div>
+                                <div class="mb-2"><label>Prioridad</label>
+                                    <select name="prioridad" class="form-select">
+                                        {% for p in prioridades %}<option value="{{ p }}" {% if p=="Media" %}selected{% endif %}>{{ p }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-2"><label>Responsable</label>
+                                    <select name="responsable_id" class="form-select">
+                                        <option value="">-- Sin asignar --</option>
+                                        {% for p in profesionales %}<option value="{{ p.id }}">{{ p.nombre_completo }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                <button class="btn btn-danger w-100">Crear</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    {% for q in lista_pqr %}
+                    <div class="card shadow-sm mb-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <span class="badge bg-secondary">{{ q.tipo }}</span>
+                                    <span class="badge {% if q.prioridad=='Urgente' %}bg-danger{% elif q.prioridad=='Alta' %}bg-warning text-dark{% else %}bg-light text-dark{% endif %}">{{ q.prioridad }}</span>
+                                    <strong>{{ q.asunto }}</strong>
+                                </div>
+                                <span class="badge {% if q.estado=='Cerrado' %}bg-success{% elif q.estado=='En proceso' %}bg-info text-dark{% else %}bg-danger{% endif %}">{{ q.estado }}</span>
+                            </div>
+                            <p class="mb-1 small mt-1">{{ q.descripcion }}</p>
+                            <small class="text-muted">
+                                {% if q.paciente_nombre %}Paciente: {{ q.paciente_nombre }} · {% endif %}
+                                Responsable: {{ q.responsable_nombre or "Sin asignar" }} · {{ q.fecha_creacion }}
+                            </small>
+                            {% if q.respuesta %}<p class="mt-2 mb-1"><strong>Respuesta:</strong> {{ q.respuesta }}</p>{% endif %}
+
+                            {% if q.estado != 'Cerrado' %}
+                            <form method="post" action="/calidad/pqr/{{ q.id }}/estado" class="mt-2 d-flex gap-2">
+                                <select name="estado" class="form-select form-select-sm" style="max-width:160px;">
+                                    {% for e in estados_pqr %}<option value="{{ e }}" {% if e==q.estado %}selected{% endif %}>{{ e }}</option>{% endfor %}
+                                </select>
+                                <input type="text" name="respuesta" class="form-control form-control-sm" placeholder="Respuesta (opcional)">
+                                <button class="btn btn-outline-primary btn-sm">Actualizar</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="card shadow-sm"><div class="card-body text-center text-muted py-4">Sin PQR registrados.</div></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ PLANIFICACIÓN ============ -->
+        <div class="tab-pane fade" id="planificacion">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card shadow mb-3">
+                        <div class="card-header bg-white"><h6 class="mb-0">Nueva tarea / plan</h6></div>
+                        <div class="card-body">
+                            <form method="post" action="/calidad/planificacion/crear">
+                                <div class="mb-2"><label>Título</label><input type="text" name="titulo" class="form-control" required></div>
+                                <div class="mb-2"><label>Descripción</label><textarea name="descripcion" class="form-control" rows="2"></textarea></div>
+                                <div class="mb-2"><label>Responsable</label>
+                                    <select name="responsable_id" class="form-select">
+                                        <option value="">-- Sin asignar --</option>
+                                        {% for p in profesionales %}<option value="{{ p.id }}">{{ p.nombre_completo }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                <div class="row">
+                                    <div class="col-6 mb-2"><label>Inicio</label><input type="date" name="fecha_inicio" class="form-control"></div>
+                                    <div class="col-6 mb-2"><label>Fecha límite</label><input type="date" name="fecha_limite" class="form-control"></div>
+                                </div>
+                                <div class="mb-2"><label>Prioridad</label>
+                                    <select name="prioridad" class="form-select">
+                                        {% for p in prioridades %}<option value="{{ p }}" {% if p=="Media" %}selected{% endif %}>{{ p }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                <button class="btn btn-warning w-100">Crear</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <table class="table table-hover align-middle bg-white shadow-sm">
+                        <thead class="table-light"><tr><th>Tarea</th><th>Responsable</th><th>Fecha límite</th><th>Prioridad</th><th>Estado</th></tr></thead>
+                        <tbody>
+                            {% for t in lista_planificacion %}
+                            <tr>
+                                <td>{{ t.titulo }}<br><small class="text-muted">{{ t.descripcion }}</small></td>
+                                <td>{{ t.responsable_nombre or "Sin asignar" }}</td>
+                                <td>{{ t.fecha_limite or "—" }}</td>
+                                <td><span class="badge {% if t.prioridad=='Urgente' %}bg-danger{% elif t.prioridad=='Alta' %}bg-warning text-dark{% else %}bg-light text-dark{% endif %}">{{ t.prioridad }}</span></td>
+                                <td>
+                                    <form method="post" action="/calidad/planificacion/{{ t.id }}/estado">
+                                        <select name="estado" class="form-select form-select-sm" onchange="this.form.submit()">
+                                            {% for e in estados_planificacion %}<option value="{{ e }}" {% if e==t.estado %}selected{% endif %}>{{ e }}</option>{% endfor %}
+                                        </select>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="text-center text-muted py-4">Sin tareas registradas.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ EVALUACIONES ============ -->
+        <div class="tab-pane fade" id="evaluaciones">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card shadow mb-3">
+                        <div class="card-header bg-white"><h6 class="mb-0">Nueva evaluación</h6></div>
+                        <div class="card-body">
+                            <form method="post" action="/calidad/evaluacion/crear">
+                                <div class="mb-2"><label>Paciente</label>
+                                    <select name="paciente_id" class="form-select" required>
+                                        <option value="">-- Seleccione --</option>
+                                        {% for p in pacientes %}<option value="{{ p.id }}">{{ p.primer_nombre }} {{ p.primer_apellido }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-2"><label>Profesional evaluado (opcional)</label>
+                                    <select name="profesional_id" class="form-select">
+                                        <option value="">-- General / IPS --</option>
+                                        {% for p in profesionales %}<option value="{{ p.id }}">{{ p.nombre_completo }}</option>{% endfor %}
+                                    </select>
+                                </div>
+                                <div class="mb-2"><label>Calificación (1 a 5)</label>
+                                    <select name="calificacion" class="form-select" required>
+                                        <option value="5">5 - Excelente</option>
+                                        <option value="4">4 - Buena</option>
+                                        <option value="3">3 - Regular</option>
+                                        <option value="2">2 - Mala</option>
+                                        <option value="1">1 - Muy mala</option>
+                                    </select>
+                                </div>
+                                <div class="mb-2"><label>Aspectos evaluados</label><input type="text" name="aspectos_evaluados" class="form-control" placeholder="Ej: Puntualidad, trato, claridad"></div>
+                                <div class="mb-2"><label>Comentario</label><textarea name="comentario" class="form-control" rows="2"></textarea></div>
+                                <button class="btn btn-primary w-100">Guardar evaluación</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    {% for e in lista_evaluaciones %}
+                    <div class="card shadow-sm mb-2">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ e.paciente_nombre }}</strong>
+                                <span class="badge bg-primary">{{ e.calificacion }} / 5</span>
+                            </div>
+                            <small class="text-muted">
+                                {% if e.profesional_nombre %}Sobre: {{ e.profesional_nombre }} · {% endif %}{{ e.fecha_creacion }}
+                            </small>
+                            {% if e.aspectos_evaluados %}<p class="mb-1 mt-1 small"><strong>Aspectos:</strong> {{ e.aspectos_evaluados }}</p>{% endif %}
+                            {% if e.comentario %}<p class="mb-0 small">{{ e.comentario }}</p>{% endif %}
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="card shadow-sm"><div class="card-body text-center text-muted py-4">Sin evaluaciones registradas.</div></div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

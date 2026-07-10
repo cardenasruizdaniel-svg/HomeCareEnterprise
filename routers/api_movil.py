@@ -32,6 +32,47 @@ router = APIRouter(prefix="/api/movil", tags=["App Móvil"])
 
 
 # ==========================================
+# CONTROL DE ACCESO: un profesional en la app
+# solo puede consultar/actuar sobre pacientes
+# que tenga realmente asignados (por un
+# servicio o una visita programada) -- nunca
+# cualquier otro paciente del sistema, aunque
+# adivine o escriba su ID directamente.
+# ==========================================
+
+ROLES_ACCESO_TOTAL_MOVIL = ("Administrador", "Director Médico", "Coordinador", "Administrativo")
+
+
+def verificar_acceso_paciente_movil(paciente_id: int, usuario: dict):
+    rol = (usuario or {}).get("rol")
+    if rol in ROLES_ACCESO_TOTAL_MOVIL:
+        return  # personal administrativo/de coordinacion puede consultar cualquier paciente
+
+    profesional_id = consultar_uno(
+        "SELECT id FROM profesionales WHERE usuario_id=?", ((usuario or {}).get("id"),)
+    )
+    profesional_id = dict(profesional_id)["id"] if profesional_id else None
+
+    if not profesional_id:
+        raise HTTPException(status_code=403, detail="Su usuario no está vinculado a ningún profesional.")
+
+    asignado = consultar_uno(
+        """
+        SELECT 1 FROM servicios_paciente WHERE paciente_id=? AND profesional_id=?
+        UNION
+        SELECT 1 FROM programaciones WHERE paciente_id=? AND profesional_id=?
+        UNION
+        SELECT 1 FROM turnos_programados WHERE paciente_id=? AND profesional_id=?
+        LIMIT 1
+        """,
+        (paciente_id, profesional_id, paciente_id, profesional_id, paciente_id, profesional_id),
+    )
+
+    if not asignado:
+        raise HTTPException(status_code=403, detail="Este paciente no está asignado a su usuario.")
+
+
+# ==========================================
 # LOGIN (para la PWA offline-first)
 # ==========================================
 
@@ -104,6 +145,7 @@ async def paciente(
     paciente_id: int,
     usuario=Depends(requiere_permiso("pacientes")),
 ):
+    verificar_acceso_paciente_movil(paciente_id, usuario)
     return movil_service.ficha_paciente_offline(paciente_id)
 
 
@@ -127,6 +169,7 @@ async def informes_paciente(
     usuario=Depends(requiere_permiso("programacion")),
 ):
     """Lista los informes (no las notas aclaratorias) del paciente, para elegir a cual corregir."""
+    verificar_acceso_paciente_movil(paciente_id, usuario)
     from services.evoluciones_service import listar_informes_para_aclarar
     return listar_informes_para_aclarar(paciente_id)
 
@@ -137,6 +180,7 @@ async def laboratorios_paciente(
     usuario=Depends(requiere_permiso("programacion")),
 ):
     """Lista los resultados de laboratorio ya registrados del paciente, para mostrarlos en la app."""
+    verificar_acceso_paciente_movil(paciente_id, usuario)
     return movil_service.listar_laboratorios_paciente(paciente_id)
 
 
@@ -152,6 +196,7 @@ async def ultima_nota_medica_paciente(
     propio frontend de la app.
     """
     from services.resumen_clinico_service import ultima_nota_medica
+    verificar_acceso_paciente_movil(paciente_id, usuario)
     return ultima_nota_medica(paciente_id)
 
 
@@ -191,6 +236,7 @@ async def medicamentos_paciente(
     paciente_id: int,
     usuario=Depends(requiere_permiso("medicamentos")),
 ):
+    verificar_acceso_paciente_movil(paciente_id, usuario)
     filas = consultar(
         "SELECT * FROM medicamentos WHERE paciente_id=? AND estado='ACTIVO'",
         (paciente_id,),
@@ -232,6 +278,20 @@ async def sincronizar(
 def _procesar_accion(tipo: str, p: dict, usuario: dict):
 
     usuario_id = usuario.get("id")
+
+    # Verificacion de acceso: si la accion trae un paciente_id
+    # directo, se valida que este asignado al profesional que
+    # esta sincronizando. Para ingreso/salida (que van por
+    # visita_id, no por paciente_id) se valida que esa visita
+    # sea realmente del profesional que la esta marcando.
+    if p.get("paciente_id"):
+        verificar_acceso_paciente_movil(p["paciente_id"], usuario)
+    elif p.get("visita_id") and usuario.get("rol") not in ROLES_ACCESO_TOTAL_MOVIL:
+        visita = consultar_uno("SELECT profesional_id FROM programaciones WHERE id=?", (p["visita_id"],))
+        profesional_actual = consultar_uno("SELECT id FROM profesionales WHERE usuario_id=?", (usuario_id,))
+        profesional_actual_id = dict(profesional_actual)["id"] if profesional_actual else None
+        if not visita or dict(visita)["profesional_id"] != profesional_actual_id:
+            raise HTTPException(status_code=403, detail="Esta visita no está asignada a su usuario.")
 
     if tipo == "ingreso":
         return movil_service.registrar_ingreso(

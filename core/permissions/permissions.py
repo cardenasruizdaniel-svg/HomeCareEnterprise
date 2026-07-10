@@ -26,7 +26,7 @@ PERMISSIONS = {
     "Coordinador": [
         "pacientes", "programacion", "ordenes", "medicamentos", "catalogos",
         "profesionales", "usuarios", "interoperabilidad", "rips",
-        "nomina", "cargos", "facturacion", "inventario",
+        "nomina", "cargos", "facturacion", "inventario", "calidad",
     ],
 
     # -----------------------------------------------
@@ -61,7 +61,7 @@ PERMISSIONS = {
     # ADMINISTRATIVOS: creación del paciente y
     # agendamiento de visitas
     # -----------------------------------------------
-    "Administrativo": ["pacientes", "programacion"],
+    "Administrativo": ["pacientes", "programacion", "calidad"],
     "Auxiliar": ["pacientes", "programacion"],
 
     "Auditor": ["auditoria", "reportes"],

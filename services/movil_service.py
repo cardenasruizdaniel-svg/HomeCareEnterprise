@@ -41,7 +41,7 @@ def agenda_profesional(profesional_id: int, fecha_inicio: str, fecha_fin: str):
         FROM programaciones pr
         JOIN pacientes p ON p.id = pr.paciente_id
         LEFT JOIN planilla_visitas pv ON pv.programacion_id = pr.id
-        WHERE pr.profesional_id=? AND pr.fecha BETWEEN ? AND ? AND pr.eliminado=0
+        WHERE pr.profesional_id=? AND pr.fecha BETWEEN ? AND ? AND pr.eliminado=0 AND pr.estado != 'Cancelada'
         ORDER BY pr.fecha, pr.hora_inicio
         """,
         (profesional_id, fecha_inicio, fecha_fin),
