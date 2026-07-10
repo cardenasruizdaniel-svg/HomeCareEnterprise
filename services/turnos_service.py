@@ -149,6 +149,19 @@ def asignar_turno_paciente(paciente_id, profesional_id, catalogo_turno_id, fecha
     if turno_catalogo.get("tramo2_inicio") and turno_catalogo.get("tramo2_fin"):
         tramos.append((turno_catalogo["tramo2_inicio"], turno_catalogo["tramo2_fin"]))
 
+    # Se necesitan los datos del paciente para poder crear
+    # tambien la VISITA REAL (tabla programaciones) de cada
+    # turno -- esa es la tabla que consulta la app movil de
+    # campo, asi que sin esto el cuidador/profesional jamas
+    # veria el turno en su agenda.
+    from database.database import consultar_uno
+    paciente = consultar_uno(
+        "SELECT direccion, barrio, municipio, departamento, celular, "
+        "(primer_nombre || ' ' || primer_apellido) AS nombre_completo FROM pacientes WHERE id=?",
+        (paciente_id,),
+    )
+    paciente = dict(paciente) if paciente else {}
+
     creados = 0
     fechas_generadas = []
     actual = inicio
@@ -157,10 +170,36 @@ def asignar_turno_paciente(paciente_id, profesional_id, catalogo_turno_id, fecha
         if dias_permitidos is None or actual.isoweekday() in dias_permitidos:
             fechas_generadas.append(actual.isoformat())
             for hora_inicio, hora_fin in tramos:
+
+                # 1) La visita real, para que aparezca en la
+                # agenda de la app y se le pueda marcar
+                # ingreso/salida con foto y ubicacion.
+                from services.programacion_service import crear_visita
+                programacion_id = None
+                try:
+                    programacion_id = crear_visita(
+                        paciente_id=paciente_id, profesional_id=profesional_id, diagnostico_id=None,
+                        fecha=actual.isoformat(), hora_inicio=hora_inicio, hora_fin=hora_fin,
+                        duracion=None, servicio=turno_catalogo["nombre"], procedimiento="",
+                        codigo_cups="", valor_servicio=0, prioridad="Normal",
+                        direccion=paciente.get("direccion", ""), barrio=paciente.get("barrio", ""),
+                        ciudad=paciente.get("municipio", ""), departamento=paciente.get("departamento", ""),
+                        telefono_contacto=paciente.get("celular", ""),
+                        nombre_contacto=paciente.get("nombre_completo", ""),
+                        observaciones=observaciones or "", usuario=usuario,
+                        notificar=False,  # se manda UNA notificacion consolidada al final, no una por dia
+                    )
+                except ValueError:
+                    programacion_id = None  # si choca de horario con otra visita, el turno igual queda creado
+
+                # 2) El registro del turno en si (para el
+                # calendario de turnos y el catalogo/patron
+                # usado), vinculado a la visita real de arriba.
                 TurnosRepository.crear({
                     "profesional_id": profesional_id,
                     "paciente_id": paciente_id,
                     "catalogo_turno_id": catalogo_turno_id,
+                    "programacion_id": programacion_id,
                     "fecha": actual.isoformat(),
                     "turno": turno_catalogo["nombre"],
                     "hora_inicio": hora_inicio,

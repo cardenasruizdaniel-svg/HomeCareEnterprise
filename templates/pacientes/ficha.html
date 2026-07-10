@@ -274,6 +274,27 @@
         </div>
     </div>
 
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <div class="card shadow border-primary">
+                <div class="card-header bg-primary text-white"><h6 class="mb-0"><i class="fa-solid fa-user-doctor"></i> Última nota médica</h6></div>
+                <div class="card-body">
+                    {% if resumen_clinico.ultima_nota_medica %}
+                    <span class="badge bg-light text-dark">Informe N.° {{ resumen_clinico.ultima_nota_medica.consecutivo }}</span>
+                    <span class="text-muted small">{{ resumen_clinico.ultima_nota_medica.fecha }}</span>
+                    <p class="mt-2 mb-1">{{ resumen_clinico.ultima_nota_medica.nota }}</p>
+                    <small class="text-muted">
+                        {{ resumen_clinico.ultima_nota_medica.profesional }}
+                        {% if resumen_clinico.ultima_nota_medica.registro_profesional %} — R.M. {{ resumen_clinico.ultima_nota_medica.registro_profesional }}{% endif %}
+                    </small>
+                    {% else %}
+                    <p class="text-muted mb-0">Este paciente todavía no tiene ninguna nota médica registrada.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card shadow">
         <div class="card-header bg-white">
             <h5 class="mb-0">

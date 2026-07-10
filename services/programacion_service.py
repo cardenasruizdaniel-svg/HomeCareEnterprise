@@ -164,6 +164,7 @@ def crear_visita(
     nombre_contacto,
     observaciones,
     usuario,
+    notificar=True,
 ):
     # -----------------------------
     # VALIDACIONES
@@ -228,7 +229,8 @@ def crear_visita(
     })
 
     try:
-        _notificar_visita_programada(nueva_visita_id)
+        if notificar:
+            _notificar_visita_programada(nueva_visita_id)
     except Exception:
         pass  # la notificacion nunca debe impedir que la visita quede programada
 

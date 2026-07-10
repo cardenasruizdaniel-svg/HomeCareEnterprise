@@ -63,6 +63,29 @@ def ultimo_informe_por_tipo_profesional(paciente_id: int) -> list:
     return ultimos
 
 
+def ultima_nota_medica(paciente_id: int) -> dict | None:
+    """
+    La nota/informe MÉDICO más reciente del paciente (no de
+    cualquier profesional -- específicamente la del médico),
+    para mostrarla de forma destacada en el resumen clínico.
+    """
+    fila = consultar_todos(
+        """
+        SELECT e.tipo_profesional, e.nota, e.fecha, e.consecutivo,
+               pr.nombre_completo AS profesional, pr.registro_profesional
+        FROM evoluciones e
+        LEFT JOIN profesionales pr ON pr.id = e.profesional_id
+        WHERE e.paciente_id=?
+          AND e.tipo_registro='INFORME'
+          AND e.tipo_profesional LIKE '%édic%'
+        ORDER BY e.consecutivo DESC
+        LIMIT 1
+        """,
+        (paciente_id,),
+    )
+    return dict(fila[0]) if fila else None
+
+
 def resumen_completo(paciente_id: int) -> dict:
     from services.diagnosticos_service import DiagnosticosService
     from services.programas_atencion_service import programa_actual
@@ -71,5 +94,6 @@ def resumen_completo(paciente_id: int) -> dict:
         "diagnosticos_activos": DiagnosticosService.listar_activos_por_paciente(paciente_id),
         "equipo_atencion": equipo_de_atencion(paciente_id),
         "ultimos_informes": ultimo_informe_por_tipo_profesional(paciente_id),
+        "ultima_nota_medica": ultima_nota_medica(paciente_id),
         "programa_actual": programa_actual(paciente_id),
     }

@@ -639,6 +639,7 @@ async function renderDetalleVisita(visitaId) {
     ${esPerfilCuidador() ? "" : `
     <button class="btn btn-secondary btn-block" id="btn-laboratorio">🧪 Resultados de laboratorio</button>
     <button class="btn btn-secondary btn-block" id="btn-ordenes">📋 Órdenes Médicas</button>
+    <button class="btn btn-secondary btn-block" id="btn-ultima-nota-medica">🩺 Última Nota Médica</button>
     `}
     ${visita.planilla_id && visita.planilla_estado !== "Firmada" ? `
     <button class="btn btn-primary btn-block" id="btn-firmar-planilla">✍️ Firmar planilla de visita</button>
@@ -681,6 +682,7 @@ async function renderDetalleVisita(visitaId) {
     document.getElementById("btn-medicamento").addEventListener("click", () => renderFormularioMedicamento(visita));
     document.getElementById("btn-laboratorio").addEventListener("click", () => renderLaboratorio(visita));
     document.getElementById("btn-ordenes").addEventListener("click", () => renderOrdenMedica(visita));
+    document.getElementById("btn-ultima-nota-medica").addEventListener("click", () => renderUltimaNotaMedica(visita));
   }
 }
 
@@ -1201,6 +1203,37 @@ function renderOrdenMedica(visita) {
     alert("Orden médica guardada. Se enviará al paciente cuando haya conexión.");
     irA("detalle_visita", visita.id);
   });
+}
+
+async function renderUltimaNotaMedica(visita) {
+  titulo("Última Nota Médica");
+  const nombrePaciente = [visita.primer_nombre, visita.primer_apellido].filter(Boolean).join(" ");
+
+  contenedor().innerHTML = `<p class="text-center">Cargando...</p>`;
+
+  let nota = null;
+  try {
+    nota = await apiGet(`/api/movil/paciente/${visita.paciente_id}/ultima-nota-medica`);
+  } catch (error) {
+    nota = null;
+  }
+
+  contenedor().innerHTML = `
+    <div class="card">
+      <h3>🩺 Última Nota Médica</h3>
+      <small>${nombrePaciente}</small>
+      ${nota ? `
+      <div style="margin-top:10px;">
+        <strong>Informe N.° ${nota.consecutivo}</strong> · <small>${nota.fecha}</small>
+        <p style="margin-top:8px;">${nota.nota}</p>
+        <small style="color:#6c757d;">${nota.profesional || ""}${nota.registro_profesional ? " — R.M. " + nota.registro_profesional : ""}</small>
+      </div>
+      ` : `
+      <div class="alerta alerta-info" style="margin-top:10px;">Este paciente todavía no tiene ninguna nota médica registrada.</div>
+      `}
+    </div>
+    <button class="btn btn-secondary btn-block" onclick="irA('detalle_visita', ${visita.id})">← Volver</button>
+  `;
 }
 
 function esPerfilCuidador() {

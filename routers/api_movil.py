@@ -140,6 +140,21 @@ async def laboratorios_paciente(
     return movil_service.listar_laboratorios_paciente(paciente_id)
 
 
+@router.get("/paciente/{paciente_id}/ultima-nota-medica")
+async def ultima_nota_medica_paciente(
+    paciente_id: int,
+    usuario=Depends(requiere_permiso("programacion")),
+):
+    """
+    Última nota médica del paciente, para mostrarla en la app.
+    Solo se le muestra el botón a médicos, enfermeros y demás
+    profesionales de la salud (no a cuidadores) desde el
+    propio frontend de la app.
+    """
+    from services.resumen_clinico_service import ultima_nota_medica
+    return ultima_nota_medica(paciente_id)
+
+
 @router.get("/visita/{programacion_id}/informes")
 async def informes_de_visita(
     programacion_id: int,

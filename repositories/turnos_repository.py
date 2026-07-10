@@ -42,14 +42,15 @@ class TurnosRepository:
     def crear(datos: dict) -> int:
         datos.setdefault("paciente_id", None)
         datos.setdefault("catalogo_turno_id", None)
+        datos.setdefault("programacion_id", None)
         return ejecutar(
             """
             INSERT INTO turnos_programados (
-                profesional_id, paciente_id, catalogo_turno_id, fecha, turno, hora_inicio, hora_fin,
-                zona, observaciones, usuario_creacion
+                profesional_id, paciente_id, catalogo_turno_id, programacion_id, fecha, turno,
+                hora_inicio, hora_fin, zona, observaciones, usuario_creacion
             ) VALUES (
-                :profesional_id, :paciente_id, :catalogo_turno_id, :fecha, :turno, :hora_inicio, :hora_fin,
-                :zona, :observaciones, :usuario_creacion
+                :profesional_id, :paciente_id, :catalogo_turno_id, :programacion_id, :fecha, :turno,
+                :hora_inicio, :hora_fin, :zona, :observaciones, :usuario_creacion
             )
             """,
             datos,

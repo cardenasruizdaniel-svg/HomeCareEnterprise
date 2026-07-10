@@ -613,6 +613,7 @@ class MigrationManager:
                     {
                         "paciente_id": "paciente_id INTEGER",
                         "catalogo_turno_id": "catalogo_turno_id INTEGER",
+                        "programacion_id": "programacion_id INTEGER",
                     },
                 )
             )

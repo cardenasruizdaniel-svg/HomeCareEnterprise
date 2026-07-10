@@ -2606,3 +2606,590 @@ INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
 INFO:     Finished server process [18264]
+[jue 09/07/2026 19:53:46.72] Iniciando HomeCare Enterprise en el puerto 8088... 
+INFO:     Started server process [14192]
+INFO:     Waiting for application startup.
+
+====================================
+ HOMECARE ENTERPRISE
+ Inicializando sistema...
+====================================
+
+=======================================================
+HomeCare Enterprise Database
+=======================================================
+[OK] acudientes
+[OK] administracion_medicamentos
+[OK] alergias
+[OK] antecedentes
+[OK] auditoria
+[OK] cargos
+[OK] catalogo_actividades
+[OK] catalogo_bancos
+[OK] catalogo_eps
+[OK] catalogo_turnos
+[OK] cie10
+[OK] configuracion_empresa
+[OK] consentimientos_informados
+[OK] contratos
+[OK] copagos
+[OK] cum
+[OK] cups
+[OK] diagnosticos
+[OK] divipola
+[OK] documentos_profesional
+[OK] evoluciones
+[OK] facturas_electronicas
+[OK] fotos_procedimientos
+[OK] historial_documentos_paciente
+[OK] historias_clinicas
+[OK] insumos
+[OK] inventario_movimientos
+[OK] laboratorio_items
+[OK] laboratorios_resultados
+[OK] medicamentos
+[OK] nomina
+[OK] nomina_detalle
+[OK] nomina_electronica
+[OK] ordenes_medicas
+[OK] paciente_programas
+[OK] pacientes
+[OK] planilla_visitas
+[OK] plantilla_componentes
+[OK] plantilla_versiones
+[OK] plantillas
+[OK] plantillas_visita
+[OK] profesionales
+[OK] programaciones
+[OK] programas_atencion
+[OK] proveedores
+[OK] schema_version
+[OK] servicios_paciente
+[OK] signos_vitales
+[OK] solicitudes_firma
+[OK] sqlite_sequence
+[OK] turnos_programados
+[OK] usuarios
+=======================================================
+
+
+[OK] Sistema listo.
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8088 (Press CTRL+C to quit)
+INFO:     127.0.0.1:41940 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41940 - "GET /static/img/logo_homecare.png HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:41940 - "GET /favicon.ico HTTP/1.1" 302 Found
+INFO:     127.0.0.1:41940 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54052 - "POST /login HTTP/1.1" 302 Found
+INFO:     127.0.0.1:54052 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54052 - "GET /static/vendor/bootstrap/css/bootstrap.min.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:39995 - "GET /static/vendor/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:54052 - "GET /static/css/style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39995 - "GET /static/js/buscar_pacientes.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:54052 - "GET /dashboard/produccion HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54052 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59544 - "GET /app/sw.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43964 - "GET /app/index.html HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59544 - "GET /app/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43964 - "GET /app/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59544 - "GET /app/estilos.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59544 - "GET /app/manifest.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59544 - "GET /app/icons/icon-192.png HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:59544 - "GET /app/icons/icon-512.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44733 - "GET /api/movil/agenda/7?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 302 Found
+INFO:     127.0.0.1:54995 - "GET /favicon.ico HTTP/1.1" 302 Found
+INFO:     127.0.0.1:54995 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54995 - "GET /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54995 - "GET /app/sw.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44733 - "GET /app/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54995 - "GET /app/index.html HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:54995 - "GET /app/ HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:54995 - "GET /app/manifest.json HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:44733 - "GET /app/estilos.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:44733 - "GET /app/icons/icon-512.png HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:44733 - "GET /api/movil/agenda/7?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:44733 - "POST /api/movil/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52550 - "POST /api/movil/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52550 - "GET /api/movil/perfil HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52550 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37628 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:37628 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37628 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:37628 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37628 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:37628 - "GET /servicios-paciente/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37628 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:37628 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38069 - "POST /servicios-paciente/asignar HTTP/1.1" 303 See Other
+INFO:     127.0.0.1:38069 - "GET /servicios-paciente/2?creado=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38069 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:38069 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38069 - "GET /gestion-visitas/13 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38069 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+Error enviando correo a cardenasruizdaniel@gmail.com
+Traceback (most recent call last):
+  File "D:\HomeCareEnterprise\services\notificaciones_service.py", line 120, in enviar_email
+    servidor.login(SMTP_USER, SMTP_PASSWORD)
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 750, in login
+    raise last_exception
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 739, in login
+    (code, resp) = self.auth(
+                   ^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 662, in auth
+    raise SMTPAuthenticationError(code, resp)
+smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 71dfb90a1353d-5bf6f35a36esm4486710e0c.0 - gsmtp')
+INFO:     127.0.0.1:39572 - "POST /gestion-visitas/programar/25 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56888 - "POST /gestion-visitas/programar/25 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39572 - "GET /gestion-visitas/13 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39572 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:46343 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46343 - "POST /api/movil/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46343 - "POST /api/movil/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46343 - "GET /api/movil/perfil HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46343 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:46343 - "GET /app/ HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:46343 - "GET /app/app.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:46343 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42727 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:42727 - "GET /app/sw.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:34170 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34170 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:34170 - "GET /servicios-paciente/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34170 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:34170 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44917 - "GET /gestion-visitas/13 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44917 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+Error enviando correo a cardenasruizdaniel@gmail.com
+Traceback (most recent call last):
+  File "D:\HomeCareEnterprise\services\notificaciones_service.py", line 120, in enviar_email
+    servidor.login(SMTP_USER, SMTP_PASSWORD)
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 750, in login
+    raise last_exception
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 739, in login
+    (code, resp) = self.auth(
+                   ^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 662, in auth
+    raise SMTPAuthenticationError(code, resp)
+smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 71dfb90a1353d-5bf6f8a4fc2sm4392910e0c.14 - gsmtp')
+INFO:     127.0.0.1:34041 - "POST /gestion-visitas/reprogramar/25 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34041 - "GET /gestion-visitas/13 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34041 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:38349 - "POST /api/movil/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38349 - "POST /api/movil/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38349 - "GET /api/movil/perfil HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38349 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39877 - "GET /app/ HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:39877 - "GET /app/app.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:39877 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39877 - "GET /app/sw.js HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:55160 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:55160 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55160 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:55160 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55160 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:55160 - "GET /servicios-paciente/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55160 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:55160 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55160 - "GET /gestion-visitas/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55160 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:60189 - "POST /gestion-visitas/programar/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37633 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37633 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37633 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59808 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:59808 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59808 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:59808 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59808 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:38852 - "GET /servicios-paciente/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38852 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:38852 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38852 - "GET /gestion-visitas/13 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38852 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+Error enviando correo a cardenasruizdaniel@gmail.com
+Traceback (most recent call last):
+  File "D:\HomeCareEnterprise\services\notificaciones_service.py", line 120, in enviar_email
+    servidor.login(SMTP_USER, SMTP_PASSWORD)
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 750, in login
+    raise last_exception
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 739, in login
+    (code, resp) = self.auth(
+                   ^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 662, in auth
+    raise SMTPAuthenticationError(code, resp)
+smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials ada2fe7eead31-744d6e38e25sm4403817137.11 - gsmtp')
+INFO:     127.0.0.1:47330 - "POST /gestion-visitas/reprogramar/25 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47330 - "GET /gestion-visitas/13 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47330 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:33367 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33367 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33367 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45206 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45206 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:36344 - "GET /servicios-paciente/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36344 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:36344 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35136 - "GET /gestion-visitas/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35136 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+Error enviando correo a cardenasruizdaniel@gmail.com
+Traceback (most recent call last):
+  File "D:\HomeCareEnterprise\services\notificaciones_service.py", line 120, in enviar_email
+    servidor.login(SMTP_USER, SMTP_PASSWORD)
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 750, in login
+    raise last_exception
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 739, in login
+    (code, resp) = self.auth(
+                   ^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 662, in auth
+    raise SMTPAuthenticationError(code, resp)
+smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials ada2fe7eead31-744d6dea737sm4508828137.9 - gsmtp')
+INFO:     127.0.0.1:53020 - "POST /gestion-visitas/programar/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53020 - "GET /gestion-visitas/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53020 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:56687 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56687 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:56687 - "GET /servicios-paciente/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56687 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:56687 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56687 - "GET /gestion-visitas/9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56687 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:45159 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:45159 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [14192]
+[jue 09/07/2026 20:13:11.30] Iniciando HomeCare Enterprise en el puerto 8088... 
+INFO:     Started server process [7736]
+INFO:     Waiting for application startup.
+
+====================================
+ HOMECARE ENTERPRISE
+ Inicializando sistema...
+====================================
+
+=======================================================
+HomeCare Enterprise Database
+=======================================================
+[OK] acudientes
+[OK] administracion_medicamentos
+[OK] alergias
+[OK] antecedentes
+[OK] auditoria
+[OK] cargos
+[OK] catalogo_actividades
+[OK] catalogo_bancos
+[OK] catalogo_eps
+[OK] catalogo_turnos
+[OK] cie10
+[OK] configuracion_empresa
+[OK] consentimientos_informados
+[OK] contratos
+[OK] copagos
+[OK] cum
+[OK] cups
+[OK] diagnosticos
+[OK] divipola
+[OK] documentos_profesional
+[OK] evoluciones
+[OK] facturas_electronicas
+[OK] fotos_procedimientos
+[OK] historial_documentos_paciente
+[OK] historias_clinicas
+[OK] insumos
+[OK] inventario_movimientos
+[OK] laboratorio_items
+[OK] laboratorios_resultados
+[OK] medicamentos
+[OK] nomina
+[OK] nomina_detalle
+[OK] nomina_electronica
+[OK] ordenes_medicas
+[OK] paciente_programas
+[OK] pacientes
+[OK] planilla_visitas
+[OK] plantilla_componentes
+[OK] plantilla_versiones
+[OK] plantillas
+[OK] plantillas_visita
+[OK] profesionales
+[OK] programaciones
+[OK] programas_atencion
+[OK] proveedores
+[OK] schema_version
+[OK] servicios_paciente
+[OK] signos_vitales
+[OK] solicitudes_firma
+[OK] sqlite_sequence
+[OK] turnos_programados
+[OK] usuarios
+=======================================================
+
+
+[OK] Sistema listo.
+
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8088 (Press CTRL+C to quit)
+INFO:     127.0.0.1:36754 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36754 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36754 - "POST /api/movil/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38905 - "GET /servicios-paciente/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38905 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:38905 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38905 - "GET /gestion-visitas/13 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38905 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+Error enviando correo a cardenasruizdaniel@gmail.com
+Traceback (most recent call last):
+  File "D:\HomeCareEnterprise\services\notificaciones_service.py", line 120, in enviar_email
+    servidor.login(SMTP_USER, SMTP_PASSWORD)
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 750, in login
+    raise last_exception
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 739, in login
+    (code, resp) = self.auth(
+                   ^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 662, in auth
+    raise SMTPAuthenticationError(code, resp)
+smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials a1e0cc1a2514c-96ed6545095sm4007140241.11 - gsmtp')
+INFO:     127.0.0.1:38905 - "POST /gestion-visitas/reprogramar/25 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38905 - "GET /gestion-visitas/13 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38905 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:38905 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38905 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:54487 - "POST /api/movil/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54487 - "GET /api/movil/perfil HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54487 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54487 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54487 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54487 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54487 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54487 - "GET /app/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54487 - "GET /app/estilos.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54487 - "GET /app/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54487 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54487 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:51583 - "GET /app/manifest.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54487 - "GET /app/icons/icon-192.png HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:39792 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39792 - "GET /static/vendor/bootstrap/css/bootstrap.min.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39976 - "GET /static/vendor/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39792 - "GET /static/css/style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39792 - "GET /static/img/logo_homecare.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39792 - "GET /static/js/buscar_pacientes.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39792 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:39792 - "GET /servicios-paciente/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39792 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:39792 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39792 - "GET /gestion-visitas/13 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39792 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+Error enviando correo a cardenasruizdaniel@gmail.com
+Traceback (most recent call last):
+  File "D:\HomeCareEnterprise\services\notificaciones_service.py", line 120, in enviar_email
+    servidor.login(SMTP_USER, SMTP_PASSWORD)
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 750, in login
+    raise last_exception
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 739, in login
+    (code, resp) = self.auth(
+                   ^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 662, in auth
+    raise SMTPAuthenticationError(code, resp)
+smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 71dfb90a1353d-5bf6f8a4fc2sm4407927e0c.14 - gsmtp')
+INFO:     127.0.0.1:39792 - "POST /gestion-visitas/reprogramar/25 HTTP/1.1" 200 OK
+Error enviando correo a cardenasruizdaniel@gmail.com
+Traceback (most recent call last):
+  File "D:\HomeCareEnterprise\services\notificaciones_service.py", line 120, in enviar_email
+    servidor.login(SMTP_USER, SMTP_PASSWORD)
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 750, in login
+    raise last_exception
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 739, in login
+    (code, resp) = self.auth(
+                   ^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 662, in auth
+    raise SMTPAuthenticationError(code, resp)
+smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials a1e0cc1a2514c-96ed663ded3sm4012977241.12 - gsmtp')
+INFO:     127.0.0.1:47867 - "POST /gestion-visitas/reprogramar/25 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39792 - "GET /gestion-visitas/13 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47867 - "GET /gestion-visitas/13 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47867 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:41268 - "POST /api/movil/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47867 - "GET /gestion-visitas/13 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47867 - "GET /static/vendor/bootstrap/css/bootstrap.min.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35865 - "GET /static/vendor/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47867 - "GET /static/css/style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35865 - "GET /static/img/logo_homecare.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35865 - "GET /static/js/buscar_pacientes.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41268 - "POST /api/movil/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41268 - "GET /api/movil/perfil HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41268 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35865 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:35865 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35865 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:35865 - "GET /servicios-paciente/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35865 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:35865 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44774 - "POST /servicios-paciente/asignar HTTP/1.1" 303 See Other
+INFO:     127.0.0.1:44774 - "GET /servicios-paciente/2?creado=0 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44774 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:44774 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44774 - "GET /gestion-visitas/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44774 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:42814 - "POST /gestion-visitas/programar/26 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:37582 - "POST /api/movil/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40131 - "POST /gestion-visitas/programar/26 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52367 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52367 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:52367 - "GET /servicios-paciente/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52367 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:52367 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52367 - "GET /gestion-visitas/13 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52367 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:33830 - "POST /gestion-visitas/cancelar/25 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33830 - "GET /gestion-visitas/13 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33830 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:33830 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33830 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:33830 - "GET /servicios-paciente/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33830 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:33830 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33830 - "GET /gestion-visitas/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33830 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:33830 - "POST /gestion-visitas/programar/26 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33830 - "GET /gestion-visitas/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33830 - "GET /static/vendor/bootstrap/css/bootstrap.min.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39732 - "GET /static/vendor/bootstrap/js/bootstrap.bundle.min.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39732 - "GET /static/css/style.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39732 - "GET /static/img/logo_homecare.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39732 - "GET /static/js/buscar_pacientes.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39732 - "POST /gestion-visitas/programar/26 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44089 - "POST /api/movil/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39732 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:44089 - "GET /api/movil/perfil HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44089 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44089 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44089 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44089 - "GET /app/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44089 - "GET /app/estilos.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44089 - "GET /app/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44089 - "GET /api/movil/agenda/8?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:44089 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:36884 - "GET /app/manifest.json HTTP/1.1" 200 OK
+Error enviando correo a cardenasruizdaniel@gmail.com
+Traceback (most recent call last):
+  File "D:\HomeCareEnterprise\services\notificaciones_service.py", line 120, in enviar_email
+    servidor.login(SMTP_USER, SMTP_PASSWORD)
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 750, in login
+    raise last_exception
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 739, in login
+    (code, resp) = self.auth(
+                   ^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 662, in auth
+    raise SMTPAuthenticationError(code, resp)
+smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 71dfb90a1353d-5bf6f66bdfesm4990986e0c.6 - gsmtp')
+INFO:     127.0.0.1:57257 - "POST /gestion-visitas/programar/26 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57257 - "GET /gestion-visitas/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57257 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:57257 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57257 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:33106 - "GET /servicios-paciente/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:33106 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:33106 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36663 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:36663 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36663 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:36663 - "GET /profesionales HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36663 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:60861 - "GET /profesionales/editar/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60861 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:40617 - "POST /profesionales/actualizar/4 HTTP/1.1" 303 See Other
+INFO:     127.0.0.1:40617 - "GET /profesionales HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40617 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:40617 - "GET /profesionales/editar/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40617 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:40617 - "GET /profesionales HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40617 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:40617 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:40617 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:40617 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:54387 - "POST /api/movil/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47508 - "GET /profesionales HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47508 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:47508 - "GET /profesionales/editar/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:47508 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:41942 - "GET /pacientes HTTP/1.1" 307 Temporary Redirect
+INFO:     127.0.0.1:41942 - "GET /pacientes/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41942 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:41942 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41942 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:41942 - "GET /servicios-paciente/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41942 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:41942 - "GET /programas-atencion/api/actividades HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41942 - "GET /gestion-visitas/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41942 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+Error enviando correo a marta.ruiz@homecare.test
+Traceback (most recent call last):
+  File "D:\HomeCareEnterprise\services\notificaciones_service.py", line 120, in enviar_email
+    servidor.login(SMTP_USER, SMTP_PASSWORD)
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 750, in login
+    raise last_exception
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 739, in login
+    (code, resp) = self.auth(
+                   ^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 662, in auth
+    raise SMTPAuthenticationError(code, resp)
+smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials ada2fe7eead31-744d6e38e25sm4425231137.11 - gsmtp')
+INFO:     127.0.0.1:50871 - "POST /gestion-visitas/programar/27 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50871 - "GET /gestion-visitas/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50871 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:58996 - "POST /api/movil/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58996 - "GET /api/movil/perfil HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58996 - "GET /api/movil/agenda/4?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58996 - "GET /api/movil/agenda/4?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58996 - "GET /api/movil/paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58996 - "GET /api/movil/agenda/4?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+Error enviando correo a marta.ruiz@homecare.test
+Traceback (most recent call last):
+  File "D:\HomeCareEnterprise\services\notificaciones_service.py", line 120, in enviar_email
+    servidor.login(SMTP_USER, SMTP_PASSWORD)
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 750, in login
+    raise last_exception
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 739, in login
+    (code, resp) = self.auth(
+                   ^^^^^^^^^^
+  File "C:\Program Files\Python312\Lib\smtplib.py", line 662, in auth
+    raise SMTPAuthenticationError(code, resp)
+smtplib.SMTPAuthenticationError: (535, b'5.7.8 Username and Password not accepted. For more information, go to\n5.7.8  https://support.google.com/mail/?p=BadCredentials 71dfb90a1353d-5bf6f8499f8sm5035545e0c.11 - gsmtp')
+INFO:     127.0.0.1:41058 - "POST /gestion-visitas/reprogramar/27 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41058 - "GET /gestion-visitas/14 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41058 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:58998 - "GET /api/movil/agenda/4?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58998 - "GET /api/movil/agenda/4?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58998 - "GET /app/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58998 - "GET /app/estilos.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58998 - "GET /app/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58998 - "GET /api/movil/agenda/4?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58998 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:54184 - "GET /app/manifest.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58998 - "GET /app/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58998 - "GET /app/estilos.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34065 - "GET /app/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54184 - "GET /app/manifest.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34065 - "GET /api/movil/agenda/4?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:34065 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:56017 - "POST /api/movil/logout HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56017 - "POST /api/movil/login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56017 - "GET /api/movil/perfil HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56017 - "GET /api/movil/agenda/4?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56017 - "GET /api/movil/agenda/4?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56017 - "GET /api/movil/paciente/7 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56017 - "GET /api/movil/agenda/4?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56017 - "GET /api/movil/paciente/4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56017 - "GET /api/movil/agenda/4?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56017 - "GET /api/movil/agenda/4?fecha_inicio=2026-07-10&fecha_fin=2026-07-10 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55328 - "GET /pacientes/2 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55328 - "GET /static/css/style.css HTTP/1.1" 304 Not Modified
+INFO:     127.0.0.1:35171 - "POST /api/movil/logout HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [7736]
+[jue 09/07/2026 20:25:19.50] Iniciando HomeCare Enterprise en el puerto 8088... 

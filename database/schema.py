@@ -1109,6 +1109,8 @@ CREATE TABLE IF NOT EXISTS turnos_programados(
 
     catalogo_turno_id INTEGER,
 
+    programacion_id INTEGER,
+
     fecha TEXT NOT NULL,
 
     turno TEXT NOT NULL,
