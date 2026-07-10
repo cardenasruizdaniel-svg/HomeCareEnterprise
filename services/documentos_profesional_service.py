@@ -37,7 +37,8 @@ def obtener(documento_id: int):
 
 
 def crear(profesional_id, tipo_documento, nombre, numero, entidad_emisora,
-          fecha_expedicion, fecha_vencimiento, ruta_archivo, observaciones, usuario):
+          fecha_expedicion, fecha_vencimiento, ruta_archivo, observaciones, usuario,
+          archivo_base64=None, nombre_archivo=None):
 
     if not tipo_documento:
         raise ValueError("Debe indicar el tipo de documento.")
@@ -51,6 +52,8 @@ def crear(profesional_id, tipo_documento, nombre, numero, entidad_emisora,
         "fecha_expedicion": fecha_expedicion or None,
         "fecha_vencimiento": fecha_vencimiento or None,
         "ruta_archivo": ruta_archivo,
+        "archivo_base64": archivo_base64 or None,
+        "nombre_archivo": nombre_archivo or None,
         "observaciones": observaciones,
         "usuario_creacion": usuario,
     })

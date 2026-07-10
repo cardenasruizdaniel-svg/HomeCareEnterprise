@@ -25,7 +25,14 @@
                             <div class="col-6 mb-3"><label>Fecha vencimiento</label><input type="date" name="fecha_vencimiento" class="form-control"></div>
                         </div>
                         <div class="mb-3"><label>Observaciones</label><textarea name="observaciones" class="form-control" rows="2"></textarea></div>
-                        <button class="btn btn-success w-100"><i class="fa-solid fa-plus"></i> Agregar</button>
+                        <div class="mb-3">
+                            <label>Archivo de soporte (PDF o imagen)</label>
+                            <input type="file" accept="application/pdf,image/*" class="form-control" id="campo-archivo-doc">
+                            <input type="hidden" name="archivo_base64" id="campo-archivo-doc-oculto">
+                            <input type="hidden" name="nombre_archivo" id="campo-nombre-archivo-doc">
+                            <small class="text-muted">Ej: la foto o el escaneo del título profesional, la tarjeta profesional, etc.</small>
+                        </div>
+                        <button class="btn btn-success w-100" id="btn-guardar-documento"><i class="fa-solid fa-plus"></i> Agregar</button>
                     </form>
                 </div>
             </div>
@@ -34,8 +41,9 @@
             <div class="card shadow">
                 <div class="card-header bg-white"><h5 class="mb-0">Documentos registrados</h5></div>
                 <div class="card-body">
+                    <div class="table-responsive">
                     <table class="table table-hover align-middle">
-                        <thead class="table-light"><tr><th>Tipo</th><th>Nombre</th><th>Vence</th><th class="text-center">Acción</th></tr></thead>
+                        <thead class="table-light"><tr><th>Tipo</th><th>Nombre</th><th>Vence</th><th class="text-center">Archivo</th><th class="text-center">Acción</th></tr></thead>
                         <tbody>
                             {% for d in documentos %}
                             <tr class="{% if d.vencido %}table-danger{% endif %}">
@@ -46,20 +54,48 @@
                                     {% if d.vencido %}<span class="badge bg-danger ms-1">Vencido</span>{% endif %}
                                 </td>
                                 <td class="text-center">
+                                    {% if d.archivo_base64 %}
+                                    <a href="/documentos-profesional/ver-archivo/{{ d.id }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                        <i class="fa-solid fa-file-lines"></i> Ver
+                                    </a>
+                                    {% else %}
+                                    <span class="badge bg-light text-dark">Sin archivo</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
                                     <a href="/documentos-profesional/eliminar/{{ d.id }}/{{ profesional_id }}" class="btn btn-outline-danger btn-sm" onclick="return confirm('¿Eliminar?');">
                                         <i class="fa-solid fa-trash"></i>
                                     </a>
                                 </td>
                             </tr>
                             {% else %}
-                            <tr><td colspan="4" class="text-center text-muted py-4">Sin documentos registrados.</td></tr>
+                            <tr><td colspan="5" class="text-center text-muted py-4">Sin documentos registrados.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     <a href="/profesionales" class="btn btn-secondary mt-3">Volver a profesionales</a>
 </div>
+
+<script>
+let archivoDocBase64 = "";
+let nombreArchivoDoc = "";
+
+document.getElementById("campo-archivo-doc").addEventListener("change", (e) => {
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = () => {
+        archivoDocBase64 = lector.result;
+        nombreArchivoDoc = archivo.name;
+        document.getElementById("campo-archivo-doc-oculto").value = archivoDocBase64;
+        document.getElementById("campo-nombre-archivo-doc").value = nombreArchivoDoc;
+    };
+    lector.readAsDataURL(archivo);
+});
+</script>
 {% endblock %}

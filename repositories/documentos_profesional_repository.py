@@ -24,14 +24,18 @@ class DocumentosProfesionalRepository:
 
     @staticmethod
     def crear(datos: dict) -> int:
+        datos.setdefault("archivo_base64", None)
+        datos.setdefault("nombre_archivo", None)
         return ejecutar(
             """
             INSERT INTO documentos_profesional (
                 profesional_id, tipo_documento, nombre, numero, entidad_emisora,
-                fecha_expedicion, fecha_vencimiento, ruta_archivo, observaciones, usuario_creacion
+                fecha_expedicion, fecha_vencimiento, ruta_archivo, archivo_base64,
+                nombre_archivo, observaciones, usuario_creacion
             ) VALUES (
                 :profesional_id, :tipo_documento, :nombre, :numero, :entidad_emisora,
-                :fecha_expedicion, :fecha_vencimiento, :ruta_archivo, :observaciones, :usuario_creacion
+                :fecha_expedicion, :fecha_vencimiento, :ruta_archivo, :archivo_base64,
+                :nombre_archivo, :observaciones, :usuario_creacion
             )
             """,
             datos,

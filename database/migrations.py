@@ -537,6 +537,20 @@ class MigrationManager:
     # transacción sin modificar la operación clínica diaria.
     # =====================================================
 
+    def migrar_documentos_profesional_archivo(self):
+        cambios = []
+        if self.existe_tabla("documentos_profesional"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "documentos_profesional",
+                    {
+                        "archivo_base64": "archivo_base64 TEXT",
+                        "nombre_archivo": "nombre_archivo TEXT",
+                    },
+                )
+            )
+        return cambios
+
     def migrar_facturacion_servicios(self):
         cambios = []
         if self.existe_tabla("facturas_electronicas"):
@@ -1470,6 +1484,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_laboratorio_items()
+        )
+
+        cambios.extend(
+            self.migrar_documentos_profesional_archivo()
         )
 
         cambios.extend(

@@ -1080,6 +1080,10 @@ CREATE TABLE IF NOT EXISTS documentos_profesional(
 
     ruta_archivo TEXT,
 
+    archivo_base64 TEXT,
+
+    nombre_archivo TEXT,
+
     estado TEXT DEFAULT 'Vigente',
 
     observaciones TEXT,
