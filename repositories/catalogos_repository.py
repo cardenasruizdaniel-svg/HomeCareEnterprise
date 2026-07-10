@@ -91,6 +91,21 @@ class DivipolaRepository:
         return len(filas)
 
     @staticmethod
+    def listar_departamentos():
+        return consultar(
+            "SELECT DISTINCT codigo_departamento, nombre_departamento FROM divipola "
+            "ORDER BY nombre_departamento"
+        )
+
+    @staticmethod
+    def listar_municipios_por_departamento(codigo_departamento: str):
+        return consultar(
+            "SELECT codigo_municipio, nombre_municipio, codigo_postal FROM divipola "
+            "WHERE codigo_departamento=? ORDER BY nombre_municipio",
+            (codigo_departamento,),
+        )
+
+    @staticmethod
     def listar_todos(texto: str = ""):
         if texto:
             condicion, parametros = _condicion_por_palabras("nombre_normalizado", texto)

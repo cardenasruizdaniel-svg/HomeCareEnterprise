@@ -1882,15 +1882,11 @@ function renderPerfil() {
       <h3>${perfil.nombre}</h3>
       <small>${perfil.rol}</small>
     </div>
-    ${esPerfilCuidador() ? "" : `
     <button class="btn btn-primary btn-block" id="btn-programar-mi-agenda">📅 Programar Mi Agenda</button>
-    `}
     <button class="btn btn-danger btn-block" id="btn-logout">Cerrar sesión</button>
   `;
 
-  if (!esPerfilCuidador()) {
-    document.getElementById("btn-programar-mi-agenda").addEventListener("click", () => renderProgramarMiAgenda());
-  }
+  document.getElementById("btn-programar-mi-agenda").addEventListener("click", () => renderProgramarMiAgenda());
 
   document.getElementById("btn-logout").addEventListener("click", async () => {
     if (!confirm("¿Cerrar sesión? Los datos pendientes de enviar se conservarán.")) return;

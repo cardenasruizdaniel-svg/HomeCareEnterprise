@@ -52,6 +52,23 @@ async def panel(
 # BÚSQUEDA (autocompletado)
 # ==========================================
 
+@router.get("/divipola/departamentos")
+async def listar_departamentos_divipola():
+    """Lista de departamentos, para el primer desplegable en cascada Departamento -> Municipio."""
+    filas = DivipolaRepository.listar_departamentos()
+    return [{"codigo": f["codigo_departamento"], "nombre": f["nombre_departamento"]} for f in filas]
+
+
+@router.get("/divipola/municipios/{codigo_departamento}")
+async def listar_municipios_divipola(codigo_departamento: str):
+    """Municipios de un departamento, para el segundo desplegable en cascada."""
+    filas = DivipolaRepository.listar_municipios_por_departamento(codigo_departamento)
+    return [
+        {"codigo": f["codigo_municipio"], "nombre": f["nombre_municipio"], "codigo_postal": f["codigo_postal"]}
+        for f in filas
+    ]
+
+
 @router.get("/divipola/buscar")
 async def buscar_divipola(q: str = ""):
     filas = DivipolaRepository.buscar_municipios(q) if q.strip() else []

@@ -33,6 +33,7 @@ from routers.configuracion_empresa import router as configuracion_empresa_router
 from routers.laboratorios import router as laboratorios_router
 from routers.pendientes_agendar import router as pendientes_agendar_router
 from routers.calidad import router as calidad_router
+from routers.informes import router as informes_router
 from routers import despacho
 from routers.plantillas import router as plantillas_router
 
@@ -181,6 +182,8 @@ def create_app() -> FastAPI:
     app.include_router(pendientes_agendar_router)
 
     app.include_router(calidad_router)
+
+    app.include_router(informes_router)
 
     app.include_router(despacho.router)
 

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block titulo %}Informes{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-chart-line text-primary"></i> Módulo de Informes</h2>
+    <p class="text-muted">Informes de los distintos módulos del programa — todos se pueden ver en pantalla, imprimir, y descargar en Excel.</p>
+
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <i class="fa-solid fa-user-injured fa-2x text-primary mb-2"></i>
+                    <h5>Caracterización de Pacientes</h5>
+                    <p class="text-muted small">Listado completo de pacientes: identificación, ubicación, aseguramiento, diagnóstico, servicios y profesional asignado.</p>
+                    <a href="/informes/caracterizacion-pacientes" class="btn btn-primary w-100">Ver informe</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <i class="fa-solid fa-map-location-dot fa-2x text-info mb-2"></i>
+                    <h5>Resumen por Zona / Municipio / EPS</h5>
+                    <p class="text-muted small">Cuántos pacientes hay en cada zona de la ciudad, municipio, y EPS.</p>
+                    <a href="/informes/resumen-zonas" class="btn btn-info w-100">Ver informe</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <i class="fa-solid fa-user-nurse fa-2x text-success mb-2"></i>
+                    <h5>Equipo Profesional</h5>
+                    <p class="text-muted small">Listado del equipo, especialidad, vinculación y cuántos pacientes tiene asignados cada uno.</p>
+                    <a href="/informes/equipo-profesional" class="btn btn-success w-100">Ver informe</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <i class="fa-solid fa-file-invoice-dollar fa-2x text-warning mb-2"></i>
+                    <h5>Facturación</h5>
+                    <p class="text-muted small">Facturado por paciente, por EPS, y por fecha.</p>
+                    <a href="/facturacion/reportes" class="btn btn-warning w-100">Ver informe</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <i class="fa-solid fa-money-check-dollar fa-2x text-secondary mb-2"></i>
+                    <h5>Nómina</h5>
+                    <p class="text-muted small">Liquidación con prestaciones sociales y aportes, antes de enviar a la DIAN.</p>
+                    <a href="/nomina" class="btn btn-secondary w-100">Ver informe</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <i class="fa-solid fa-award fa-2x text-danger mb-2"></i>
+                    <h5>Calidad</h5>
+                    <p class="text-muted small">PQR, planificación de trabajo, y evaluación de la atención al paciente.</p>
+                    <a href="/calidad" class="btn btn-danger w-100">Ver informe</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <i class="fa-solid fa-calendar-xmark fa-2x text-dark mb-2"></i>
+                    <h5>Pendientes de Agendar</h5>
+                    <p class="text-muted small">Pacientes sin primera visita, y con sesiones sin programar.</p>
+                    <a href="/pendientes-agendar" class="btn btn-dark w-100">Ver informe</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card shadow h-100">
+                <div class="card-body text-center">
+                    <i class="fa-solid fa-calendar-days fa-2x text-primary mb-2"></i>
+                    <h5>Cronograma Mensual por Profesional</h5>
+                    <p class="text-muted small">Cronograma día a día de un profesional, listo para imprimir.</p>
+                    <a href="/programacion/mensual" class="btn btn-outline-primary w-100">Ver informe</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

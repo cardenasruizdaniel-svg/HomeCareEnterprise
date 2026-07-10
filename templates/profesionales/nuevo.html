@@ -82,22 +82,17 @@
                         <input type="text" name="direccion" class="form-control">
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label>Municipio</label>
-                        <input type="text" name="municipio" id="campo-municipio-texto" class="form-control">
+                        <label>Departamento</label>
+                        <select id="select-departamento" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                        </select>
+                        <input type="hidden" name="departamento" id="campo-departamento-oculto">
                     </div>
                     <div class="col-md-4 mb-3">
-                        <label>Departamento</label>
-                        <input type="text" name="departamento" id="campo-departamento-texto" class="form-control">
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-8 mb-3 position-relative">
-                        <label>Buscar municipio (DIVIPOLA)</label>
-                        <input type="text" id="divipola_busqueda" class="form-control" autocomplete="off"
-                               placeholder="Escriba el municipio, ej: Armenia">
-                        <div id="divipola_resultados" class="list-group position-absolute w-100" style="z-index:1000;"></div>
-                        <small class="text-muted">Busque y haga clic para completar automáticamente el municipio y el departamento de arriba.</small>
+                        <label>Municipio</label>
+                        <select name="municipio" id="select-municipio" class="form-select">
+                            <option value="">-- Primero elija el departamento --</option>
+                        </select>
                     </div>
                 </div>
 
@@ -279,31 +274,33 @@ document.getElementById('tipo_contrato').addEventListener('change', (e) => {
 </script>
 
 <script>
-const buscadorDivipola = document.getElementById('divipola_busqueda');
-const resultadosDivipola = document.getElementById('divipola_resultados');
+async function cargarDepartamentosProfesional() {
+    const selectDepto = document.getElementById('select-departamento');
+    const resp = await fetch('/catalogos/divipola/departamentos');
+    const departamentos = await resp.json();
+    selectDepto.innerHTML = '<option value="">-- Seleccione --</option>' +
+        departamentos.map(d => `<option value="${d.codigo}" data-nombre="${d.nombre}">${d.nombre}</option>`).join('');
 
-let temporizadorDivipola;
-buscadorDivipola.addEventListener('input', () => {
-    clearTimeout(temporizadorDivipola);
-    const texto = buscadorDivipola.value.trim();
-    if (texto.length < 3) { resultadosDivipola.innerHTML = ''; return; }
-    temporizadorDivipola = setTimeout(async () => {
-        const resp = await fetch(`/catalogos/divipola/buscar?q=${encodeURIComponent(texto)}`);
-        const datos = await resp.json();
-        resultadosDivipola.innerHTML = datos.map(d =>
-            `<button type="button" class="list-group-item list-group-item-action" data-municipio="${d.municipio}" data-departamento="${d.departamento}">${d.texto}</button>`
-        ).join('');
-    }, 300);
-});
+    selectDepto.addEventListener('change', async () => {
+        const opcion = selectDepto.selectedOptions[0];
+        document.getElementById('campo-departamento-oculto').value = opcion && opcion.dataset.nombre ? opcion.dataset.nombre : '';
+        await cargarMunicipiosProfesional(selectDepto.value);
+    });
+}
 
-resultadosDivipola.addEventListener('click', (e) => {
-    if (e.target.matches('[data-municipio]')) {
-        buscadorDivipola.value = e.target.textContent;
-        document.getElementById('campo-municipio-texto').value = e.target.dataset.municipio;
-        document.getElementById('campo-departamento-texto').value = e.target.dataset.departamento;
-        resultadosDivipola.innerHTML = '';
+async function cargarMunicipiosProfesional(codigoDepartamento) {
+    const selectMunicipio = document.getElementById('select-municipio');
+    if (!codigoDepartamento) {
+        selectMunicipio.innerHTML = '<option value="">-- Primero elija el departamento --</option>';
+        return;
     }
-});
+    const resp = await fetch(`/catalogos/divipola/municipios/${codigoDepartamento}`);
+    const municipios = await resp.json();
+    selectMunicipio.innerHTML = '<option value="">-- Seleccione --</option>' +
+        municipios.map(m => `<option value="${m.nombre}">${m.nombre}</option>`).join('');
+}
+
+cargarDepartamentosProfesional();
 </script>
 
 {% endblock %}

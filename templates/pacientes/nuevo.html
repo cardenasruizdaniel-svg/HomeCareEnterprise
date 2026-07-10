@@ -142,23 +142,19 @@
                         <label>Barrio</label>
                         <input name="barrio" class="form-control">
                     </div>
-                    <div class="col-md-2 mb-3">
-                        <label>Municipio</label>
-                        <input name="municipio" id="campo-municipio-texto" class="form-control">
-                    </div>
-                    <div class="col-md-2 mb-3">
+                    <div class="col-md-3 mb-3">
                         <label>Departamento</label>
-                        <input name="departamento" id="campo-departamento-texto" class="form-control">
+                        <select id="select-departamento" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                        </select>
+                        <input type="hidden" name="departamento" id="campo-departamento-oculto">
                     </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-8 mb-3 position-relative">
-                        <label>Municipio de residencia (DIVIPOLA — para el RIPS)</label>
-                        <input type="text" id="divipola_busqueda" class="form-control" autocomplete="off"
-                               placeholder="Escriba el municipio, ej: Armenia">
+                    <div class="col-md-3 mb-3">
+                        <label>Municipio</label>
+                        <select name="municipio" id="select-municipio" class="form-select">
+                            <option value="">-- Primero elija el departamento --</option>
+                        </select>
                         <input type="hidden" name="codigo_municipio_divipola" id="codigo_municipio_divipola">
-                        <div id="divipola_resultados" class="list-group position-absolute w-100" style="z-index:1000;"></div>
                     </div>
                 </div>
 
@@ -196,34 +192,39 @@
 </div>
 
 <script>
-const buscadorDivipola = document.getElementById('divipola_busqueda');
-const resultadosDivipola = document.getElementById('divipola_resultados');
-const codigoDivipola = document.getElementById('codigo_municipio_divipola');
+async function cargarDepartamentosPaciente() {
+    const selectDepto = document.getElementById('select-departamento');
+    const resp = await fetch('/catalogos/divipola/departamentos');
+    const departamentos = await resp.json();
+    selectDepto.innerHTML = '<option value="">-- Seleccione --</option>' +
+        departamentos.map(d => `<option value="${d.codigo}" data-nombre="${d.nombre}">${d.nombre}</option>`).join('');
 
-let temporizador;
-buscadorDivipola.addEventListener('input', () => {
-    clearTimeout(temporizador);
-    const texto = buscadorDivipola.value.trim();
-    codigoDivipola.value = '';
-    if (texto.length < 3) { resultadosDivipola.innerHTML = ''; return; }
-    temporizador = setTimeout(async () => {
-        const resp = await fetch(`/catalogos/divipola/buscar?q=${encodeURIComponent(texto)}`);
-        const datos = await resp.json();
-        resultadosDivipola.innerHTML = datos.map(d =>
-            `<button type="button" class="list-group-item list-group-item-action" data-codigo="${d.codigo}" data-municipio="${d.municipio}" data-departamento="${d.departamento}">${d.texto}</button>`
-        ).join('');
-    }, 300);
-});
+    selectDepto.addEventListener('change', async () => {
+        const opcion = selectDepto.selectedOptions[0];
+        document.getElementById('campo-departamento-oculto').value = opcion && opcion.dataset.nombre ? opcion.dataset.nombre : '';
+        await cargarMunicipiosPaciente(selectDepto.value);
+    });
+}
 
-resultadosDivipola.addEventListener('click', (e) => {
-    if (e.target.matches('[data-codigo]')) {
-        codigoDivipola.value = e.target.dataset.codigo;
-        buscadorDivipola.value = e.target.textContent;
-        document.getElementById('campo-municipio-texto').value = e.target.dataset.municipio;
-        document.getElementById('campo-departamento-texto').value = e.target.dataset.departamento;
-        resultadosDivipola.innerHTML = '';
+async function cargarMunicipiosPaciente(codigoDepartamento) {
+    const selectMunicipio = document.getElementById('select-municipio');
+    const codigoOculto = document.getElementById('codigo_municipio_divipola');
+    if (!codigoDepartamento) {
+        selectMunicipio.innerHTML = '<option value="">-- Primero elija el departamento --</option>';
+        return;
     }
-});
+    const resp = await fetch(`/catalogos/divipola/municipios/${codigoDepartamento}`);
+    const municipios = await resp.json();
+    selectMunicipio.innerHTML = '<option value="">-- Seleccione --</option>' +
+        municipios.map(m => `<option value="${m.nombre}" data-codigo="${m.codigo}">${m.nombre}</option>`).join('');
+
+    selectMunicipio.addEventListener('change', () => {
+        const opcion = selectMunicipio.selectedOptions[0];
+        codigoOculto.value = opcion && opcion.dataset.codigo ? opcion.dataset.codigo : '';
+    });
+}
+
+cargarDepartamentosPaciente();
 
 document.getElementById('btn-ubicacion-actual').addEventListener('click', () => {
     if (!navigator.geolocation) {

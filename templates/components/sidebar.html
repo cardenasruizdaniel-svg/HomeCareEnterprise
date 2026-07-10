@@ -112,6 +112,15 @@
         </li>
         {% endif %}
 
+        {% if usuario and tiene_permiso(usuario.rol, "pacientes") %}
+        <li>
+            <a href="/informes">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Informes</span>
+            </a>
+        </li>
+        {% endif %}
+
         {% if usuario and tiene_permiso(usuario.rol, "nomina") %}
         <li class="menu-title">Nómina</li>
         <li>

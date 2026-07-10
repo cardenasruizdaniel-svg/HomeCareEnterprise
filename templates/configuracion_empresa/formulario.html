@@ -83,6 +83,46 @@
             </div>
         </div>
     </div>
+
+    {% if es_administrador_maestro %}
+    <div class="row mt-4">
+        <div class="col-md-8">
+            <div class="card shadow border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fa-solid fa-triangle-exclamation"></i> Reiniciar Base de Datos en Blanco</h5>
+                </div>
+                <div class="card-body">
+                    {% if request.query_params.get('error_reinicio') %}
+                    <div class="alert alert-danger">{{ request.query_params.get('error_reinicio') }}</div>
+                    {% endif %}
+                    {% if request.query_params.get('reiniciado') %}
+                    <div class="alert alert-success">
+                        Base de datos reiniciada correctamente. Se conservaron todas las cuentas de acceso.
+                    </div>
+                    {% endif %}
+                    <p class="text-muted">
+                        Solo visible para el Administrador maestro. Úsela <strong>únicamente</strong> cuando el
+                        programa vaya a arrancar en producción real, para borrar todos los pacientes, profesionales,
+                        visitas e historias clínicas de prueba — <strong>conservando todos los usuarios</strong>
+                        (nadie pierde su cuenta de acceso) y volviendo a sembrar los catálogos de referencia
+                        (EPS, bancos, DIVIPOLA, CIE-10, etc.) para que el sistema quede listo para usarse de inmediato.
+                    </p>
+                    <p class="text-danger"><strong>Esta acción no se puede deshacer.</strong></p>
+
+                    <form method="post" action="/configuracion-empresa/reiniciar-base-datos" id="form-reiniciar-bd">
+                        <div class="mb-3">
+                            <label>Para confirmar, escriba <strong>REINICIAR</strong> en mayúsculas:</label>
+                            <input type="text" name="confirmacion" class="form-control" required>
+                        </div>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Reiniciar base de datos ahora
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <script>
@@ -95,5 +135,14 @@ document.getElementById("campo-logo-archivo").addEventListener("change", (e) => 
     };
     lector.readAsDataURL(archivo);
 });
+
+const formReiniciar = document.getElementById("form-reiniciar-bd");
+if (formReiniciar) {
+    formReiniciar.addEventListener("submit", (evento) => {
+        if (!confirm("¿Está TOTALMENTE seguro? Esto borra todos los pacientes, profesionales, visitas e historias clínicas. No se puede deshacer.")) {
+            evento.preventDefault();
+        }
+    });
+}
 </script>
 {% endblock %}
