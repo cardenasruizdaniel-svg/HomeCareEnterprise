@@ -537,6 +537,20 @@ class MigrationManager:
     # transacción sin modificar la operación clínica diaria.
     # =====================================================
 
+    def migrar_facturacion_servicios(self):
+        cambios = []
+        if self.existe_tabla("facturas_electronicas"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "facturas_electronicas",
+                    {
+                        "servicio_paciente_id": "servicio_paciente_id INTEGER",
+                        "concepto": "concepto TEXT",
+                    },
+                )
+            )
+        return cambios
+
     def migrar_calidad(self):
         cambios = []
         if not self.existe_tabla("calidad_pqr"):
@@ -1158,6 +1172,10 @@ class MigrationManager:
                         "arl": "arl TEXT",
 
                         "fondo_pension": "fondo_pension TEXT",
+
+                        "tipo_vinculacion": "tipo_vinculacion TEXT DEFAULT 'Prestación de Servicios'",
+
+                        "nivel_riesgo_arl": "nivel_riesgo_arl TEXT DEFAULT 'I'",
                     },
                 )
             )
@@ -1451,6 +1469,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_laboratorio_items()
+        )
+
+        cambios.extend(
+            self.migrar_facturacion_servicios()
         )
 
         cambios.extend(

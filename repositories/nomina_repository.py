@@ -32,6 +32,8 @@ class NominaRepository:
                 pf.valor_hora,
                 pf.salario_fijo,
                 pf.especialidad_principal,
+                pf.tipo_vinculacion,
+                pf.nivel_riesgo_arl,
                 COUNT(pr.id) AS numero_visitas,
                 SUM(COALESCE(pr.horas_trabajadas, 0)) AS horas_trabajadas
             FROM programaciones pr

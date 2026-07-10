@@ -52,10 +52,23 @@
                 Resultado: {{ previsualizacion.periodo_inicio }} a {{ previsualizacion.periodo_fin }}
             </h5>
             <span class="badge bg-light text-dark">
-                Total a pagar: $ {{ "{:,.0f}".format(previsualizacion.total_pagar) }}
+                Total a pagar (neto): $ {{ "{:,.0f}".format(previsualizacion.total_pagar) }}
             </span>
         </div>
         <div class="card-body">
+
+            <div class="alert alert-info">
+                <strong>Informe legal antes de generar la nómina y subirla a la DIAN:</strong>
+                este es el desglose completo del periodo — lo que se paga a cada persona, más las
+                prestaciones sociales y aportes patronales que le corresponden a la empresa según el
+                tipo de vinculación de cada profesional (solo aplica a quienes tienen contrato
+                <strong>Laboral</strong>; a los de Prestación de Servicios no les aplica por ley).
+                <div class="row mt-2">
+                    <div class="col-md-4"><strong>Total prestaciones sociales:</strong> $ {{ "{:,.0f}".format(previsualizacion.total_prestaciones_periodo) }}</div>
+                    <div class="col-md-4"><strong>Total aportes patronales:</strong> $ {{ "{:,.0f}".format(previsualizacion.total_aportes_periodo) }}</div>
+                    <div class="col-md-4"><strong>Costo total para la empresa:</strong> $ {{ "{:,.0f}".format(previsualizacion.costo_total_empresa_periodo) }}</div>
+                </div>
+            </div>
 
             {% if previsualizacion.detalle %}
             <div class="table-responsive">
@@ -64,11 +77,13 @@
                         <tr>
                             <th>Profesional</th>
                             <th>Rol</th>
+                            <th>Vinculación</th>
                             <th>Contrato</th>
                             <th class="text-center">Visitas</th>
                             <th class="text-center">Horas a liquidar</th>
                             <th class="text-end">Valor/hora</th>
                             <th class="text-end">Valor a pagar</th>
+                            <th class="text-end">Prestaciones + aportes</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -76,6 +91,11 @@
                         <tr>
                             <td>{{ d.nombre_completo }}<br><small class="text-muted">{{ d.documento }}</small></td>
                             <td>{{ d.especialidad_principal }}</td>
+                            <td>
+                                <span class="badge {% if d.tipo_vinculacion == 'Laboral' %}bg-primary{% else %}bg-light text-dark{% endif %}">
+                                    {{ d.tipo_vinculacion }}
+                                </span>
+                            </td>
                             <td>
                                 <span class="badge {% if d.tipo_contrato == 'FIJO' %}bg-info text-dark{% else %}bg-secondary{% endif %}">
                                     {{ d.tipo_contrato }}
@@ -97,6 +117,19 @@
                                 {% if d.tipo_contrato == 'FIJO' %}—{% else %}$ {{ "{:,.0f}".format(d.valor_hora) }}{% endif %}
                             </td>
                             <td class="text-end"><strong>$ {{ "{:,.0f}".format(d.valor_a_pagar) }}</strong></td>
+                            <td class="text-end">
+                                {% if d.prestaciones %}
+                                <span class="text-primary">$ {{ "{:,.0f}".format(d.prestaciones.total_prestaciones + d.prestaciones.total_aportes_patronales) }}</span>
+                                <br><small class="text-muted">
+                                    Cesantías: $ {{ "{:,.0f}".format(d.prestaciones.cesantias) }} ·
+                                    Prima: $ {{ "{:,.0f}".format(d.prestaciones.prima_servicios) }} ·
+                                    Vac: $ {{ "{:,.0f}".format(d.prestaciones.vacaciones) }} ·
+                                    Aportes: $ {{ "{:,.0f}".format(d.prestaciones.total_aportes_patronales) }}
+                                </small>
+                                {% else %}
+                                <span class="text-muted">No aplica</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>

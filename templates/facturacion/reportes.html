@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block titulo %}Reportes de Facturación{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-chart-column text-primary"></i> Reportes de Facturación</h2>
+    <a href="/facturacion" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver al listado</a>
+
+    <form method="get" class="row align-items-end mb-4">
+        <div class="col-md-3"><label>Desde</label><input type="date" name="fecha_desde" value="{{ fecha_desde }}" class="form-control"></div>
+        <div class="col-md-3"><label>Hasta</label><input type="date" name="fecha_hasta" value="{{ fecha_hasta }}" class="form-control"></div>
+        <div class="col-md-3"><button class="btn btn-primary">Filtrar</button></div>
+    </form>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-success"><div class="card-body text-center">
+                <h3 class="text-success mb-0">$ {{ "{:,.0f}".format(resumen.total_facturado) }}</h3>
+                <small class="text-muted">Total facturado</small>
+            </div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-primary"><div class="card-body text-center">
+                <h3 class="text-primary mb-0">{{ resumen.total_facturas }}</h3><small class="text-muted">Facturas emitidas</small>
+            </div></div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-info"><div class="card-body text-center">
+                <h3 class="text-info mb-0">{{ resumen.total_pacientes }}</h3><small class="text-muted">Pacientes facturados</small>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-white"><h5 class="mb-0">Facturado por Paciente</h5></div>
+                <div class="card-body">
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light"><tr><th>Paciente</th><th>EPS</th><th class="text-center">Facturas</th><th class="text-end">Total</th></tr></thead>
+                        <tbody>
+                            {% for p in por_paciente %}
+                            <tr>
+                                <td>{{ p.primer_nombre }} {{ p.primer_apellido }}</td>
+                                <td>{{ p.eps or "—" }}</td>
+                                <td class="text-center">{{ p.total_facturas }}</td>
+                                <td class="text-end">$ {{ "{:,.0f}".format(p.valor_total) }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted py-4">Sin facturas en este periodo.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-white"><h5 class="mb-0">Facturado por EPS</h5></div>
+                <div class="card-body">
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light"><tr><th>EPS</th><th class="text-center">Facturas</th><th class="text-end">Total</th></tr></thead>
+                        <tbody>
+                            {% for e in por_eps %}
+                            <tr>
+                                <td>{{ e.eps }}</td>
+                                <td class="text-center">{{ e.total_facturas }}</td>
+                                <td class="text-end">$ {{ "{:,.0f}".format(e.valor_total) }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="text-center text-muted py-4">Sin facturas en este periodo.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {% if por_fecha %}
+            <div class="card shadow">
+                <div class="card-header bg-white"><h5 class="mb-0">Facturado por Fecha</h5></div>
+                <div class="card-body">
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light"><tr><th>Fecha</th><th class="text-center">Facturas</th><th class="text-end">Total</th></tr></thead>
+                        <tbody>
+                            {% for f in por_fecha %}
+                            <tr><td>{{ f.fecha }}</td><td class="text-center">{{ f.total_facturas }}</td><td class="text-end">$ {{ "{:,.0f}".format(f.valor_total) }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

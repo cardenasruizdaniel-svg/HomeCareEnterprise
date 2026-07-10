@@ -1278,6 +1278,10 @@ CREATE TABLE IF NOT EXISTS facturas_electronicas(
 
     copago_id INTEGER,
 
+    servicio_paciente_id INTEGER,
+
+    concepto TEXT,
+
     paciente_id INTEGER NOT NULL,
 
     fecha_emision TEXT DEFAULT CURRENT_TIMESTAMP,

@@ -142,6 +142,9 @@
                                     <a href="/planilla-visitas/{{ s.id }}" class="btn btn-outline-primary btn-sm">
                                         <i class="fa-solid fa-file-signature"></i> Ver planilla
                                     </a>
+                                    <a href="/facturacion/facturar-servicio/{{ s.id }}" class="btn btn-outline-success btn-sm">
+                                        <i class="fa-solid fa-file-invoice-dollar"></i> Facturar
+                                    </a>
                                     {% if s.estado == 'Activo' %}
                                     <a href="/servicios-paciente/cancelar/{{ s.id }}/{{ paciente_id }}" class="btn btn-outline-danger btn-sm"
                                        onclick="return confirm('¿Cancelar este servicio?');">Cancelar</a>

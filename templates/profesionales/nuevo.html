@@ -109,6 +109,24 @@
                 <h5 class="text-muted mb-3">Contratación (para nómina)</h5>
                 <div class="row">
                     <div class="col-md-4 mb-3">
+                        <label>Vinculación</label>
+                        <select name="tipo_vinculacion" class="form-select">
+                            <option value="Prestación de Servicios">Prestación de Servicios (contratista independiente)</option>
+                            <option value="Laboral">Laboral (contrato de trabajo, con prestaciones sociales)</option>
+                        </select>
+                        <small class="text-muted">De esto depende si aplican cesantías, prima, vacaciones y aportes patronales.</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Nivel de riesgo ARL</label>
+                        <select name="nivel_riesgo_arl" class="form-select">
+                            <option value="I">I - Riesgo mínimo</option>
+                            <option value="II">II - Riesgo bajo</option>
+                            <option value="III">III - Riesgo medio</option>
+                            <option value="IV" selected>IV - Riesgo alto (atención domiciliaria)</option>
+                            <option value="V">V - Riesgo máximo</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
                         <label>Tipo de contrato</label>
                         <select name="tipo_contrato" class="form-select" id="tipo_contrato">
                             <option value="POR_HORAS">Por horas</option>

@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block titulo %}Facturar Servicio{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-file-invoice-dollar text-primary"></i> Facturar Servicio</h2>
+    <p class="text-muted">{{ servicio.tipo_servicio }}{% if servicio.subtipo %} - {{ servicio.subtipo }}{% endif %} — {{ paciente.primer_nombre }} {{ paciente.primer_apellido }}</p>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body">
+                    <form method="post" action="/facturacion/facturar-servicio/{{ servicio.id }}">
+                        <div class="mb-3">
+                            <label>Valor a facturar</label>
+                            <input type="number" step="0.01" name="valor_servicio" class="form-control" placeholder="Ej: 150000" required>
+                            <small class="text-muted">Los servicios de salud están excluidos de IVA.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label>Medio de pago</label>
+                            <select name="medio_pago" class="form-select">
+                                <option>Transferencia</option>
+                                <option>Efectivo</option>
+                                <option>Tarjeta</option>
+                                <option>EPS / Convenio</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-success w-100"><i class="fa-solid fa-file-invoice"></i> Generar factura electrónica</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
