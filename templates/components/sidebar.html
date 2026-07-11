@@ -200,3 +200,29 @@
     </ul>
 
 </div>
+
+<script>
+// Resalta en el menú la opción de la pantalla en la que se
+// esta -- comparando la URL actual contra cada enlace, y
+// usando el mas largo que coincida (para que "/pacientes"
+// no se marque activo estando en "/pacientes-pendientes").
+(function () {
+    const rutaActual = window.location.pathname;
+    const enlaces = document.querySelectorAll(".sidebar .menu a[href]");
+    let mejorEnlace = null;
+    let mejorLongitud = 0;
+
+    enlaces.forEach((enlace) => {
+        const href = enlace.getAttribute("href");
+        if (href && href !== "/" && rutaActual.startsWith(href) && href.length > mejorLongitud) {
+            mejorEnlace = enlace;
+            mejorLongitud = href.length;
+        } else if (href === "/" && rutaActual === "/") {
+            mejorEnlace = enlace;
+            mejorLongitud = 1;
+        }
+    });
+
+    if (mejorEnlace) mejorEnlace.classList.add("active");
+})();
+</script>

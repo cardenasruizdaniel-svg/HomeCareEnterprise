@@ -741,3 +741,237 @@ body.sidebar-oculta .contenido-principal{
 #btn-alternar-sidebar:hover{
     color: #0f172a;
 }
+
+/* ===========================================================
+   REDISEÑO VISUAL — capa de pulido final
+   Se agrega al final a propósito para que tenga prioridad
+   sobre las reglas anteriores (la cascada de CSS favorece lo
+   último declarado). Objetivo: que la app se sienta menos
+   plana, con más profundidad, un acento propio (verde-azulado
+   "HomeCare"), y transiciones suaves — sin perder la
+   seriedad de un software clínico.
+   =========================================================== */
+
+:root{
+    --hc-navy-950:#0a0f1d;
+    --hc-navy-900:#0f172a;
+    --hc-navy-800:#17233f;
+    --hc-teal:#0fb9ae;
+    --hc-teal-dark:#0a8f86;
+    --hc-teal-soft:#e5fbf9;
+    --hc-blue:#2f6fed;
+    --hc-bg:#f2f5fa;
+    --hc-surface:#ffffff;
+    --hc-ink:#16213e;
+    --hc-muted:#64748b;
+    --hc-border:#e7ebf3;
+    --hc-radius-lg:18px;
+    --hc-radius-md:12px;
+    --hc-shadow-soft:0 1px 2px rgba(15,23,42,.04), 0 8px 24px rgba(15,23,42,.06);
+    --hc-shadow-lift:0 2px 6px rgba(15,23,42,.06), 0 16px 32px rgba(15,23,42,.10);
+}
+
+/* ---------- Fondo y tipografía general ---------- */
+body{
+    background:
+        radial-gradient(1200px 600px at 100% -10%, rgba(15,185,174,.05), transparent 60%),
+        var(--hc-bg);
+    color:var(--hc-ink);
+    -webkit-font-smoothing:antialiased;
+}
+
+h1,h2,h3,h4,h5,h6{
+    color:var(--hc-ink);
+    letter-spacing:-.01em;
+}
+
+/* Barra de scroll con un poco más de personalidad, sin ser ruidosa */
+::-webkit-scrollbar{ width:10px; height:10px; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:20px; border:2px solid var(--hc-bg); }
+::-webkit-scrollbar-thumb:hover{ background:var(--hc-teal); }
+
+/* ---------- Barra lateral: de plana a estratificada ---------- */
+.sidebar{
+    background:
+        radial-gradient(600px 300px at 0% 0%, rgba(15,185,174,.14), transparent 55%),
+        linear-gradient(165deg, var(--hc-navy-950) 0%, var(--hc-navy-900) 55%, var(--hc-navy-800) 100%);
+    box-shadow:4px 0 24px rgba(2,6,23,.28);
+    border-right:1px solid rgba(255,255,255,.04);
+}
+
+.sidebar .sidebar-header{
+    border-bottom:1px solid rgba(255,255,255,.08);
+    margin-bottom:6px;
+}
+
+.sidebar .menu-title{
+    color:rgba(148,163,184,.75) !important;
+    font-size:11px !important;
+    letter-spacing:.09em;
+    text-transform:uppercase;
+    font-weight:700;
+    padding:18px 16px 6px !important;
+}
+
+.sidebar .menu a,
+.sidebar ul li a{
+    position:relative;
+    border-radius:10px;
+    color:#cbd5e1;
+    transition:background .2s ease, color .2s ease, transform .15s ease, padding-left .15s ease;
+}
+
+.sidebar .menu a::before,
+.sidebar ul li a::before{
+    content:"";
+    position:absolute;
+    left:-16px;
+    top:8px;
+    bottom:8px;
+    width:3px;
+    border-radius:0 4px 4px 0;
+    background:var(--hc-teal);
+    opacity:0;
+    transition:opacity .2s ease, left .2s ease;
+}
+
+.sidebar .menu a:hover,
+.sidebar ul li a:hover{
+    background:rgba(15,185,174,.12) !important;
+    color:#ffffff !important;
+    transform:translateX(3px);
+}
+
+.sidebar .menu a:hover::before,
+.sidebar ul li a:hover::before{
+    opacity:1;
+    left:-14px;
+}
+
+.sidebar .menu a.active,
+.sidebar ul li a.active{
+    background:rgba(15,185,174,.16) !important;
+    color:#ffffff !important;
+}
+
+.sidebar .menu a.active::before,
+.sidebar ul li a.active::before{
+    opacity:1;
+    left:-14px;
+}
+
+.sidebar i{
+    color:#7ee8e0;
+}
+.sidebar .menu a:hover i,
+.sidebar ul li a:hover i{
+    color:#ffffff;
+}
+
+/* ---------- Barra superior: vidrio esmerilado sutil ---------- */
+.topbar{
+    background:rgba(255,255,255,.86);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--hc-border);
+    box-shadow:0 1px 0 rgba(15,23,42,.02), 0 10px 24px -18px rgba(15,23,42,.35);
+}
+
+/* ---------- Tarjetas: más profundidad, esquinas más suaves ---------- */
+.card{
+    border:1px solid var(--hc-border);
+    border-radius:var(--hc-radius-lg);
+    box-shadow:var(--hc-shadow-soft);
+    transition:box-shadow .25s ease, transform .25s ease, border-color .25s ease;
+}
+
+.card.shadow,
+.card.shadow-sm{
+    box-shadow:var(--hc-shadow-soft) !important;
+}
+
+.card:hover{
+    box-shadow:var(--hc-shadow-lift);
+    border-color:rgba(15,185,174,.25);
+}
+
+.card-header{
+    border-radius:var(--hc-radius-lg) var(--hc-radius-lg) 0 0 !important;
+    border-bottom:1px solid var(--hc-border);
+    font-weight:600;
+}
+
+/* Tarjetas de estadística/dashboard con acento superior sutil */
+.card.text-center > .card-body::before,
+.card.shadow-sm.text-center::before{
+    content:"";
+}
+
+/* ---------- Botones: un poco de peso y una transición cuidada ---------- */
+.btn{
+    border-radius:10px;
+    font-weight:500;
+    transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+.btn:active{
+    transform:translateY(1px);
+}
+.btn-primary{
+    background:linear-gradient(180deg, var(--hc-blue), #2657c7);
+    border-color:#2657c7;
+    box-shadow:0 6px 16px -8px rgba(47,111,237,.55);
+}
+.btn-primary:hover{
+    filter:brightness(1.06);
+    box-shadow:0 8px 20px -8px rgba(47,111,237,.65);
+}
+.btn-success{
+    background:linear-gradient(180deg, var(--hc-teal), var(--hc-teal-dark));
+    border-color:var(--hc-teal-dark);
+    box-shadow:0 6px 16px -8px rgba(15,185,174,.5);
+}
+.btn-success:hover{
+    filter:brightness(1.06);
+}
+
+/* ---------- Tablas: encabezado con más carácter ---------- */
+.table thead.table-light th,
+.table > thead > tr > th{
+    background:#f8fafc;
+    color:var(--hc-muted);
+    font-size:12px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    font-weight:700;
+    border-bottom:2px solid var(--hc-border);
+}
+.table-hover > tbody > tr:hover > *{
+    background-color:var(--hc-teal-soft);
+}
+
+/* ---------- Badges: esquinas mas suaves ---------- */
+.badge{
+    border-radius:6px;
+    font-weight:600;
+    letter-spacing:.02em;
+}
+
+/* ---------- Foco visible para accesibilidad (se respeta) ---------- */
+a:focus-visible,
+button:focus-visible,
+.form-control:focus,
+.form-select:focus{
+    outline:2px solid var(--hc-teal);
+    outline-offset:1px;
+    box-shadow:0 0 0 4px rgba(15,185,174,.15) !important;
+    border-color:var(--hc-teal) !important;
+}
+
+/* ---------- Movimiento respetuoso ---------- */
+@media (prefers-reduced-motion: reduce){
+    *{
+        animation-duration:0.001ms !important;
+        transition-duration:0.001ms !important;
+    }
+}
