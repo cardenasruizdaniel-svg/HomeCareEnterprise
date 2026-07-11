@@ -100,3 +100,21 @@ def liquidacion_prestacional(salario_mensual: float, nivel_riesgo_arl: str = "I"
         "aportes_empleador": aportes_empleador,
         "costo_total_empleador": costo_total_empleador,
     }
+
+
+def firmar_contrato(contrato_id: int, firma_base64: str):
+    """
+    Registra la firma del profesional en su contrato -- ya sea
+    capturada directamente en el sistema, o recibida a través
+    del enlace de firma remota por QR (para que el profesional
+    firme desde su propio celular sin necesitar ir a la oficina).
+    """
+    from database.database import ejecutar
+
+    if not firma_base64:
+        raise ValueError("Debe capturar la firma antes de enviarla.")
+
+    ejecutar(
+        "UPDATE contratos SET firma_base64=?, firmado=1, fecha_firma=CURRENT_TIMESTAMP WHERE id=?",
+        (firma_base64, contrato_id),
+    )

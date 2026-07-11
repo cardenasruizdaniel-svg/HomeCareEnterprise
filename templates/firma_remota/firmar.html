@@ -26,7 +26,7 @@ canvas { touch-action:none; }
     </div>
 
     {% else %}
-    <h4 class="text-center mb-3">✍️ Firmar documento</h4>
+    <h4 class="text-center mb-3">✍️ {% if solicitud.tipo == 'contrato' %}Firmar contrato{% else %}Firmar documento{% endif %}</h4>
     <p class="text-muted text-center small">Complete sus datos y firme con el dedo en el recuadro de abajo.</p>
 
     <div id="alerta-firma-remota"></div>
@@ -34,8 +34,12 @@ canvas { touch-action:none; }
     <div class="mb-2">
         <label>¿Quién firma?</label>
         <select id="campo-firmante" class="form-select">
+            {% if solicitud.tipo == 'contrato' %}
+            <option value="Profesional">El profesional</option>
+            {% else %}
             <option value="Paciente">El paciente</option>
             <option value="Acudiente/Responsable">Acudiente / Responsable</option>
+            {% endif %}
         </select>
     </div>
     <div class="row mb-2">

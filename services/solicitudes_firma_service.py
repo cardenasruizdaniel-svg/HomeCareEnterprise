@@ -14,7 +14,7 @@ import uuid
 
 from database.database import consultar_uno, ejecutar
 
-TIPOS_VALIDOS = ("planilla_visita", "consentimiento")
+TIPOS_VALIDOS = ("planilla_visita", "consentimiento", "contrato")
 
 
 def crear_solicitud(tipo: str, referencia_id: int) -> str:
@@ -75,5 +75,8 @@ def completar_firma(token: str, firma_base64: str, firmante: str = "",
             solicitud["referencia_id"], firmante or "Paciente", nombre_firmante,
             documento_firmante, parentesco_firmante, firma_base64,
         )
+    elif solicitud["tipo"] == "contrato":
+        from services.contratos_service import firmar_contrato
+        firmar_contrato(solicitud["referencia_id"], firma_base64)
 
     return {"ok": True}

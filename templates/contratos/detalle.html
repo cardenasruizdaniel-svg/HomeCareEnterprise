@@ -50,8 +50,24 @@
             </div>
             {% endif %}
 
-            <a href="/contratos" class="btn btn-secondary">Volver</a>
+            <hr>
+            <h5><i class="fa-solid fa-signature"></i> Firma del profesional</h5>
+            {% if contrato.firmado %}
+            <div class="alert alert-success">
+                Contrato firmado el {{ contrato.fecha_firma }}.
+                {% if contrato.firma_base64 %}<br><img src="{{ contrato.firma_base64 }}" style="max-height:80px; background:white; border:1px solid #dee2e6;">{% endif %}
+            </div>
+            {% else %}
+            <div class="alert alert-warning">Este contrato todavía no ha sido firmado por el profesional.</div>
+            <button type="button" class="btn btn-dark" onclick="abrirFirmaQR('contrato', {{ contrato.id }}, () => location.reload())">
+                <i class="fa-solid fa-qrcode"></i> Generar código QR para firmar desde el celular
+            </button>
+            {% endif %}
+
+            <a href="/contratos" class="btn btn-secondary mt-3">Volver</a>
         </div>
     </div>
 </div>
+
+{% include "components/modal_firma_qr.html" %}
 {% endblock %}

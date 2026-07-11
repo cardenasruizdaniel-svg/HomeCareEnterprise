@@ -1919,6 +1919,42 @@ async function renderVerReporte(visita) {
   }
 }
 
+// Dibuja, sobre la foto tomada, la latitud/longitud y la
+// fecha/hora exacta en que se tomó -- para que la ubicación
+// quede como prueba VISIBLE directamente en la imagen, y no
+// solo como un dato aparte en la base de datos.
+function agregarMarcaDeAguaUbicacion(fotoBase64, lat, lon) {
+  return new Promise((resolve) => {
+    const imagen = new Image();
+    imagen.onload = () => {
+      const lienzo = document.createElement("canvas");
+      lienzo.width = imagen.width;
+      lienzo.height = imagen.height;
+      const contexto = lienzo.getContext("2d");
+      contexto.drawImage(imagen, 0, 0);
+
+      const texto1 = `📍 Lat: ${lat.toFixed(6)}, Lon: ${lon.toFixed(6)}`;
+      const texto2 = new Date().toLocaleString("es-CO");
+      const tamanoFuente = Math.max(14, Math.round(imagen.width / 40));
+      const alturaFranja = tamanoFuente * 2 + 24;
+
+      contexto.fillStyle = "rgba(0, 0, 0, 0.55)";
+      contexto.fillRect(0, imagen.height - alturaFranja, imagen.width, alturaFranja);
+
+      contexto.fillStyle = "#ffffff";
+      contexto.font = `bold ${tamanoFuente}px Arial`;
+      contexto.textBaseline = "top";
+      contexto.fillText(texto1, 12, imagen.height - alturaFranja + 8);
+      contexto.font = `${tamanoFuente - 2}px Arial`;
+      contexto.fillText(texto2, 12, imagen.height - alturaFranja + tamanoFuente + 14);
+
+      resolve(lienzo.toDataURL("image/jpeg", 0.85));
+    };
+    imagen.onerror = () => resolve(fotoBase64); // si algo falla, se manda la foto original sin marca
+    imagen.src = fotoBase64;
+  });
+}
+
 function calcularDistanciaMetros(lat1, lon1, lat2, lon2) {
   if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return null;
   const R = 6371000; // radio de la Tierra en metros
@@ -1996,9 +2032,12 @@ function renderCapturaFotoIngreso(visita, accion) {
       }
     }
 
+    document.getElementById("foto-ingreso-estado").textContent = "Marcando la ubicación sobre la foto...";
+    const fotoConMarcaDeAgua = await agregarMarcaDeAguaUbicacion(fotoCapturada, ubicacion.lat, ubicacion.lon);
+
     await encolarAccion(accion, {
       visita_id: visita.id, lat: ubicacion.lat, lon: ubicacion.lon,
-      foto_base64: fotoCapturada, marca_tiempo_offline: new Date().toISOString(),
+      foto_base64: fotoConMarcaDeAgua, marca_tiempo_offline: new Date().toISOString(),
     });
 
     if (accion === "ingreso") {

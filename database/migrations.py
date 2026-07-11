@@ -576,6 +576,21 @@ class MigrationManager:
             )
         return cambios
 
+    def migrar_firma_contratos(self):
+        cambios = []
+        if self.existe_tabla("contratos"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "contratos",
+                    {
+                        "firma_base64": "firma_base64 TEXT",
+                        "firmado": "firmado INTEGER DEFAULT 0",
+                        "fecha_firma": "fecha_firma TEXT",
+                    },
+                )
+            )
+        return cambios
+
     def migrar_examen_fisico_recomendaciones(self):
         cambios = []
         if not self.existe_tabla("examen_fisico"):
@@ -1557,6 +1572,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_facturacion_servicios()
+        )
+
+        cambios.extend(
+            self.migrar_firma_contratos()
         )
 
         cambios.extend(

@@ -1044,6 +1044,12 @@ CREATE TABLE IF NOT EXISTS contratos(
 
     estado TEXT DEFAULT 'Activo',
 
+    firma_base64 TEXT,
+
+    firmado INTEGER DEFAULT 0,
+
+    fecha_firma TEXT,
+
     observaciones TEXT,
 
     usuario_creacion INTEGER,
