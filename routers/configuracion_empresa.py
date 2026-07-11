@@ -27,11 +27,17 @@ def _requiere_administrador_maestro(usuario=Depends(usuario_actual)):
 @router.get("", response_class=HTMLResponse)
 @router.get("/", response_class=HTMLResponse)
 async def ver(request: Request, usuario=Depends(requiere_permiso("usuarios"))):
+    diagnostico_facial = None
+    if isinstance(usuario, dict) and usuario.get("rol") == "Administrador":
+        from services.reconocimiento_facial_service import diagnostico_disponibilidad
+        diagnostico_facial = diagnostico_disponibilidad()
+
     return templates.TemplateResponse(
         request=request, name="configuracion_empresa/formulario.html",
         context={
             "usuario": usuario, "config": config_service.obtener(),
             "es_administrador_maestro": isinstance(usuario, dict) and usuario.get("rol") == "Administrador",
+            "diagnostico_facial": diagnostico_facial,
         },
     )
 

@@ -85,6 +85,33 @@
     </div>
 
     {% if es_administrador_maestro %}
+
+    {% if diagnostico_facial %}
+    <div class="row mt-4">
+        <div class="col-md-8">
+            <div class="card shadow {% if diagnostico_facial.disponible %}border-success{% else %}border-danger{% endif %}">
+                <div class="card-header {% if diagnostico_facial.disponible %}bg-success{% else %}bg-danger{% endif %} text-white">
+                    <h5 class="mb-0">
+                        <i class="fa-solid fa-face-viewfinder"></i>
+                        Reconocimiento Facial: {% if diagnostico_facial.disponible %}Activo ✅{% else %}NO está funcionando ⚠️{% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p>{{ diagnostico_facial.motivo }}</p>
+                    {% if not diagnostico_facial.disponible %}
+                    <p class="text-muted small">
+                        Los ingresos/salidas se están registrando SIN verificar el rostro mientras esto no se corrija —
+                        cualquier foto se está aceptando. Para instalarlo, en la carpeta del programa ejecute:
+                    </p>
+                    <pre class="bg-light p-2 rounded">pip install opencv-contrib-python --break-system-packages</pre>
+                    <p class="text-muted small">(en Windows, sin el modificador <code>--break-system-packages</code>: <code>pip install opencv-contrib-python</code>), y reinicie el programa después.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="row mt-4">
         <div class="col-md-8">
             <div class="card shadow border-danger">

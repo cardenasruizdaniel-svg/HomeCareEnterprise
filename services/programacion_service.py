@@ -519,8 +519,8 @@ def registrar_ingreso(id, latitud=None, longitud=None, foto_base64=None):
                 raise ValueError(
                     "No se puede registrar el ingreso: " + resultado_facial["motivo"]
                 )
-        except ImportError:
-            pass  # OpenCV no disponible en esta instalación -- se omite la verificación, no se bloquea el ingreso
+        except ImportError as error:
+            print(f"[ADVERTENCIA] Verificación facial OMITIDA (falta instalar OpenCV): {error}")  # se ve en la consola del servidor
 
     paciente = consultar_uno(
         "SELECT latitud, longitud, radio_geocerca_metros FROM pacientes WHERE id=?",
@@ -567,8 +567,8 @@ def registrar_salida(id, latitud=None, longitud=None, foto_base64=None):
                 raise ValueError(
                     "No se puede registrar la salida: " + resultado_facial["motivo"]
                 )
-        except ImportError:
-            pass  # OpenCV no disponible en esta instalación -- se omite la verificación, no se bloquea la salida
+        except ImportError as error:
+            print(f"[ADVERTENCIA] Verificación facial OMITIDA (falta instalar OpenCV): {error}")  # se ve en la consola del servidor
 
     ahora_dt = datetime.now()
     ahora = ahora_dt.strftime("%Y-%m-%d %H:%M:%S")

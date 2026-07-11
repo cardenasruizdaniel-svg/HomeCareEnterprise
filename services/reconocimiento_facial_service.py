@@ -82,6 +82,40 @@ def _extraer_rostro(imagen_base64: str, tamano=(200, 200)):
     return rostro_redimensionado
 
 
+def diagnostico_disponibilidad() -> dict:
+    """
+    Revisa si OpenCV (con el módulo de reconocimiento facial)
+    está realmente instalado y funcionando en este servidor.
+    Úsela para confirmar por qué la verificación facial no
+    está bloqueando nada -- si esto devuelve "disponible: False",
+    la causa es que falta instalar la librería, no un error de
+    programación.
+    """
+    try:
+        import cv2
+        if not hasattr(cv2, "face"):
+            return {
+                "disponible": False,
+                "motivo": "Está instalado 'opencv-python' pero NO 'opencv-contrib-python' "
+                          "(el módulo cv2.face con el reconocimiento facial solo viene en la versión 'contrib').",
+            }
+        cv2.face.LBPHFaceRecognizer_create()
+        ruta_cascada = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+        import os
+        if not os.path.exists(ruta_cascada):
+            return {"disponible": False, "motivo": "No se encontró el archivo de detección de rostros de OpenCV."}
+        return {"disponible": True, "motivo": "OpenCV con reconocimiento facial está instalado y funcionando correctamente."}
+    except ImportError as error:
+        return {
+            "disponible": False,
+            "motivo": f"OpenCV no está instalado en este servidor ({error}). "
+                      "Ejecute: pip install opencv-contrib-python --break-system-packages "
+                      "(o sin ese modificador en Windows) y reinicie el programa.",
+        }
+    except Exception as error:
+        return {"disponible": False, "motivo": f"Error inesperado al verificar OpenCV: {error}"}
+
+
 def comparar_rostros(foto_enrolamiento_base64: str, foto_nueva_base64: str) -> dict:
     """
     Compara la foto tomada en el ingreso/salida contra la foto
