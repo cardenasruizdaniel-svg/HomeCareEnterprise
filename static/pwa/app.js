@@ -1486,7 +1486,37 @@ async function renderUltimaNotaMedica(visita) {
 async function renderProgramaAtencion(visita) {
   titulo("Programa de Atención");
   const nombrePaciente = [visita.primer_nombre, visita.primer_apellido].filter(Boolean).join(" ");
-  contenedor().innerHTML = `<p class="text-center">Cargando catálogo...</p>`;
+  contenedor().innerHTML = `<p class="text-center">Cargando...</p>`;
+
+  // Si el paciente YA tiene un programa asignado, no se deja
+  // volver a asignar/editar desde la app -- cualquier cambio
+  // se hace desde la web, para mantener el control de quién
+  // modifica el programa y cuándo.
+  let programaExistente = null;
+  try {
+    programaExistente = await apiGet(`/api/movil/paciente/${visita.paciente_id}/programa-atencion`);
+  } catch (error) {
+    programaExistente = null;
+  }
+
+  if (programaExistente) {
+    contenedor().innerHTML = `
+      <div class="card">
+        <h3>📑 Programa de Atención</h3>
+        <small>${nombrePaciente}</small>
+        <div class="alerta alerta-info" style="margin-top:10px;">
+          Este paciente ya tiene un programa asignado. Para modificarlo, hágalo desde la página web.
+        </div>
+        <p style="margin-top:10px;"><strong>Programa:</strong> ${programaExistente.programa_nombre}</p>
+        ${programaExistente.tipo ? `<p><strong>Tipo:</strong> ${programaExistente.tipo}${programaExistente.subtipo ? " - " + programaExistente.subtipo : ""}</p>` : ""}
+        ${programaExistente.profesional ? `<p><strong>Asignado por:</strong> ${programaExistente.profesional}</p>` : ""}
+        ${programaExistente.fecha_inicio ? `<p><strong>Fecha de inicio:</strong> ${programaExistente.fecha_inicio}</p>` : ""}
+        ${programaExistente.motivo ? `<p><strong>Motivo:</strong> ${programaExistente.motivo}</p>` : ""}
+      </div>
+      <button class="btn btn-secondary btn-block" onclick="irA('detalle_visita', ${visita.id})">← Volver</button>
+    `;
+    return;
+  }
 
   let catalogo = { programas: [], actividades: [] };
   try {
@@ -1688,9 +1718,9 @@ async function renderAlergias(visita) {
     html += `<div class="alerta alerta-info">Sin alergias registradas.</div>`;
   } else {
     datos.alergias.forEach((a) => {
-      html += `<div class="card"><strong>${nombresTipo[a.tipo] || a.tipo}: ${a.alergeno}</strong><br>
+      html += `<div class="card" style="border-left:4px solid #c71c22;"><strong>${nombresTipo[a.tipo] || a.tipo}: ${a.alergeno}</strong><br>
         <small>Severidad: ${a.severidad} · ${a.estado}</small>
-        ${a.reaccion ? `<p style="margin-top:6px;">Reacción: ${a.reaccion}</p>` : ""}</div>`;
+        ${a.reaccion ? `<p style="margin-top:6px; color:#c71c22; font-weight:bold;">⚠️ Le puede producir: ${a.reaccion}</p>` : `<p style="margin-top:6px; color:#888;">No se registró qué le produce.</p>`}</div>`;
     });
   }
 
@@ -1704,7 +1734,7 @@ async function renderAlergias(visita) {
       <div class="form-group"><label>Severidad</label>
         <select id="al-severidad">${datos.severidades.map(s => `<option value="${s}">${s}</option>`).join("")}</select>
       </div>
-      <div class="form-group"><label>Reacción</label><textarea id="al-reaccion" rows="2"></textarea></div>
+      <div class="form-group"><label>¿Qué le puede producir? (reacción)</label><textarea id="al-reaccion" rows="2" placeholder="Ej: Urticaria, dificultad para respirar, hinchazón..."></textarea></div>
       <button class="btn btn-success w-100" id="btn-guardar-alergia">Guardar</button>
     </div>
     <button class="btn btn-secondary btn-block" onclick="irA('detalle_visita', ${visita.id})">← Volver</button>
@@ -1813,11 +1843,45 @@ async function renderRecomendaciones(visita) {
     diagnosticosPaciente = [];
   }
 
-  contenedor().innerHTML = `
-    <div class="card">
-      <h3>📝 Recomendaciones / Plan Médico</h3>
-      <small>${nombrePaciente}</small>
+  let recomendacionesExistentes = [];
+  try {
+    recomendacionesExistentes = await apiGet(`/api/movil/paciente/${visita.paciente_id}/recomendaciones`);
+  } catch (error) {
+    recomendacionesExistentes = [];
+  }
 
+  let htmlExistentes = `<div class="card"><h3>📝 Recomendaciones / Plan Médico</h3><small>${nombrePaciente}</small></div>`;
+
+  if (recomendacionesExistentes.length === 0) {
+    htmlExistentes += `<div class="alerta alerta-info">Este paciente todavía no tiene recomendaciones/plan médico registrado.</div>`;
+  } else {
+    htmlExistentes += `<h5 style="margin-top:10px;">Ya registradas</h5>`;
+    recomendacionesExistentes.forEach((r) => {
+      htmlExistentes += `
+        <div class="card">
+          <strong>${r.diagnostico_ppal_nombre || ""} ${r.diagnostico_ppal_codigo ? "(" + r.diagnostico_ppal_codigo + ")" : ""}</strong><br>
+          <small>${r.profesional || ""} · ${r.tipo_consulta || ""} · ${r.fecha_creacion || ""}</small>
+          ${r.diagnostico_rel1_nombre ? `<p style="margin-top:4px; margin-bottom:0;">Relacionado 1: ${r.diagnostico_rel1_nombre}</p>` : ""}
+          ${r.diagnostico_rel2_nombre ? `<p style="margin-bottom:0;">Relacionado 2: ${r.diagnostico_rel2_nombre}</p>` : ""}
+          ${r.diagnostico_rel3_nombre ? `<p style="margin-bottom:0;">Relacionado 3: ${r.diagnostico_rel3_nombre}</p>` : ""}
+          <div style="margin-top:6px;">
+            ${r.incapacidad ? `<span class="badge" style="background:#dd5600;color:white;">Incapacidad</span>` : ""}
+            ${r.nota_aclaratoria ? `<span class="badge" style="background:#0d6efd;color:white;">Nota aclaratoria</span>` : ""}
+            ${r.orden_medicamentos ? `<span class="badge" style="background:#0fb9ae;color:white;">Orden medicamentos</span>` : ""}
+            ${r.orden_procedimientos ? `<span class="badge" style="background:#6c757d;color:white;">Orden procedimientos</span>` : ""}
+          </div>
+          ${r.recomendaciones_texto ? `<p style="margin-top:6px; margin-bottom:0;">${r.recomendaciones_texto}</p>` : ""}
+        </div>
+      `;
+    });
+  }
+
+  contenedor().innerHTML = htmlExistentes + `<h5 style="margin-top:16px;">Agregar nueva</h5>`;
+
+  const contenedorFormulario = document.createElement("div");
+  contenedor().appendChild(contenedorFormulario);
+  contenedorFormulario.innerHTML = `
+    <div class="card">
       <label style="font-weight:bold; margin-top:10px; display:block;">Diagnóstico principal</label>
       <select id="reco-ppal-select">
         <option value="">-- Seleccione --</option>

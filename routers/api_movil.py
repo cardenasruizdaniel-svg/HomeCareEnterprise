@@ -239,6 +239,20 @@ async def catalogo_programa_atencion(usuario=Depends(requiere_permiso("pacientes
     return movil_service.catalogo_programa_atencion()
 
 
+@router.get("/paciente/{paciente_id}/programa-atencion")
+async def programa_atencion_del_paciente(paciente_id: int, usuario=Depends(requiere_permiso("pacientes"))):
+    """
+    El programa que el paciente tiene actualmente asignado (si
+    ya tiene uno). Se usa para que la app NO deje volver a
+    asignar/editar un programa desde el celular una vez que ya
+    existe uno -- cualquier modificación posterior se hace
+    desde la web, para no perder el control de cambios.
+    """
+    verificar_acceso_paciente_movil(paciente_id, usuario)
+    from services.programas_atencion_service import programa_actual
+    return programa_actual(paciente_id)
+
+
 @router.get("/paciente/{paciente_id}/alergias")
 async def alergias_paciente(paciente_id: int, usuario=Depends(requiere_permiso("programacion"))):
     verificar_acceso_paciente_movil(paciente_id, usuario)
@@ -266,6 +280,14 @@ async def diagnosticos_paciente(paciente_id: int, usuario=Depends(requiere_permi
     from services.diagnosticos_service import DiagnosticosService
     filas = DiagnosticosService.listar_activos_por_paciente(paciente_id)
     return [{"codigo": dict(f)["codigo_cie10"], "nombre": dict(f)["diagnostico"]} for f in filas]
+
+
+@router.get("/paciente/{paciente_id}/recomendaciones")
+async def recomendaciones_paciente(paciente_id: int, usuario=Depends(requiere_permiso("programacion"))):
+    """Recomendaciones/plan médico ya registrados del paciente, para verlos en la app antes de agregar uno nuevo."""
+    verificar_acceso_paciente_movil(paciente_id, usuario)
+    from services.recomendaciones_service import listar_por_paciente
+    return listar_por_paciente(paciente_id)
 
 
 @router.get("/mi-agenda-programable")

@@ -88,14 +88,22 @@ def comparar_rostros(foto_enrolamiento_base64: str, foto_nueva_base64: str) -> d
     de enrolamiento del profesional.
 
     Devuelve:
-    - {"verificado": True}  -> coincide, o no se pudo comparar
-      (sin enrolamiento, o no se detectó rostro en alguna de
-      las dos fotos -- en ese caso NO se bloquea, solo no se
-      pudo confirmar, para no ser demasiado estricto con fotos
-      borrosas o mal encuadradas).
-    - {"verificado": False, "motivo": "..."} -> se detectaron
-      rostros en ambas fotos, pero NO coinciden -- esto SÍ debe
-      bloquear el registro de ingreso/salida.
+    - {"verificado": True}  -> el profesional no tiene foto de
+      enrolamiento registrada (no aplica la verificación para
+      él todavía), o el rostro sí coincide.
+    - {"verificado": False, "motivo": "..."} -> BLOQUEA el
+      registro en cualquiera de estos casos: no se detectó un
+      rostro claro en la foto de enrolamiento (hay que
+      corregirla desde la ficha del profesional), no se
+      detectó un rostro claro en la foto nueva (hay que volver
+      a tomarla, de frente y con buena luz), o sí se detectaron
+      ambos rostros pero NO coinciden.
+
+    IMPORTANTE: si el profesional SÍ tiene foto de enrolamiento
+    registrada, la verificación es OBLIGATORIA -- no se deja
+    pasar una foto que no muestre claramente un rostro, para
+    evitar que alguien registre el ingreso con una foto de
+    cualquier otra cosa.
     """
 
     if not foto_enrolamiento_base64:
@@ -103,11 +111,19 @@ def comparar_rostros(foto_enrolamiento_base64: str, foto_nueva_base64: str) -> d
 
     rostro_enrolado = _extraer_rostro(foto_enrolamiento_base64)
     if rostro_enrolado is None:
-        return {"verificado": True, "motivo": "No se pudo detectar un rostro en la foto de enrolamiento."}
+        return {
+            "verificado": False,
+            "motivo": "La foto de enrolamiento de este profesional no tiene un rostro detectable. "
+                      "Un administrador debe actualizarla desde la ficha del profesional en la web.",
+        }
 
     rostro_nuevo = _extraer_rostro(foto_nueva_base64)
     if rostro_nuevo is None:
-        return {"verificado": True, "motivo": "No se detectó un rostro claro en la foto tomada -- no se pudo comparar."}
+        return {
+            "verificado": False,
+            "motivo": "No se detectó un rostro claro en la foto tomada. Tome la foto de frente, "
+                      "con buena luz, mostrando su rostro completo (sin gafas oscuras ni gorra).",
+        }
 
     reconocedor = cv2.face.LBPHFaceRecognizer_create()
     reconocedor.train([rostro_enrolado], np.array([1]))
