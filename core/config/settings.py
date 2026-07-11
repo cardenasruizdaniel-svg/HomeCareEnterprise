@@ -53,8 +53,43 @@ TIMEZONE = "America/Bogota"
 # Seguridad
 # --------------------------------------------------------
 
+# --------------------------------------------------------
+
+def _obtener_o_generar_secret_key() -> str:
+    """
+    Cada instalación necesita su PROPIA clave secreta (usada
+    para firmar las cookies de sesión), no una clave fija
+    igual en todas las copias del programa -- si fuera fija,
+    cualquiera que tuviera el código fuente podría fabricar una
+    cookie de sesión válida sin necesitar contraseña.
+
+    La primera vez que arranca el programa en un computador,
+    se genera una clave aleatoria y se guarda en un archivo
+    local (fuera del código, para no quedar en ningún control
+    de versiones). Las veces siguientes, se reutiliza esa
+    misma clave para no invalidar las sesiones ya iniciadas.
+    """
+    import secrets
+
+    archivo_clave = BASE_DIR / "instancia_secret_key.txt"
+
+    if archivo_clave.exists():
+        clave = archivo_clave.read_text(encoding="utf-8").strip()
+        if clave:
+            return clave
+
+    clave_nueva = secrets.token_hex(32)
+    try:
+        archivo_clave.write_text(clave_nueva, encoding="utf-8")
+    except OSError:
+        pass  # si no se puede escribir a disco, igual sigue funcionando esta sesión (solo no persiste)
+
+    return clave_nueva
+
+
 SECRET_KEY = (
-    "homecare-enterprise-dev-secret-key"
+    os.environ.get("HOMECARE_SECRET_KEY")
+    or _obtener_o_generar_secret_key()
 )
 
 SESSION_TIMEOUT = 60 * 60 * 8  # 8 horas

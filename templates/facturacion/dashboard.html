@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block titulo %}Dashboard de Facturación{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-chart-pie text-primary"></i> Dashboard de Facturación</h2>
+    <p class="text-muted">Estado general del proceso: cuánto se ha facturado, cuánto se ha cobrado, y qué falta por gestionar.</p>
+
+    <div class="d-flex gap-2 mb-4 flex-wrap">
+        <a href="/facturacion/pendientes-facturar" class="btn btn-warning">
+            <i class="fa-solid fa-clock"></i> Pendientes de facturar
+            {% if total_pendientes_facturar %}<span class="badge bg-dark ms-1">{{ total_pendientes_facturar }}</span>{% endif %}
+        </a>
+        <a href="/facturacion/cartera" class="btn btn-outline-danger"><i class="fa-solid fa-hand-holding-dollar"></i> Cartera / Cuentas por cobrar</a>
+        <a href="/facturacion/listado" class="btn btn-outline-secondary"><i class="fa-solid fa-list"></i> Ver todas las facturas</a>
+        <a href="/facturacion/reportes" class="btn btn-outline-primary"><i class="fa-solid fa-chart-column"></i> Reportes por paciente/EPS/fecha</a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow-sm border-primary"><div class="card-body text-center">
+                <h3 class="text-primary mb-0">$ {{ "{:,.0f}".format(total_facturado) }}</h3>
+                <small class="text-muted">Total facturado ({{ total_facturas }} facturas)</small>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-success"><div class="card-body text-center">
+                <h3 class="text-success mb-0">$ {{ "{:,.0f}".format(total_cobrado) }}</h3>
+                <small class="text-muted">Total cobrado</small>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-warning"><div class="card-body text-center">
+                <h3 class="text-warning mb-0">$ {{ "{:,.0f}".format(cartera_pendiente) }}</h3>
+                <small class="text-muted">Cartera pendiente ({{ numero_pendientes or 0 }})</small>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm border-danger"><div class="card-body text-center">
+                <h3 class="text-danger mb-0">$ {{ "{:,.0f}".format(cartera_vencida) }}</h3>
+                <small class="text-muted">Cartera vencida ({{ numero_vencidas or 0 }})</small>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h6 class="mb-0">Facturado por mes (últimos 6 meses)</h6></div>
+                <div class="card-body">
+                    {% set maximo = (por_mes|map(attribute='total_facturado')|max) if por_mes else 0 %}
+                    {% for m in por_mes %}
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between small">
+                            <span>{{ m.mes }}</span>
+                            <span>$ {{ "{:,.0f}".format(m.total_facturado) }} ({{ m.numero_facturas }} facturas)</span>
+                        </div>
+                        <div style="background:#e9ecef; border-radius:6px; height:14px; overflow:hidden;">
+                            <div style="background:linear-gradient(90deg, var(--hc-teal,#0fb9ae), var(--hc-blue,#2f6fed)); height:100%; width:{{ (m.total_facturado / maximo * 100) if maximo else 0 }}%;"></div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center py-3">Todavía no hay facturas registradas.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h6 class="mb-0">Facturado por EPS</h6></div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <thead class="table-light"><tr><th>EPS</th><th class="text-end">Total</th></tr></thead>
+                        <tbody>
+                            {% for e in top_eps %}
+                            <tr><td>{{ e.eps }}</td><td class="text-end">$ {{ "{:,.0f}".format(e.total_facturado) }}</td></tr>
+                            {% else %}
+                            <tr><td colspan="2" class="text-center text-muted py-3">Sin datos todavía.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if numero_anuladas %}
+    <p class="text-muted small">{{ numero_anuladas }} factura(s) anulada(s) — no se incluyen en los totales de arriba.</p>
+    {% endif %}
+</div>
+{% endblock %}

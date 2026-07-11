@@ -576,6 +576,39 @@ class MigrationManager:
             )
         return cambios
 
+    def migrar_cartera_facturacion(self):
+        cambios = []
+        if self.existe_tabla("facturas_electronicas"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "facturas_electronicas",
+                    {
+                        "entidad_responsable_pago": "entidad_responsable_pago TEXT",
+                        "estado_cartera": "estado_cartera TEXT DEFAULT 'Pendiente de pago'",
+                        "fecha_vencimiento": "fecha_vencimiento TEXT",
+                        "fecha_pago": "fecha_pago TEXT",
+                        "valor_pagado": "valor_pagado REAL DEFAULT 0",
+                        "metodo_pago_recibido": "metodo_pago_recibido TEXT",
+                        "motivo_anulacion": "motivo_anulacion TEXT",
+                    },
+                )
+            )
+        return cambios
+
+    def migrar_bloqueo_login(self):
+        cambios = []
+        if self.existe_tabla("usuarios"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "usuarios",
+                    {
+                        "intentos_fallidos": "intentos_fallidos INTEGER DEFAULT 0",
+                        "bloqueado_hasta": "bloqueado_hasta TEXT",
+                    },
+                )
+            )
+        return cambios
+
     def migrar_catalogo_examenes_laboratorio(self):
         cambios = []
         if not self.existe_tabla("catalogo_examenes_laboratorio"):
@@ -1597,6 +1630,14 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_facturacion_servicios()
+        )
+
+        cambios.extend(
+            self.migrar_cartera_facturacion()
+        )
+
+        cambios.extend(
+            self.migrar_bloqueo_login()
         )
 
         cambios.extend(

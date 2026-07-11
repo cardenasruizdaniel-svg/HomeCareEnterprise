@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block titulo %}Pendientes de Facturar{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/facturacion" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver al Dashboard</a>
+    <h2 class="mb-1"><i class="fa-solid fa-clock text-warning"></i> Pendientes de Facturar</h2>
+    <p class="text-muted">Servicios que ya se prestaron (con ingreso y salida registrados) pero que todavía no tienen ninguna factura generada.</p>
+
+    <div class="table-responsive">
+    <table class="table table-hover align-middle">
+        <thead class="table-light">
+            <tr><th>Paciente</th><th>Servicio</th><th>EPS</th><th class="text-center">Sesiones prestadas</th><th>Última sesión</th><th class="text-center">Acción</th></tr>
+        </thead>
+        <tbody>
+            {% for p in pendientes %}
+            <tr>
+                <td>{{ p.primer_nombre }} {{ p.primer_apellido }}</td>
+                <td>{{ p.tipo_servicio }}{% if p.subtipo %} - {{ p.subtipo }}{% endif %}</td>
+                <td>{{ p.eps or "Particular" }}</td>
+                <td class="text-center"><span class="badge bg-secondary">{{ p.sesiones_prestadas }}</span></td>
+                <td>{{ p.ultima_sesion }}</td>
+                <td class="text-center">
+                    <a href="/facturacion/facturar-servicio/{{ p.servicio_id }}" class="btn btn-success btn-sm">
+                        <i class="fa-solid fa-file-invoice-dollar"></i> Facturar ahora
+                    </a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center text-muted py-5">Todo lo prestado ya está facturado — no hay nada pendiente.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

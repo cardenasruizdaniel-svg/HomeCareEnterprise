@@ -1314,6 +1314,20 @@ CREATE TABLE IF NOT EXISTS facturas_electronicas(
 
     estado TEXT DEFAULT 'Generada',
 
+    entidad_responsable_pago TEXT,
+
+    estado_cartera TEXT DEFAULT 'Pendiente de pago',
+
+    fecha_vencimiento TEXT,
+
+    fecha_pago TEXT,
+
+    valor_pagado REAL DEFAULT 0,
+
+    metodo_pago_recibido TEXT,
+
+    motivo_anulacion TEXT,
+
     xml_path TEXT,
 
     pdf_path TEXT,

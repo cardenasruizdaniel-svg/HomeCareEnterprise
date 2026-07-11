@@ -142,12 +142,16 @@ def generar_factura_copago(copago_id: int, medio_pago: str, usuario=None) -> dic
     }
 
 
-def generar_factura_servicio(servicio_paciente_id: int, valor_servicio: float, medio_pago: str, usuario=None) -> dict:
+def generar_factura_servicio(servicio_paciente_id: int, valor_servicio: float, medio_pago: str,
+                                usuario=None, plazo_dias_pago: int = 30) -> dict:
     """
     Factura un SERVICIO/informe ya prestado (ej. las visitas
     de un mes de terapia), no solo un copago -- para poder
     facturarle a la EPS o al paciente particular el valor
-    completo del servicio brindado.
+    completo del servicio brindado. Queda con estado de
+    cartera "Pendiente de pago" y una fecha de vencimiento
+    (30 días por defecto, el plazo habitual con EPS), para
+    poder hacerle seguimiento en el dashboard de facturación.
     """
 
     servicio = consultar_uno("SELECT * FROM servicios_paciente WHERE id=?", (servicio_paciente_id,))
@@ -165,8 +169,10 @@ def generar_factura_servicio(servicio_paciente_id: int, valor_servicio: float, m
 
     numero = FacturacionRepository.siguiente_numero(PREFIJO_FACTURACION)
 
-    from datetime import datetime
+    from datetime import datetime, timedelta
     fecha_emision = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    fecha_vencimiento = (datetime.now() + timedelta(days=plazo_dias_pago)).strftime("%Y-%m-%d")
+    entidad_responsable = paciente.get("eps") or "Particular"
 
     valor_subtotal = valor_servicio
     valor_iva = 0  # servicios de salud excluidos de IVA
@@ -215,6 +221,8 @@ def generar_factura_servicio(servicio_paciente_id: int, valor_servicio: float, m
         "medio_pago": medio_pago,
         "cufe": cufe,
         "estado": "Generada",
+        "entidad_responsable_pago": entidad_responsable,
+        "fecha_vencimiento": fecha_vencimiento,
         "xml_path": str(ruta_xml),
         "pdf_path": None,
         "usuario_creacion": usuario,
@@ -259,6 +267,42 @@ def listar_todas():
 
 def obtener(factura_id: int):
     return FacturacionRepository.obtener(factura_id)
+
+
+def marcar_pagada(factura_id: int, valor_pagado: float, metodo_pago: str, fecha_pago: str = None):
+    from datetime import date
+    if not valor_pagado or valor_pagado <= 0:
+        raise ValueError("Debe indicar el valor pagado.")
+    FacturacionRepository.marcar_pagada(factura_id, valor_pagado, metodo_pago, fecha_pago or date.today().isoformat())
+
+
+def anular_factura(factura_id: int, motivo: str):
+    if not motivo:
+        raise ValueError("Debe indicar el motivo de la anulación.")
+    FacturacionRepository.anular(factura_id, motivo)
+
+
+def listar_cartera(estado_cartera=None):
+    FacturacionRepository.marcar_vencidas()  # actualiza el estado antes de mostrar el listado
+    return [dict(f) for f in FacturacionRepository.listar_cartera(estado_cartera)]
+
+
+def pendientes_facturar():
+    return [dict(f) for f in FacturacionRepository.pendientes_facturar()]
+
+
+def dashboard_facturacion():
+    FacturacionRepository.marcar_vencidas()
+    resumen = dict(FacturacionRepository.resumen_dashboard())
+    for clave in ("total_facturado", "total_cobrado", "cartera_pendiente", "cartera_vencida"):
+        resumen[clave] = resumen.get(clave) or 0
+
+    return {
+        **resumen,
+        "por_mes": [dict(m) for m in FacturacionRepository.facturado_por_mes()],
+        "top_eps": [dict(e) for e in FacturacionRepository.top_eps()],
+        "total_pendientes_facturar": len(pendientes_facturar()),
+    }
 
 
 # ==========================================================

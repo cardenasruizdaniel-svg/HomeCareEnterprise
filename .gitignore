@@ -1,3 +1,5 @@
 
 .env
 exports/
+instancia_secret_key.txt
+database_respaldo_*.db

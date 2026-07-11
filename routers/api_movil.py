@@ -30,6 +30,29 @@ from services.ordenes_service import OrdenesService
 
 router = APIRouter(prefix="/api/movil", tags=["App Móvil"])
 
+# ==========================================
+# VERSIONADO DE LA API
+#
+# /api/movil es, en la práctica, la "v1" de esta API -- ya
+# está usada por la app instalada en los celulares de campo,
+# asi que NO se debe renombrar (romperia todas las apps ya
+# instaladas hasta que se actualizaran). El plan de
+# versionado hacia adelante es: cualquier cambio que rompa
+# compatibilidad (quitar un campo, cambiar su significado,
+# etc.) se agrega bajo un prefijo NUEVO (ej. /api/v2/movil),
+# dejando /api/movil funcionando exactamente igual para las
+# apps que todavia no se hayan actualizado. Los celulares
+# pueden consultar /api/movil/version para saber que version
+# de la API esta corriendo el servidor.
+# ==========================================
+
+VERSION_API = "1.0"
+
+
+@router.get("/version")
+async def version_api():
+    return {"version": VERSION_API, "nombre": "HomeCare Enterprise API Móvil"}
+
 
 # ==========================================
 # CONTROL DE ACCESO: un profesional en la app

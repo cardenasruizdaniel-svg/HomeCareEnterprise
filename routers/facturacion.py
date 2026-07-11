@@ -16,6 +16,20 @@ router = APIRouter(prefix="/facturacion", tags=["Facturación Electrónica"])
 
 @router.get("", response_class=HTMLResponse)
 @router.get("/", response_class=HTMLResponse)
+async def dashboard(request: Request, usuario=Depends(requiere_permiso("facturacion"))):
+    """
+    Página principal del módulo: el dashboard del proceso de
+    facturación (cuánto se ha facturado, cuánto se ha cobrado,
+    qué está pendiente/vencido, tendencia por mes, y qué hay
+    por facturar todavía).
+    """
+    return templates.TemplateResponse(
+        request=request, name="facturacion/dashboard.html",
+        context={"usuario": usuario, **facturacion_service.dashboard_facturacion()},
+    )
+
+
+@router.get("/listado", response_class=HTMLResponse)
 async def listado(request: Request, usuario=Depends(requiere_permiso("facturacion"))):
     return templates.TemplateResponse(
         request=request, name="facturacion/lista.html",
@@ -40,6 +54,63 @@ async def descargar_xml(factura_id: int, usuario=Depends(requiere_permiso("factu
     if not factura.get("xml_path") or not Path(factura["xml_path"]).exists():
         raise HTTPException(status_code=404, detail="XML no encontrado.")
     return FileResponse(factura["xml_path"], media_type="application/xml")
+
+
+# ==========================================================
+# CARTERA (cuentas por cobrar)
+# ==========================================================
+
+@router.get("/cartera", response_class=HTMLResponse)
+async def cartera(request: Request, estado: str = "", usuario=Depends(requiere_permiso("facturacion"))):
+    return templates.TemplateResponse(
+        request=request, name="facturacion/cartera.html",
+        context={
+            "usuario": usuario, "estado_filtro": estado,
+            "facturas": facturacion_service.listar_cartera(estado or None),
+        },
+    )
+
+
+@router.post("/cartera/{factura_id}/marcar-pagada")
+async def marcar_pagada(
+    request: Request,
+    factura_id: int,
+    valor_pagado: float = Form(...),
+    metodo_pago: str = Form("Transferencia"),
+    fecha_pago: str = Form(""),
+    usuario=Depends(requiere_permiso("facturacion")),
+):
+    try:
+        facturacion_service.marcar_pagada(factura_id, valor_pagado, metodo_pago, fecha_pago or None)
+    except ValueError as error:
+        return RedirectResponse(url=f"/facturacion/cartera?error={error}", status_code=303)
+    return RedirectResponse(url="/facturacion/cartera", status_code=303)
+
+
+@router.post("/cartera/{factura_id}/anular")
+async def anular(
+    request: Request,
+    factura_id: int,
+    motivo: str = Form(...),
+    usuario=Depends(requiere_permiso("facturacion")),
+):
+    try:
+        facturacion_service.anular_factura(factura_id, motivo)
+    except ValueError as error:
+        return RedirectResponse(url=f"/facturacion/cartera?error={error}", status_code=303)
+    return RedirectResponse(url="/facturacion/cartera", status_code=303)
+
+
+# ==========================================================
+# PENDIENTES DE FACTURAR (servicios ya prestados sin facturar)
+# ==========================================================
+
+@router.get("/pendientes-facturar", response_class=HTMLResponse)
+async def pendientes_facturar(request: Request, usuario=Depends(requiere_permiso("facturacion"))):
+    return templates.TemplateResponse(
+        request=request, name="facturacion/pendientes_facturar.html",
+        context={"usuario": usuario, "pendientes": facturacion_service.pendientes_facturar()},
+    )
 
 
 # ==========================================================
@@ -85,7 +156,7 @@ async def facturar_servicio_guardar(
                 "error": str(error),
             },
         )
-    return RedirectResponse(url=f"/facturacion?generada={resultado['numero_completo']}", status_code=303)
+    return RedirectResponse(url=f"/facturacion/listado?generada={resultado['numero_completo']}", status_code=303)
 
 
 # ==========================================================

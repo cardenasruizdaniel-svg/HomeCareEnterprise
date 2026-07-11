@@ -131,6 +131,16 @@ def create_app() -> FastAPI:
 
     )
 
+    from middleware.rate_limit import RateLimitMiddleware
+    app.add_middleware(RateLimitMiddleware)
+
+    # Comprime las respuestas (HTML, CSS, JS, JSON) antes de
+    # enviarlas -- reduce bastante el tamaño de la descarga sin
+    # tocar ni un solo caracter del código (a diferencia de
+    # minificar, que reescribe el archivo).
+    from fastapi.middleware.gzip import GZipMiddleware
+    app.add_middleware(GZipMiddleware, minimum_size=1000)
+
     # ==========================================
     # STATIC
     # ==========================================
