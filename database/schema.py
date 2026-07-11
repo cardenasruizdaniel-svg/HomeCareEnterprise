@@ -2279,4 +2279,51 @@ CREATE TABLE IF NOT EXISTS recomendaciones_medicas(
 );
 """,
 
+# =====================================================
+# CATÁLOGO DE TIPOS DE EXAMEN DE LABORATORIO
+# Cada examen (ej. Hemograma completo) trae ya
+# precargados sus parámetros estándar (nombre, unidad,
+# rango normal) según los valores de referencia
+# habituales en laboratorios clínicos de Colombia --
+# para que al registrar un resultado solo haya que
+# escribir el valor obtenido, no armar la lista entera
+# a mano cada vez.
+# =====================================================
+
+"""
+CREATE TABLE IF NOT EXISTS catalogo_examenes_laboratorio(
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    nombre_examen TEXT NOT NULL UNIQUE,
+
+    categoria TEXT,
+
+    activo INTEGER DEFAULT 1
+
+);
+""",
+
+"""
+CREATE TABLE IF NOT EXISTS catalogo_parametros_laboratorio(
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    examen_id INTEGER NOT NULL,
+
+    nombre_parametro TEXT NOT NULL,
+
+    unidad TEXT,
+
+    rango_min REAL,
+
+    rango_max REAL,
+
+    orden INTEGER DEFAULT 0,
+
+    FOREIGN KEY(examen_id) REFERENCES catalogo_examenes_laboratorio(id)
+
+);
+""",
+
 ]

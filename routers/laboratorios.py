@@ -20,6 +20,7 @@ async def listado(request: Request, paciente_id: int, usuario=Depends(requiere_p
     profesionales = consultar_todos(
         "SELECT id, nombre_completo FROM profesionales WHERE estado='ACTIVO' ORDER BY nombre_completo"
     )
+    from repositories.catalogo_examenes_laboratorio_repository import listar_examenes
 
     return templates.TemplateResponse(
         request=request, name="laboratorios/lista.html",
@@ -27,8 +28,23 @@ async def listado(request: Request, paciente_id: int, usuario=Depends(requiere_p
             "usuario": usuario, "paciente": paciente, "paciente_id": paciente_id,
             "resultados": laboratorios_service.listar_por_paciente(paciente_id),
             "profesionales": profesionales,
+            "catalogo_examenes": [dict(e) for e in listar_examenes()],
         },
     )
+
+
+@router.get("/catalogo/{examen_id}/parametros")
+async def parametros_de_examen(examen_id: int, usuario=Depends(requiere_permiso("pacientes"))):
+    """Parámetros estándar (con su rango normal) de un tipo de examen, para autocompletar el formulario."""
+    from repositories.catalogo_examenes_laboratorio_repository import listar_parametros_de_examen
+    filas = listar_parametros_de_examen(examen_id)
+    return [
+        {
+            "nombre_parametro": f["nombre_parametro"], "unidad": f["unidad"],
+            "rango_min": f["rango_min"], "rango_max": f["rango_max"],
+        }
+        for f in filas
+    ]
 
 
 @router.post("/registrar", response_class=JSONResponse)

@@ -184,6 +184,16 @@ async def laboratorios_paciente(
     return movil_service.listar_laboratorios_paciente(paciente_id)
 
 
+@router.get("/laboratorios/catalogo")
+async def catalogo_laboratorio(usuario=Depends(requiere_permiso("programacion"))):
+    """Catálogo de tipos de examen con sus parámetros estándar, para la app."""
+    from repositories.catalogo_examenes_laboratorio_repository import listar_examenes, listar_parametros_de_examen
+    examenes = [dict(e) for e in listar_examenes()]
+    for examen in examenes:
+        examen["parametros"] = [dict(p) for p in listar_parametros_de_examen(examen["id"])]
+    return examenes
+
+
 @router.get("/paciente/{paciente_id}/ultima-nota-medica")
 async def ultima_nota_medica_paciente(
     paciente_id: int,

@@ -195,6 +195,9 @@ def iniciar_sistema():
     from repositories.turnos_repository import CatalogoTurnosRepository
     CatalogoTurnosRepository.sembrar_si_vacio()
 
+    from repositories.catalogo_examenes_laboratorio_repository import sembrar_si_vacio as sembrar_examenes_lab
+    sembrar_examenes_lab()
+
     print()
 
     print("[OK] Sistema listo.")

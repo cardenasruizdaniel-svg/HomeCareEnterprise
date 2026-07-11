@@ -576,6 +576,31 @@ class MigrationManager:
             )
         return cambios
 
+    def migrar_catalogo_examenes_laboratorio(self):
+        cambios = []
+        if not self.existe_tabla("catalogo_examenes_laboratorio"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS catalogo_examenes_laboratorio(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nombre_examen TEXT NOT NULL UNIQUE,
+                    categoria TEXT,
+                    activo INTEGER DEFAULT 1
+                );
+                CREATE TABLE IF NOT EXISTS catalogo_parametros_laboratorio(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    examen_id INTEGER NOT NULL,
+                    nombre_parametro TEXT NOT NULL,
+                    unidad TEXT,
+                    rango_min REAL,
+                    rango_max REAL,
+                    orden INTEGER DEFAULT 0,
+                    FOREIGN KEY(examen_id) REFERENCES catalogo_examenes_laboratorio(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó el catálogo de exámenes de laboratorio")
+        return cambios
+
     def migrar_firma_contratos(self):
         cambios = []
         if self.existe_tabla("contratos"):
@@ -1572,6 +1597,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_facturacion_servicios()
+        )
+
+        cambios.extend(
+            self.migrar_catalogo_examenes_laboratorio()
         )
 
         cambios.extend(

@@ -1242,6 +1242,11 @@ async function renderLaboratorio(visita) {
   html += `
     <div class="card">
       <h5>Registrar nuevo resultado</h5>
+      <div class="form-group"><label>Tipo de examen (elija del catálogo, o escriba uno personalizado abajo)</label>
+        <select id="lab-catalogo-examen">
+          <option value="">-- Personalizado --</option>
+        </select>
+      </div>
       <div class="form-group"><label>Examen</label><input type="text" id="lab-examen" placeholder="Ej: Hemograma completo"></div>
       <div class="form-group"><label>Laboratorio que lo realizó</label><input type="text" id="lab-laboratorio"></div>
       <div class="form-group"><label>Fecha del resultado</label><input type="date" id="lab-fecha"></div>
@@ -1263,19 +1268,20 @@ async function renderLaboratorio(visita) {
 
   contenedor().innerHTML = html;
 
-  function agregarFilaItemMovil() {
+  function agregarFilaItemMovil(valoresIniciales) {
+    valoresIniciales = valoresIniciales || {};
     const fila = document.createElement("div");
     fila.className = "fila-item-lab-movil";
     fila.style.cssText = "border:1px solid #dee2e6; border-radius:6px; padding:8px; margin-bottom:8px;";
     fila.innerHTML = `
-      <input type="text" class="campo-nombre-parametro" placeholder="Parámetro (ej: Glóbulos rojos)" style="margin-bottom:4px;">
+      <input type="text" class="campo-nombre-parametro" placeholder="Parámetro (ej: Glóbulos rojos)" style="margin-bottom:4px;" value="${valoresIniciales.nombre_parametro || ''}">
       <div style="display:flex; gap:4px;">
         <input type="text" class="campo-valor-obtenido" placeholder="Valor" style="flex:1;">
-        <input type="text" class="campo-unidad" placeholder="Unidad" style="flex:1;">
+        <input type="text" class="campo-unidad" placeholder="Unidad" style="flex:1;" value="${valoresIniciales.unidad || ''}">
       </div>
       <div style="display:flex; gap:4px; margin-top:4px;">
-        <input type="number" step="any" class="campo-rango-min" placeholder="Rango mín." style="flex:1;">
-        <input type="number" step="any" class="campo-rango-max" placeholder="Rango máx." style="flex:1;">
+        <input type="number" step="any" class="campo-rango-min" placeholder="Rango mín." style="flex:1;" value="${valoresIniciales.rango_min ?? ''}">
+        <input type="number" step="any" class="campo-rango-max" placeholder="Rango máx." style="flex:1;" value="${valoresIniciales.rango_max ?? ''}">
       </div>
       <button type="button" class="btn btn-secondary btn-quitar-item-movil" style="margin-top:4px; width:100%;">Quitar</button>
     `;
@@ -1285,6 +1291,26 @@ async function renderLaboratorio(visita) {
 
   document.getElementById("btn-agregar-item-lab").addEventListener("click", agregarFilaItemMovil);
   agregarFilaItemMovil();
+
+  // Cargar el catalogo de examenes para el desplegable
+  let catalogoExamenesLab = [];
+  try {
+    catalogoExamenesLab = await apiGet("/api/movil/laboratorios/catalogo");
+    const selectCatalogo = document.getElementById("lab-catalogo-examen");
+    selectCatalogo.innerHTML = '<option value="">-- Personalizado --</option>' +
+      catalogoExamenesLab.map((e) => `<option value="${e.id}">${e.nombre_examen} (${e.categoria || ''})</option>`).join("");
+
+    selectCatalogo.addEventListener("change", () => {
+      const examenId = selectCatalogo.value;
+      if (!examenId) return;
+      const examen = catalogoExamenesLab.find((e) => String(e.id) === examenId);
+      document.getElementById("lab-examen").value = examen.nombre_examen;
+      document.getElementById("lab-items-contenedor").innerHTML = "";
+      examen.parametros.forEach((p) => agregarFilaItemMovil(p));
+    });
+  } catch (error) {
+    // sin conexion, se sigue pudiendo diligenciar de forma personalizada
+  }
 
   let fotoCapturada = null;
   document.getElementById("lab-foto-input").addEventListener("change", (e) => {

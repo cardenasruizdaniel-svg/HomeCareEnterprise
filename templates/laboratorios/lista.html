@@ -23,7 +23,17 @@
             <div class="card shadow mb-3">
                 <div class="card-header bg-white"><h5 class="mb-0">Nuevo resultado de examen</h5></div>
                 <div class="card-body">
-                    <div class="mb-2"><label>Examen</label><input type="text" id="campo-examen" class="form-control" placeholder="Ej: Hemograma completo, Parcial de orina..." required></div>
+                    <div class="mb-2">
+                        <label>Tipo de examen</label>
+                        <select id="campo-tipo-examen-catalogo" class="form-select mb-1">
+                            <option value="">-- Escriba uno personalizado abajo, o elija del catálogo --</option>
+                            {% for e in catalogo_examenes %}
+                            <option value="{{ e.id }}" data-nombre="{{ e.nombre_examen }}">{{ e.nombre_examen }} ({{ e.categoria }})</option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" id="campo-examen" class="form-control" placeholder="Nombre del examen (se llena solo al elegir del catálogo, o escríbalo)" required>
+                        <small class="text-muted">Al elegir un examen del catálogo, los parámetros de abajo se llenan solos con los rangos normales — usted solo escribe el valor obtenido.</small>
+                    </div>
                     <div class="mb-2"><label>Laboratorio que lo realizó</label><input type="text" id="campo-lab-realizo" class="form-control"></div>
                     <div class="row">
                         <div class="col-6 mb-2"><label>Fecha de la orden</label><input type="date" id="campo-fecha-orden" class="form-control"></div>
@@ -133,20 +143,39 @@ document.getElementById("campo-foto-resultado").addEventListener("change", (e) =
     lector.readAsDataURL(archivo);
 });
 
-function agregarFilaItem() {
+function agregarFilaItem(valoresIniciales) {
+    valoresIniciales = valoresIniciales || {};
     const fila = document.createElement("tr");
     fila.className = "fila-item-lab";
     fila.innerHTML = `
-        <td><input type="text" class="form-control form-control-sm campo-nombre-parametro" placeholder="Ej: Glóbulos rojos"></td>
+        <td><input type="text" class="form-control form-control-sm campo-nombre-parametro" placeholder="Ej: Glóbulos rojos" value="${valoresIniciales.nombre_parametro || ''}"></td>
         <td><input type="text" class="form-control form-control-sm campo-valor-obtenido" placeholder="Ej: 4.8"></td>
-        <td><input type="text" class="form-control form-control-sm campo-unidad" placeholder="mill/mm3"></td>
-        <td><input type="number" step="any" class="form-control form-control-sm campo-rango-min" placeholder="4.5"></td>
-        <td><input type="number" step="any" class="form-control form-control-sm campo-rango-max" placeholder="5.5"></td>
+        <td><input type="text" class="form-control form-control-sm campo-unidad" placeholder="mill/mm3" value="${valoresIniciales.unidad || ''}"></td>
+        <td><input type="number" step="any" class="form-control form-control-sm campo-rango-min" placeholder="4.5" value="${valoresIniciales.rango_min ?? ''}"></td>
+        <td><input type="number" step="any" class="form-control form-control-sm campo-rango-max" placeholder="5.5" value="${valoresIniciales.rango_max ?? ''}"></td>
         <td><button type="button" class="btn btn-outline-danger btn-sm btn-quitar-item">✕</button></td>
     `;
     document.getElementById("cuerpo-items-lab").appendChild(fila);
     fila.querySelector(".btn-quitar-item").addEventListener("click", () => fila.remove());
 }
+
+document.getElementById("campo-tipo-examen-catalogo").addEventListener("change", async (evento) => {
+    const opcion = evento.target.selectedOptions[0];
+    const examenId = evento.target.value;
+
+    if (!examenId) return;
+
+    document.getElementById("campo-examen").value = opcion.dataset.nombre;
+
+    const respuesta = await fetch(`/laboratorios/catalogo/${examenId}/parametros`);
+    const parametros = await respuesta.json();
+
+    // Se limpia la tabla y se llena solo con los parametros
+    // estandar de este examen -- el usuario solo debe escribir
+    // el valor obtenido de cada uno.
+    document.getElementById("cuerpo-items-lab").innerHTML = "";
+    parametros.forEach((p) => agregarFilaItem(p));
+});
 
 document.getElementById("btn-agregar-item").addEventListener("click", agregarFilaItem);
 agregarFilaItem(); // ya arranca con una fila lista para diligenciar

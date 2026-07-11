@@ -68,6 +68,7 @@ def reiniciar_base_datos_en_blanco(usuario_id=None) -> dict:
     from repositories.catalogos_repository import DivipolaRepository, CUPSRepository, CUMRepository
     from repositories.turnos_repository import CatalogoTurnosRepository
     from repositories import cie10_repository
+    from repositories.catalogo_examenes_laboratorio_repository import sembrar_si_vacio as sembrar_examenes_lab
 
     ProgramasAtencionRepository.sembrar_si_vacio()
     CatalogoActividadesRepository.sembrar_si_vacio()
@@ -78,6 +79,7 @@ def reiniciar_base_datos_en_blanco(usuario_id=None) -> dict:
     CUMRepository.sembrar_si_vacio()
     CatalogoTurnosRepository.sembrar_si_vacio()
     cie10_repository.sembrar_si_vacio()
+    sembrar_examenes_lab()
 
     from database.database import consultar_escalar
     total_usuarios = consultar_escalar("SELECT COUNT(*) FROM usuarios")
