@@ -789,27 +789,7 @@ async function renderDetalleVisita(visitaId) {
     <button class="btn btn-success btn-block" id="btn-salida" ${visita.hora_real_fin ? "disabled" : ""}>
       ⏹ Finalizar labores
     </button>
-    <button class="btn btn-secondary btn-block" onclick="irAFichaPacienteDesdeVisita(${visita.paciente_id}, ${visita.id})">
-      🧑‍⚕️ Ver historia clínica y alergias
-    </button>
-    ${esPerfilCuidador() ? "" : `
-    <button class="btn btn-secondary btn-block" id="btn-signos">🌡️ Signos Vitales y Tallas</button>
-    ${esPerfilConMedicamentos() ? `<button class="btn btn-secondary btn-block" id="btn-medicamento">💊 Registrar medicamento administrado</button>` : ""}
-    `}
-    <button class="btn btn-secondary btn-block" id="btn-evolucion">${esPerfilCuidador() ? "📋 Registro Informe de Cuidador" : "📝 Registrar evolución"}</button>
-    ${esPerfilCuidador() ? "" : `
-    <button class="btn btn-secondary btn-block" id="btn-laboratorio">🧪 Resultados de laboratorio</button>
-    ${esPerfilConOrdenes() ? `<button class="btn btn-secondary btn-block" id="btn-ordenes">📋 Órdenes Médicas</button>` : ""}
-    <button class="btn btn-secondary btn-block" id="btn-ultima-nota-medica">🩺 Última Nota Médica</button>
-    <button class="btn btn-secondary btn-block" id="btn-programa-atencion">📑 Programa de Atención</button>
-    <button class="btn btn-secondary btn-block" id="btn-alergias">⚠️ Alergias</button>
-    <button class="btn btn-secondary btn-block" id="btn-antecedentes">📖 Antecedentes</button>
-    <button class="btn btn-secondary btn-block" id="btn-examen-fisico">🩻 Examen Físico</button>
-    <button class="btn btn-secondary btn-block" id="btn-recomendaciones">📝 Recomendaciones</button>
-    `}
-    ${visita.planilla_id && visita.planilla_estado !== "Firmada" ? `
-    <button class="btn btn-primary btn-block" id="btn-firmar-planilla">✍️ Firmar planilla de visita</button>
-    ` : ""}
+
     ${esPerfilCuidador() ? "" : `
     ${!visita.ubicacion_confirmada || esPerfilAdministrativo() ? `
     <button class="btn btn-secondary btn-block" id="btn-actualizar-ubicacion-paciente">
@@ -819,6 +799,33 @@ async function renderDetalleVisita(visitaId) {
     <div class="alerta alerta-info">📍 La ubicación de este paciente ya fue registrada en la visita de valoración inicial.</div>
     `}
     `}
+
+    <button class="btn btn-secondary btn-block" onclick="irAFichaPacienteDesdeVisita(${visita.paciente_id}, ${visita.id})">
+      🧑‍⚕️ Ver historia clínica y alergias
+    </button>
+
+    ${esPerfilCuidador() ? "" : `
+    <button class="btn btn-secondary btn-block" id="btn-signos">🌡️ Signos Vitales y Tallas</button>
+    <button class="btn btn-secondary btn-block" id="btn-laboratorio">🧪 Resultados de laboratorio</button>
+    <button class="btn btn-secondary btn-block" id="btn-examen-fisico">🩻 Examen Físico</button>
+    <button class="btn btn-secondary btn-block" id="btn-alergias">⚠️ Alergias</button>
+    <button class="btn btn-secondary btn-block" id="btn-antecedentes">📖 Antecedentes</button>
+    `}
+
+    <button class="btn btn-secondary btn-block" id="btn-evolucion">${esPerfilCuidador() ? "📋 Registro Informe de Cuidador" : "📝 Registrar evolución"}</button>
+
+    ${esPerfilCuidador() ? "" : `
+    ${esPerfilConOrdenes() ? `<button class="btn btn-secondary btn-block" id="btn-ordenes">📋 Órdenes Médicas</button>` : ""}
+    <button class="btn btn-secondary btn-block" id="btn-programa-atencion">📑 Programa de Atención</button>
+    <button class="btn btn-secondary btn-block" id="btn-ultima-nota-medica">🩺 Última Nota Médica</button>
+    <button class="btn btn-secondary btn-block" id="btn-recomendaciones">📝 Recomendaciones</button>
+    ${esPerfilConMedicamentos() ? `<button class="btn btn-secondary btn-block" id="btn-medicamento">💊 Registrar medicamento administrado</button>` : ""}
+    `}
+
+    ${visita.planilla_id && visita.planilla_estado !== "Firmada" ? `
+    <button class="btn btn-primary btn-block" id="btn-firmar-planilla">✍️ Firmar planilla de visita</button>
+    ` : ""}
+
     <button class="btn btn-secondary btn-block" onclick="irA('agenda')">← Volver a la agenda</button>
   `;
 
