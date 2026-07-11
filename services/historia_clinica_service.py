@@ -216,6 +216,60 @@ def obtener_linea_tiempo(paciente_id: int) -> list:
             "profesional": r["profesional"],
         })
 
+    examenes_fisicos = consultar_todos(
+        """
+        SELECT ef.*, pr.nombre_completo AS profesional
+        FROM examen_fisico ef
+        LEFT JOIN profesionales pr ON pr.id = ef.profesional_id
+        WHERE ef.paciente_id=?
+        """,
+        (paciente_id,),
+    )
+    for ef in examenes_fisicos:
+        ef = dict(ef)
+        sistemas_con_hallazgo = []
+        for sistema in ("cabeza", "cara", "boca", "cuello", "torax", "abdomen", "extremidades", "vascular", "neurologico", "columna"):
+            if ef.get(sistema):
+                sistemas_con_hallazgo.append(f"{sistema.capitalize()}: {ef[sistema]}")
+        eventos.append({
+            "fecha": ef["fecha_creacion"],
+            "tipo": "Examen físico",
+            "icono": "fa-stethoscope",
+            "color": "primary",
+            "titulo": f"Examen físico ({ef.get('tipo_profesional') or 'sin especificar'})",
+            "detalle": " | ".join(sistemas_con_hallazgo) if sistemas_con_hallazgo else "Sin hallazgos registrados.",
+            "imagen": None,
+            "profesional": ef["profesional"],
+        })
+
+    recomendaciones = consultar_todos(
+        """
+        SELECT r.*, pr.nombre_completo AS profesional
+        FROM recomendaciones_medicas r
+        LEFT JOIN profesionales pr ON pr.id = r.profesional_id
+        WHERE r.paciente_id=?
+        """,
+        (paciente_id,),
+    )
+    for r in recomendaciones:
+        r = dict(r)
+        detalle = f"Dx principal: {r['diagnostico_ppal_nombre']} ({r['diagnostico_ppal_codigo']})"
+        for n in (1, 2, 3):
+            if r.get(f"diagnostico_rel{n}_nombre"):
+                detalle += f" | Relacionado {n}: {r[f'diagnostico_rel{n}_nombre']}"
+        if r.get("recomendaciones_texto"):
+            detalle += f" — {r['recomendaciones_texto']}"
+        eventos.append({
+            "fecha": r["fecha_creacion"],
+            "tipo": "Recomendaciones / Plan médico",
+            "icono": "fa-clipboard-list",
+            "color": "danger",
+            "titulo": f"Plan médico — {r['tipo_consulta']}",
+            "detalle": detalle,
+            "imagen": None,
+            "profesional": r["profesional"],
+        })
+
     eventos.sort(key=lambda e: e["fecha"] or "", reverse=True)
 
     return eventos

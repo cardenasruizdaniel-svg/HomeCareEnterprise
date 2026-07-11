@@ -206,6 +206,26 @@ async def catalogo_programa_atencion(usuario=Depends(requiere_permiso("pacientes
     return movil_service.catalogo_programa_atencion()
 
 
+@router.get("/paciente/{paciente_id}/alergias")
+async def alergias_paciente(paciente_id: int, usuario=Depends(requiere_permiso("programacion"))):
+    verificar_acceso_paciente_movil(paciente_id, usuario)
+    from services.alergias_service import listar_alergias, TIPOS_VALIDOS, SEVERIDADES
+    return {
+        "alergias": [dict(a) for a in listar_alergias(paciente_id)],
+        "tipos": TIPOS_VALIDOS, "severidades": SEVERIDADES,
+    }
+
+
+@router.get("/paciente/{paciente_id}/antecedentes")
+async def antecedentes_paciente(paciente_id: int, usuario=Depends(requiere_permiso("programacion"))):
+    verificar_acceso_paciente_movil(paciente_id, usuario)
+    from services.antecedentes_service import listar_antecedentes, TIPOS_VALIDOS
+    return {
+        "antecedentes": [dict(a) for a in listar_antecedentes(paciente_id)],
+        "tipos": TIPOS_VALIDOS,
+    }
+
+
 @router.get("/mi-agenda-programable")
 async def mi_agenda_programable(usuario=Depends(requiere_permiso("programacion"))):
     """
@@ -390,6 +410,33 @@ def _procesar_accion(tipo: str, p: dict, usuario: dict):
             p["paciente_id"], p.get("programa_id"), p.get("profesional_id"), p.get("motivo"),
             p.get("actividades", []), usuario.get("id") if isinstance(usuario, dict) else None,
         )
+
+    if tipo == "crear_alergia":
+        from services.alergias_service import crear_alergia
+        return {"id": crear_alergia(
+            p["paciente_id"], p.get("tipo"), p.get("alergeno"), p.get("severidad"),
+            p.get("estado", "Activa"), p.get("reaccion", ""), p.get("observaciones", ""),
+            p.get("fecha_diagnostico") or None, usuario_id,
+        )}
+
+    if tipo == "crear_antecedente":
+        from services.antecedentes_service import crear_antecedente
+        return {"id": crear_antecedente(
+            p["paciente_id"], p.get("tipo"), p.get("descripcion"), p.get("observaciones", ""), usuario_id,
+        )}
+
+    if tipo == "crear_examen_fisico":
+        from services.examen_fisico_service import crear as crear_examen_fisico
+        return {"id": crear_examen_fisico(
+            p["paciente_id"], p.get("programacion_id"), p.get("profesional_id"), p.get("tipo_profesional"),
+            p.get("valores", {}), usuario_id,
+        )}
+
+    if tipo == "crear_recomendacion":
+        from services.recomendaciones_service import crear as crear_recomendacion
+        return {"id": crear_recomendacion(
+            p["paciente_id"], p.get("programacion_id"), p.get("profesional_id"), p.get("datos", {}), usuario_id,
+        )}
 
     if tipo == "programar_visita_movil":
         return movil_service.programar_visita_movil(

@@ -576,6 +576,56 @@ class MigrationManager:
             )
         return cambios
 
+    def migrar_examen_fisico_recomendaciones(self):
+        cambios = []
+        if not self.existe_tabla("examen_fisico"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS examen_fisico(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    paciente_id INTEGER NOT NULL,
+                    programacion_id INTEGER,
+                    profesional_id INTEGER,
+                    tipo_profesional TEXT,
+                    fecha TEXT DEFAULT CURRENT_TIMESTAMP,
+                    cabeza TEXT, cara TEXT, boca TEXT, cuello TEXT, torax TEXT,
+                    abdomen TEXT, extremidades TEXT, vascular TEXT, neurologico TEXT, columna TEXT,
+                    usuario_creacion INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
+                    FOREIGN KEY(profesional_id) REFERENCES profesionales(id)
+                );
+            """)
+            cambios.append("Se creó la tabla examen_fisico")
+
+        if not self.existe_tabla("recomendaciones_medicas"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS recomendaciones_medicas(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    paciente_id INTEGER NOT NULL,
+                    programacion_id INTEGER,
+                    profesional_id INTEGER,
+                    fecha TEXT DEFAULT CURRENT_TIMESTAMP,
+                    diagnostico_ppal_codigo TEXT, diagnostico_ppal_nombre TEXT,
+                    diagnostico_rel1_codigo TEXT, diagnostico_rel1_nombre TEXT,
+                    diagnostico_rel2_codigo TEXT, diagnostico_rel2_nombre TEXT,
+                    diagnostico_rel3_codigo TEXT, diagnostico_rel3_nombre TEXT,
+                    tipo_consulta TEXT,
+                    incapacidad INTEGER DEFAULT 0,
+                    nota_aclaratoria INTEGER DEFAULT 0,
+                    orden_medicamentos INTEGER DEFAULT 0,
+                    orden_procedimientos INTEGER DEFAULT 0,
+                    recomendaciones_texto TEXT,
+                    usuario_creacion INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
+                    FOREIGN KEY(profesional_id) REFERENCES profesionales(id)
+                );
+            """)
+            cambios.append("Se creó la tabla recomendaciones_medicas")
+
+        self.connection.commit()
+        return cambios
+
     def migrar_calidad(self):
         cambios = []
         if not self.existe_tabla("calidad_pqr"):
@@ -1507,6 +1557,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_facturacion_servicios()
+        )
+
+        cambios.extend(
+            self.migrar_examen_fisico_recomendaciones()
         )
 
         cambios.extend(

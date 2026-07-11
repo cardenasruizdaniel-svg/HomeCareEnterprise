@@ -463,6 +463,38 @@ async function reanudarMonitoreoSiHayTurnoAbierto() {
 // ==========================================================
 
 const contenedor = () => document.getElementById("contenedor");
+
+// ==========================================================
+// VISOR DE REPORTES DENTRO DE LA APP
+//
+// Antes, "imprimir" abría una pestaña nueva del navegador,
+// lo que hacia que el usuario sintiera que "se salio" de la
+// app. Esto en cambio muestra el reporte en una ventana
+// superpuesta DENTRO de la misma app (un iframe a pantalla
+// completa con boton de cerrar e imprimir), sin navegar a
+// ningun lado ni abrir nada por fuera.
+// ==========================================================
+
+function abrirReporteEnApp(url) {
+  const overlay = document.createElement("div");
+  overlay.id = "overlay-reporte-app";
+  overlay.style.cssText = "position:fixed; inset:0; background:#fff; z-index:9999; display:flex; flex-direction:column;";
+  overlay.innerHTML = `
+    <div style="display:flex; gap:8px; padding:10px; background:#0d6efd; flex-shrink:0;">
+      <button id="btn-cerrar-reporte-app" style="background:#fff; color:#0d6efd; border:none; border-radius:6px; padding:8px 14px; font-weight:bold;">← Volver a la app</button>
+      <button id="btn-imprimir-reporte-app" style="background:#198754; color:#fff; border:none; border-radius:6px; padding:8px 14px; font-weight:bold;">🖨️ Imprimir</button>
+    </div>
+    <iframe id="iframe-reporte-app" src="${url}" style="flex:1; border:none; width:100%;"></iframe>
+  `;
+  document.body.appendChild(overlay);
+
+  document.getElementById("btn-cerrar-reporte-app").addEventListener("click", () => overlay.remove());
+  document.getElementById("btn-imprimir-reporte-app").addEventListener("click", () => {
+    const iframe = document.getElementById("iframe-reporte-app");
+    iframe.contentWindow.focus();
+    iframe.contentWindow.print();
+  });
+}
 const titulo = (t) => (document.getElementById("titulo-pantalla").textContent = t);
 
 function mostrarNav(mostrar) {
@@ -749,7 +781,7 @@ async function renderDetalleVisita(visitaId) {
       🧑‍⚕️ Ver historia clínica y alergias
     </button>
     ${esPerfilCuidador() ? "" : `
-    <button class="btn btn-secondary btn-block" id="btn-signos">🌡️ Registrar signos vitales</button>
+    <button class="btn btn-secondary btn-block" id="btn-signos">🌡️ Signos Vitales y Tallas</button>
     <button class="btn btn-secondary btn-block" id="btn-medicamento">💊 Registrar medicamento administrado</button>
     `}
     <button class="btn btn-secondary btn-block" id="btn-evolucion">${esPerfilCuidador() ? "📋 Registro Informe de Cuidador" : "📝 Registrar evolución"}</button>
@@ -758,6 +790,10 @@ async function renderDetalleVisita(visitaId) {
     <button class="btn btn-secondary btn-block" id="btn-ordenes">📋 Órdenes Médicas</button>
     <button class="btn btn-secondary btn-block" id="btn-ultima-nota-medica">🩺 Última Nota Médica</button>
     <button class="btn btn-secondary btn-block" id="btn-programa-atencion">📑 Programa de Atención</button>
+    <button class="btn btn-secondary btn-block" id="btn-alergias">⚠️ Alergias</button>
+    <button class="btn btn-secondary btn-block" id="btn-antecedentes">📖 Antecedentes</button>
+    <button class="btn btn-secondary btn-block" id="btn-examen-fisico">🩻 Examen Físico</button>
+    <button class="btn btn-secondary btn-block" id="btn-recomendaciones">📝 Recomendaciones</button>
     `}
     ${visita.planilla_id && visita.planilla_estado !== "Firmada" ? `
     <button class="btn btn-primary btn-block" id="btn-firmar-planilla">✍️ Firmar planilla de visita</button>
@@ -802,13 +838,20 @@ async function renderDetalleVisita(visitaId) {
     document.getElementById("btn-ordenes").addEventListener("click", () => renderOrdenMedica(visita));
     document.getElementById("btn-ultima-nota-medica").addEventListener("click", () => renderUltimaNotaMedica(visita));
     document.getElementById("btn-programa-atencion").addEventListener("click", () => renderProgramaAtencion(visita));
+    document.getElementById("btn-alergias").addEventListener("click", () => renderAlergias(visita));
+    document.getElementById("btn-antecedentes").addEventListener("click", () => renderAntecedentes(visita));
+    document.getElementById("btn-examen-fisico").addEventListener("click", () => renderExamenFisico(visita));
+    document.getElementById("btn-recomendaciones").addEventListener("click", () => renderRecomendaciones(visita));
   }
 }
 
 function renderFormularioSignos(visita) {
   contenedor().innerHTML = `
     <div class="card">
-      <h3>Signos vitales</h3>
+      <h3>Signos Vitales y Tallas</h3>
+      <div class="form-group"><label>Peso (kg)</label><input type="number" step="0.1" id="sv-peso"></div>
+      <div class="form-group"><label>Talla (m)</label><input type="number" step="0.01" id="sv-talla"></div>
+      <div class="form-group"><label>IMC (calculado)</label><input type="text" id="sv-imc" readonly style="background:#f0f0f0;"></div>
       <div class="form-group"><label>Temperatura (°C)</label><input type="number" step="0.1" id="sv-temp"></div>
       <div class="form-group"><label>Presión sistólica</label><input type="number" id="sv-sis"></div>
       <div class="form-group"><label>Presión diastólica</label><input type="number" id="sv-dia"></div>
@@ -822,8 +865,23 @@ function renderFormularioSignos(visita) {
       <button class="btn btn-secondary w-100 mt-2" onclick="irA('detalle_visita', ${visita.id})">Cancelar</button>
     </div>`;
 
+  function calcularImcMovil() {
+    const peso = parseFloat(document.getElementById("sv-peso").value);
+    const talla = parseFloat(document.getElementById("sv-talla").value);
+    if (peso > 0 && talla > 0) {
+      document.getElementById("sv-imc").value = (peso / (talla * talla)).toFixed(2);
+    } else {
+      document.getElementById("sv-imc").value = "";
+    }
+  }
+  document.getElementById("sv-peso").addEventListener("input", calcularImcMovil);
+  document.getElementById("sv-talla").addEventListener("input", calcularImcMovil);
+
   document.getElementById("btn-guardar-signos").addEventListener("click", async () => {
     const datos = {
+      peso: parseFloat(document.getElementById("sv-peso").value) || null,
+      talla: parseFloat(document.getElementById("sv-talla").value) || null,
+      imc: parseFloat(document.getElementById("sv-imc").value) || null,
       temperatura: parseFloat(document.getElementById("sv-temp").value) || null,
       presion_sistolica: parseInt(document.getElementById("sv-sis").value) || null,
       presion_diastolica: parseInt(document.getElementById("sv-dia").value) || null,
@@ -841,7 +899,7 @@ function renderFormularioSignos(visita) {
       datos,
     });
 
-    alert("Signos vitales guardados. Se enviarán al servidor automáticamente.");
+    alert("Signos vitales y tallas guardados. Se enviarán al servidor automáticamente.");
     irA("detalle_visita", visita.id);
   });
 }
@@ -1544,6 +1602,229 @@ function sumarUnaHora(horaTexto) {
   return `${String(total).padStart(2, "0")}:${String(minutos).padStart(2, "0")}`;
 }
 
+async function renderAlergias(visita) {
+  titulo("Alergias");
+  const nombrePaciente = [visita.primer_nombre, visita.primer_apellido].filter(Boolean).join(" ");
+  contenedor().innerHTML = `<p class="text-center">Cargando...</p>`;
+
+  let datos = { alergias: [], tipos: [], severidades: [] };
+  try { datos = await apiGet(`/api/movil/paciente/${visita.paciente_id}/alergias`); } catch (e) {}
+
+  const nombresTipo = { MED: "Medicamentos", ALI: "Alimentos", LAT: "Látex", CON: "Contraste", PIC: "Picaduras", AMB: "Ambientales", OTR: "Otros" };
+
+  let html = `<div class="card"><h3>⚠️ Alergias</h3><small>${nombrePaciente}</small></div>`;
+
+  if (datos.alergias.length === 0) {
+    html += `<div class="alerta alerta-info">Sin alergias registradas.</div>`;
+  } else {
+    datos.alergias.forEach((a) => {
+      html += `<div class="card"><strong>${nombresTipo[a.tipo] || a.tipo}: ${a.alergeno}</strong><br>
+        <small>Severidad: ${a.severidad} · ${a.estado}</small>
+        ${a.reaccion ? `<p style="margin-top:6px;">Reacción: ${a.reaccion}</p>` : ""}</div>`;
+    });
+  }
+
+  html += `
+    <div class="card">
+      <h5>Registrar nueva alergia</h5>
+      <div class="form-group"><label>Tipo</label>
+        <select id="al-tipo">${datos.tipos.map(t => `<option value="${t}">${nombresTipo[t] || t}</option>`).join("")}</select>
+      </div>
+      <div class="form-group"><label>Alérgeno</label><input type="text" id="al-alergeno" placeholder="Ej: Penicilina"></div>
+      <div class="form-group"><label>Severidad</label>
+        <select id="al-severidad">${datos.severidades.map(s => `<option value="${s}">${s}</option>`).join("")}</select>
+      </div>
+      <div class="form-group"><label>Reacción</label><textarea id="al-reaccion" rows="2"></textarea></div>
+      <button class="btn btn-success w-100" id="btn-guardar-alergia">Guardar</button>
+    </div>
+    <button class="btn btn-secondary btn-block" onclick="irA('detalle_visita', ${visita.id})">← Volver</button>
+  `;
+
+  contenedor().innerHTML = html;
+
+  document.getElementById("btn-guardar-alergia").addEventListener("click", async () => {
+    const alergeno = document.getElementById("al-alergeno").value.trim();
+    if (!alergeno) { alert("Debe indicar el alérgeno."); return; }
+    await encolarAccion("crear_alergia", {
+      paciente_id: visita.paciente_id, tipo: document.getElementById("al-tipo").value,
+      alergeno: alergeno, severidad: document.getElementById("al-severidad").value,
+      reaccion: document.getElementById("al-reaccion").value, estado: "Activa",
+    });
+    alert("Alergia guardada. Se sincronizará cuando haya conexión.");
+    irA("detalle_visita", visita.id);
+  });
+}
+
+async function renderAntecedentes(visita) {
+  titulo("Antecedentes");
+  const nombrePaciente = [visita.primer_nombre, visita.primer_apellido].filter(Boolean).join(" ");
+  contenedor().innerHTML = `<p class="text-center">Cargando...</p>`;
+
+  let datos = { antecedentes: [], tipos: [] };
+  try { datos = await apiGet(`/api/movil/paciente/${visita.paciente_id}/antecedentes`); } catch (e) {}
+
+  const nombresTipo = { AP: "Personales", AF: "Familiares", AQ: "Quirúrgicos", AH: "Hospitalizaciones", AL: "Alergias", HT: "Hábitos", GO: "Gineco-Obstétricos", OC: "Ocupacionales", FA: "Farmacológicos" };
+
+  let html = `<div class="card"><h3>📖 Antecedentes</h3><small>${nombrePaciente}</small></div>`;
+
+  if (datos.antecedentes.length === 0) {
+    html += `<div class="alerta alerta-info">Sin antecedentes registrados.</div>`;
+  } else {
+    datos.antecedentes.forEach((a) => {
+      html += `<div class="card"><strong>${nombresTipo[a.tipo] || a.tipo}</strong><p style="margin-top:6px;">${a.descripcion}</p></div>`;
+    });
+  }
+
+  html += `
+    <div class="card">
+      <h5>Registrar nuevo antecedente</h5>
+      <div class="form-group"><label>Tipo</label>
+        <select id="an-tipo">${datos.tipos.map(t => `<option value="${t}">${nombresTipo[t] || t}</option>`).join("")}</select>
+      </div>
+      <div class="form-group"><label>Descripción</label><textarea id="an-descripcion" rows="3"></textarea></div>
+      <button class="btn btn-success w-100" id="btn-guardar-antecedente">Guardar</button>
+    </div>
+    <button class="btn btn-secondary btn-block" onclick="irA('detalle_visita', ${visita.id})">← Volver</button>
+  `;
+
+  contenedor().innerHTML = html;
+
+  document.getElementById("btn-guardar-antecedente").addEventListener("click", async () => {
+    const descripcion = document.getElementById("an-descripcion").value.trim();
+    if (!descripcion) { alert("Debe indicar la descripción."); return; }
+    await encolarAccion("crear_antecedente", {
+      paciente_id: visita.paciente_id, tipo: document.getElementById("an-tipo").value,
+      descripcion: descripcion,
+    });
+    alert("Antecedente guardado. Se sincronizará cuando haya conexión.");
+    irA("detalle_visita", visita.id);
+  });
+}
+
+function renderExamenFisico(visita) {
+  titulo("Examen Físico");
+  const nombrePaciente = [visita.primer_nombre, visita.primer_apellido].filter(Boolean).join(" ");
+  const sistemas = ["cabeza", "cara", "boca", "cuello", "torax", "abdomen", "extremidades", "vascular", "neurologico", "columna"];
+
+  contenedor().innerHTML = `
+    <div class="card">
+      <h3>🩻 Examen Físico por Sistemas</h3>
+      <small>${nombrePaciente}</small>
+      <div class="form-group" style="margin-top:10px;"><label>Tipo de profesional</label><input type="text" id="ef-tipo-profesional" placeholder="Ej: Medicina General, Enfermería"></div>
+      ${sistemas.map(s => `<div class="form-group"><label style="text-transform:capitalize;">${s}</label><textarea id="ef-${s}" rows="2" placeholder="Ej: NORMAL"></textarea></div>`).join("")}
+      <button class="btn btn-success w-100" id="btn-guardar-examen-fisico">Guardar examen físico</button>
+    </div>
+    <button class="btn btn-secondary btn-block" onclick="irA('detalle_visita', ${visita.id})">← Volver</button>
+  `;
+
+  document.getElementById("btn-guardar-examen-fisico").addEventListener("click", async () => {
+    const valores = {};
+    sistemas.forEach((s) => { valores[s] = document.getElementById(`ef-${s}`).value; });
+
+    await encolarAccion("crear_examen_fisico", {
+      paciente_id: visita.paciente_id, programacion_id: visita.id, profesional_id: perfil.profesional_id,
+      tipo_profesional: document.getElementById("ef-tipo-profesional").value, valores: valores,
+    });
+
+    alert("Examen físico guardado. Se sincronizará cuando haya conexión.");
+    irA("detalle_visita", visita.id);
+  });
+}
+
+function renderRecomendaciones(visita) {
+  titulo("Recomendaciones");
+  const nombrePaciente = [visita.primer_nombre, visita.primer_apellido].filter(Boolean).join(" ");
+  const tiposConsulta = ["PRIMERA VEZ", "CONTROL", "CONFIRMADO NUEVO", "CONFIRMADO REPETIDO", "PRESUNTIVO"];
+
+  contenedor().innerHTML = `
+    <div class="card">
+      <h3>📝 Recomendaciones / Plan Médico</h3>
+      <small>${nombrePaciente}</small>
+
+      <label style="font-weight:bold; margin-top:10px; display:block;">Diagnóstico principal</label>
+      <input type="text" id="reco-buscar-ppal" placeholder="Buscar por código o nombre (CIE-10)...">
+      <div id="reco-resultados-ppal" style="max-height:150px; overflow-y:auto;"></div>
+      <input type="hidden" id="reco-ppal-codigo"><input type="hidden" id="reco-ppal-nombre">
+
+      ${[1, 2, 3].map(n => `
+      <label style="font-weight:bold; margin-top:10px; display:block;">Diagnóstico relacionado ${n} (opcional)</label>
+      <input type="text" id="reco-buscar-rel${n}" placeholder="Buscar por código o nombre (CIE-10)...">
+      <div id="reco-resultados-rel${n}" style="max-height:150px; overflow-y:auto;"></div>
+      <input type="hidden" id="reco-rel${n}-codigo"><input type="hidden" id="reco-rel${n}-nombre">
+      `).join("")}
+
+      <div class="form-group"><label>Tipo de consulta</label>
+        <select id="reco-tipo-consulta">${tiposConsulta.map(t => `<option value="${t}">${t}</option>`).join("")}</select>
+      </div>
+
+      <label><input type="checkbox" id="reco-incapacidad"> Incapacidad</label><br>
+      <label><input type="checkbox" id="reco-nota-aclaratoria"> Nota aclaratoria</label><br>
+      <label><input type="checkbox" id="reco-orden-medicamentos"> Orden de medicamentos</label><br>
+      <label><input type="checkbox" id="reco-orden-procedimientos"> Orden de procedimientos</label>
+
+      <div class="form-group" style="margin-top:10px;"><label>Recomendaciones / plan</label><textarea id="reco-texto" rows="3"></textarea></div>
+      <button class="btn btn-success w-100" id="btn-guardar-recomendacion">Guardar</button>
+    </div>
+    <button class="btn btn-secondary btn-block" onclick="irA('detalle_visita', ${visita.id})">← Volver</button>
+  `;
+
+  function habilitarBusquedaCie10(sufijo) {
+    const campo = document.getElementById(`reco-buscar-${sufijo}`);
+    const resultados = document.getElementById(`reco-resultados-${sufijo}`);
+    const campoCodigo = document.getElementById(`reco-${sufijo}-codigo`);
+    const campoNombre = document.getElementById(`reco-${sufijo}-nombre`);
+
+    let temporizador;
+    campo.addEventListener("input", () => {
+      clearTimeout(temporizador);
+      campoCodigo.value = ""; campoNombre.value = "";
+      const texto = campo.value.trim();
+      if (texto.length < 2) { resultados.innerHTML = ""; return; }
+      temporizador = setTimeout(async () => {
+        const resp = await fetch(`/api/cie10?buscar=${encodeURIComponent(texto)}`);
+        const datos = await resp.json();
+        resultados.innerHTML = datos.slice(0, 10).map(d =>
+          `<div class="card" style="padding:6px; margin:4px 0; cursor:pointer;" data-codigo="${d.codigo}" data-descripcion="${d.descripcion}">${d.codigo} - ${d.descripcion}</div>`
+        ).join("");
+        resultados.querySelectorAll("[data-codigo]").forEach((el) => {
+          el.addEventListener("click", () => {
+            campo.value = `${el.dataset.codigo} - ${el.dataset.descripcion}`;
+            campoCodigo.value = el.dataset.codigo;
+            campoNombre.value = el.dataset.descripcion;
+            resultados.innerHTML = "";
+          });
+        });
+      }, 300);
+    });
+  }
+
+  ["ppal", "rel1", "rel2", "rel3"].forEach(habilitarBusquedaCie10);
+
+  document.getElementById("btn-guardar-recomendacion").addEventListener("click", async () => {
+    const codigoPpal = document.getElementById("reco-ppal-codigo").value;
+    if (!codigoPpal) { alert("Debe seleccionar el diagnóstico principal de la lista de resultados."); return; }
+
+    await encolarAccion("crear_recomendacion", {
+      paciente_id: visita.paciente_id, programacion_id: visita.id, profesional_id: perfil.profesional_id,
+      datos: {
+        diagnostico_ppal_codigo: codigoPpal, diagnostico_ppal_nombre: document.getElementById("reco-ppal-nombre").value,
+        diagnostico_rel1_codigo: document.getElementById("reco-rel1-codigo").value, diagnostico_rel1_nombre: document.getElementById("reco-rel1-nombre").value,
+        diagnostico_rel2_codigo: document.getElementById("reco-rel2-codigo").value, diagnostico_rel2_nombre: document.getElementById("reco-rel2-nombre").value,
+        diagnostico_rel3_codigo: document.getElementById("reco-rel3-codigo").value, diagnostico_rel3_nombre: document.getElementById("reco-rel3-nombre").value,
+        tipo_consulta: document.getElementById("reco-tipo-consulta").value,
+        incapacidad: document.getElementById("reco-incapacidad").checked,
+        nota_aclaratoria: document.getElementById("reco-nota-aclaratoria").checked,
+        orden_medicamentos: document.getElementById("reco-orden-medicamentos").checked,
+        orden_procedimientos: document.getElementById("reco-orden-procedimientos").checked,
+        recomendaciones_texto: document.getElementById("reco-texto").value,
+      },
+    });
+
+    alert("Recomendación guardada. Se sincronizará cuando haya conexión.");
+    irA("detalle_visita", visita.id);
+  });
+}
+
 function esPerfilCuidador() {
   return !!(perfil && perfil.rol && perfil.rol.toLowerCase().includes("cuidador"));
 }
@@ -1590,7 +1871,7 @@ async function renderVerReporte(visita) {
           <br><small>${i.tipo_profesional || ""} · ${i.profesional || ""} · ${i.fecha}</small>
           <p style="margin-top:8px;">${i.nota}</p>
           ${i.firma_profesional_base64 ? `<img src="${i.firma_profesional_base64}" style="max-height:60px;background:white;border:1px solid #dee2e6;">` : ""}
-          <button class="btn btn-secondary btn-block mt-1" onclick="window.open('/historia-clinica/informe/${i.id}/imprimir', '_blank')">
+          <button class="btn btn-secondary btn-block mt-1" onclick="abrirReporteEnApp('/historia-clinica/informe/${i.id}/imprimir')">
             🖨️ Imprimir este informe (con datos completos del paciente)
           </button>
         </div>

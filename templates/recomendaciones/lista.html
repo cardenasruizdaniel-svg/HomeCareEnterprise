@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block titulo %}Recomendaciones{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    {% include "components/volver_paciente.html" %}
+
+    <h2 class="mb-1"><i class="fa-solid fa-clipboard-list text-primary"></i> Recomendaciones / Plan Médico — {{ paciente.primer_nombre }} {{ paciente.primer_apellido }}</h2>
+    <p class="text-muted">Diagnóstico principal, diagnósticos relacionados, tipo de consulta y marcas del plan.</p>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h5 class="mb-0">Nueva recomendación</h5></div>
+                <div class="card-body">
+                    <form method="post" action="/recomendaciones/{{ paciente_id }}/guardar" id="form-recomendaciones">
+
+                        <label class="fw-bold">Diagnóstico principal</label>
+                        <div class="mb-2 position-relative">
+                            <input type="text" class="form-control campo-buscar-cie10" data-objetivo="ppal" placeholder="Buscar por código o nombre (CIE-10)..." required>
+                            <div class="list-group position-absolute w-100 resultados-cie10" style="z-index:1000;"></div>
+                            <input type="hidden" name="diagnostico_ppal_codigo">
+                            <input type="hidden" name="diagnostico_ppal_nombre">
+                        </div>
+
+                        {% for n in [1, 2, 3] %}
+                        <label class="fw-bold">Diagnóstico relacionado {{ n }} (opcional)</label>
+                        <div class="mb-2 position-relative">
+                            <input type="text" class="form-control campo-buscar-cie10" data-objetivo="rel{{ n }}" placeholder="Buscar por código o nombre (CIE-10)...">
+                            <div class="list-group position-absolute w-100 resultados-cie10" style="z-index:1000;"></div>
+                            <input type="hidden" name="diagnostico_rel{{ n }}_codigo">
+                            <input type="hidden" name="diagnostico_rel{{ n }}_nombre">
+                        </div>
+                        {% endfor %}
+
+                        <div class="mb-2">
+                            <label>Tipo de consulta</label>
+                            <select name="tipo_consulta" class="form-select">
+                                {% for t in tipos_consulta %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="row mb-2">
+                            <div class="col-6 form-check"><input type="checkbox" name="incapacidad" value="1" class="form-check-input" id="ck-incap"><label class="form-check-label" for="ck-incap">Incapacidad</label></div>
+                            <div class="col-6 form-check"><input type="checkbox" name="nota_aclaratoria" value="1" class="form-check-input" id="ck-nota"><label class="form-check-label" for="ck-nota">Nota aclaratoria</label></div>
+                            <div class="col-6 form-check"><input type="checkbox" name="orden_medicamentos" value="1" class="form-check-input" id="ck-medic"><label class="form-check-label" for="ck-medic">Orden de medicamentos</label></div>
+                            <div class="col-6 form-check"><input type="checkbox" name="orden_procedimientos" value="1" class="form-check-input" id="ck-proc"><label class="form-check-label" for="ck-proc">Orden de procedimientos</label></div>
+                        </div>
+
+                        <div class="mb-2"><label>Recomendaciones / plan (texto libre)</label><textarea name="recomendaciones_texto" class="form-control" rows="3"></textarea></div>
+
+                        <button class="btn btn-success w-100"><i class="fa-solid fa-floppy-disk"></i> Guardar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            {% for r in registros %}
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ r.diagnostico_ppal_nombre }} ({{ r.diagnostico_ppal_codigo }})</strong>
+                        <small class="text-muted">{{ r.fecha_creacion }}</small>
+                    </div>
+                    <small class="text-muted">{{ r.profesional or "" }} — {{ r.tipo_consulta }}</small>
+                    {% if r.diagnostico_rel1_nombre %}<p class="mb-1 mt-2 small">Relacionado 1: {{ r.diagnostico_rel1_nombre }} ({{ r.diagnostico_rel1_codigo }})</p>{% endif %}
+                    {% if r.diagnostico_rel2_nombre %}<p class="mb-1 small">Relacionado 2: {{ r.diagnostico_rel2_nombre }} ({{ r.diagnostico_rel2_codigo }})</p>{% endif %}
+                    {% if r.diagnostico_rel3_nombre %}<p class="mb-1 small">Relacionado 3: {{ r.diagnostico_rel3_nombre }} ({{ r.diagnostico_rel3_codigo }})</p>{% endif %}
+                    <div class="mt-1">
+                        {% if r.incapacidad %}<span class="badge bg-warning text-dark">Incapacidad</span>{% endif %}
+                        {% if r.nota_aclaratoria %}<span class="badge bg-info text-dark">Nota aclaratoria</span>{% endif %}
+                        {% if r.orden_medicamentos %}<span class="badge bg-primary">Orden medicamentos</span>{% endif %}
+                        {% if r.orden_procedimientos %}<span class="badge bg-secondary">Orden procedimientos</span>{% endif %}
+                    </div>
+                    {% if r.recomendaciones_texto %}<p class="mt-2 mb-0 small">{{ r.recomendaciones_texto }}</p>{% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="card shadow-sm"><div class="card-body text-center text-muted py-5">Sin recomendaciones registradas.</div></div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll(".campo-buscar-cie10").forEach((campo) => {
+    const contenedorResultados = campo.parentElement.querySelector(".resultados-cie10");
+    const objetivo = campo.dataset.objetivo;
+    const campoCodigo = document.querySelector(`input[name="diagnostico_${objetivo === "ppal" ? "ppal" : objetivo}_codigo"]`);
+    const campoNombre = document.querySelector(`input[name="diagnostico_${objetivo === "ppal" ? "ppal" : objetivo}_nombre"]`);
+
+    let temporizador;
+    campo.addEventListener("input", () => {
+        clearTimeout(temporizador);
+        const texto = campo.value.trim();
+        campoCodigo.value = "";
+        campoNombre.value = "";
+        if (texto.length < 2) { contenedorResultados.innerHTML = ""; return; }
+        temporizador = setTimeout(async () => {
+            const resp = await fetch(`/api/cie10?buscar=${encodeURIComponent(texto)}`);
+            const datos = await resp.json();
+            contenedorResultados.innerHTML = datos.slice(0, 15).map(d =>
+                `<button type="button" class="list-group-item list-group-item-action" data-codigo="${d.codigo}" data-descripcion="${d.descripcion}">${d.codigo} - ${d.descripcion}</button>`
+            ).join("");
+        }, 300);
+    });
+
+    contenedorResultados.addEventListener("click", (e) => {
+        if (e.target.matches("[data-codigo]")) {
+            campo.value = `${e.target.dataset.codigo} - ${e.target.dataset.descripcion}`;
+            campoCodigo.value = e.target.dataset.codigo;
+            campoNombre.value = e.target.dataset.descripcion;
+            contenedorResultados.innerHTML = "";
+        }
+    });
+});
+</script>
+{% endblock %}

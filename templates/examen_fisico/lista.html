@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block titulo %}Examen Físico{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    {% include "components/volver_paciente.html" %}
+
+    <h2 class="mb-1"><i class="fa-solid fa-stethoscope text-primary"></i> Examen Físico por Sistemas — {{ paciente.primer_nombre }} {{ paciente.primer_apellido }}</h2>
+    <p class="text-muted">Registre el examen físico separado por cada sistema, tal como en la historia clínica de medicina general.</p>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h5 class="mb-0">Nuevo examen físico</h5></div>
+                <div class="card-body">
+                    <form method="post" action="/examen-fisico/{{ paciente_id }}/guardar">
+                        <div class="mb-2"><label>Tipo de profesional que registra</label>
+                            <input type="text" name="tipo_profesional" class="form-control" placeholder="Ej: Medicina General, Enfermería">
+                        </div>
+                        {% for sistema in sistemas %}
+                        <div class="mb-2">
+                            <label class="text-capitalize">{{ sistema }}</label>
+                            <textarea name="{{ sistema }}" class="form-control" rows="2" placeholder="Ej: NORMAL, o describa los hallazgos"></textarea>
+                        </div>
+                        {% endfor %}
+                        <button class="btn btn-success w-100"><i class="fa-solid fa-floppy-disk"></i> Guardar examen físico</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            {% for r in registros %}
+            <div class="card shadow-sm mb-3">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <strong>{{ r.profesional or "Sin profesional" }}</strong>
+                        <small class="text-muted">{{ r.fecha_creacion }}</small>
+                    </div>
+                    <small class="text-muted">{{ r.tipo_profesional }}</small>
+                    <table class="table table-sm mt-2 mb-0">
+                        {% for sistema in sistemas %}
+                        {% if r[sistema] %}
+                        <tr><td class="text-capitalize" style="width:140px;"><strong>{{ sistema }}</strong></td><td>{{ r[sistema] }}</td></tr>
+                        {% endif %}
+                        {% endfor %}
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="card shadow-sm"><div class="card-body text-center text-muted py-5">Sin exámenes físicos registrados.</div></div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

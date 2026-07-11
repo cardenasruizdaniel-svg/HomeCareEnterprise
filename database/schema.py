@@ -2162,4 +2162,115 @@ CREATE TABLE IF NOT EXISTS calidad_evaluaciones(
 );
 """,
 
+# =====================================================
+# EXAMEN FÍSICO POR SISTEMAS
+# (cabeza, boca, cuello, torax, abdomen, extremidades,
+# vascular, neurologico, columna -- como en el formato
+# de historia clinica de medicina general de la IPS)
+# =====================================================
+
+"""
+CREATE TABLE IF NOT EXISTS examen_fisico(
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    paciente_id INTEGER NOT NULL,
+
+    programacion_id INTEGER,
+
+    profesional_id INTEGER,
+
+    tipo_profesional TEXT,
+
+    fecha TEXT DEFAULT CURRENT_TIMESTAMP,
+
+    cabeza TEXT,
+
+    cara TEXT,
+
+    boca TEXT,
+
+    cuello TEXT,
+
+    torax TEXT,
+
+    abdomen TEXT,
+
+    extremidades TEXT,
+
+    vascular TEXT,
+
+    neurologico TEXT,
+
+    columna TEXT,
+
+    usuario_creacion INTEGER,
+
+    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
+    FOREIGN KEY(profesional_id) REFERENCES profesionales(id)
+
+);
+""",
+
+# =====================================================
+# RECOMENDACIONES / PLAN MÉDICO
+# (diagnostico principal + 3 relacionados, tipo de
+# consulta, y marcas de incapacidad/nota aclaratoria/
+# orden de medicamentos/orden de procedimientos --
+# tal como en el formato de historia clinica de la IPS)
+# =====================================================
+
+"""
+CREATE TABLE IF NOT EXISTS recomendaciones_medicas(
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    paciente_id INTEGER NOT NULL,
+
+    programacion_id INTEGER,
+
+    profesional_id INTEGER,
+
+    fecha TEXT DEFAULT CURRENT_TIMESTAMP,
+
+    diagnostico_ppal_codigo TEXT,
+
+    diagnostico_ppal_nombre TEXT,
+
+    diagnostico_rel1_codigo TEXT,
+
+    diagnostico_rel1_nombre TEXT,
+
+    diagnostico_rel2_codigo TEXT,
+
+    diagnostico_rel2_nombre TEXT,
+
+    diagnostico_rel3_codigo TEXT,
+
+    diagnostico_rel3_nombre TEXT,
+
+    tipo_consulta TEXT,
+
+    incapacidad INTEGER DEFAULT 0,
+
+    nota_aclaratoria INTEGER DEFAULT 0,
+
+    orden_medicamentos INTEGER DEFAULT 0,
+
+    orden_procedimientos INTEGER DEFAULT 0,
+
+    recomendaciones_texto TEXT,
+
+    usuario_creacion INTEGER,
+
+    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
+    FOREIGN KEY(profesional_id) REFERENCES profesionales(id)
+
+);
+""",
+
 ]
