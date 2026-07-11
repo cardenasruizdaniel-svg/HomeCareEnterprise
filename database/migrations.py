@@ -609,6 +609,17 @@ class MigrationManager:
             )
         return cambios
 
+    def migrar_reconocimiento_facial(self):
+        cambios = []
+        if self.existe_tabla("profesionales"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "profesionales",
+                    {"foto_enrolamiento_base64": "foto_enrolamiento_base64 TEXT"},
+                )
+            )
+        return cambios
+
     def migrar_catalogo_examenes_laboratorio(self):
         cambios = []
         if not self.existe_tabla("catalogo_examenes_laboratorio"):
@@ -1638,6 +1649,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_bloqueo_login()
+        )
+
+        cambios.extend(
+            self.migrar_reconocimiento_facial()
         )
 
         cambios.extend(

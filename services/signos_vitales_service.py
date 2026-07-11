@@ -49,6 +49,12 @@ def calcular_imc(peso, talla):
     if not talla or talla <= 0:
         return 0
 
+    # Si la talla viene en centímetros (ej. 170) en vez de
+    # metros (1.70), se normaliza sola -- es un error común al
+    # digitar, y así el cálculo queda correcto de todas formas.
+    if talla > 3:
+        talla = talla / 100
+
     return round(peso / (talla * talla), 2)
 
 

@@ -207,6 +207,24 @@
             </button>
             <div id="aviso-firma-profesional"></div>
 
+            <hr>
+
+            <h5><i class="fa-solid fa-face-viewfinder"></i> Foto de Enrolamiento (verificación facial)</h5>
+            <p class="text-muted small">
+                Se usa para confirmar, en cada ingreso/salida marcado desde la app, que es esta misma persona.
+                {% if profesional.foto_enrolamiento_base64 %}Ya tiene una foto guardada; puede cargar una nueva para reemplazarla.{% endif %}
+            </p>
+            {% if profesional.foto_enrolamiento_base64 %}
+            <p class="small text-muted">Foto actual:</p>
+            <img src="{{ profesional.foto_enrolamiento_base64 }}" style="max-height:150px; border:1px solid #dee2e6;" class="mb-2 d-block rounded">
+            {% endif %}
+            <input type="file" accept="image/*" capture="user" class="form-control mb-2" id="campo-foto-enrolamiento-archivo">
+            <img id="vista-previa-enrolamiento" style="max-height:150px; display:none;" class="mb-2 border rounded">
+            <button type="button" class="btn btn-primary btn-sm mb-2" id="btn-guardar-foto-enrolamiento">
+                <i class="fa-solid fa-floppy-disk"></i> Guardar foto de enrolamiento
+            </button>
+            <div id="aviso-foto-enrolamiento"></div>
+
         </div>
     </div>
 
@@ -301,6 +319,39 @@ async function cargarMunicipiosProfesional(codigoDepartamento, municipioActual) 
 }
 
 cargarDepartamentosProfesional();
+</script>
+
+<script>
+let fotoEnrolamientoNueva = null;
+
+document.getElementById('campo-foto-enrolamiento-archivo').addEventListener('change', (e) => {
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = () => {
+        fotoEnrolamientoNueva = lector.result;
+        const vista = document.getElementById('vista-previa-enrolamiento');
+        vista.src = lector.result;
+        vista.style.display = 'block';
+    };
+    lector.readAsDataURL(archivo);
+});
+
+document.getElementById('btn-guardar-foto-enrolamiento').addEventListener('click', async () => {
+    if (!fotoEnrolamientoNueva) {
+        document.getElementById('aviso-foto-enrolamiento').innerHTML = '<div class="alert alert-warning mt-2">Seleccione una foto primero.</div>';
+        return;
+    }
+    const respuesta = await fetch('/profesionales/actualizar-foto-enrolamiento/{{ profesional.id }}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ foto_enrolamiento_base64: fotoEnrolamientoNueva }),
+    });
+    const resultado = await respuesta.json();
+    document.getElementById('aviso-foto-enrolamiento').innerHTML = resultado.ok
+        ? '<div class="alert alert-success mt-2">Foto de enrolamiento guardada correctamente.</div>'
+        : `<div class="alert alert-danger mt-2">${resultado.error || 'No se pudo guardar.'}</div>`;
+});
 </script>
 
 {% endblock %}

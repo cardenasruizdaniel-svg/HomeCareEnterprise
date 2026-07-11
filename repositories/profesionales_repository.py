@@ -255,7 +255,9 @@ class ProfesionalesRepository:
 
                 usuario_creacion,
 
-                firma_base64
+                firma_base64,
+
+                foto_enrolamiento_base64
 
             )
 
@@ -329,7 +331,9 @@ class ProfesionalesRepository:
 
                 :usuario_creacion,
 
-                :firma_base64
+                :firma_base64,
+
+                :foto_enrolamiento_base64
 
             )
 
@@ -2296,6 +2300,17 @@ class ProfesionalesRepository:
         cursor.execute(
             "UPDATE profesionales SET firma_base64=? WHERE id=?",
             (firma_base64, profesional_id),
+        )
+        conexion.commit()
+        conexion.close()
+
+    @staticmethod
+    def actualizar_foto_enrolamiento(profesional_id: int, foto_base64: str):
+        conexion = get_connection()
+        cursor = conexion.cursor()
+        cursor.execute(
+            "UPDATE profesionales SET foto_enrolamiento_base64=? WHERE id=?",
+            (foto_base64, profesional_id),
         )
         conexion.commit()
         conexion.close()

@@ -18,3 +18,10 @@ reportlab==4.2.5
 
 requests==2.32.3
 openpyxl==3.1.5
+
+# Reconocimiento facial (verificación de ingreso/salida en la app):
+# opencv-contrib-python trae, además de OpenCV normal, el módulo
+# cv2.face (LBPH) que se usa para comparar rostros -- opencv-python
+# (sin "-contrib") NO trae ese módulo, así que debe ser este paquete.
+opencv-contrib-python==4.10.0.84
+numpy==1.26.4

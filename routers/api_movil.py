@@ -259,6 +259,15 @@ async def antecedentes_paciente(paciente_id: int, usuario=Depends(requiere_permi
     }
 
 
+@router.get("/paciente/{paciente_id}/diagnosticos")
+async def diagnosticos_paciente(paciente_id: int, usuario=Depends(requiere_permiso("programacion"))):
+    """Diagnósticos ya registrados del paciente, para elegir rápido en Recomendaciones sin tener que buscar en CIE-10 cada vez."""
+    verificar_acceso_paciente_movil(paciente_id, usuario)
+    from services.diagnosticos_service import DiagnosticosService
+    filas = DiagnosticosService.listar_activos_por_paciente(paciente_id)
+    return [{"codigo": dict(f)["codigo_cie10"], "nombre": dict(f)["diagnostico"]} for f in filas]
+
+
 @router.get("/mi-agenda-programable")
 async def mi_agenda_programable(usuario=Depends(requiere_permiso("programacion"))):
     """

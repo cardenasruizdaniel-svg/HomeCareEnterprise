@@ -503,6 +503,25 @@ def registrar_ingreso(id, latitud=None, longitud=None, foto_base64=None):
     ahora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     visita = dict(_repo.obtener(id))
+
+    # Verificación facial: compara la foto tomada contra la
+    # foto de enrolamiento del profesional, para confirmar que
+    # quien está marcando el ingreso es de verdad esa persona.
+    if foto_base64 and visita.get("profesional_id"):
+        try:
+            from services.reconocimiento_facial_service import comparar_rostros
+            profesional = consultar_uno(
+                "SELECT foto_enrolamiento_base64 FROM profesionales WHERE id=?", (visita["profesional_id"],)
+            )
+            foto_enrolamiento = dict(profesional).get("foto_enrolamiento_base64") if profesional else None
+            resultado_facial = comparar_rostros(foto_enrolamiento, foto_base64)
+            if not resultado_facial["verificado"]:
+                raise ValueError(
+                    "No se puede registrar el ingreso: " + resultado_facial["motivo"]
+                )
+        except ImportError:
+            pass  # OpenCV no disponible en esta instalación -- se omite la verificación, no se bloquea el ingreso
+
     paciente = consultar_uno(
         "SELECT latitud, longitud, radio_geocerca_metros FROM pacientes WHERE id=?",
         (visita["paciente_id"],),
@@ -535,6 +554,21 @@ def registrar_salida(id, latitud=None, longitud=None, foto_base64=None):
     from core.geolocalizacion import verificar_geocerca
 
     visita = dict(_repo.obtener(id))
+
+    if foto_base64 and visita.get("profesional_id"):
+        try:
+            from services.reconocimiento_facial_service import comparar_rostros
+            profesional = consultar_uno(
+                "SELECT foto_enrolamiento_base64 FROM profesionales WHERE id=?", (visita["profesional_id"],)
+            )
+            foto_enrolamiento = dict(profesional).get("foto_enrolamiento_base64") if profesional else None
+            resultado_facial = comparar_rostros(foto_enrolamiento, foto_base64)
+            if not resultado_facial["verificado"]:
+                raise ValueError(
+                    "No se puede registrar la salida: " + resultado_facial["motivo"]
+                )
+        except ImportError:
+            pass  # OpenCV no disponible en esta instalación -- se omite la verificación, no se bloquea la salida
 
     ahora_dt = datetime.now()
     ahora = ahora_dt.strftime("%Y-%m-%d %H:%M:%S")

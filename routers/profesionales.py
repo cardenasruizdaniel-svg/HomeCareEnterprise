@@ -105,6 +105,7 @@ async def guardar(
     nombre_usuario: str = Form(""),
     password: str = Form(""),
     rol_sistema: str = Form(""),
+    foto_enrolamiento_base64: str = Form(""),
     _actor=Depends(requiere_permiso("profesionales")),
 ):
     datos_profesional = {
@@ -137,6 +138,7 @@ async def guardar(
         "tipo_cuenta": tipo_cuenta,
         "numero_cuenta": numero_cuenta,
         "firma_base64": firma_base64 or None,
+        "foto_enrolamiento_base64": foto_enrolamiento_base64 or None,
     }
 
     try:
@@ -352,6 +354,20 @@ async def actualizar_firma_endpoint(
 ):
     try:
         profesionales_service.actualizar_firma(profesional_id, datos.get("firma_base64"))
+        return {"ok": True}
+    except ValueError as error:
+        return {"ok": False, "error": str(error)}
+
+
+@router.post("/actualizar-foto-enrolamiento/{profesional_id}")
+async def actualizar_foto_enrolamiento_endpoint(
+    profesional_id: int,
+    datos: dict,
+    usuario=Depends(requiere_permiso("profesionales")),
+):
+    try:
+        from repositories.profesionales_repository import ProfesionalesRepository
+        ProfesionalesRepository.actualizar_foto_enrolamiento(profesional_id, datos.get("foto_enrolamiento_base64"))
         return {"ok": True}
     except ValueError as error:
         return {"ok": False, "error": str(error)}

@@ -27,8 +27,12 @@
                         <label>Tipo de examen</label>
                         <select id="campo-tipo-examen-catalogo" class="form-select mb-1">
                             <option value="">-- Escriba uno personalizado abajo, o elija del catálogo --</option>
-                            {% for e in catalogo_examenes %}
-                            <option value="{{ e.id }}" data-nombre="{{ e.nombre_examen }}">{{ e.nombre_examen }} ({{ e.categoria }})</option>
+                            {% for categoria, examenes in catalogo_examenes|groupby("categoria") %}
+                            <optgroup label="{{ categoria }}">
+                                {% for e in examenes %}
+                                <option value="{{ e.id }}" data-nombre="{{ e.nombre_examen }}">{{ e.nombre_examen }}</option>
+                                {% endfor %}
+                            </optgroup>
                             {% endfor %}
                         </select>
                         <input type="text" id="campo-examen" class="form-control" placeholder="Nombre del examen (se llena solo al elegir del catálogo, o escríbalo)" required>

@@ -194,9 +194,21 @@ async function intentarSincronizar() {
         if (geocerca && geocerca.verificable !== undefined) {
           mostrarAvisoGeocerca(geocerca);
         }
+      } else {
+        // Una accion que el servidor rechazo (ej. verificacion
+        // facial que no coincide, o el turno ya se habia
+        // cerrado) NUNCA va a funcionar con los mismos datos
+        // por mas veces que se reintente -- asi que se avisa
+        // claramente y se saca de la cola, en vez de quedar
+        // reintentando en silencio para siempre sin que la
+        // persona se entere de que algo no se guardo.
+        await borrarDeStore("cola_offline", resultado.id);
+        alert(
+          "⚠ Una acción no se pudo guardar y no se va a reintentar sola:\n\n" +
+          (resultado.error || "Error desconocido del servidor.") +
+          "\n\nSi era un registro de ingreso/salida, vuelva a intentarlo desde la pantalla de la visita."
+        );
       }
-      // los que fallan se quedan en la cola para reintentar
-      // (por ejemplo, si el servidor devolvió un error puntual)
     }
   } catch (error) {
     console.warn("No se pudo sincronizar todavía:", error.message);
@@ -782,12 +794,12 @@ async function renderDetalleVisita(visitaId) {
     </button>
     ${esPerfilCuidador() ? "" : `
     <button class="btn btn-secondary btn-block" id="btn-signos">🌡️ Signos Vitales y Tallas</button>
-    <button class="btn btn-secondary btn-block" id="btn-medicamento">💊 Registrar medicamento administrado</button>
+    ${esPerfilConMedicamentos() ? `<button class="btn btn-secondary btn-block" id="btn-medicamento">💊 Registrar medicamento administrado</button>` : ""}
     `}
     <button class="btn btn-secondary btn-block" id="btn-evolucion">${esPerfilCuidador() ? "📋 Registro Informe de Cuidador" : "📝 Registrar evolución"}</button>
     ${esPerfilCuidador() ? "" : `
     <button class="btn btn-secondary btn-block" id="btn-laboratorio">🧪 Resultados de laboratorio</button>
-    <button class="btn btn-secondary btn-block" id="btn-ordenes">📋 Órdenes Médicas</button>
+    ${esPerfilConOrdenes() ? `<button class="btn btn-secondary btn-block" id="btn-ordenes">📋 Órdenes Médicas</button>` : ""}
     <button class="btn btn-secondary btn-block" id="btn-ultima-nota-medica">🩺 Última Nota Médica</button>
     <button class="btn btn-secondary btn-block" id="btn-programa-atencion">📑 Programa de Atención</button>
     <button class="btn btn-secondary btn-block" id="btn-alergias">⚠️ Alergias</button>
@@ -833,9 +845,11 @@ async function renderDetalleVisita(visitaId) {
   document.getElementById("btn-evolucion").addEventListener("click", () => renderFormularioEvolucion(visita));
   if (!esPerfilCuidador()) {
     document.getElementById("btn-signos").addEventListener("click", () => renderFormularioSignos(visita));
-    document.getElementById("btn-medicamento").addEventListener("click", () => renderFormularioMedicamento(visita));
+    const botonMedicamento = document.getElementById("btn-medicamento");
+    if (botonMedicamento) botonMedicamento.addEventListener("click", () => renderFormularioMedicamento(visita));
     document.getElementById("btn-laboratorio").addEventListener("click", () => renderLaboratorio(visita));
-    document.getElementById("btn-ordenes").addEventListener("click", () => renderOrdenMedica(visita));
+    const botonOrdenes = document.getElementById("btn-ordenes");
+    if (botonOrdenes) botonOrdenes.addEventListener("click", () => renderOrdenMedica(visita));
     document.getElementById("btn-ultima-nota-medica").addEventListener("click", () => renderUltimaNotaMedica(visita));
     document.getElementById("btn-programa-atencion").addEventListener("click", () => renderProgramaAtencion(visita));
     document.getElementById("btn-alergias").addEventListener("click", () => renderAlergias(visita));
@@ -850,7 +864,7 @@ function renderFormularioSignos(visita) {
     <div class="card">
       <h3>Signos Vitales y Tallas</h3>
       <div class="form-group"><label>Peso (kg)</label><input type="number" step="0.1" id="sv-peso"></div>
-      <div class="form-group"><label>Talla (m)</label><input type="number" step="0.01" id="sv-talla"></div>
+      <div class="form-group"><label>Talla (metros, ej: 1.70 — también acepta cm, ej: 170)</label><input type="number" step="0.01" id="sv-talla" placeholder="1.70"></div>
       <div class="form-group"><label>IMC (calculado)</label><input type="text" id="sv-imc" readonly style="background:#f0f0f0;"></div>
       <div class="form-group"><label>Temperatura (°C)</label><input type="number" step="0.1" id="sv-temp"></div>
       <div class="form-group"><label>Presión sistólica</label><input type="number" id="sv-sis"></div>
@@ -867,7 +881,11 @@ function renderFormularioSignos(visita) {
 
   function calcularImcMovil() {
     const peso = parseFloat(document.getElementById("sv-peso").value);
-    const talla = parseFloat(document.getElementById("sv-talla").value);
+    let talla = parseFloat(document.getElementById("sv-talla").value);
+    // Si escriben la talla en centímetros (ej. 170) en vez de
+    // metros (1.70), se detecta y se convierte solo -- es muy
+    // común escribirla así por costumbre.
+    if (talla > 3) talla = talla / 100;
     if (peso > 0 && talla > 0) {
       document.getElementById("sv-imc").value = (peso / (talla * talla)).toFixed(2);
     } else {
@@ -880,7 +898,11 @@ function renderFormularioSignos(visita) {
   document.getElementById("btn-guardar-signos").addEventListener("click", async () => {
     const datos = {
       peso: parseFloat(document.getElementById("sv-peso").value) || null,
-      talla: parseFloat(document.getElementById("sv-talla").value) || null,
+      talla: (() => {
+        let t = parseFloat(document.getElementById("sv-talla").value);
+        if (!t) return null;
+        return t > 3 ? t / 100 : t; // normaliza a metros si la escribieron en centímetros
+      })(),
       imc: parseFloat(document.getElementById("sv-imc").value) || null,
       temperatura: parseFloat(document.getElementById("sv-temp").value) || null,
       presion_sistolica: parseInt(document.getElementById("sv-sis").value) || null,
@@ -1292,13 +1314,28 @@ async function renderLaboratorio(visita) {
   document.getElementById("btn-agregar-item-lab").addEventListener("click", agregarFilaItemMovil);
   agregarFilaItemMovil();
 
-  // Cargar el catalogo de examenes para el desplegable
+  // Cargar el catalogo de examenes para el desplegable, agrupado por categoría
   let catalogoExamenesLab = [];
   try {
     catalogoExamenesLab = await apiGet("/api/movil/laboratorios/catalogo");
     const selectCatalogo = document.getElementById("lab-catalogo-examen");
-    selectCatalogo.innerHTML = '<option value="">-- Personalizado --</option>' +
-      catalogoExamenesLab.map((e) => `<option value="${e.id}">${e.nombre_examen} (${e.categoria || ''})</option>`).join("");
+
+    const categorias = {};
+    catalogoExamenesLab.forEach((e) => {
+      const cat = e.categoria || "Otros";
+      categorias[cat] = categorias[cat] || [];
+      categorias[cat].push(e);
+    });
+
+    let opcionesHtml = '<option value="">-- Personalizado --</option>';
+    Object.keys(categorias).sort().forEach((categoria) => {
+      opcionesHtml += `<optgroup label="${categoria}">`;
+      categorias[categoria].forEach((e) => {
+        opcionesHtml += `<option value="${e.id}">${e.nombre_examen}</option>`;
+      });
+      opcionesHtml += `</optgroup>`;
+    });
+    selectCatalogo.innerHTML = opcionesHtml;
 
     selectCatalogo.addEventListener("change", () => {
       const examenId = selectCatalogo.value;
@@ -1757,10 +1794,17 @@ function renderExamenFisico(visita) {
   });
 }
 
-function renderRecomendaciones(visita) {
+async function renderRecomendaciones(visita) {
   titulo("Recomendaciones");
   const nombrePaciente = [visita.primer_nombre, visita.primer_apellido].filter(Boolean).join(" ");
   const tiposConsulta = ["PRIMERA VEZ", "CONTROL", "CONFIRMADO NUEVO", "CONFIRMADO REPETIDO", "PRESUNTIVO"];
+
+  let diagnosticosPaciente = [];
+  try {
+    diagnosticosPaciente = await apiGet(`/api/movil/paciente/${visita.paciente_id}/diagnosticos`);
+  } catch (error) {
+    diagnosticosPaciente = [];
+  }
 
   contenedor().innerHTML = `
     <div class="card">
@@ -1768,8 +1812,16 @@ function renderRecomendaciones(visita) {
       <small>${nombrePaciente}</small>
 
       <label style="font-weight:bold; margin-top:10px; display:block;">Diagnóstico principal</label>
-      <input type="text" id="reco-buscar-ppal" placeholder="Buscar por código o nombre (CIE-10)...">
-      <div id="reco-resultados-ppal" style="max-height:150px; overflow-y:auto;"></div>
+      <select id="reco-ppal-select">
+        <option value="">-- Seleccione --</option>
+        ${diagnosticosPaciente.map((d) => `<option value="${d.codigo}" data-nombre="${d.nombre}">${d.codigo} - ${d.nombre}</option>`).join("")}
+        <option value="NA" data-nombre="No aplica">No aplica</option>
+        <option value="__buscar__">Otro (buscar en el catálogo CIE-10)...</option>
+      </select>
+      <div id="reco-buscar-ppal-contenedor" style="display:none; margin-top:6px;">
+        <input type="text" id="reco-buscar-ppal" placeholder="Buscar por código o nombre (CIE-10)...">
+        <div id="reco-resultados-ppal" style="max-height:150px; overflow-y:auto;"></div>
+      </div>
       <input type="hidden" id="reco-ppal-codigo"><input type="hidden" id="reco-ppal-nombre">
 
       ${[1, 2, 3].map(n => `
@@ -1826,6 +1878,21 @@ function renderRecomendaciones(visita) {
 
   ["ppal", "rel1", "rel2", "rel3"].forEach(habilitarBusquedaCie10);
 
+  document.getElementById("reco-ppal-select").addEventListener("change", (evento) => {
+    const opcion = evento.target.selectedOptions[0];
+    const contenedorBusqueda = document.getElementById("reco-buscar-ppal-contenedor");
+
+    if (evento.target.value === "__buscar__") {
+      contenedorBusqueda.style.display = "block";
+      document.getElementById("reco-ppal-codigo").value = "";
+      document.getElementById("reco-ppal-nombre").value = "";
+    } else {
+      contenedorBusqueda.style.display = "none";
+      document.getElementById("reco-ppal-codigo").value = evento.target.value;
+      document.getElementById("reco-ppal-nombre").value = opcion ? opcion.dataset.nombre || "" : "";
+    }
+  });
+
   document.getElementById("btn-guardar-recomendacion").addEventListener("click", async () => {
     const codigoPpal = document.getElementById("reco-ppal-codigo").value;
     if (!codigoPpal) { alert("Debe seleccionar el diagnóstico principal de la lista de resultados."); return; }
@@ -1858,6 +1925,39 @@ function esPerfilCuidador() {
 function esPerfilAdministrativo() {
   const rol = (perfil && perfil.rol || "").toLowerCase();
   return rol.includes("administrativo") || rol.includes("administrador") || rol.includes("coordinador");
+}
+
+// Solo los roles que en la web tienen permiso de "ordenes"
+// (médico y profesionales de terapias) pueden generar Órdenes
+// Médicas desde la app -- enfermería y cuidadores no, para que
+// sea consistente con lo que ya se restringe en la web.
+function esPerfilConOrdenes() {
+  const rol = (perfil && perfil.rol || "").toLowerCase();
+  const rolesConOrdenes = ["médico", "medico", "director médico", "fisioterapeuta",
+    "terapeuta respiratorio", "psicólogo", "psicologo", "salud ocupacional", "terapeuta", "nutricionista",
+    "administrador", "coordinador"];
+  return rolesConOrdenes.some((r) => rol.includes(r));
+}
+
+// Solo los roles que en la web tienen permiso de "medicamentos"
+// (médico, enfermería, coordinación) pueden registrar
+// medicamentos administrados desde la app.
+// Solo los profesionales de terapias (fisioterapia, terapia
+// respiratoria, psicología, salud ocupacional, terapeuta,
+// nutrición) pueden organizar su propia agenda desde la app --
+// los demás roles (médico, enfermería, cuidador, coordinación)
+// dependen de que se la programen desde la oficina.
+function esPerfilTerapeuta() {
+  const rol = (perfil && perfil.rol || "").toLowerCase();
+  const rolesTerapeutas = ["fisioterapeuta", "terapeuta respiratorio", "psicólogo", "psicologo",
+    "salud ocupacional", "terapeuta", "nutricionista"];
+  return rolesTerapeutas.some((r) => rol.includes(r));
+}
+
+function esPerfilConMedicamentos() {
+  const rol = (perfil && perfil.rol || "").toLowerCase();
+  const rolesConMedicamentos = ["médico", "medico", "director médico", "enfermer", "coordinador", "administrador"];
+  return rolesConMedicamentos.some((r) => rol.includes(r));
 }
 
 async function renderVerReporte(visita) {
@@ -2228,11 +2328,12 @@ function renderPerfil() {
       <h3>${perfil.nombre}</h3>
       <small>${perfil.rol}</small>
     </div>
-    <button class="btn btn-primary btn-block" id="btn-programar-mi-agenda">📅 Programar Mi Agenda</button>
+    ${esPerfilTerapeuta() ? `<button class="btn btn-primary btn-block" id="btn-programar-mi-agenda">📅 Programar Mi Agenda</button>` : ""}
     <button class="btn btn-danger btn-block" id="btn-logout">Cerrar sesión</button>
   `;
 
-  document.getElementById("btn-programar-mi-agenda").addEventListener("click", () => renderProgramarMiAgenda());
+  const botonProgramarAgenda = document.getElementById("btn-programar-mi-agenda");
+  if (botonProgramarAgenda) botonProgramarAgenda.addEventListener("click", () => renderProgramarMiAgenda());
 
   document.getElementById("btn-logout").addEventListener("click", async () => {
     if (!confirm("¿Cerrar sesión? Los datos pendientes de enviar se conservarán.")) return;

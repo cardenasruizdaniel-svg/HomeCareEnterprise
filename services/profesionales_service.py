@@ -76,6 +76,7 @@ def crear(datos: dict, usuario_id=None) -> int:
     datos.setdefault("numero_cuenta", "")
     datos.setdefault("usuario_id", None)
     datos.setdefault("firma_base64", None)
+    datos.setdefault("foto_enrolamiento_base64", None)
     datos["usuario_creacion"] = usuario_id
 
     return ProfesionalesRepository.crear(datos)

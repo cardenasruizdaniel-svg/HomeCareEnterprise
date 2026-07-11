@@ -131,11 +131,13 @@
                 <i class="fa-solid fa-clock-rotate-left fa-lg"></i><br>Antecedentes
             </a>
         </div>
+        {% if tiene_permiso(usuario.rol, "ordenes") %}
         <div class="col-md-3 mb-2">
             <a href="/ordenes-medicas/{{ paciente.id }}" class="btn btn-outline-primary w-100 p-3">
                 <i class="fa-solid fa-file-prescription fa-lg"></i><br>Órdenes Médicas
             </a>
         </div>
+        {% endif %}
         <div class="col-md-3 mb-2">
             <a href="/historia-clinica/{{ paciente.id }}" class="btn btn-primary w-100 p-3">
                 <i class="fa-solid fa-book-medical fa-lg"></i><br>Historia Clínica Completa

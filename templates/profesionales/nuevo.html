@@ -190,6 +190,19 @@
 
                 <hr>
 
+                <h5><i class="fa-solid fa-face-viewfinder"></i> Foto de Enrolamiento (verificación facial)</h5>
+                <p class="text-muted small">
+                    Esta foto se usa para confirmar, cada vez que este profesional registre su ingreso o
+                    salida de una visita desde la app, que es de verdad esta misma persona (y no otra
+                    usando su usuario). Tome una foto de frente, con buena luz, sin gafas oscuras ni gorra.
+                    Es opcional — si no la carga, simplemente no se hace esta verificación con él.
+                </p>
+                <input type="file" accept="image/*" capture="user" class="form-control mb-2" id="campo-foto-enrolamiento-archivo">
+                <img id="vista-previa-enrolamiento" style="max-height:150px; display:none;" class="mb-2 border rounded">
+                <input type="hidden" name="foto_enrolamiento_base64" id="campo-foto-enrolamiento-oculto">
+
+                <hr>
+
                 <h5><i class="fa-solid fa-key"></i> Cuenta de acceso al sistema</h5>
                 <p class="text-muted small">
                     Cree aquí mismo el usuario y la contraseña con los que esta persona va a
@@ -302,5 +315,19 @@ async function cargarMunicipiosProfesional(codigoDepartamento) {
 
 cargarDepartamentosProfesional();
 </script>
+
+<script>
+document.getElementById('campo-foto-enrolamiento-archivo').addEventListener('change', (e) => {
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = () => {
+        document.getElementById('campo-foto-enrolamiento-oculto').value = lector.result;
+        const vista = document.getElementById('vista-previa-enrolamiento');
+        vista.src = lector.result;
+        vista.style.display = 'block';
+    };
+    lector.readAsDataURL(archivo);
+});
 
 {% endblock %}
