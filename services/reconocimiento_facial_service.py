@@ -37,7 +37,7 @@ from PIL import Image, ImageOps
 # demasiado permisivo). LBPH da un valor de "distancia" (más
 # bajo = más parecido); se convierte a un porcentaje de
 # similitud para que sea más fácil de entender e interpretar.
-PORCENTAJE_MINIMO_SIMILITUD = 80
+PORCENTAJE_MINIMO_SIMILITUD = 60
 
 _detector_rostros = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 
