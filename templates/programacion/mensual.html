@@ -36,6 +36,9 @@
                         <option value="{{ p.id }}">{{ p.nombre_completo }} ({{ p.especialidad_principal }})</option>
                         {% endfor %}
                     </select>
+                    {% if not profesionales %}
+                    <small class="text-danger">No hay ningún profesional con especialidad "Cuidador" registrado. Créelo desde Usuario/Profesional.</small>
+                    {% endif %}
                 </div>
                 <div class="col-md-3 mb-2">
                     <a href="#" id="link-ver-calendario" class="btn btn-outline-primary w-100 no-imprimir"><i class="fa-solid fa-calendar-week"></i> Ver calendario día/semana/año</a>
@@ -82,6 +85,11 @@
                             <option value="{{ p.id }}" data-nombre="{{ p.primer_nombre }} {{ p.primer_apellido }}">{{ p.documento }} - {{ p.primer_nombre }} {{ p.primer_apellido }}</option>
                             {% endfor %}
                         </select>
+                        {% if not pacientes %}
+                        <small class="text-danger">Ningún paciente tiene la actividad de Cuidador asignada todavía. El médico debe asignarla primero desde Programa de Atención.</small>
+                        {% else %}
+                        <small class="text-muted">Solo aparecen pacientes con la actividad de Cuidador ya asignada por el médico.</small>
+                        {% endif %}
                     </div>
                     <div class="col-md-4 mb-2">
                         <div id="zona-chip-arrastrable"></div>

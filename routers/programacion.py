@@ -168,11 +168,16 @@ async def programacion_mensual_formulario(
 ):
     profesionales = consultar_todos(
         "SELECT id, nombre_completo, especialidad_principal FROM profesionales "
-        "WHERE estado='ACTIVO' ORDER BY nombre_completo"
+        "WHERE estado='ACTIVO' AND LOWER(especialidad_principal) LIKE '%cuidador%' ORDER BY nombre_completo"
     )
     pacientes = consultar_todos(
-        "SELECT id, documento, primer_nombre, primer_apellido FROM pacientes "
-        "WHERE UPPER(estado)='ACTIVO' ORDER BY primer_nombre"
+        """
+        SELECT DISTINCT p.id, p.documento, p.primer_nombre, p.primer_apellido
+        FROM pacientes p
+        JOIN servicios_paciente sp ON sp.paciente_id = p.id
+        WHERE UPPER(p.estado)='ACTIVO' AND LOWER(sp.tipo_servicio)='cuidador' AND sp.estado='Activo'
+        ORDER BY p.primer_nombre
+        """
     )
     from repositories.turnos_repository import CatalogoTurnosRepository
     catalogo_turnos = [dict(t) for t in CatalogoTurnosRepository.listar_activos()]
