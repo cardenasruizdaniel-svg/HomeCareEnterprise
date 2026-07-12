@@ -174,6 +174,8 @@ async def programacion_mensual_formulario(
         "SELECT id, documento, primer_nombre, primer_apellido FROM pacientes "
         "WHERE UPPER(estado)='ACTIVO' ORDER BY primer_nombre"
     )
+    from repositories.turnos_repository import CatalogoTurnosRepository
+    catalogo_turnos = [dict(t) for t in CatalogoTurnosRepository.listar_activos()]
 
     return templates.TemplateResponse(
         request=request,
@@ -182,6 +184,7 @@ async def programacion_mensual_formulario(
             "usuario": usuario,
             "profesionales": profesionales,
             "pacientes": pacientes,
+            "catalogo_turnos": catalogo_turnos,
         },
     )
 

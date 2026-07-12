@@ -321,6 +321,33 @@ def _notificar_visita_programada(visita_id):
             )
 
 
+def verificar_choque_horario(profesional_id: int, fecha: str, hora_inicio: str, hora_fin: str):
+    """
+    Revisa si el profesional YA tiene un turno programado ese
+    mismo día que se cruce en horario con el que se está
+    intentando asignar. Devuelve los datos del turno en
+    conflicto (con el nombre del paciente), o None si el
+    horario está libre.
+    """
+    filas = consultar_todos(
+        """
+        SELECT pr.id, pr.hora_inicio, pr.hora_fin, pr.paciente_id,
+               p.primer_nombre, p.primer_apellido
+        FROM programaciones pr
+        JOIN pacientes p ON p.id = pr.paciente_id
+        WHERE pr.profesional_id=? AND pr.fecha=? AND pr.estado != 'Cancelada'
+        """,
+        (profesional_id, fecha),
+    )
+    for f in filas:
+        f = dict(f)
+        # se cruzan si el nuevo inicio es antes de que termine el existente,
+        # Y el nuevo fin es despues de que empiece el existente.
+        if hora_inicio < f["hora_fin"] and hora_fin > f["hora_inicio"]:
+            return f
+    return None
+
+
 def crear_programacion_mensual(profesional_id: int, turnos: list, usuario) -> dict:
     """
     Crea de una sola vez todos los turnos de un mes para un
@@ -363,6 +390,7 @@ def crear_programacion_mensual(profesional_id: int, turnos: list, usuario) -> di
 
     creados = []
     errores = []
+    conflictos = []
     indice_global = 0
 
     for (paciente_id, nombre_servicio), turnos_grupo in grupos.items():
@@ -437,6 +465,22 @@ def crear_programacion_mensual(profesional_id: int, turnos: list, usuario) -> di
                 if (hora_fin_dt - hora_inicio_dt).total_seconds() <= 0:
                     raise ValueError("la hora de fin debe ser posterior a la de inicio")
 
+                # Verificacion de choque: si el cuidador YA tiene un
+                # turno programado ese dia que se cruce en horario,
+                # NO se duplica -- se informa claramente cual es el
+                # turno que ya existe, para que la oficina decida.
+                conflicto = verificar_choque_horario(profesional_id, turno["fecha"], turno["hora_inicio"], turno["hora_fin"])
+                if conflicto:
+                    conflictos.append({
+                        "fecha": turno["fecha"], "hora_inicio": turno["hora_inicio"], "hora_fin": turno["hora_fin"],
+                        "paciente_nuevo_id": paciente_id,
+                        "mensaje": (
+                            f"El {turno['fecha']} a las {conflicto['hora_inicio']}-{conflicto['hora_fin']} "
+                            f"ya hay un turno programado con {conflicto['primer_nombre']} {conflicto['primer_apellido']}."
+                        ),
+                    })
+                    continue
+
                 planilla_id = ejecutar(
                     """
                     INSERT INTO planilla_visitas(
@@ -456,7 +500,10 @@ def crear_programacion_mensual(profesional_id: int, turnos: list, usuario) -> di
             except Exception as error:
                 errores.append({"turno": indice_global, "fecha": turno.get("fecha", ""), "error": str(error)})
 
-    return {"creados": len(creados), "errores": errores, "total": len(creados) + len(errores)}
+    return {
+        "creados": len(creados), "errores": errores, "conflictos": conflictos,
+        "total": len(creados) + len(errores) + len(conflictos),
+    }
 
 
 def historial_programacion_profesional(profesional_id: int) -> list:

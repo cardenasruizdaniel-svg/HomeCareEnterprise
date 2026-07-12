@@ -1,29 +1,122 @@
 {% extends "base.html" %}
 {% block titulo %}Programación Mensual{% endblock %}
+{% block css %}
+<style>
+.pm-cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+.pm-dia-nombre { text-align:center; font-weight:700; font-size:12px; color:var(--hc-muted,#64748b); text-transform:uppercase; padding:4px 0; }
+.pm-celda { background:#fff; border:1px solid var(--hc-border,#e7ebf3); border-radius:8px; min-height:110px; padding:6px; font-size:12px; transition:background .15s; }
+.pm-celda.fuera-de-mes { background:#f8fafc; color:#b7c0cc; }
+.pm-celda.hoy { border:2px solid var(--hc-teal,#0fb9ae); }
+.pm-celda.zona-drop-activa { background:var(--hc-teal-soft,#e5fbf9); border:2px dashed var(--hc-teal,#0fb9ae); }
+.pm-numero { font-weight:700; margin-bottom:4px; }
+.pm-chip { border-radius:5px; padding:3px 5px; margin-bottom:3px; font-size:11px; line-height:1.3; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pm-chip.guardado { background:#e5fbf9; border-left:3px solid #0fb9ae; }
+.pm-chip.pendiente { background:#fff7e0; border-left:3px solid #dd9d00; border-style:dashed; cursor:pointer; }
+.pm-chip.conflicto { background:#ffe3e3; border-left:3px solid #c71c22; }
+.pm-chip-x { float:right; color:#c71c22; font-weight:700; cursor:pointer; padding-left:4px; }
+.pm-chip-arrastrable { border:1px solid var(--hc-teal,#0fb9ae); background:var(--hc-teal-soft,#e5fbf9); border-radius:8px; padding:10px; cursor:grab; user-select:none; }
+.pm-chip-arrastrable:active { cursor:grabbing; }
+.pm-mes-anterior-chip { display:inline-block; background:#f1f5f9; border-radius:5px; padding:2px 6px; margin:2px; font-size:11px; }
+</style>
+{% endblock %}
 {% block contenido %}
 <div class="container-fluid">
-    <h2 class="mb-1"><i class="fa-solid fa-calendar-days text-primary"></i> Programación Mensual (Cuidadores)</h2>
-    <p class="text-muted">
-        Para profesionales con horario fijo variable dentro del mes (por ejemplo, cuidadores que trabajan distintas
-        horas del día, incluso con pacientes distintos el mismo día). Agregue todos los turnos del mes de una vez;
-        las horas se contabilizarán para nómina según lo que el profesional marque realmente al llegar y salir de
-        cada turno.
-    </p>
 
-    <div id="alerta-resultado"></div>
+    <h2 class="mb-1"><i class="fa-solid fa-calendar-days text-primary"></i> Programación Mensual del Cuidador</h2>
+    <p class="text-muted">Seleccione el cuidador, arme el turno con el paciente, y arrástrelo al día del calendario donde quiere ubicarlo.</p>
 
-    <div class="card shadow mb-3" id="card-historial" style="display:none;">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h6 class="mb-0"><i class="fa-solid fa-clock-rotate-left"></i> Historial de programaciones anteriores</h6>
-            <div class="d-flex gap-2">
-                <a href="#" id="link-ver-calendario" class="btn btn-primary btn-sm no-imprimir">
-                    <i class="fa-solid fa-calendar-days"></i> Ver calendario (día/semana/mes/año)
-                </a>
-                <a href="#" id="link-ver-cronograma" class="btn btn-outline-primary btn-sm no-imprimir">
-                    <i class="fa-solid fa-print"></i> Ver / Imprimir cronograma de este mes
-                </a>
+    <div class="card shadow mb-3">
+        <div class="card-body">
+            <div class="row align-items-end">
+                <div class="col-md-6 mb-2">
+                    <label>Profesional (cuidador)</label>
+                    <select id="profesional_id" class="form-select">
+                        <option value="">-- Seleccione --</option>
+                        {% for p in profesionales %}
+                        <option value="{{ p.id }}">{{ p.nombre_completo }} ({{ p.especialidad_principal }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <a href="#" id="link-ver-calendario" class="btn btn-outline-primary w-100 no-imprimir"><i class="fa-solid fa-calendar-week"></i> Ver calendario día/semana/año</a>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <a href="#" id="link-ver-cronograma" class="btn btn-outline-secondary w-100 no-imprimir"><i class="fa-solid fa-print"></i> Imprimir cronograma</a>
+                </div>
             </div>
         </div>
+    </div>
+
+    <div id="zona-programacion" style="display:none;">
+
+        <div class="card shadow mb-3" id="card-mes-anterior">
+            <div class="card-header bg-white"><h6 class="mb-0"><i class="fa-solid fa-clock-rotate-left"></i> Lo que tenía programado el mes anterior</h6></div>
+            <div class="card-body" id="cuerpo-mes-anterior">
+                <p class="text-muted text-center mb-0">Cargando...</p>
+            </div>
+        </div>
+
+        <div class="card shadow mb-3">
+            <div class="card-header bg-white"><h6 class="mb-0"><i class="fa-solid fa-hand-pointer"></i> Armar turno para arrastrar al calendario</h6></div>
+            <div class="card-body">
+                <div class="row align-items-end">
+                    <div class="col-md-4 mb-2">
+                        <label>Turno (catálogo)</label>
+                        <select id="pm-turno" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            {% for t in catalogo_turnos %}
+                            <option value="{{ t.id }}"
+                                    data-nombre="{{ t.nombre }}"
+                                    data-t1i="{{ t.tramo1_inicio }}" data-t1f="{{ t.tramo1_fin }}"
+                                    data-t2i="{{ t.tramo2_inicio or '' }}" data-t2f="{{ t.tramo2_fin or '' }}">
+                                {{ t.nombre }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <label>Paciente a visitar</label>
+                        <select id="pm-paciente" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            {% for p in pacientes %}
+                            <option value="{{ p.id }}" data-nombre="{{ p.primer_nombre }} {{ p.primer_apellido }}">{{ p.documento }} - {{ p.primer_nombre }} {{ p.primer_apellido }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <div id="zona-chip-arrastrable"></div>
+                    </div>
+                </div>
+                <small class="text-muted">Arme el turno y el paciente arriba, y luego arrastre la tarjeta verde que aparece hacia el día que quiere en el calendario. Puede repetir esto varias veces para armar días distintos, semanas, o el mes completo.</small>
+            </div>
+        </div>
+
+        <div class="card shadow mb-3">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-outline-secondary btn-sm" id="pm-btn-anterior">←</button>
+                    <strong id="pm-etiqueta-mes" style="min-width:180px; text-align:center; display:inline-block;"></strong>
+                    <button class="btn btn-outline-secondary btn-sm" id="pm-btn-siguiente">→</button>
+                </div>
+                <div>
+                    <span class="badge bg-warning text-dark">■ Pendiente por guardar</span>
+                    <span class="badge bg-success">■ Ya guardado</span>
+                    <span class="badge bg-danger">■ Con conflicto</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div id="pm-calendario-contenedor"><p class="text-center text-muted py-5">Seleccione un cuidador para empezar.</p></div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div id="pm-resumen-pendientes" class="text-muted"></div>
+            <button class="btn btn-success btn-lg" id="pm-btn-guardar"><i class="fa-solid fa-floppy-disk"></i> Guardar Programación</button>
+        </div>
+    </div>
+
+    <div class="card shadow mb-3" id="card-historial" style="display:none;">
+        <div class="card-header bg-white"><h6 class="mb-0"><i class="fa-solid fa-list-check"></i> Resumen histórico por mes</h6></div>
         <div class="card-body">
             <div class="table-responsive">
             <table class="table table-sm table-hover">
@@ -33,180 +126,264 @@
             </div>
         </div>
     </div>
-
-    <div class="card shadow mb-3">
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label>Profesional (cuidador)</label>
-                    <select id="profesional_id" class="form-select" required>
-                        <option value="">-- Seleccione --</option>
-                        {% for p in profesionales %}
-                        <option value="{{ p.id }}">{{ p.nombre_completo }} ({{ p.especialidad_principal }})</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-md-3 mb-3 d-flex align-items-end">
-                    <button type="button" class="btn btn-primary w-100" id="btn-agregar-turno">
-                        <i class="fa-solid fa-plus"></i> Agregar turno
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card shadow">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered align-middle" id="tabla-turnos">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Hora inicio</th>
-                            <th>Hora fin</th>
-                            <th>Paciente</th>
-                            <th>Servicio</th>
-                            <th></th>
-                        </tr>
-                    </thead>
-                    <tbody id="cuerpo-tabla-turnos"></tbody>
-                </table>
-            </div>
-            <button type="button" class="btn btn-success" id="btn-guardar-mes">
-                <i class="fa-solid fa-floppy-disk"></i> Guardar toda la programación del mes
-            </button>
-            <a href="/programacion" class="btn btn-secondary">Cancelar</a>
-        </div>
-    </div>
 </div>
 
 <script>
-const OPCIONES_PACIENTES = `
-    {% for p in pacientes %}
-    <option value="{{ p.id }}">{{ p.documento }} - {{ p.primer_nombre }} {{ p.primer_apellido }}</option>
-    {% endfor %}
-`;
+const NOMBRES_MES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const NOMBRES_DIA = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
 
-let contadorFilas = 0;
+let profesionalSeleccionado = null;
+let mesReferencia = new Date();
+let datosGuardadosDelMes = {};   // { "2026-07-06": [ {hora_inicio, hora_fin, paciente_nombre, estado}, ... ] }
+let programacionPendiente = [];  // [ {id_temporal, fecha, turno_id, turno_nombre, paciente_id, paciente_nombre, tramos:[[hi,hf],...], estado:"pendiente"|"conflicto", mensajeConflicto} ]
+let contadorTemporal = 0;
 
-function agregarFila() {
-    contadorFilas++;
-    const cuerpo = document.getElementById("cuerpo-tabla-turnos");
-    const fila = document.createElement("tr");
-    fila.dataset.fila = contadorFilas;
-    fila.innerHTML = `
-        <td><input type="date" class="form-control form-control-sm campo-fecha" required></td>
-        <td><input type="time" class="form-control form-control-sm campo-hora-inicio" required></td>
-        <td><input type="time" class="form-control form-control-sm campo-hora-fin" required></td>
-        <td>
-            <select class="form-select form-select-sm campo-paciente-id" required>
-                <option value="">-- Seleccione el paciente --</option>
-                ${OPCIONES_PACIENTES}
-            </select>
-        </td>
-        <td><input type="text" class="form-control form-control-sm campo-servicio" placeholder="Cuidado domiciliario" value="Cuidado domiciliario"></td>
-        <td class="text-center">
-            <button type="button" class="btn btn-outline-danger btn-sm btn-quitar-fila"><i class="fa-solid fa-trash"></i></button>
-        </td>
-    `;
-    cuerpo.appendChild(fila);
+function formatoISO(fecha) { return fecha.toISOString().slice(0, 10); }
 
-    fila.querySelector(".btn-quitar-fila").addEventListener("click", () => fila.remove());
-}
-
-document.getElementById("btn-agregar-turno").addEventListener("click", agregarFila);
-agregarFila(); // arrancar con una fila lista
-
+// ---------- 1. Seleccionar cuidador ----------
 document.getElementById("profesional_id").addEventListener("change", async (evento) => {
-    const profesionalId = evento.target.value;
-    const cardHistorial = document.getElementById("card-historial");
-    const cuerpoHistorial = document.getElementById("cuerpo-historial");
-    const linkCronograma = document.getElementById("link-ver-cronograma");
-    const linkCalendario = document.getElementById("link-ver-calendario");
+    profesionalSeleccionado = evento.target.value;
+    const zona = document.getElementById("zona-programacion");
 
-    if (!profesionalId) {
-        cardHistorial.style.display = "none";
-        return;
-    }
+    if (!profesionalSeleccionado) { zona.style.display = "none"; return; }
 
+    document.getElementById("link-ver-calendario").href = `/programacion/mensual/calendario/${profesionalSeleccionado}`;
     const hoy = new Date();
-    linkCronograma.href = `/programacion/mensual/cronograma/${profesionalId}/${hoy.getFullYear()}/${hoy.getMonth() + 1}`;
-    linkCalendario.href = `/programacion/mensual/calendario/${profesionalId}`;
+    document.getElementById("link-ver-cronograma").href = `/programacion/mensual/cronograma/${profesionalSeleccionado}/${hoy.getFullYear()}/${hoy.getMonth() + 1}`;
 
-    try {
-        const respuesta = await fetch(`/programacion/mensual/historial/${profesionalId}`);
-        const historial = await respuesta.json();
-
-        if (historial.length === 0) {
-            cuerpoHistorial.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Sin programaciones anteriores para este profesional.</td></tr>`;
-        } else {
-            cuerpoHistorial.innerHTML = historial.map((h) => `
-                <tr>
-                    <td>${h.mes}</td>
-                    <td class="text-center">${h.total_visitas}</td>
-                    <td class="text-center">${h.total_pacientes}</td>
-                    <td class="text-center">${h.canceladas || 0}</td>
-                </tr>
-            `).join("");
-        }
-        cardHistorial.style.display = "block";
-    } catch (error) {
-        cardHistorial.style.display = "none";
-    }
+    zona.style.display = "block";
+    programacionPendiente = [];
+    mesReferencia = new Date();
+    await cargarMesAnterior();
+    await cargarHistorial();
+    await cargarYRenderizarMes();
 });
 
-document.getElementById("btn-guardar-mes").addEventListener("click", async () => {
-    const profesionalId = document.getElementById("profesional_id").value;
-    const alerta = document.getElementById("alerta-resultado");
+// ---------- 2. Mes anterior (referencia) ----------
+async function cargarMesAnterior() {
+    const cuerpo = document.getElementById("cuerpo-mes-anterior");
+    cuerpo.innerHTML = `<p class="text-muted text-center mb-0">Cargando...</p>`;
 
-    if (!profesionalId) {
-        alerta.innerHTML = `<div class="alert alert-danger">Debe seleccionar el profesional.</div>`;
+    const mesAnterior = new Date(mesReferencia.getFullYear(), mesReferencia.getMonth() - 1, 1);
+    const inicio = formatoISO(new Date(mesAnterior.getFullYear(), mesAnterior.getMonth(), 1));
+    const fin = formatoISO(new Date(mesAnterior.getFullYear(), mesAnterior.getMonth() + 1, 0));
+
+    const resp = await fetch(`/programacion/mensual/calendario/${profesionalSeleccionado}/datos?fecha_desde=${inicio}&fecha_hasta=${fin}`);
+    const datos = await resp.json();
+
+    const dias = Object.keys(datos.por_dia).sort();
+    if (dias.length === 0) {
+        cuerpo.innerHTML = `<p class="text-muted text-center mb-0">No tenía nada programado en ${NOMBRES_MES[mesAnterior.getMonth()]}.</p>`;
         return;
     }
 
-    const filas = document.querySelectorAll("#cuerpo-tabla-turnos tr");
-    const turnos = [];
+    cuerpo.innerHTML = `<p class="mb-2"><strong>${NOMBRES_MES[mesAnterior.getMonth()]} ${mesAnterior.getFullYear()}</strong> — ${datos.total_visitas} turno(s):</p>` +
+        dias.map((fecha) => {
+            const visitas = datos.por_dia[fecha];
+            return visitas.map((v) => `<span class="pm-mes-anterior-chip">${fecha.slice(8,10)}: ${v.hora_inicio}-${v.hora_fin} ${v.primer_nombre} ${v.primer_apellido}</span>`).join("");
+        }).join(" ");
+}
 
-    for (const fila of filas) {
-        const pacienteId = fila.querySelector(".campo-paciente-id").value;
-        turnos.push({
-            fecha: fila.querySelector(".campo-fecha").value,
-            hora_inicio: fila.querySelector(".campo-hora-inicio").value,
-            hora_fin: fila.querySelector(".campo-hora-fin").value,
-            paciente_id: pacienteId ? parseInt(pacienteId) : null,
-            servicio: fila.querySelector(".campo-servicio").value,
+// ---------- 3. Historial resumen ----------
+async function cargarHistorial() {
+    const resp = await fetch(`/programacion/mensual/historial/${profesionalSeleccionado}`);
+    const historial = await resp.json();
+    const cuerpo = document.getElementById("cuerpo-historial");
+    document.getElementById("card-historial").style.display = historial.length ? "block" : "none";
+    cuerpo.innerHTML = historial.map((h) => `
+        <tr><td>${h.mes}</td><td class="text-center">${h.total_visitas}</td><td class="text-center">${h.total_pacientes}</td><td class="text-center">${h.canceladas || 0}</td></tr>
+    `).join("");
+}
+
+// ---------- 4. Armar el "chip" arrastrable ----------
+function actualizarChipArrastrable() {
+    const selectTurno = document.getElementById("pm-turno");
+    const selectPaciente = document.getElementById("pm-paciente");
+    const zona = document.getElementById("zona-chip-arrastrable");
+
+    if (!selectTurno.value || !selectPaciente.value) {
+        zona.innerHTML = `<small class="text-muted">Elija turno y paciente para armar la tarjeta.</small>`;
+        return;
+    }
+
+    const opTurno = selectTurno.selectedOptions[0];
+    const opPaciente = selectPaciente.selectedOptions[0];
+
+    zona.innerHTML = `
+        <div class="pm-chip-arrastrable" draggable="true" id="chip-arrastrable">
+            <i class="fa-solid fa-up-down-left-right"></i> <strong>${opTurno.dataset.nombre}</strong><br>
+            <small>${opPaciente.dataset.nombre}</small>
+        </div>
+    `;
+
+    const chip = document.getElementById("chip-arrastrable");
+    chip.addEventListener("dragstart", (evento) => {
+        evento.dataTransfer.setData("text/plain", JSON.stringify({
+            turno_id: selectTurno.value, turno_nombre: opTurno.dataset.nombre,
+            t1i: opTurno.dataset.t1i, t1f: opTurno.dataset.t1f, t2i: opTurno.dataset.t2i, t2f: opTurno.dataset.t2f,
+            paciente_id: selectPaciente.value, paciente_nombre: opPaciente.dataset.nombre,
+        }));
+    });
+}
+document.getElementById("pm-turno").addEventListener("change", actualizarChipArrastrable);
+document.getElementById("pm-paciente").addEventListener("change", actualizarChipArrastrable);
+
+// ---------- 5. Calendario del mes (con zonas de drop) ----------
+async function cargarYRenderizarMes() {
+    document.getElementById("pm-etiqueta-mes").textContent = `${NOMBRES_MES[mesReferencia.getMonth()]} ${mesReferencia.getFullYear()}`;
+
+    const inicio = formatoISO(new Date(mesReferencia.getFullYear(), mesReferencia.getMonth(), 1));
+    const fin = formatoISO(new Date(mesReferencia.getFullYear(), mesReferencia.getMonth() + 1, 0));
+    const resp = await fetch(`/programacion/mensual/calendario/${profesionalSeleccionado}/datos?fecha_desde=${inicio}&fecha_hasta=${fin}`);
+    const datos = await resp.json();
+    datosGuardadosDelMes = datos.por_dia;
+
+    renderizarCalendario();
+}
+
+function renderizarCalendario() {
+    const contenedor = document.getElementById("pm-calendario-contenedor");
+    const anio = mesReferencia.getFullYear(), mes = mesReferencia.getMonth();
+    const primerDiaMes = new Date(anio, mes, 1);
+    const ultimoDiaMes = new Date(anio, mes + 1, 0);
+    const offsetInicio = primerDiaMes.getDay() === 0 ? 6 : primerDiaMes.getDay() - 1;
+    const hoy = formatoISO(new Date());
+
+    let html = `<div class="pm-cal-grid mb-1">` + NOMBRES_DIA.map((n) => `<div class="pm-dia-nombre">${n}</div>`).join("") + `</div><div class="pm-cal-grid">`;
+
+    for (let i = 0; i < offsetInicio; i++) html += `<div class="pm-celda fuera-de-mes"></div>`;
+
+    for (let dia = 1; dia <= ultimoDiaMes.getDate(); dia++) {
+        const iso = formatoISO(new Date(anio, mes, dia));
+        const guardados = datosGuardadosDelMes[iso] || [];
+        const pendientesDia = programacionPendiente.filter((p) => p.fecha === iso);
+
+        let chipsHtml = guardados.map((v) => `
+            <div class="pm-chip guardado">${v.hora_inicio} ${v.primer_nombre} ${v.primer_apellido}</div>
+        `).join("");
+
+        chipsHtml += pendientesDia.map((p) => `
+            <div class="pm-chip ${p.estado === 'conflicto' ? 'conflicto' : 'pendiente'}" title="${p.mensajeConflicto || 'Pendiente de guardar'}">
+                ${p.tramos.map((t) => t[0]).join("/")} ${p.paciente_nombre}
+                <span class="pm-chip-x" onclick="quitarPendiente('${p.id_temporal}')">✕</span>
+            </div>
+        `).join("");
+
+        html += `
+            <div class="pm-celda ${iso === hoy ? 'hoy' : ''}" data-fecha="${iso}">
+                <div class="pm-numero">${dia}</div>
+                ${chipsHtml}
+            </div>
+        `;
+    }
+    html += `</div>`;
+    contenedor.innerHTML = html;
+
+    document.querySelectorAll(".pm-celda[data-fecha]").forEach((celda) => {
+        celda.addEventListener("dragover", (evento) => { evento.preventDefault(); celda.classList.add("zona-drop-activa"); });
+        celda.addEventListener("dragleave", () => celda.classList.remove("zona-drop-activa"));
+        celda.addEventListener("drop", (evento) => {
+            evento.preventDefault();
+            celda.classList.remove("zona-drop-activa");
+            const datosChip = JSON.parse(evento.dataTransfer.getData("text/plain"));
+            agregarPendiente(celda.dataset.fecha, datosChip);
         });
-    }
-
-    if (turnos.length === 0) {
-        alerta.innerHTML = `<div class="alert alert-danger">Agregue al menos un turno.</div>`;
-        return;
-    }
-
-    const respuesta = await fetch("/programacion/mensual/crear", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profesional_id: profesionalId, turnos: turnos }),
     });
 
-    const resultado = await respuesta.json();
+    actualizarResumenPendientes();
+}
 
-    if (resultado.error) {
-        alerta.innerHTML = `<div class="alert alert-danger">${resultado.error}</div>`;
+function agregarPendiente(fecha, datosChip) {
+    contadorTemporal++;
+    const tramos = [[datosChip.t1i, datosChip.t1f]];
+    if (datosChip.t2i && datosChip.t2f) tramos.push([datosChip.t2i, datosChip.t2f]);
+
+    programacionPendiente.push({
+        id_temporal: `tmp${contadorTemporal}`,
+        fecha, turno_id: datosChip.turno_id, turno_nombre: datosChip.turno_nombre,
+        paciente_id: datosChip.paciente_id, paciente_nombre: datosChip.paciente_nombre,
+        tramos, estado: "pendiente", mensajeConflicto: "",
+    });
+    renderizarCalendario();
+}
+
+window.quitarPendiente = (idTemporal) => {
+    programacionPendiente = programacionPendiente.filter((p) => p.id_temporal !== idTemporal);
+    renderizarCalendario();
+};
+
+function actualizarResumenPendientes() {
+    const total = programacionPendiente.length;
+    document.getElementById("pm-resumen-pendientes").textContent =
+        total === 0 ? "Sin cambios pendientes por guardar." : `${total} turno(s) armado(s), listos para guardar.`;
+}
+
+document.getElementById("pm-btn-anterior").addEventListener("click", async () => {
+    mesReferencia = new Date(mesReferencia.getFullYear(), mesReferencia.getMonth() - 1, 1);
+    await cargarYRenderizarMes();
+});
+document.getElementById("pm-btn-siguiente").addEventListener("click", async () => {
+    mesReferencia = new Date(mesReferencia.getFullYear(), mesReferencia.getMonth() + 1, 1);
+    await cargarYRenderizarMes();
+});
+
+// ---------- 6. Guardar ----------
+document.getElementById("pm-btn-guardar").addEventListener("click", async () => {
+    if (programacionPendiente.length === 0) {
+        alert("No hay ningún turno armado todavía. Arrastre al menos uno al calendario antes de guardar.");
         return;
     }
 
-    let html = `<div class="alert alert-success">Se crearon ${resultado.creados} de ${resultado.total} turnos correctamente.</div>`;
-
-    if (resultado.errores && resultado.errores.length > 0) {
-        html += `<div class="alert alert-warning"><strong>Turnos con error:</strong><ul class="mb-0">`;
-        resultado.errores.forEach((e) => {
-            html += `<li>Fila ${e.turno} (${e.fecha}): ${e.error}</li>`;
+    const turnosParaGuardar = [];
+    programacionPendiente.forEach((p) => {
+        p.tramos.forEach((tramo) => {
+            turnosParaGuardar.push({
+                fecha: p.fecha, hora_inicio: tramo[0], hora_fin: tramo[1],
+                paciente_id: parseInt(p.paciente_id), servicio: "Cuidador",
+            });
         });
-        html += `</ul></div>`;
-    }
+    });
 
-    alerta.innerHTML = html;
+    const boton = document.getElementById("pm-btn-guardar");
+    boton.disabled = true;
+    boton.textContent = "Guardando...";
+
+    try {
+        const resp = await fetch("/programacion/mensual/crear", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ profesional_id: profesionalSeleccionado, turnos: turnosParaGuardar }),
+        });
+        const resultado = await resp.json();
+
+        if (resultado.error) {
+            alert("No se pudo guardar: " + resultado.error);
+        } else {
+            let mensaje = `Se guardaron ${resultado.creados} turno(s) correctamente.`;
+            if (resultado.conflictos && resultado.conflictos.length > 0) {
+                mensaje += `\n\n⚠ ${resultado.conflictos.length} turno(s) NO se guardaron porque ya había algo programado:\n\n`;
+                mensaje += resultado.conflictos.map((c) => "• " + c.mensaje).join("\n");
+            }
+            alert(mensaje);
+
+            // Se marcan como conflicto los que fallaron (quedan visibles en rojo para corregir),
+            // y se quitan de pendientes los que sí se guardaron -- luego se recarga el mes
+            // para traer del servidor lo que ya quedó guardado de verdad.
+            const fechasConflicto = new Set((resultado.conflictos || []).map((c) => c.fecha + "|" + c.hora_inicio));
+            programacionPendiente = programacionPendiente.filter((p) =>
+                p.tramos.some((t) => fechasConflicto.has(p.fecha + "|" + t[0]))
+            );
+            programacionPendiente.forEach((p) => { p.estado = "conflicto"; p.mensajeConflicto = "Ya había un turno en ese horario."; });
+
+            await cargarYRenderizarMes();
+            await cargarHistorial();
+        }
+    } catch (error) {
+        alert("Error de conexión al guardar: " + error.message);
+    } finally {
+        boton.disabled = false;
+        boton.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar Programación';
+    }
 });
 </script>
 {% endblock %}
