@@ -31,11 +31,12 @@ from io import BytesIO
 import cv2
 import numpy as np
 
-# Más bajo = más exigente (más fácil que rechace a la persona
-# correcta). Más alto = más permisivo (más fácil que deje pasar
-# a alguien distinto). 70 es un punto de partida razonable;
-# ajústelo según la experiencia real con fotos del equipo.
-UMBRAL_COINCIDENCIA = 70
+# Se exige un 80% de similitud para aceptar la foto (ajustable
+# aquí si, con el uso real, resulta demasiado estricto o
+# demasiado permisivo). LBPH da un valor de "distancia" (más
+# bajo = más parecido); se convierte a un porcentaje de
+# similitud para que sea más fácil de entender e interpretar.
+PORCENTAJE_MINIMO_SIMILITUD = 80
 
 _detector_rostros = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 
@@ -163,12 +164,14 @@ def comparar_rostros(foto_enrolamiento_base64: str, foto_nueva_base64: str) -> d
     reconocedor.train([rostro_enrolado], np.array([1]))
 
     _etiqueta, confianza = reconocedor.predict(rostro_nuevo)
+    similitud_porcentaje = max(0.0, 100.0 - confianza)
 
-    if confianza > UMBRAL_COINCIDENCIA:
+    if similitud_porcentaje < PORCENTAJE_MINIMO_SIMILITUD:
         return {
             "verificado": False,
-            "motivo": f"El rostro de la foto no coincide con el registrado para este profesional (confianza: {confianza:.1f}).",
-            "confianza": confianza,
+            "motivo": f"El rostro de la foto no coincide con el registrado para este profesional "
+                      f"(similitud: {similitud_porcentaje:.0f}%, se requiere al menos {PORCENTAJE_MINIMO_SIMILITUD}%).",
+            "similitud_porcentaje": round(similitud_porcentaje, 1),
         }
 
-    return {"verificado": True, "confianza": confianza}
+    return {"verificado": True, "similitud_porcentaje": round(similitud_porcentaje, 1)}

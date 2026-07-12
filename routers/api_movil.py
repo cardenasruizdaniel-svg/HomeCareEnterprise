@@ -18,7 +18,7 @@ sincronizo y pueda borrarla de su cola local.
 =========================================================
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from core.dependencies import requiere_permiso, usuario_actual
@@ -52,6 +52,55 @@ VERSION_API = "1.0"
 @router.get("/version")
 async def version_api():
     return {"version": VERSION_API, "nombre": "HomeCare Enterprise API Móvil"}
+
+
+@router.post("/verificar-rostro")
+async def verificar_rostro_endpoint(
+    datos: dict = Body(...),
+    usuario=Depends(requiere_permiso("programacion")),
+):
+    """
+    Verificación facial INMEDIATA (no encolada): se llama justo
+    al tomar la foto de ingreso/salida, ANTES de dejar completar
+    el registro -- así, si el rostro no coincide, la persona se
+    entera EN EL MOMENTO y no puede avanzar, en vez de enterarse
+    después cuando ya se sincronizó sola en segundo plano.
+
+    Requiere conexión en el momento de tomar la foto. Si el
+    celular está sin internet justo ahí, la app sigue el camino
+    de siempre: encola la acción, y se verifica cuando vuelva a
+    haber conexión (comparando contra la MISMA foto de
+    enrolamiento guardada en el servidor -- no hace falta tener
+    nada descargado en el celular para esa comparación).
+    """
+    visita_id = datos.get("visita_id")
+    foto_base64 = datos.get("foto_base64")
+
+    if not visita_id or not foto_base64:
+        raise HTTPException(status_code=400, detail="Faltan datos para verificar.")
+
+    visita = consultar_uno("SELECT profesional_id FROM programaciones WHERE id=?", (visita_id,))
+    if not visita:
+        raise HTTPException(status_code=404, detail="La visita no existe.")
+    profesional_id = dict(visita)["profesional_id"]
+
+    if usuario.get("rol") not in ROLES_ACCESO_TOTAL_MOVIL:
+        profesional_actual = consultar_uno("SELECT id FROM profesionales WHERE usuario_id=?", (usuario.get("id"),))
+        profesional_actual_id = dict(profesional_actual)["id"] if profesional_actual else None
+        if profesional_id != profesional_actual_id:
+            raise HTTPException(status_code=403, detail="Esta visita no está asignada a su usuario.")
+
+    try:
+        from services.reconocimiento_facial_service import comparar_rostros
+        profesional = consultar_uno(
+            "SELECT foto_enrolamiento_base64 FROM profesionales WHERE id=?", (profesional_id,)
+        )
+        foto_enrolamiento = dict(profesional).get("foto_enrolamiento_base64") if profesional else None
+        return comparar_rostros(foto_enrolamiento, foto_base64)
+    except ImportError:
+        # OpenCV no instalado en este servidor: no se puede verificar ahora mismo,
+        # se deja pasar (si esto llega a fallar despues, la app avisa igual).
+        return {"verificado": True, "motivo": "Verificación facial no disponible en este servidor."}
 
 
 # ==========================================

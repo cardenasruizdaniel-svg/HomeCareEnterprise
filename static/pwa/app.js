@@ -2229,6 +2229,39 @@ function renderCapturaFotoIngreso(visita, accion) {
       }
     }
 
+    document.getElementById("foto-ingreso-estado").textContent = "Verificando su identidad...";
+
+    // Verificación facial INMEDIATA: si hay conexión en este
+    // momento, se valida el rostro contra la foto de
+    // enrolamiento ANTES de dejar avanzar -- si no coincide,
+    // aquí mismo se detiene, no se llega a registrar nada.
+    // Si NO hay conexión justo ahora, se sigue el camino de
+    // siempre (se encola, y se valida contra la misma foto de
+    // enrolamiento del servidor en cuanto haya señal).
+    try {
+      const respuestaVerificacion = await fetch("/api/movil/verificar-rostro", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ visita_id: visita.id, foto_base64: fotoCapturada }),
+      });
+
+      if (respuestaVerificacion.ok) {
+        const resultadoVerificacion = await respuestaVerificacion.json();
+        if (!resultadoVerificacion.verificado) {
+          document.getElementById("foto-ingreso-estado").innerHTML =
+            `<span style="color:#c71c22; font-weight:bold;">
+              ⚠ No se pudo ${accion === "ingreso" ? "registrar el ingreso" : "finalizar la visita"}: ${resultadoVerificacion.motivo}
+            </span>`;
+          return; // se detiene aquí -- no se registra nada
+        }
+      }
+      // Si respuestaVerificacion no fue "ok" por algún otro motivo del servidor,
+      // se sigue adelante y quedará pendiente de verificar cuando sincronice.
+    } catch (error) {
+      // Sin conexión en este momento -- se sigue el camino offline de siempre.
+    }
+
     document.getElementById("foto-ingreso-estado").textContent = "Marcando la ubicación sobre la foto...";
     const fotoConMarcaDeAgua = await agregarMarcaDeAguaUbicacion(fotoCapturada, ubicacion.lat, ubicacion.lon);
 
