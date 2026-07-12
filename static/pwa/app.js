@@ -157,38 +157,69 @@ async function actualizarContadorPendientes() {
 
 let sincronizando = false;
 
-async function intentarSincronizar() {
-  if (sincronizando || !navigator.onLine) return;
+async function intentarSincronizar(esManual = false) {
+  if (sincronizando) {
+    return { ok: false, motivo: "ya_en_progreso" };
+  }
+
+  // navigator.onLine solo dice si hay una antena de red prendida
+  // (wifi/datos), NO si de verdad hay internet funcionando -- en
+  // zonas con señal débil puede decir "true" sin que en realidad
+  // haya conexión, o quedarse en "false" por un momento aunque sí
+  // haya señal. Para el intento AUTOMÁTICO se respeta como una
+  // primera señal rápida (para no gastar batería/datos intentando
+  // en vano), pero el botón "Sincronizar ahora" siempre intenta
+  // de verdad -- si en realidad no hay internet, el propio envío
+  // fallará y lo dirá claramente.
+  if (!esManual && !navigator.onLine) return { ok: false, motivo: "sin_señal" };
 
   sincronizando = true;
+  actualizarEstadoConexion(await contarPendientes(), "sincronizando");
+
+  let resultadoFinal = { ok: true, enviados: 0 };
 
   try {
     const pendientes = await leerTodoDeStore("cola_offline");
 
     if (pendientes.length === 0) {
-      sincronizando = false;
       actualizarEstadoConexion(0);
-      return;
+      return { ok: true, enviados: 0, sinPendientes: true };
     }
 
     const cuerpo = {
       acciones: pendientes.map((a) => ({ id: a.id, tipo: a.tipo, payload: a.payload })),
     };
 
-    const respuesta = await fetch("/api/movil/sync", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "same-origin",
-      body: JSON.stringify(cuerpo),
-    });
+    // Límite de tiempo: si la conexión está muy lenta o se
+    // cuelga, después de 25 segundos se cancela el intento en
+    // vez de quedarse esperando indefinidamente (lo cual
+    // bloqueaba cualquier otro intento de sincronizar mientras
+    // tanto, automático o manual).
+    const controlador = new AbortController();
+    const limiteTiempo = setTimeout(() => controlador.abort(), 25000);
+
+    let respuesta;
+    try {
+      respuesta = await fetch("/api/movil/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify(cuerpo),
+        signal: controlador.signal,
+      });
+    } finally {
+      clearTimeout(limiteTiempo);
+    }
 
     if (!respuesta.ok) throw new Error("El servidor rechazó la sincronización.");
 
     const datos = await respuesta.json();
+    let enviadosOk = 0;
 
     for (const resultado of datos.resultados) {
       if (resultado.ok) {
         await borrarDeStore("cola_offline", resultado.id);
+        enviadosOk++;
 
         const geocerca = resultado.resultado && resultado.resultado.geocerca;
         if (geocerca && geocerca.verificable !== undefined) {
@@ -210,16 +241,28 @@ async function intentarSincronizar() {
         );
       }
     }
+
+    resultadoFinal = { ok: true, enviados: enviadosOk, total: pendientes.length };
   } catch (error) {
+    const esTimeout = error.name === "AbortError";
     console.warn("No se pudo sincronizar todavía:", error.message);
+    resultadoFinal = {
+      ok: false,
+      motivo: esTimeout ? "tiempo_agotado" : "error_conexion",
+      mensaje: esTimeout
+        ? "La conexión está muy lenta y se canceló el intento después de 25 segundos. Se reintentará solo."
+        : "No se pudo conectar con el servidor. Se reintentará solo cuando haya señal.",
+    };
   } finally {
     sincronizando = false;
     actualizarContadorPendientes();
   }
+
+  return resultadoFinal;
 }
 
-window.addEventListener("online", intentarSincronizar);
-setInterval(intentarSincronizar, 20000);
+window.addEventListener("online", () => intentarSincronizar());
+setInterval(() => intentarSincronizar(), 15000);
 
 // ==========================================================
 // ESTADO DE CONEXIÓN (indicador visual)
@@ -237,11 +280,14 @@ function mostrarAvisoGeocerca(geocerca) {
   }
 }
 
-function actualizarEstadoConexion(pendientes) {
+function actualizarEstadoConexion(pendientes, estadoEspecial) {
   const el = document.getElementById("estado-conexion");
   if (!el) return;
 
-  if (!navigator.onLine) {
+  if (estadoEspecial === "sincronizando") {
+    el.textContent = "⏳ Enviando...";
+    el.className = "estado-conexion pendiente";
+  } else if (!navigator.onLine) {
     el.textContent = "Sin conexión";
     el.className = "estado-conexion offline";
   } else if (pendientes > 0) {
@@ -2577,8 +2623,27 @@ async function renderPendientes() {
     <button class="btn btn-primary btn-block" id="btn-sync-ahora">🔄 Sincronizar ahora</button>
     <div id="lista-pendientes" class="mt-2"></div>`;
 
-  document.getElementById("btn-sync-ahora").addEventListener("click", async () => {
-    await intentarSincronizar();
+  document.getElementById("btn-sync-ahora").addEventListener("click", async (evento) => {
+    const boton = evento.target;
+    const textoOriginal = boton.textContent;
+    boton.disabled = true;
+    boton.textContent = "⏳ Sincronizando...";
+
+    const resultado = await intentarSincronizar(true); // true = intento manual, no espera a navigator.onLine
+
+    boton.disabled = false;
+    boton.textContent = textoOriginal;
+
+    if (resultado.motivo === "ya_en_progreso") {
+      alert("Ya hay una sincronización en curso, espere un momento y vuelva a intentar.");
+    } else if (resultado.sinPendientes) {
+      alert("No había nada pendiente por enviar.");
+    } else if (resultado.ok) {
+      alert(`✔ Se enviaron ${resultado.enviados} de ${resultado.total} elemento(s) pendientes.`);
+    } else {
+      alert("⚠ " + (resultado.mensaje || "No se pudo sincronizar."));
+    }
+
     renderPendientes();
   });
 
@@ -2591,11 +2656,16 @@ async function renderPendientes() {
 
   lista.innerHTML = pendientes
     .map(
-      (a) => `
-      <div class="card">
+      (a) => {
+        const minutosEsperando = Math.floor((Date.now() - new Date(a.creado_en).getTime()) / 60000);
+        const llevaRato = minutosEsperando >= 5;
+        return `
+      <div class="card" style="${llevaRato ? 'border-left:4px solid #dd9d00;' : ''}">
         <strong>${etiquetas[a.tipo] || a.tipo}</strong><br>
-        <small>Registrado: ${new Date(a.creado_en).toLocaleString()}</small>
-      </div>`
+        <small>Registrado: ${new Date(a.creado_en).toLocaleString()} (${minutosEsperando < 1 ? "hace un momento" : "hace " + minutosEsperando + " min"})</small>
+        ${llevaRato ? `<br><small style="color:#dd9d00;">⚠ Lleva un rato esperando — revise su conexión y use "Sincronizar ahora"</small>` : ""}
+      </div>`;
+      }
     )
     .join("");
 }
