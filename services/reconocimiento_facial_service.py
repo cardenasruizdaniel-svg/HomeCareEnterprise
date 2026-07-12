@@ -30,6 +30,7 @@ from io import BytesIO
 
 import cv2
 import numpy as np
+from PIL import Image, ImageOps
 
 # Se exige un 80% de similitud para aceptar la foto (ajustable
 # aquí si, con el uso real, resulta demasiado estricto o
@@ -42,18 +43,45 @@ _detector_rostros = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_f
 
 
 def _decodificar_imagen(imagen_base64: str):
-    """Convierte un data-URI base64 (como los que manda la app) a una imagen de OpenCV."""
+    """
+    Convierte un data-URI base64 (como los que manda la app o
+    sube la web) a una imagen de OpenCV, respetando la
+    orientación real de la foto.
+
+    IMPORTANTE: los celulares suelen guardar la foto "acostada"
+    en los datos crudos, y solo la rotan visualmente usando una
+    etiqueta EXIF que el navegador/galería interpreta al
+    mostrarla -- pero OpenCV, si se decodifica directo, NO lee
+    esa etiqueta, y ve la foto de lado o al revés (por lo que
+    no detecta ningún rostro, aunque a simple vista se vea
+    perfectamente derecha). Por eso se decodifica primero con
+    Pillow, que sí corrige la orientación según el EXIF, antes
+    de pasarla a OpenCV.
+    """
     if not imagen_base64:
         return None
     try:
         if "," in imagen_base64:
             imagen_base64 = imagen_base64.split(",", 1)[1]
         datos = base64.b64decode(imagen_base64)
-        arreglo = np.frombuffer(datos, dtype=np.uint8)
-        imagen = cv2.imdecode(arreglo, cv2.IMREAD_COLOR)
-        return imagen
+
+        imagen_pil = Image.open(BytesIO(datos))
+        imagen_pil = ImageOps.exif_transpose(imagen_pil)  # corrige la rotación según el EXIF
+        imagen_pil = imagen_pil.convert("RGB")
+
+        imagen_rgb = np.array(imagen_pil)
+        imagen_bgr = cv2.cvtColor(imagen_rgb, cv2.COLOR_RGB2BGR)  # OpenCV usa BGR, Pillow usa RGB
+        return imagen_bgr
     except Exception:
         return None
+
+
+def _detectar_rostro_mas_grande(gris):
+    """Busca el rostro más grande en una imagen en escala de grises. None si no encuentra ninguno."""
+    rostros = _detector_rostros.detectMultiScale(gris, scaleFactor=1.1, minNeighbors=4, minSize=(60, 60))
+    if len(rostros) == 0:
+        return None
+    return max(rostros, key=lambda r: r[2] * r[3])
 
 
 def _extraer_rostro(imagen_base64: str, tamano=(200, 200)):
@@ -71,15 +99,24 @@ def _extraer_rostro(imagen_base64: str, tamano=(200, 200)):
         return None
 
     gris = cv2.cvtColor(imagen, cv2.COLOR_BGR2GRAY)
-    rostros = _detector_rostros.detectMultiScale(gris, scaleFactor=1.1, minNeighbors=5, minSize=(80, 80))
+    rostro_detectado = _detectar_rostro_mas_grande(gris)
 
-    if len(rostros) == 0:
+    # Si no detecta nada en la orientación normal (ya corregida
+    # por EXIF), como último recurso se prueba rotando la foto
+    # 90/180/270 grados -- por si la foto viene sin la etiqueta
+    # de orientación correcta, o se guardó realmente girada.
+    if rostro_detectado is None:
+        for angulo in (cv2.ROTATE_90_CLOCKWISE, cv2.ROTATE_180, cv2.ROTATE_90_COUNTERCLOCKWISE):
+            gris_rotada = cv2.rotate(gris, angulo)
+            rostro_detectado = _detectar_rostro_mas_grande(gris_rotada)
+            if rostro_detectado is not None:
+                gris = gris_rotada
+                break
+
+    if rostro_detectado is None:
         return None
 
-    # Si detecta varios rostros en la foto, se usa el más
-    # grande (el más cercano a la cámara -- lo más probable es
-    # que sea la persona que está tomando la foto).
-    x, y, w, h = max(rostros, key=lambda r: r[2] * r[3])
+    x, y, w, h = rostro_detectado
 
     # Se reduce un poco el recuadro detectado (10% en cada
     # lado) para acercarse más a la cara y alejarse del pelo,

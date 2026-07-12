@@ -25,3 +25,4 @@ openpyxl==3.1.5
 # (sin "-contrib") NO trae ese módulo, así que debe ser este paquete.
 opencv-contrib-python==4.10.0.84
 numpy==1.26.4
+Pillow==10.4.0
