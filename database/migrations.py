@@ -609,6 +609,35 @@ class MigrationManager:
             )
         return cambios
 
+    def migrar_configuracion_legal(self):
+        cambios = []
+        if not self.existe_tabla("configuracion_legal"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS configuracion_legal(
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    reps_codigo_habilitacion TEXT, reps_numero_habilitacion TEXT,
+                    reps_fecha_habilitacion TEXT, reps_vigencia_hasta TEXT,
+                    rips_nit_prestador TEXT, rips_codigo_prestador TEXT, rips_razon_social TEXT,
+                    dian_nit TEXT, dian_digito_verificacion TEXT,
+                    dian_resolucion_numero TEXT, dian_resolucion_prefijo TEXT,
+                    dian_resolucion_rango_desde TEXT, dian_resolucion_rango_hasta TEXT,
+                    dian_resolucion_fecha_desde TEXT, dian_resolucion_fecha_hasta TEXT,
+                    dian_software_id TEXT, dian_software_pin TEXT,
+                    dian_certificado_nombre_archivo TEXT, dian_certificado_base64 TEXT, dian_certificado_password TEXT,
+                    dian_ambiente TEXT DEFAULT 'Habilitación', dian_test_set_id TEXT,
+                    dian_nomina_software_id TEXT, dian_nomina_software_pin TEXT,
+                    dian_nomina_ambiente TEXT DEFAULT 'Habilitación', dian_nomina_test_set_id TEXT,
+                    pila_operador TEXT, pila_usuario TEXT, pila_clave TEXT,
+                    sic_numero_registro_rnbd TEXT, sic_fecha_registro TEXT,
+                    arl_nit TEXT, arl_nombre TEXT,
+                    fecha_actualizacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    usuario_actualizacion INTEGER
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla configuracion_legal")
+        return cambios
+
     def migrar_reconocimiento_facial(self):
         cambios = []
         if self.existe_tabla("profesionales"):
@@ -1649,6 +1678,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_bloqueo_login()
+        )
+
+        cambios.extend(
+            self.migrar_configuracion_legal()
         )
 
         cambios.extend(

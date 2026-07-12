@@ -2340,4 +2340,73 @@ CREATE TABLE IF NOT EXISTS catalogo_parametros_laboratorio(
 );
 """,
 
+# =====================================================
+# CONFIGURACIÓN LEGAL / CUMPLIMIENTO NORMATIVO
+# Una sola fila con todas las "llaves" (códigos,
+# resoluciones, credenciales) que exige cada ente del
+# gobierno colombiano para que el sistema opere de forma
+# legal: Secretaría de Salud (REPS), Ministerio de Salud
+# (RIPS), DIAN (facturación y nómina electrónica), UGPP/
+# operador PILA, y SIC (protección de datos).
+# =====================================================
+
+"""
+CREATE TABLE IF NOT EXISTS configuracion_legal(
+
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+
+    -- Secretaría de Salud / REPS (Registro Especial de Prestadores de Servicios de Salud)
+    reps_codigo_habilitacion TEXT,
+    reps_numero_habilitacion TEXT,
+    reps_fecha_habilitacion TEXT,
+    reps_vigencia_hasta TEXT,
+
+    -- RIPS (Ministerio de Salud / SISPRO -- Resolución vigente sobre RIPS)
+    rips_nit_prestador TEXT,
+    rips_codigo_prestador TEXT,
+    rips_razon_social TEXT,
+
+    -- DIAN - Facturación Electrónica
+    dian_nit TEXT,
+    dian_digito_verificacion TEXT,
+    dian_resolucion_numero TEXT,
+    dian_resolucion_prefijo TEXT,
+    dian_resolucion_rango_desde TEXT,
+    dian_resolucion_rango_hasta TEXT,
+    dian_resolucion_fecha_desde TEXT,
+    dian_resolucion_fecha_hasta TEXT,
+    dian_software_id TEXT,
+    dian_software_pin TEXT,
+    dian_certificado_nombre_archivo TEXT,
+    dian_certificado_base64 TEXT,
+    dian_certificado_password TEXT,
+    dian_ambiente TEXT DEFAULT 'Habilitación',
+    dian_test_set_id TEXT,
+
+    -- DIAN - Nómina Electrónica
+    dian_nomina_software_id TEXT,
+    dian_nomina_software_pin TEXT,
+    dian_nomina_ambiente TEXT DEFAULT 'Habilitación',
+    dian_nomina_test_set_id TEXT,
+
+    -- UGPP / Operador PILA (Seguridad Social)
+    pila_operador TEXT,
+    pila_usuario TEXT,
+    pila_clave TEXT,
+
+    -- SIC - Protección de Datos (Registro Nacional de Bases de Datos)
+    sic_numero_registro_rnbd TEXT,
+    sic_fecha_registro TEXT,
+
+    -- ARL (para reportes de accidentalidad laboral)
+    arl_nit TEXT,
+    arl_nombre TEXT,
+
+    fecha_actualizacion TEXT DEFAULT CURRENT_TIMESTAMP,
+
+    usuario_actualizacion INTEGER
+
+);
+""",
+
 ]

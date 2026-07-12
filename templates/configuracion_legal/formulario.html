@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block titulo %}Configuración Legal{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-gavel text-primary"></i> Configuración Legal / Cumplimiento Normativo</h2>
+    <p class="text-muted">
+        Aquí se diligencian las llaves, códigos y credenciales que exige cada entidad del gobierno colombiano
+        para que el sistema opere de forma legal. Ver el <a href="/configuracion-legal/manual-pdf" target="_blank">Manual de Configuración Legal</a> para el detalle de dónde conseguir cada dato.
+    </p>
+
+    {% if guardado %}<div class="alert alert-success">Configuración guardada correctamente.</div>{% endif %}
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-white"><h6 class="mb-0">Estado general</h6></div>
+        <div class="card-body">
+            <div class="row">
+                {% for s in resumen %}
+                <div class="col-md-6 col-lg-4 mb-2">
+                    <div class="d-flex align-items-center gap-2">
+                        {% if s.completo %}<span class="badge bg-success">Completo</span>{% else %}<span class="badge bg-warning text-dark">Pendiente</span>{% endif %}
+                        <div><strong>{{ s.nombre }}</strong><br><small class="text-muted">{{ s.responsable }}</small></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <form method="post" action="/configuracion-legal/guardar">
+
+        <div class="card shadow mb-3">
+            <div class="card-header bg-white"><h5 class="mb-0"><i class="fa-solid fa-house-medical"></i> REPS / Habilitación en Salud</h5><small class="text-muted">Secretaría de Salud Departamental / Ministerio de Salud</small></div>
+            <div class="card-body row">
+                <div class="col-md-6 mb-2"><label>Código de habilitación (REPS)</label><input type="text" name="reps_codigo_habilitacion" class="form-control" value="{{ config.reps_codigo_habilitacion or '' }}"></div>
+                <div class="col-md-6 mb-2"><label>Número de resolución de habilitación</label><input type="text" name="reps_numero_habilitacion" class="form-control" value="{{ config.reps_numero_habilitacion or '' }}"></div>
+                <div class="col-md-6 mb-2"><label>Fecha de habilitación</label><input type="date" name="reps_fecha_habilitacion" class="form-control" value="{{ config.reps_fecha_habilitacion or '' }}"></div>
+                <div class="col-md-6 mb-2"><label>Vigente hasta</label><input type="date" name="reps_vigencia_hasta" class="form-control" value="{{ config.reps_vigencia_hasta or '' }}"></div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-3">
+            <div class="card-header bg-white"><h5 class="mb-0"><i class="fa-solid fa-file-medical"></i> RIPS</h5><small class="text-muted">Ministerio de Salud / SISPRO</small></div>
+            <div class="card-body row">
+                <div class="col-md-4 mb-2"><label>NIT del prestador</label><input type="text" name="rips_nit_prestador" class="form-control" value="{{ config.rips_nit_prestador or '' }}"></div>
+                <div class="col-md-4 mb-2"><label>Código del prestador</label><input type="text" name="rips_codigo_prestador" class="form-control" value="{{ config.rips_codigo_prestador or '' }}"></div>
+                <div class="col-md-4 mb-2"><label>Razón social (como figura en REPS)</label><input type="text" name="rips_razon_social" class="form-control" value="{{ config.rips_razon_social or '' }}"></div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-3">
+            <div class="card-header bg-white"><h5 class="mb-0"><i class="fa-solid fa-file-invoice-dollar"></i> DIAN — Facturación Electrónica</h5><small class="text-muted">Dirección de Impuestos y Aduanas Nacionales</small></div>
+            <div class="card-body row">
+                <div class="col-md-4 mb-2"><label>NIT</label><input type="text" name="dian_nit" class="form-control" value="{{ config.dian_nit or '' }}"></div>
+                <div class="col-md-2 mb-2"><label>Dígito de verificación</label><input type="text" name="dian_digito_verificacion" class="form-control" value="{{ config.dian_digito_verificacion or '' }}"></div>
+                <div class="col-md-3 mb-2"><label>N.° de resolución de facturación</label><input type="text" name="dian_resolucion_numero" class="form-control" value="{{ config.dian_resolucion_numero or '' }}"></div>
+                <div class="col-md-3 mb-2"><label>Prefijo autorizado</label><input type="text" name="dian_resolucion_prefijo" class="form-control" value="{{ config.dian_resolucion_prefijo or '' }}"></div>
+                <div class="col-md-3 mb-2"><label>Rango autorizado desde</label><input type="text" name="dian_resolucion_rango_desde" class="form-control" value="{{ config.dian_resolucion_rango_desde or '' }}"></div>
+                <div class="col-md-3 mb-2"><label>Rango autorizado hasta</label><input type="text" name="dian_resolucion_rango_hasta" class="form-control" value="{{ config.dian_resolucion_rango_hasta or '' }}"></div>
+                <div class="col-md-3 mb-2"><label>Vigencia desde</label><input type="date" name="dian_resolucion_fecha_desde" class="form-control" value="{{ config.dian_resolucion_fecha_desde or '' }}"></div>
+                <div class="col-md-3 mb-2"><label>Vigencia hasta</label><input type="date" name="dian_resolucion_fecha_hasta" class="form-control" value="{{ config.dian_resolucion_fecha_hasta or '' }}"></div>
+                <div class="col-md-4 mb-2"><label>Software ID</label><input type="text" name="dian_software_id" class="form-control" value="{{ config.dian_software_id or '' }}"></div>
+                <div class="col-md-4 mb-2">
+                    <label>Software PIN</label>
+                    <input type="password" name="dian_software_pin" class="form-control" value="{{ config.dian_software_pin or '' }}">
+                </div>
+                <div class="col-md-4 mb-2"><label>Test Set ID (habilitación DIAN)</label><input type="text" name="dian_test_set_id" class="form-control" value="{{ config.dian_test_set_id or '' }}"></div>
+                <div class="col-md-4 mb-2">
+                    <label>Certificado digital (.p12 / .pfx)</label>
+                    <input type="file" accept=".p12,.pfx" class="form-control" id="campo-certificado-archivo">
+                    <input type="hidden" name="dian_certificado_base64" id="campo-certificado-oculto">
+                    <input type="hidden" name="dian_certificado_nombre_archivo" id="campo-certificado-nombre">
+                    {% if config.dian_certificado_nombre_archivo %}<small class="text-success">Archivo actual: {{ config.dian_certificado_nombre_archivo }}</small>{% endif %}
+                </div>
+                <div class="col-md-4 mb-2">
+                    <label>Contraseña del certificado {% if config._dian_certificado_password_configurada %}<span class="badge bg-success">ya configurada</span>{% endif %}</label>
+                    <input type="password" name="dian_certificado_password" class="form-control" placeholder="Dejar en blanco para no cambiarla">
+                </div>
+                <div class="col-md-4 mb-2">
+                    <label>Ambiente</label>
+                    <select name="dian_ambiente" class="form-select">
+                        <option value="Habilitación" {% if config.dian_ambiente=="Habilitación" %}selected{% endif %}>Habilitación (pruebas)</option>
+                        <option value="Producción" {% if config.dian_ambiente=="Producción" %}selected{% endif %}>Producción (real)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-3">
+            <div class="card-header bg-white"><h5 class="mb-0"><i class="fa-solid fa-money-check-dollar"></i> DIAN — Nómina Electrónica</h5><small class="text-muted">Dirección de Impuestos y Aduanas Nacionales</small></div>
+            <div class="card-body row">
+                <div class="col-md-4 mb-2"><label>Software ID</label><input type="text" name="dian_nomina_software_id" class="form-control" value="{{ config.dian_nomina_software_id or '' }}"></div>
+                <div class="col-md-4 mb-2"><label>Software PIN</label><input type="password" name="dian_nomina_software_pin" class="form-control" value="{{ config.dian_nomina_software_pin or '' }}"></div>
+                <div class="col-md-4 mb-2"><label>Test Set ID</label><input type="text" name="dian_nomina_test_set_id" class="form-control" value="{{ config.dian_nomina_test_set_id or '' }}"></div>
+                <div class="col-md-4 mb-2">
+                    <label>Ambiente</label>
+                    <select name="dian_nomina_ambiente" class="form-select">
+                        <option value="Habilitación" {% if config.dian_nomina_ambiente=="Habilitación" %}selected{% endif %}>Habilitación (pruebas)</option>
+                        <option value="Producción" {% if config.dian_nomina_ambiente=="Producción" %}selected{% endif %}>Producción (real)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-3">
+            <div class="card-header bg-white"><h5 class="mb-0"><i class="fa-solid fa-shield-heart"></i> UGPP / Operador PILA (Seguridad Social)</h5><small class="text-muted">Unidad de Gestión Pensional y Parafiscales / Operador de planillas</small></div>
+            <div class="card-body row">
+                <div class="col-md-4 mb-2"><label>Operador (Aportes en Línea, SOI, MiPlanilla, etc.)</label><input type="text" name="pila_operador" class="form-control" value="{{ config.pila_operador or '' }}"></div>
+                <div class="col-md-4 mb-2"><label>Usuario</label><input type="text" name="pila_usuario" class="form-control" value="{{ config.pila_usuario or '' }}"></div>
+                <div class="col-md-4 mb-2">
+                    <label>Contraseña {% if config._pila_clave_configurada %}<span class="badge bg-success">ya configurada</span>{% endif %}</label>
+                    <input type="password" name="pila_clave" class="form-control" placeholder="Dejar en blanco para no cambiarla">
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-3">
+            <div class="card-header bg-white"><h5 class="mb-0"><i class="fa-solid fa-database"></i> SIC — Protección de Datos</h5><small class="text-muted">Superintendencia de Industria y Comercio (Registro Nacional de Bases de Datos)</small></div>
+            <div class="card-body row">
+                <div class="col-md-6 mb-2"><label>Número de registro RNBD</label><input type="text" name="sic_numero_registro_rnbd" class="form-control" value="{{ config.sic_numero_registro_rnbd or '' }}"></div>
+                <div class="col-md-6 mb-2"><label>Fecha de registro</label><input type="date" name="sic_fecha_registro" class="form-control" value="{{ config.sic_fecha_registro or '' }}"></div>
+            </div>
+        </div>
+
+        <div class="card shadow mb-4">
+            <div class="card-header bg-white"><h5 class="mb-0"><i class="fa-solid fa-helmet-safety"></i> ARL</h5><small class="text-muted">Administradora de Riesgos Laborales contratada por la IPS</small></div>
+            <div class="card-body row">
+                <div class="col-md-6 mb-2"><label>NIT de la ARL</label><input type="text" name="arl_nit" class="form-control" value="{{ config.arl_nit or '' }}"></div>
+                <div class="col-md-6 mb-2"><label>Nombre de la ARL</label><input type="text" name="arl_nombre" class="form-control" value="{{ config.arl_nombre or '' }}"></div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-lg mb-4"><i class="fa-solid fa-floppy-disk"></i> Guardar Configuración Legal</button>
+    </form>
+</div>
+
+<script>
+document.getElementById("campo-certificado-archivo").addEventListener("change", (e) => {
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = () => {
+        document.getElementById("campo-certificado-oculto").value = lector.result;
+        document.getElementById("campo-certificado-nombre").value = archivo.name;
+    };
+    lector.readAsDataURL(archivo);
+});
+</script>
+{% endblock %}
