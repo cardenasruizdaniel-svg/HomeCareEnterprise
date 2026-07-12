@@ -1,70 +1,256 @@
 {% extends "base.html" %}
-{% block titulo %}Calendario{% endblock %}
+{% block titulo %}Calendario de Programación{% endblock %}
 {% block css %}
 <style>
-.dia-calendario { min-height: 100px; vertical-align: top; padding: 6px !important; }
-.dia-numero { font-weight: 600; font-size: 13px; }
-.dia-fuera-mes { background: #f8f9fa; color: #adb5bd; }
-.dia-hoy { background: #e7f1ff; }
-.visita-mini { font-size: 11px; display:block; background:#0d6efd; color:white; border-radius:4px; padding:1px 4px; margin-top:2px; text-decoration:none; }
-.visita-mini:hover { background:#0b5ed7; color:white; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; }
+.cal-dia-nombre { text-align:center; font-weight:700; font-size:12px; color:var(--hc-muted,#64748b); text-transform:uppercase; padding:4px 0; }
+.cal-celda { background:#fff; border:1px solid var(--hc-border,#e7ebf3); border-radius:8px; min-height:100px; padding:6px; font-size:12px; }
+.cal-celda.fuera-de-mes { background:#f8fafc; color:#b7c0cc; }
+.cal-celda.hoy { border:2px solid var(--hc-teal,#0fb9ae); }
+.cal-numero { font-weight:700; margin-bottom:4px; }
+.cal-turno { background:var(--hc-teal-soft,#e5fbf9); border-left:3px solid var(--hc-teal,#0fb9ae); border-radius:4px; padding:2px 4px; margin-bottom:2px; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cal-turno:hover { filter:brightness(0.95); }
+.cal-turno.cancelada { border-left-color:#adb5bd; opacity:.6; text-decoration:line-through; }
+.cal-semana-fila { display:grid; grid-template-columns:70px 1fr; gap:8px; border-bottom:1px solid var(--hc-border,#e7ebf3); padding:6px 0; }
+.cal-mini-mes { border:1px solid var(--hc-border,#e7ebf3); border-radius:8px; padding:8px; }
+.cal-mini-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; margin-top:4px; }
+.cal-mini-dia { aspect-ratio:1; border-radius:3px; font-size:9px; display:flex; align-items:center; justify-content:center; }
+.cal-mini-dia.con-turnos { background:var(--hc-teal,#0fb9ae); color:#fff; font-weight:700; }
+.cal-mini-dia.sin-turnos { background:#f1f5f9; color:#94a3b8; }
 </style>
 {% endblock %}
 {% block contenido %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0"><i class="fa-solid fa-table-cells-large text-danger"></i> Calendario — {{ nombre_mes }} {{ anio }}</h2>
-    </div>
+    <a href="/programacion/mensual" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver a Programación Mensual</a>
 
-    <div class="d-flex gap-2 mb-3">
-        {% set mes_anterior = mes - 1 if mes > 1 else 12 %}
-        {% set anio_anterior = anio if mes > 1 else anio - 1 %}
-        {% set mes_siguiente = mes + 1 if mes < 12 else 1 %}
-        {% set anio_siguiente = anio if mes < 12 else anio + 1 %}
-        <a href="/programacion/calendario?anio={{ anio_anterior }}&mes={{ mes_anterior }}" class="btn btn-outline-secondary btn-sm">
-            <i class="fa-solid fa-chevron-left"></i> Mes anterior
-        </a>
-        <a href="/programacion" class="btn btn-outline-primary btn-sm">Hoy</a>
-        <a href="/programacion/calendario?anio={{ anio_siguiente }}&mes={{ mes_siguiente }}" class="btn btn-outline-secondary btn-sm">
-            Mes siguiente <i class="fa-solid fa-chevron-right"></i>
-        </a>
-    </div>
+    <h2 class="mb-1"><i class="fa-solid fa-calendar-days text-primary"></i> Calendario de {{ profesional.nombre_completo }}</h2>
+    <p class="text-muted">{{ profesional.especialidad_principal }}</p>
 
-    <div class="card shadow border-0">
-        <div class="card-body p-2">
-            <table class="table table-bordered mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th class="text-center">Lun</th><th class="text-center">Mar</th><th class="text-center">Mié</th>
-                        <th class="text-center">Jue</th><th class="text-center">Vie</th><th class="text-center">Sáb</th><th class="text-center">Dom</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for semana in semanas %}
-                    <tr>
-                        {% for dia in semana %}
-                        {% if dia == 0 %}
-                        <td class="dia-calendario dia-fuera-mes"></td>
-                        {% else %}
-                        {% set fecha_celda = "%04d-%02d-%02d"|format(anio, mes, dia) %}
-                        <td class="dia-calendario {% if fecha_celda == hoy %}dia-hoy{% endif %}">
-                            <div class="dia-numero">{{ dia }}</div>
-                            {% for v in visitas_por_dia.get(fecha_celda, [])[:4] %}
-                            <a href="/programacion/detalle/{{ v.id }}" class="visita-mini" title="{{ v.paciente }}">
-                                {{ v.hora_inicio }} {{ v.paciente }}
-                            </a>
-                            {% endfor %}
-                            {% if visitas_por_dia.get(fecha_celda, [])|length > 4 %}
-                            <small class="text-muted">+{{ visitas_por_dia.get(fecha_celda)|length - 4 }} más</small>
-                            {% endif %}
-                        </td>
-                        {% endif %}
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="card shadow mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                <div class="btn-group">
+                    <button class="btn btn-outline-primary" id="btn-vista-dia">Día</button>
+                    <button class="btn btn-outline-primary" id="btn-vista-semana">Semana</button>
+                    <button class="btn btn-primary" id="btn-vista-mes">Mes</button>
+                    <button class="btn btn-outline-primary" id="btn-vista-anio">Año</button>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-outline-secondary" id="btn-anterior">←</button>
+                    <strong id="etiqueta-periodo" style="min-width:220px; text-align:center;"></strong>
+                    <button class="btn btn-outline-secondary" id="btn-siguiente">→</button>
+                    <button class="btn btn-outline-secondary btn-sm" id="btn-hoy">Hoy</button>
+                </div>
+            </div>
         </div>
     </div>
+
+    <div id="contenedor-calendario">
+        <p class="text-center text-muted py-5">Cargando...</p>
+    </div>
 </div>
+
+<!-- Modal para editar un turno al hacer clic -->
+<div class="modal fade" id="modalTurnoCalendario" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Detalle del turno</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body" id="cuerpo-modal-turno"></div>
+        <div class="modal-footer">
+            <a href="#" id="link-ir-a-gestionar" class="btn btn-primary">Ir a editar / reprogramar</a>
+        </div>
+    </div></div>
+</div>
+
+<script>
+const PROFESIONAL_ID = {{ profesional_id }};
+const NOMBRES_MES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const NOMBRES_DIA = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+
+let vistaActual = "mes";
+let fechaReferencia = new Date();
+
+function formatoISO(fecha) { return fecha.toISOString().slice(0, 10); }
+
+function inicioDeSemana(fecha) {
+    const d = new Date(fecha);
+    const diaSemana = d.getDay();
+    const offset = diaSemana === 0 ? -6 : 1 - diaSemana;
+    d.setDate(d.getDate() + offset);
+    return d;
+}
+
+async function cargarYRenderizar() {
+    const etiqueta = document.getElementById("etiqueta-periodo");
+    const contenedor = document.getElementById("contenedor-calendario");
+
+    let fechaDesde, fechaHasta;
+
+    if (vistaActual === "dia") {
+        fechaDesde = fechaHasta = formatoISO(fechaReferencia);
+        etiqueta.textContent = fechaReferencia.toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+    } else if (vistaActual === "semana") {
+        const inicio = inicioDeSemana(fechaReferencia);
+        const fin = new Date(inicio); fin.setDate(fin.getDate() + 6);
+        fechaDesde = formatoISO(inicio); fechaHasta = formatoISO(fin);
+        etiqueta.textContent = `${fechaDesde} — ${fechaHasta}`;
+    } else if (vistaActual === "mes") {
+        const inicio = new Date(fechaReferencia.getFullYear(), fechaReferencia.getMonth(), 1);
+        const fin = new Date(fechaReferencia.getFullYear(), fechaReferencia.getMonth() + 1, 0);
+        fechaDesde = formatoISO(inicio); fechaHasta = formatoISO(fin);
+        etiqueta.textContent = `${NOMBRES_MES[fechaReferencia.getMonth()]} ${fechaReferencia.getFullYear()}`;
+    } else if (vistaActual === "anio") {
+        fechaDesde = `${fechaReferencia.getFullYear()}-01-01`;
+        fechaHasta = `${fechaReferencia.getFullYear()}-12-31`;
+        etiqueta.textContent = `${fechaReferencia.getFullYear()}`;
+    }
+
+    contenedor.innerHTML = `<p class="text-center text-muted py-5">Cargando...</p>`;
+    const resp = await fetch(`/programacion/mensual/calendario/${PROFESIONAL_ID}/datos?fecha_desde=${fechaDesde}&fecha_hasta=${fechaHasta}`);
+    const datos = await resp.json();
+
+    if (vistaActual === "dia") renderVistaDia(datos);
+    else if (vistaActual === "semana") renderVistaSemana(datos, fechaDesde);
+    else if (vistaActual === "mes") renderVistaMes(datos);
+    else if (vistaActual === "anio") renderVistaAnio(datos, fechaReferencia.getFullYear());
+}
+
+function tarjetaTurno(v) {
+    const clase = v.estado === "Cancelada" ? "cal-turno cancelada" : "cal-turno";
+    return `<div class="${clase}" onclick='abrirDetalleTurno(${JSON.stringify(v).replace(/'/g, "&apos;")})'>${v.hora_inicio} ${v.primer_nombre} ${v.primer_apellido}</div>`;
+}
+
+function renderVistaDia(datos) {
+    const contenedor = document.getElementById("contenedor-calendario");
+    const visitas = Object.values(datos.por_dia)[0] || [];
+    if (visitas.length === 0) {
+        contenedor.innerHTML = `<div class="alert alert-info">Sin turnos programados este día.</div>`;
+        return;
+    }
+    contenedor.innerHTML = `<div class="card shadow"><div class="card-body">` +
+        visitas.map((v) => `
+            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                <div>
+                    <strong>${v.hora_inicio} - ${v.hora_fin}</strong> — ${v.primer_nombre} ${v.primer_apellido}
+                    <br><small class="text-muted">${v.servicio || ""} · ${v.zona_ciudad || ""} · ${v.direccion || ""}</small>
+                </div>
+                <span class="badge ${v.estado === 'Cancelada' ? 'bg-secondary' : 'bg-success'}">${v.estado}</span>
+            </div>
+        `).join("") + `</div></div>`;
+}
+
+function renderVistaSemana(datos, fechaInicioSemana) {
+    const contenedor = document.getElementById("contenedor-calendario");
+    let html = `<div class="card shadow"><div class="card-body">`;
+    const inicio = new Date(fechaInicioSemana + "T00:00:00");
+    for (let i = 0; i < 7; i++) {
+        const dia = new Date(inicio); dia.setDate(dia.getDate() + i);
+        const iso = formatoISO(dia);
+        const visitas = datos.por_dia[iso] || [];
+        html += `
+            <div class="cal-semana-fila">
+                <div><strong>${NOMBRES_DIA[dia.getDay()]}</strong><br><small>${dia.getDate()}/${dia.getMonth()+1}</small></div>
+                <div>${visitas.length ? visitas.map(tarjetaTurno).join("") : '<span class="text-muted small">Sin turnos</span>'}</div>
+            </div>
+        `;
+    }
+    html += `</div></div>`;
+    contenedor.innerHTML = html;
+}
+
+function renderVistaMes(datos) {
+    const contenedor = document.getElementById("contenedor-calendario");
+    const anio = fechaReferencia.getFullYear(), mes = fechaReferencia.getMonth();
+    const primerDiaMes = new Date(anio, mes, 1);
+    const ultimoDiaMes = new Date(anio, mes + 1, 0);
+    const offsetInicio = primerDiaMes.getDay() === 0 ? 6 : primerDiaMes.getDay() - 1; // lunes=0
+
+    const hoy = formatoISO(new Date());
+
+    let html = `<div class="cal-grid mb-1">` + NOMBRES_DIA.map((n) => `<div class="cal-dia-nombre">${n}</div>`).join("") + `</div><div class="cal-grid">`;
+
+    for (let i = 0; i < offsetInicio; i++) html += `<div class="cal-celda fuera-de-mes"></div>`;
+
+    for (let dia = 1; dia <= ultimoDiaMes.getDate(); dia++) {
+        const fechaCelda = new Date(anio, mes, dia);
+        const iso = formatoISO(fechaCelda);
+        const visitas = datos.por_dia[iso] || [];
+        const esHoy = iso === hoy;
+        html += `
+            <div class="cal-celda ${esHoy ? 'hoy' : ''}">
+                <div class="cal-numero">${dia}</div>
+                ${visitas.slice(0, 3).map(tarjetaTurno).join("")}
+                ${visitas.length > 3 ? `<small class="text-muted">+${visitas.length - 3} más</small>` : ""}
+            </div>
+        `;
+    }
+    html += `</div>`;
+    contenedor.innerHTML = html;
+}
+
+function renderVistaAnio(datos, anio) {
+    const contenedor = document.getElementById("contenedor-calendario");
+    let html = `<div class="row">`;
+    for (let mes = 0; mes < 12; mes++) {
+        const ultimoDiaMes = new Date(anio, mes + 1, 0).getDate();
+        let miniGrid = "";
+        let totalMes = 0;
+        for (let dia = 1; dia <= ultimoDiaMes; dia++) {
+            const iso = formatoISO(new Date(anio, mes, dia));
+            const cantidad = (datos.por_dia[iso] || []).length;
+            totalMes += cantidad;
+            miniGrid += `<div class="cal-mini-dia ${cantidad ? 'con-turnos' : 'sin-turnos'}" title="${iso}: ${cantidad} turno(s)">${cantidad || ""}</div>`;
+        }
+        html += `
+            <div class="col-md-3 mb-3">
+                <div class="cal-mini-mes">
+                    <strong>${NOMBRES_MES[mes]}</strong> <small class="text-muted">(${totalMes} turnos)</small>
+                    <div class="cal-mini-grid">${miniGrid}</div>
+                </div>
+            </div>
+        `;
+    }
+    html += `</div>`;
+    contenedor.innerHTML = html;
+}
+
+window.abrirDetalleTurno = (visita) => {
+    document.getElementById("cuerpo-modal-turno").innerHTML = `
+        <p><strong>Paciente:</strong> ${visita.primer_nombre} ${visita.primer_apellido}</p>
+        <p><strong>Fecha:</strong> ${visita.fecha} — ${visita.hora_inicio} a ${visita.hora_fin}</p>
+        <p><strong>Servicio:</strong> ${visita.servicio || "—"}</p>
+        <p><strong>Zona:</strong> ${visita.zona_ciudad || "—"} — ${visita.direccion || ""}</p>
+        <p><strong>Estado:</strong> ${visita.estado}</p>
+    `;
+    document.getElementById("link-ir-a-gestionar").href = `/gestion-visitas?paciente_id=${visita.paciente_id}`;
+    new bootstrap.Modal(document.getElementById("modalTurnoCalendario")).show();
+};
+
+function cambiarVista(nuevaVista) {
+    vistaActual = nuevaVista;
+    ["dia", "semana", "mes", "anio"].forEach((v) => {
+        document.getElementById(`btn-vista-${v}`).className = v === nuevaVista ? "btn btn-primary" : "btn btn-outline-primary";
+    });
+    cargarYRenderizar();
+}
+
+document.getElementById("btn-vista-dia").addEventListener("click", () => cambiarVista("dia"));
+document.getElementById("btn-vista-semana").addEventListener("click", () => cambiarVista("semana"));
+document.getElementById("btn-vista-mes").addEventListener("click", () => cambiarVista("mes"));
+document.getElementById("btn-vista-anio").addEventListener("click", () => cambiarVista("anio"));
+
+document.getElementById("btn-anterior").addEventListener("click", () => { moverPeriodo(-1); cargarYRenderizar(); });
+document.getElementById("btn-siguiente").addEventListener("click", () => { moverPeriodo(1); cargarYRenderizar(); });
+document.getElementById("btn-hoy").addEventListener("click", () => { fechaReferencia = new Date(); cargarYRenderizar(); });
+
+function moverPeriodo(direccion) {
+    const nueva = new Date(fechaReferencia);
+    if (vistaActual === "dia") nueva.setDate(nueva.getDate() + direccion);
+    else if (vistaActual === "semana") nueva.setDate(nueva.getDate() + direccion * 7);
+    else if (vistaActual === "mes") nueva.setMonth(nueva.getMonth() + direccion);
+    else if (vistaActual === "anio") nueva.setFullYear(nueva.getFullYear() + direccion);
+    fechaReferencia = nueva;
+}
+
+cargarYRenderizar();
+</script>
 {% endblock %}

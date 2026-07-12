@@ -13,11 +13,16 @@
     <div id="alerta-resultado"></div>
 
     <div class="card shadow mb-3" id="card-historial" style="display:none;">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h6 class="mb-0"><i class="fa-solid fa-clock-rotate-left"></i> Historial de programaciones anteriores</h6>
-            <a href="#" id="link-ver-cronograma" class="btn btn-outline-primary btn-sm no-imprimir">
-                <i class="fa-solid fa-print"></i> Ver / Imprimir cronograma de este mes
-            </a>
+            <div class="d-flex gap-2">
+                <a href="#" id="link-ver-calendario" class="btn btn-primary btn-sm no-imprimir">
+                    <i class="fa-solid fa-calendar-days"></i> Ver calendario (día/semana/mes/año)
+                </a>
+                <a href="#" id="link-ver-cronograma" class="btn btn-outline-primary btn-sm no-imprimir">
+                    <i class="fa-solid fa-print"></i> Ver / Imprimir cronograma de este mes
+                </a>
+            </div>
         </div>
         <div class="card-body">
             <div class="table-responsive">
@@ -117,6 +122,7 @@ document.getElementById("profesional_id").addEventListener("change", async (even
     const cardHistorial = document.getElementById("card-historial");
     const cuerpoHistorial = document.getElementById("cuerpo-historial");
     const linkCronograma = document.getElementById("link-ver-cronograma");
+    const linkCalendario = document.getElementById("link-ver-calendario");
 
     if (!profesionalId) {
         cardHistorial.style.display = "none";
@@ -125,6 +131,7 @@ document.getElementById("profesional_id").addEventListener("change", async (even
 
     const hoy = new Date();
     linkCronograma.href = `/programacion/mensual/cronograma/${profesionalId}/${hoy.getFullYear()}/${hoy.getMonth() + 1}`;
+    linkCalendario.href = `/programacion/mensual/calendario/${profesionalId}`;
 
     try {
         const respuesta = await fetch(`/programacion/mensual/historial/${profesionalId}`);

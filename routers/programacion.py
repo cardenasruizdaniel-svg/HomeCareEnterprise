@@ -15,7 +15,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from core.dependencies import requiere_permiso
 from core.templates import templates
 
-from database.database import consultar_todos
+from database.database import consultar_todos, consultar_uno
 
 from services import programacion_service
 
@@ -201,6 +201,28 @@ async def ver_cronograma(
         request=request, name="programacion/cronograma_mensual.html",
         context={"usuario": usuario, **datos},
     )
+
+
+@router.get("/mensual/calendario/{profesional_id}", response_class=HTMLResponse)
+async def ver_calendario_didactico(
+    request: Request, profesional_id: int,
+    usuario=Depends(requiere_permiso("programacion")),
+):
+    """Tablero de calendario visual (día/semana/mes/año) de la programación de un profesional."""
+    profesional = consultar_uno("SELECT nombre_completo, especialidad_principal FROM profesionales WHERE id=?", (profesional_id,))
+    return templates.TemplateResponse(
+        request=request, name="programacion/calendario.html",
+        context={"usuario": usuario, "profesional_id": profesional_id, "profesional": dict(profesional) if profesional else {}},
+    )
+
+
+@router.get("/mensual/calendario/{profesional_id}/datos")
+async def datos_calendario_didactico(
+    profesional_id: int, fecha_desde: str, fecha_hasta: str,
+    usuario=Depends(requiere_permiso("programacion")),
+):
+    """Datos en JSON para el tablero de calendario, por el rango de fechas que esté viendo en ese momento."""
+    return programacion_service.agenda_por_rango(profesional_id, fecha_desde, fecha_hasta)
 
 
 @router.post("/mensual/crear")

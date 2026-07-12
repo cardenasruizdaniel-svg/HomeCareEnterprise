@@ -371,22 +371,59 @@ def crear_programacion_mensual(profesional_id: int, turnos: list, usuario) -> di
         if not fechas_grupo:
             continue
 
-        servicio_id = ServiciosPacienteRepository.crear({
-            "paciente_id": paciente_id,
-            "tipo_servicio": nombre_servicio,
-            "subtipo": None,
-            "profesional_id": profesional_id,
-            "frecuencia": "Mensual (variable)",
-            "fecha_inicio": fechas_grupo[0],
-            "fecha_fin": fechas_grupo[-1],
-            "hora_inicio": turnos_grupo[0].get("hora_inicio") or "08:00",
-            "hora_fin": turnos_grupo[0].get("hora_fin") or "09:00",
-            "indicaciones": "",
-            "usuario_creacion": usuario,
-        })
+        # Si el paciente YA tiene un servicio activo de este
+        # mismo tipo (por ejemplo, "Cuidador" -- que el médico
+        # ya le asignó con su meta de sesiones desde la primera
+        # valoración), se reutiliza ESE MISMO servicio en vez
+        # de crear uno nuevo cada vez que la oficina programa un
+        # mes. Así, las sesiones que se van cargando mes a mes
+        # quedan todas agrupadas en la misma actividad del
+        # paciente, no repartidas en servicios duplicados.
+        servicio_existente = consultar_uno(
+            "SELECT id FROM servicios_paciente WHERE paciente_id=? AND LOWER(tipo_servicio)=LOWER(?) AND estado='Activo' "
+            "ORDER BY id DESC LIMIT 1",
+            (paciente_id, nombre_servicio),
+        )
+
+        if servicio_existente:
+            servicio_id = dict(servicio_existente)["id"]
+            # Se actualiza el rango de fechas para que cubra tambien este nuevo mes,
+            # y se le asigna el profesional que se acaba de programar (el mas reciente).
+            ejecutar(
+                """
+                UPDATE servicios_paciente
+                SET fecha_fin = CASE WHEN fecha_fin IS NULL OR fecha_fin < ? THEN ? ELSE fecha_fin END,
+                    profesional_id = ?
+                WHERE id=?
+                """,
+                (fechas_grupo[-1], fechas_grupo[-1], profesional_id, servicio_id),
+            )
+        else:
+            servicio_id = ServiciosPacienteRepository.crear({
+                "paciente_id": paciente_id,
+                "tipo_servicio": nombre_servicio,
+                "subtipo": None,
+                "profesional_id": profesional_id,
+                "frecuencia": "Mensual (variable)",
+                "fecha_inicio": fechas_grupo[0],
+                "fecha_fin": fechas_grupo[-1],
+                "hora_inicio": turnos_grupo[0].get("hora_inicio") or "08:00",
+                "hora_fin": turnos_grupo[0].get("hora_fin") or "09:00",
+                "indicaciones": "",
+                "usuario_creacion": usuario,
+            })
+
+        # El numero de sesiones que se muestra queda como el
+        # TOTAL de visitas reales que tiene el servicio hasta
+        # ahora (las de este mes + las de meses anteriores si
+        # los hubo), para que refleje la realidad de lo
+        # programado, no solo lo de esta tanda.
+        total_sesiones_actual = consultar_escalar(
+            "SELECT COUNT(*) FROM planilla_visitas WHERE servicio_paciente_id=?", (servicio_id,)
+        ) or 0
         ejecutar(
             "UPDATE servicios_paciente SET numero_sesiones=? WHERE id=?",
-            (len(turnos_grupo), servicio_id),
+            (total_sesiones_actual + len(turnos_grupo), servicio_id),
         )
 
         for turno in turnos_grupo:
@@ -443,6 +480,41 @@ def historial_programacion_profesional(profesional_id: int) -> list:
         (profesional_id,),
     )
     return [dict(f) for f in filas]
+
+
+def agenda_por_rango(profesional_id: int, fecha_desde: str, fecha_hasta: str) -> dict:
+    """
+    Igual que cronograma_mensual, pero para CUALQUIER rango de
+    fechas (un día, una semana, un mes o un año completo) --
+    es la base del tablero de calendario didáctico, que puede
+    mostrar la programación por día, semana, mes o año según
+    lo que se necesite en cada momento.
+    """
+    filas = consultar_todos(
+        """
+        SELECT pr.id, pr.fecha, pr.hora_inicio, pr.hora_fin, pr.servicio, pr.estado,
+               pr.paciente_id, p.primer_nombre, p.primer_apellido, p.direccion, p.zona_ciudad
+        FROM programaciones pr
+        JOIN pacientes p ON p.id = pr.paciente_id
+        WHERE pr.profesional_id=? AND pr.fecha BETWEEN ? AND ?
+        ORDER BY pr.fecha, pr.hora_inicio
+        """,
+        (profesional_id, fecha_desde, fecha_hasta),
+    )
+
+    por_dia = {}
+    for f in filas:
+        f = dict(f)
+        por_dia.setdefault(f["fecha"], []).append(f)
+
+    profesional = consultar_uno("SELECT nombre_completo, especialidad_principal FROM profesionales WHERE id=?", (profesional_id,))
+
+    return {
+        "profesional": dict(profesional) if profesional else {},
+        "fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta,
+        "por_dia": por_dia,
+        "total_visitas": len(filas),
+    }
 
 
 def cronograma_mensual(profesional_id: int, anio: int, mes: int) -> dict:

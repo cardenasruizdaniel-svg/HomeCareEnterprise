@@ -125,15 +125,33 @@ def asignar_servicio(paciente_id, tipo_servicio, subtipo, profesional_id, frecue
             "duplicado_evitado": True,
         }
 
-    fechas = _generar_fechas(fecha_inicio, fecha_fin, frecuencia, numero_sesiones)
+    fecha_fin_guardar = fecha_fin
 
-    # Si no se indico fecha de fin a mano, se calcula una de
-    # REFERENCIA automaticamente (la fecha de la ultima sesion
-    # generada, segun el numero de sesiones y la periodicidad),
-    # para que quede un dato util en pantalla sin obligar al
-    # usuario a calcularla el mismo. Igual se puede modificar
-    # despues si se indica una fecha de fin manual.
-    fecha_fin_guardar = fecha_fin or (fechas[-1] if fechas else "")
+    # El servicio de CUIDADOR es distinto a todos los demás: el
+    # médico solo indica CUÁNTAS sesiones/días necesita el
+    # paciente (la meta), pero NO a qué hora ni con qué
+    # cuidador exacto -- porque ese servicio puede ser en la
+    # mañana, en la tarde, en ambas, o incluso por turnos de
+    # 24 horas con varios cuidadores distintos rotando. Esa
+    # parte se decide después, desde la oficina, en
+    # Programación Mensual -- así que aquí NO se generan fechas
+    # ni visitas tentativas todavía, solo se deja la actividad
+    # asignada con la meta de sesiones para que la oficina sepa
+    # cuánto tiene que programarle.
+    es_cuidador = (tipo_servicio or "").strip().lower() == "cuidador"
+
+    if es_cuidador:
+        fechas = []
+        fecha_fin_guardar = fecha_fin_guardar or ""
+    else:
+        fechas = _generar_fechas(fecha_inicio, fecha_fin, frecuencia, numero_sesiones)
+        # Si no se indico fecha de fin a mano, se calcula una de
+        # REFERENCIA automaticamente (la fecha de la ultima sesion
+        # generada, segun el numero de sesiones y la periodicidad),
+        # para que quede un dato util en pantalla sin obligar al
+        # usuario a calcularla el mismo. Igual se puede modificar
+        # despues si se indica una fecha de fin manual.
+        fecha_fin_guardar = fecha_fin_guardar or (fechas[-1] if fechas else "")
 
     servicio_id = ServiciosPacienteRepository.crear({
         "paciente_id": paciente_id,
@@ -174,6 +192,12 @@ def asignar_servicio(paciente_id, tipo_servicio, subtipo, profesional_id, frecue
         "servicio_id": servicio_id,
         "total_fechas": len(fechas),
         "visitas_creadas": 0,  # ya no se crean automaticamente; se programan una a una
+        "es_cuidador": es_cuidador,
+        "mensaje": (
+            f"Se asignó la actividad de Cuidador con una meta de {numero_sesiones or 0} sesión(es)/día(s). "
+            "Las fechas, horarios y el cuidador específico se programan desde la oficina en Programación Mensual."
+            if es_cuidador else None
+        ),
     }
 
 
