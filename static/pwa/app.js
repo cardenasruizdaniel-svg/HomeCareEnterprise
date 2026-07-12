@@ -2650,10 +2650,30 @@ async function iniciar() {
   }
 
   if (perfil && perfil.profesional_id) {
-    mostrarNav(true);
-    irA("agenda");
-    reanudarMonitoreoSiHayTurnoAbierto();
-    iniciarRecordatoriosDeTurno();
+    // Cada vez que se abre la app (no solo al escribir usuario y
+    // contraseña), se revisa si el profesional YA tiene foto de
+    // enrolamiento -- si por cualquier motivo no la tiene (no
+    // se alcanzó a tomar antes, se reinició la base de datos,
+    // un administrador se la borró, etc.), se le pide tomarla
+    // ANTES de dejarlo continuar. Si no hay conexión para
+    // consultarlo, se deja pasar normal (no se bloquea el
+    // trabajo en campo por no poder verificarlo en ese momento).
+    let debePedirEnrolamiento = false;
+    try {
+      const perfilActualizado = await apiGet("/api/movil/perfil");
+      debePedirEnrolamiento = perfilActualizado.tiene_foto_enrolamiento === false;
+    } catch (error) {
+      debePedirEnrolamiento = false;
+    }
+
+    if (debePedirEnrolamiento) {
+      renderEnrolamientoFacial();
+    } else {
+      mostrarNav(true);
+      irA("agenda");
+      reanudarMonitoreoSiHayTurnoAbierto();
+      iniciarRecordatoriosDeTurno();
+    }
   } else {
     renderLogin();
   }
