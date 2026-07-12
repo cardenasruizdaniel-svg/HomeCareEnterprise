@@ -908,6 +908,15 @@ async function renderDetalleVisita(visitaId) {
   const nombrePaciente = [visita.primer_nombre, visita.primer_apellido].filter(Boolean).join(" ");
   const yaFinalizada = !!visita.hora_real_fin;
 
+  // Si ya se registró la ubicación de este paciente pero
+  // todavía está pendiente de enviar (sin conexión en ese
+  // momento), no se debe dejar volver a registrarla -- si no,
+  // cada clic agrega una más a la cola y se duplica el envío.
+  const colaPendiente = await leerTodoDeStore("cola_offline");
+  const yaHayUbicacionPendiente = colaPendiente.some(
+    (accion) => accion.tipo === "actualizar_ubicacion_paciente" && accion.payload && accion.payload.paciente_id === visita.paciente_id
+  );
+
   if (yaFinalizada) {
     // La visita ya se completó: pantalla BLOQUEADA, solo se
     // puede consultar/imprimir el reporte o (si hace falta)
@@ -972,11 +981,15 @@ async function renderDetalleVisita(visitaId) {
     </button>
 
     ${esPerfilCuidador() ? "" : `
-    ${!visita.ubicacion_confirmada ? `
-    <button class="btn btn-secondary btn-block" id="btn-actualizar-ubicacion-paciente">
-      📍 Registrar ubicación exacta del paciente
-    </button>
-    ` : `
+    ${!visita.ubicacion_confirmada ? (
+      yaHayUbicacionPendiente ? `
+      <div class="alerta alerta-info">⏳ Ya se registró la ubicación de este paciente y está pendiente de enviar (sin conexión en ese momento). Se enviará sola en cuanto haya señal — no hace falta volver a registrarla.</div>
+      ` : `
+      <button class="btn btn-secondary btn-block" id="btn-actualizar-ubicacion-paciente">
+        📍 Registrar ubicación exacta del paciente
+      </button>
+      `
+    ) : `
     <div class="alerta alerta-info">📍 La ubicación de este paciente ya fue registrada. Para volver a tomarla, un administrador debe borrarla primero desde la ficha del paciente en la web.</div>
     `}
     `}
@@ -1016,15 +1029,21 @@ async function renderDetalleVisita(visitaId) {
   const botonUbicacion = document.getElementById("btn-actualizar-ubicacion-paciente");
   if (botonUbicacion) {
   botonUbicacion.addEventListener("click", async () => {
+    botonUbicacion.disabled = true;
+    botonUbicacion.textContent = "Obteniendo ubicación...";
+
     const ubicacion = await obtenerUbicacion();
     if (ubicacion.lat === null) {
       alert("No se pudo obtener la ubicación. Verifique el permiso de ubicación.");
+      botonUbicacion.disabled = false;
+      botonUbicacion.textContent = "📍 Registrar ubicación exacta del paciente";
       return;
     }
     await encolarAccion("actualizar_ubicacion_paciente", {
       paciente_id: visita.paciente_id, lat: ubicacion.lat, lon: ubicacion.lon,
     });
     alert("Ubicación del paciente guardada. Se sincronizará cuando haya conexión.");
+    renderDetalleVisita(visita.id); // se vuelve a dibujar para que el boton se reemplace por el aviso "pendiente de enviar"
   });
   }
 
