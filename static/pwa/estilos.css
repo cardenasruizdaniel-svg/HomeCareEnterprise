@@ -1,3 +1,9 @@
+:root {
+  --hc-teal: #00c2b8;
+  --hc-teal-oscuro: #0a8f86;
+  --hc-rosa: #ff3399;
+  --hc-navy: #16213e;
+}
 * { box-sizing: border-box; }
 body {
   margin: 0;
@@ -7,16 +13,19 @@ body {
   padding-bottom: 70px;
 }
 .topbar {
-  background: #0d6efd;
+  background: linear-gradient(135deg, var(--hc-teal-oscuro), var(--hc-teal));
   color: white;
-  padding: 14px 16px;
+  padding: 12px 16px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   position: sticky;
   top: 0;
   z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
+.topbar-marca { display: flex; align-items: center; gap: 10px; }
+.topbar-logo { height: 32px; width: 32px; object-fit: contain; border-radius: 6px; background: white; padding: 2px; }
 .topbar h1 { font-size: 18px; margin: 0; }
 .estado-conexion {
   font-size: 12px;
@@ -25,7 +34,7 @@ body {
   background: rgba(255,255,255,0.2);
 }
 .estado-conexion.offline { background: #dc3545; }
-.estado-conexion.pendiente { background: #ffc107; color: #212529; }
+.estado-conexion.pendiente { background: var(--hc-rosa); color: white; }
 
 .contenedor { padding: 14px; max-width: 480px; margin: 0 auto; }
 
@@ -35,8 +44,9 @@ body {
   box-shadow: 0 1px 4px rgba(0,0,0,0.08);
   padding: 14px;
   margin-bottom: 12px;
+  border-top: 3px solid transparent;
 }
-.card h3 { margin: 0 0 8px; font-size: 16px; }
+.card h3 { margin: 0 0 8px; font-size: 16px; color: var(--hc-navy); }
 .card small { color: #6c757d; }
 
 .btn {
@@ -50,7 +60,7 @@ body {
   text-align: center;
   text-decoration: none;
 }
-.btn-primary { background: #0d6efd; color: white; }
+.btn-primary { background: linear-gradient(135deg, var(--hc-teal-oscuro), var(--hc-teal)); color: white; }
 .btn-success { background: #198754; color: white; }
 .btn-danger { background: #dc3545; color: white; }
 .btn-secondary { background: #e9ecef; color: #212529; }
@@ -92,7 +102,7 @@ body {
   align-items: center;
   gap: 2px;
 }
-.bottom-nav button.activo { color: #0d6efd; font-weight: 700; }
+.bottom-nav button.activo { color: var(--hc-teal-oscuro); font-weight: 700; }
 .bottom-nav .icono { font-size: 20px; }
 
 .alerta { padding: 10px 12px; border-radius: 8px; margin-bottom: 12px; font-size: 14px; }

@@ -533,6 +533,13 @@ function renderLogin() {
   mostrarNav(false);
   titulo("HomeCare - Ingreso");
   contenedor().innerHTML = `
+    <div style="text-align:center; padding:30px 10px 10px;">
+      <img src="/static/img/logo_homecare.png" alt="HomeCare del Quindío" style="width:110px; height:110px; object-fit:contain; border-radius:20px; background:white; box-shadow:0 4px 16px rgba(0,0,0,0.12); padding:10px;">
+      <h2 style="margin:16px 0 2px; color:var(--hc-navy);">
+        <span style="color:var(--hc-teal-oscuro);">Home</span><span style="color:var(--hc-rosa);">Care</span>
+      </h2>
+      <p style="color:#6c757d; margin:0 0 20px; font-size:13px;">del Quindío I.P.S. — App de Campo</p>
+    </div>
     <div class="card">
       <h3>Iniciar sesión</h3>
       <div id="login-error"></div>
