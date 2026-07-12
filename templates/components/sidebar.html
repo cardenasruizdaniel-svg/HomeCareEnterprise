@@ -107,7 +107,23 @@
                 <span>Configuración Legal</span>
             </a>
         </li>
+        <li>
+            <a href="/roles-permisos">
+                <i class="fa-solid fa-user-shield"></i>
+                <span>Roles y Permisos</span>
+            </a>
+        </li>
         {% endif %}
+
+        {% if usuario and tiene_permiso(usuario.rol, "chatbot_whatsapp") %}
+        <li>
+            <a href="/configuracion-whatsapp">
+                <i class="fa-brands fa-whatsapp"></i>
+                <span>Chatbot WhatsApp</span>
+            </a>
+        </li>
+        {% endif %}
+
 
         {% if usuario and tiene_permiso(usuario.rol, "calidad") %}
         <li>

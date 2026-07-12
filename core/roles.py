@@ -82,3 +82,22 @@ ROLES = [
     CONSULTA,
 
 ]
+
+
+def listar_roles_activos():
+    """
+    Lista de roles para mostrar en los desplegables (ej. al
+    crear un Usuario/Profesional) -- se trae de la base de
+    datos, para que los perfiles nuevos que un Administrador
+    cree desde Roles y Permisos aparezcan aquí también, sin
+    tener que tocar código. Si por algún motivo la base de
+    datos no está disponible, se usa la lista fija de arriba
+    como respaldo.
+    """
+    try:
+        from database.database import consultar_todos
+        filas = consultar_todos("SELECT nombre FROM roles WHERE activo=1 ORDER BY nombre")
+        nombres = [dict(f)["nombre"] for f in filas]
+        return nombres if nombres else ROLES
+    except Exception:
+        return ROLES

@@ -74,8 +74,23 @@ PERMISSIONS = {
 
 
 def has_permission(role: str, module: str) -> bool:
-    perms = PERMISSIONS.get(role, [])
-    return "*" in perms or module in perms
+    """
+    Consulta los permisos del rol -- primero intenta la base de
+    datos (donde un Administrador puede haber creado roles
+    nuevos o cambiado los permisos de uno existente desde la
+    web), y si por cualquier motivo la base de datos no está
+    disponible todavía (por ejemplo, muy al principio del
+    arranque del programa, antes de que corran las
+    migraciones), usa el diccionario de aquí mismo como
+    respaldo, para que el sistema nunca se quede sin poder
+    validar permisos.
+    """
+    try:
+        from core.permissions.permisos_dinamicos import tiene_permiso_bd
+        return tiene_permiso_bd(role, module)
+    except Exception:
+        perms = PERMISSIONS.get(role, [])
+        return "*" in perms or module in perms
 
 
 # ==========================================================

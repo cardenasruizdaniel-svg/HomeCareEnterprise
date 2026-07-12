@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from core.dependencies import requiere_permiso
-from core.roles import ROLES
+from core.roles import listar_roles_activos
 from core.templates import templates
 
 from services.usuarios_service import (
@@ -43,7 +43,7 @@ async def listado(
         context={
             "usuario": usuario,
             "usuarios": usuarios,
-            "roles": ROLES,
+            "roles": listar_roles_activos(),
         },
     )
 
@@ -62,7 +62,7 @@ async def nuevo(
         name="usuarios/nuevo.html",
         context={
             "usuario": usuario,
-            "roles": ROLES,
+            "roles": listar_roles_activos(),
         },
     )
 
@@ -103,7 +103,7 @@ async def editar(
         name="usuarios/editar.html",
         context={
             "usuario": registro,
-            "roles": ROLES,
+            "roles": listar_roles_activos(),
         },
     )
 

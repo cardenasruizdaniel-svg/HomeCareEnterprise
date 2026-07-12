@@ -2409,4 +2409,101 @@ CREATE TABLE IF NOT EXISTS configuracion_legal(
 );
 """,
 
+# =====================================================
+# CHATBOT DE WHATSAPP
+# Configuración de la conexión con la API de WhatsApp
+# Business (Meta), y el registro de conversaciones del
+# chatbot para pacientes/acudientes.
+# =====================================================
+
+"""
+CREATE TABLE IF NOT EXISTS configuracion_whatsapp(
+
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+
+    habilitado INTEGER DEFAULT 0,
+
+    token_acceso TEXT,
+
+    id_numero_telefono TEXT,
+
+    token_verificacion_webhook TEXT,
+
+    mensaje_bienvenida TEXT DEFAULT 'Hola, soy el asistente virtual de HomeCare del Quindío I.P.S. 👋',
+
+    fecha_actualizacion TEXT DEFAULT CURRENT_TIMESTAMP,
+
+    usuario_actualizacion INTEGER
+
+);
+""",
+
+"""
+CREATE TABLE IF NOT EXISTS whatsapp_conversaciones(
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    numero_celular TEXT NOT NULL,
+
+    paciente_id INTEGER,
+
+    direccion TEXT NOT NULL,
+
+    mensaje TEXT,
+
+    fecha TEXT DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY(paciente_id) REFERENCES pacientes(id)
+
+);
+""",
+
+# =====================================================
+# ROLES Y PERMISOS DINÁMICOS
+# Antes los roles y sus permisos venían escritos en el
+# código (core/permissions/permissions.py) -- ahora viven
+# aquí, para que un Administrador pueda crear perfiles
+# nuevos y activar/desactivar módulos por perfil desde la
+# web, sin tener que tocar código. La primera vez que
+# arranca el sistema, se siembran automáticamente los
+# roles y permisos que ya existían, para no cambiarle el
+# comportamiento a nadie.
+# =====================================================
+
+"""
+CREATE TABLE IF NOT EXISTS roles(
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    nombre TEXT NOT NULL UNIQUE,
+
+    descripcion TEXT,
+
+    acceso_total INTEGER DEFAULT 0,
+
+    es_del_sistema INTEGER DEFAULT 0,
+
+    activo INTEGER DEFAULT 1,
+
+    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP
+
+);
+""",
+
+"""
+CREATE TABLE IF NOT EXISTS roles_permisos(
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    rol_id INTEGER NOT NULL,
+
+    modulo TEXT NOT NULL,
+
+    FOREIGN KEY(rol_id) REFERENCES roles(id),
+
+    UNIQUE(rol_id, modulo)
+
+);
+""",
+
 ]

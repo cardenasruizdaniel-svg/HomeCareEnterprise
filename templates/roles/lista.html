@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block titulo %}Roles y Permisos{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-user-shield text-primary"></i> Roles y Permisos</h2>
+    <p class="text-muted">
+        Cree perfiles nuevos, o cambie a qué módulos tiene acceso cada uno. Los cambios se aplican de inmediato
+        a todos los usuarios que tengan ese perfil asignado.
+    </p>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalCrearRol">
+        <i class="fa-solid fa-plus"></i> Crear perfil nuevo
+    </button>
+
+    {% for rol in roles %}
+    <div class="card shadow mb-3">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <div>
+                <strong>{{ rol.nombre }}</strong>
+                {% if rol.es_del_sistema %}<span class="badge bg-secondary ms-1">Perfil base</span>{% endif %}
+                {% if rol.acceso_total %}<span class="badge bg-danger ms-1">Acceso total</span>{% endif %}
+                <br><small class="text-muted">{{ rol.descripcion }}</small>
+            </div>
+            <div>
+                <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#editar-{{ rol.id }}">
+                    <i class="fa-solid fa-pen"></i> Editar permisos
+                </button>
+                {% if not rol.es_del_sistema %}
+                <form method="post" action="/roles-permisos/{{ rol.id }}/eliminar" class="d-inline" onsubmit="return confirm('¿Eliminar el perfil {{ rol.nombre }}?');">
+                    <button class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        <div class="collapse" id="editar-{{ rol.id }}">
+            <div class="card-body">
+                <form method="post" action="/roles-permisos/{{ rol.id }}/actualizar">
+                    <div class="mb-2"><label>Descripción</label><input type="text" name="descripcion" class="form-control" value="{{ rol.descripcion or '' }}"></div>
+                    <div class="mb-2 form-check">
+                        <input type="checkbox" name="acceso_total" value="1" class="form-check-input acceso-total-check" id="at-{{ rol.id }}" {% if rol.acceso_total %}checked{% endif %}>
+                        <label class="form-check-label" for="at-{{ rol.id }}"><strong>Acceso total</strong> (ve y hace todo, sin restricción)</label>
+                    </div>
+                    <div class="row modulos-checkboxes-{{ rol.id }}" style="{% if rol.acceso_total %}opacity:.4;{% endif %}">
+                        {% for clave, nombre_modulo in catalogo_modulos %}
+                        <div class="col-md-4 mb-2 form-check">
+                            <input type="checkbox" name="modulos" value="{{ clave }}" class="form-check-input"
+                                   id="mod-{{ rol.id }}-{{ clave }}" {% if clave in rol.permisos %}checked{% endif %}>
+                            <label class="form-check-label" for="mod-{{ rol.id }}-{{ clave }}">{{ nombre_modulo }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-2"><i class="fa-solid fa-floppy-disk"></i> Guardar cambios</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="modal fade" id="modalCrearRol" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <form method="post" action="/roles-permisos/crear">
+            <div class="modal-header"><h5 class="modal-title">Crear perfil nuevo</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Nombre del perfil</label><input type="text" name="nombre" class="form-control" required placeholder="Ej: Asistencial"></div>
+                <div class="mb-2"><label>Descripción</label><input type="text" name="descripcion" class="form-control"></div>
+                <div class="mb-2 form-check">
+                    <input type="checkbox" name="acceso_total" value="1" class="form-check-input" id="nuevo-acceso-total">
+                    <label class="form-check-label" for="nuevo-acceso-total"><strong>Acceso total</strong></label>
+                </div>
+                <label class="fw-bold mt-2">Módulos a los que tiene acceso:</label>
+                <div class="row" id="nuevo-modulos-checkboxes">
+                    {% for clave, nombre_modulo in catalogo_modulos %}
+                    <div class="col-md-4 mb-2 form-check">
+                        <input type="checkbox" name="modulos" value="{{ clave }}" class="form-check-input" id="nuevo-mod-{{ clave }}">
+                        <label class="form-check-label" for="nuevo-mod-{{ clave }}">{{ nombre_modulo }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success">Crear perfil</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+
+<script>
+document.querySelectorAll('.acceso-total-check').forEach((checkbox) => {
+    checkbox.addEventListener('change', (evento) => {
+        const rolId = evento.target.id.replace('at-', '');
+        const contenedor = document.querySelector(`.modulos-checkboxes-${rolId}`);
+        if (contenedor) contenedor.style.opacity = evento.target.checked ? '.4' : '1';
+    });
+});
+document.getElementById('nuevo-acceso-total').addEventListener('change', (evento) => {
+    document.getElementById('nuevo-modulos-checkboxes').style.opacity = evento.target.checked ? '.4' : '1';
+});
+</script>
+{% endblock %}

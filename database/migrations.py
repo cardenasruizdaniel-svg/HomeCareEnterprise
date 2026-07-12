@@ -609,6 +609,125 @@ class MigrationManager:
             )
         return cambios
 
+    def migrar_perfil_asistencial(self):
+        cambios = []
+        existente = self.connection.execute("SELECT id FROM roles WHERE nombre='Asistencial'").fetchone()
+        if not existente:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                "INSERT INTO roles(nombre, descripcion, acceso_total, es_del_sistema) VALUES "
+                "('Asistencial', 'Chatbot de WhatsApp, creación de pacientes, programación de agendas, inventario y facturación.', 0, 1)"
+            )
+            rol_id = cursor.lastrowid
+            for modulo in ("chatbot_whatsapp", "pacientes", "programacion", "inventario", "facturacion"):
+                cursor.execute("INSERT INTO roles_permisos(rol_id, modulo) VALUES (?, ?)", (rol_id, modulo))
+            self.connection.commit()
+            cambios.append("Se creó el perfil 'Asistencial'")
+        return cambios
+
+    def migrar_roles_permisos(self):
+        cambios = []
+        if not self.existe_tabla("roles"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS roles(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nombre TEXT NOT NULL UNIQUE,
+                    descripcion TEXT,
+                    acceso_total INTEGER DEFAULT 0,
+                    es_del_sistema INTEGER DEFAULT 0,
+                    activo INTEGER DEFAULT 1,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP
+                );
+                CREATE TABLE IF NOT EXISTS roles_permisos(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    rol_id INTEGER NOT NULL,
+                    modulo TEXT NOT NULL,
+                    FOREIGN KEY(rol_id) REFERENCES roles(id),
+                    UNIQUE(rol_id, modulo)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se crearon las tablas roles y roles_permisos")
+
+        # Sembrar los roles que ya existian en el codigo (solo si
+        # la tabla de roles esta vacia -- para no duplicar ni
+        # pisar cambios que ya haya hecho un administrador).
+        total_roles = self.connection.execute("SELECT COUNT(*) FROM roles").fetchone()[0]
+        if total_roles == 0:
+            from core.permissions.permissions import PERMISSIONS
+            cursor = self.connection.cursor()
+            descripciones = {
+                "Administrador": "Acceso total al sistema.",
+                "Director Médico": "Acceso total al sistema.",
+                "Coordinador": "Coordinación operativa: pacientes, programación, facturación, nómina, inventario.",
+                "Médico": "Proceso médico completo: historia clínica, órdenes, medicamentos, y asignación del programa de atención.",
+                "Enfermero": "Notas clínicas del paciente y administración de medicamentos.",
+                "Cuidador": "Cuidado directo del paciente (solo desde la app móvil).",
+                "Fisioterapeuta": "Profesional de terapias: notas, órdenes, historia clínica.",
+                "Terapeuta Respiratorio": "Profesional de terapias: notas, órdenes, historia clínica.",
+                "Psicólogo": "Profesional de terapias: notas, órdenes, historia clínica.",
+                "Salud Ocupacional": "Profesional de terapias: notas, órdenes, historia clínica.",
+                "Terapeuta": "Profesional de terapias: notas, órdenes, historia clínica.",
+                "Nutricionista": "Profesional de terapias: notas, órdenes, historia clínica.",
+                "Administrativo": "Creación de pacientes y agendamiento de visitas.",
+                "Auxiliar": "Creación de pacientes y agendamiento de visitas.",
+                "Auditor": "Solo consulta: auditoría y reportes.",
+                "Facturación": "Facturación, RIPS y catálogos.",
+                "Inventario": "Inventario de insumos.",
+                "Consulta": "Solo consulta de pacientes.",
+            }
+            for nombre_rol, permisos in PERMISSIONS.items():
+                acceso_total = 1 if "*" in permisos else 0
+                cursor.execute(
+                    "INSERT OR IGNORE INTO roles(nombre, descripcion, acceso_total, es_del_sistema) VALUES (?, ?, ?, 1)",
+                    (nombre_rol, descripciones.get(nombre_rol, ""), acceso_total),
+                )
+                rol_id = cursor.execute("SELECT id FROM roles WHERE nombre=?", (nombre_rol,)).fetchone()[0]
+                if not acceso_total:
+                    for modulo in permisos:
+                        cursor.execute(
+                            "INSERT OR IGNORE INTO roles_permisos(rol_id, modulo) VALUES (?, ?)",
+                            (rol_id, modulo),
+                        )
+            self.connection.commit()
+            cambios.append(f"Se sembraron {len(PERMISSIONS)} roles con sus permisos")
+
+        return cambios
+
+    def migrar_chatbot_whatsapp(self):
+        cambios = []
+        if not self.existe_tabla("configuracion_whatsapp"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS configuracion_whatsapp(
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    habilitado INTEGER DEFAULT 0,
+                    token_acceso TEXT,
+                    id_numero_telefono TEXT,
+                    token_verificacion_webhook TEXT,
+                    mensaje_bienvenida TEXT DEFAULT 'Hola, soy el asistente virtual de HomeCare del Quindío I.P.S. 👋',
+                    fecha_actualizacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    usuario_actualizacion INTEGER
+                );
+            """)
+            cambios.append("Se creó la tabla configuracion_whatsapp")
+
+        if not self.existe_tabla("whatsapp_conversaciones"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS whatsapp_conversaciones(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    numero_celular TEXT NOT NULL,
+                    paciente_id INTEGER,
+                    direccion TEXT NOT NULL,
+                    mensaje TEXT,
+                    fecha TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(paciente_id) REFERENCES pacientes(id)
+                );
+            """)
+            cambios.append("Se creó la tabla whatsapp_conversaciones")
+
+        self.connection.commit()
+        return cambios
+
     def migrar_configuracion_legal(self):
         cambios = []
         if not self.existe_tabla("configuracion_legal"):
@@ -1678,6 +1797,18 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_bloqueo_login()
+        )
+
+        cambios.extend(
+            self.migrar_roles_permisos()
+        )
+
+        cambios.extend(
+            self.migrar_perfil_asistencial()
+        )
+
+        cambios.extend(
+            self.migrar_chatbot_whatsapp()
         )
 
         cambios.extend(

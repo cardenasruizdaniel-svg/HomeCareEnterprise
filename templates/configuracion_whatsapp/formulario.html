@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block titulo %}Configuración de WhatsApp{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-brands fa-whatsapp text-success"></i> Chatbot de WhatsApp</h2>
+    <p class="text-muted">
+        Conecta el sistema con WhatsApp Business API (Meta) para enviar automáticamente órdenes médicas,
+        confirmaciones de citas, y responder preguntas frecuentes de los pacientes por chat.
+        Ver el <a href="/configuracion-whatsapp/manual-pdf" target="_blank">Manual de Conexión de WhatsApp</a> con el paso a paso completo.
+    </p>
+
+    {% if guardado %}<div class="alert alert-success">Configuración guardada correctamente.</div>{% endif %}
+
+    <div class="card shadow mb-3 border-info">
+        <div class="card-header bg-info text-dark"><h6 class="mb-0"><i class="fa-solid fa-circle-info"></i> Antes de activar</h6></div>
+        <div class="card-body">
+            <p>Para que esto funcione de verdad, necesita tener (o crear) una cuenta de <strong>WhatsApp Business API</strong> con Meta:</p>
+            <ol class="mb-2">
+                <li>Cree una cuenta en <a href="https://business.facebook.com" target="_blank">business.facebook.com</a> y active WhatsApp Business Platform.</li>
+                <li>Obtenga el <strong>Token de acceso</strong> y el <strong>ID del número de teléfono</strong> desde el panel de desarrolladores de Meta.</li>
+                <li>Registre esta URL como webhook en el panel de Meta:
+                    <div class="bg-light p-2 rounded mt-1"><code>{{ request.url.scheme }}://{{ request.url.netloc }}/webhook/whatsapp</code></div>
+                </li>
+                <li>Use el <strong>Token de verificación</strong> de abajo (ya generado automáticamente) cuando Meta se lo pida al registrar el webhook.</li>
+            </ol>
+            <p class="text-muted small mb-0">Mientras esto no esté configurado, los mensajes (órdenes médicas, confirmaciones de citas) se siguen registrando en el sistema pero no se envían de verdad — quedan en modo "simulado".</p>
+        </div>
+    </div>
+
+    <form method="post" action="/configuracion-whatsapp/guardar">
+        <div class="card shadow mb-3">
+            <div class="card-body row">
+                <div class="col-md-3 mb-3 form-check">
+                    <input type="checkbox" name="habilitado" value="1" class="form-check-input" id="ck-habilitado" {% if config.habilitado %}checked{% endif %}>
+                    <label class="form-check-label" for="ck-habilitado"><strong>Chatbot habilitado</strong></label>
+                </div>
+                <div class="col-md-9 mb-3">
+                    <label>Mensaje de bienvenida</label>
+                    <input type="text" name="mensaje_bienvenida" class="form-control" value="{{ config.mensaje_bienvenida or '' }}">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>Token de acceso (Meta) {% if config._token_acceso_configurado %}<span class="badge bg-success">ya configurado</span>{% endif %}</label>
+                    <input type="password" name="token_acceso" class="form-control" placeholder="Dejar en blanco para no cambiarlo">
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>ID del número de teléfono (Meta)</label>
+                    <input type="text" name="id_numero_telefono" class="form-control" value="{{ config.id_numero_telefono or '' }}">
+                </div>
+                <div class="col-md-12 mb-3">
+                    <label>Token de verificación del webhook</label>
+                    <input type="text" name="token_verificacion_webhook" class="form-control" value="{{ config.token_verificacion_webhook or '' }}">
+                    <small class="text-muted">Ya se generó uno automáticamente — cópielo tal cual al panel de Meta al registrar el webhook.</small>
+                </div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success btn-lg mb-4"><i class="fa-solid fa-floppy-disk"></i> Guardar Configuración</button>
+    </form>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-white"><h6 class="mb-0"><i class="fa-solid fa-comments"></i> Últimas conversaciones</h6></div>
+        <div class="card-body">
+            <div class="table-responsive">
+            <table class="table table-sm table-hover">
+                <thead class="table-light"><tr><th>Fecha</th><th>Paciente</th><th>Número</th><th>Dirección</th><th>Mensaje</th></tr></thead>
+                <tbody>
+                    {% for c in conversaciones %}
+                    <tr>
+                        <td>{{ c.fecha }}</td>
+                        <td>{{ (c.primer_nombre + " " + c.primer_apellido) if c.primer_nombre else "No identificado" }}</td>
+                        <td>{{ c.numero_celular }}</td>
+                        <td><span class="badge {% if c.direccion=='entrante' %}bg-primary{% else %}bg-secondary{% endif %}">{{ c.direccion }}</span></td>
+                        <td>{{ c.mensaje[:80] if c.mensaje else "" }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">Sin conversaciones todavía.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

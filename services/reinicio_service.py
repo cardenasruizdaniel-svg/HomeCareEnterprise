@@ -18,9 +18,12 @@ justo antes de lanzar el programa a producción real.
 from database.database import consultar_todos, ejecutar, get_connection
 
 # Tablas que NUNCA se vacian en un reinicio: la de usuarios
-# (para no perder ninguna cuenta de acceso) y las internas de
-# SQLite.
-TABLAS_PROTEGIDAS = {"usuarios", "sqlite_sequence"}
+# (para no perder ninguna cuenta de acceso), los roles y sus
+# permisos (son CONFIGURACIÓN del sistema, no datos de
+# prueba -- si se borraran, nadie, ni siquiera el
+# Administrador, tendría permiso para nada hasta reiniciar el
+# servidor), y las internas de SQLite.
+TABLAS_PROTEGIDAS = {"usuarios", "roles", "roles_permisos", "sqlite_sequence"}
 
 
 def reiniciar_base_datos_en_blanco(usuario_id=None) -> dict:

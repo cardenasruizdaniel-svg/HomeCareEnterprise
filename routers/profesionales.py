@@ -14,7 +14,7 @@ from services import profesionales_import_service
 from fastapi.responses import HTMLResponse, RedirectResponse
 
 from core.dependencies import requiere_permiso
-from core.roles import ROLES
+from core.roles import listar_roles_activos
 from core.templates import templates
 from database.database import consultar_todos, consultar_uno
 
@@ -61,7 +61,7 @@ async def nuevo(
         name="profesionales/nuevo.html",
         context={
             "usuario": usuario,
-            "roles": ROLES,
+            "roles": listar_roles_activos(),
             "lista_bancos": [dict(b) for b in CatalogoBancosRepository.listar_activos()],
         },
     )
@@ -152,7 +152,7 @@ async def guardar(
         return templates.TemplateResponse(
             request=request, name="profesionales/nuevo.html",
             context={
-                "usuario": _actor, "roles": ROLES,
+                "usuario": _actor, "roles": listar_roles_activos(),
                 "lista_bancos": [dict(b) for b in CatalogoBancosRepository.listar_activos()],
                 "error": str(error), "datos_previos": {**datos_profesional, "nombre_usuario": nombre_usuario, "rol_sistema": rol_sistema},
             },
@@ -188,7 +188,7 @@ async def editar(
         context={
             "usuario": usuario,
             "profesional": profesional,
-            "roles": ROLES,
+            "roles": listar_roles_activos(),
             "cuenta_vinculada": cuenta_vinculada,
             "lista_bancos": [dict(b) for b in CatalogoBancosRepository.listar_activos()],
         },
@@ -243,7 +243,7 @@ async def actualizar(
         return templates.TemplateResponse(
             request=request, name="profesionales/editar.html",
             context={
-                "usuario": _actor, "profesional": profesional, "roles": ROLES,
+                "usuario": _actor, "profesional": profesional, "roles": listar_roles_activos(),
                 "cuenta_vinculada": cuenta_vinculada,
                 "lista_bancos": [dict(b) for b in CatalogoBancosRepository.listar_activos()],
                 "error": str(error),

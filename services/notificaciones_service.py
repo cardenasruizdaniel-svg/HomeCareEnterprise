@@ -142,7 +142,25 @@ def enviar_whatsapp(
     if not numero:
         return {"enviado": False, "motivo": "El paciente no tiene celular registrado."}
 
-    if not WHATSAPP_TOKEN or not WHATSAPP_PHONE_ID:
+    # Primero se busca la configuración guardada en la base de
+    # datos (Configuración de WhatsApp, en la web) -- si no hay
+    # nada ahí, se usan las variables de entorno (.env) como
+    # respaldo, para no romper instalaciones que ya las tenían
+    # configuradas de esa forma.
+    token = WHATSAPP_TOKEN
+    id_telefono = WHATSAPP_PHONE_ID
+    try:
+        from database.database import consultar_uno
+        config_bd = consultar_uno("SELECT * FROM configuracion_whatsapp WHERE id=1")
+        if config_bd:
+            config_bd = dict(config_bd)
+            if config_bd.get("habilitado") and config_bd.get("token_acceso") and config_bd.get("id_numero_telefono"):
+                token = config_bd["token_acceso"]
+                id_telefono = config_bd["id_numero_telefono"]
+    except Exception:
+        pass  # si la tabla todavía no existe (instalación vieja sin migrar), se sigue con las variables de entorno
+
+    if not token or not id_telefono:
         logger.info(
             "[SIMULADO] WhatsApp a %s | Mensaje: %s | Adjunto: %s",
             numero, mensaje, adjunto_url,
@@ -152,16 +170,16 @@ def enviar_whatsapp(
             "modo": "simulado",
             "motivo": (
                 "WhatsApp Business API no configurada "
-                "(ver .env: WHATSAPP_TOKEN, WHATSAPP_PHONE_ID)."
+                "(configúrela en Configuración de WhatsApp, o en el .env: WHATSAPP_TOKEN, WHATSAPP_PHONE_ID)."
             ),
         }
 
     try:
         import requests
 
-        url = f"{WHATSAPP_API_URL}/{WHATSAPP_PHONE_ID}/messages"
+        url = f"{WHATSAPP_API_URL}/{id_telefono}/messages"
         headers = {
-            "Authorization": f"Bearer {WHATSAPP_TOKEN}",
+            "Authorization": f"Bearer {token}",
             "Content-Type": "application/json",
         }
 

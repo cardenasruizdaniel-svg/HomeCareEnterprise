@@ -37,6 +37,9 @@ from routers.informes import router as informes_router
 from routers.examen_fisico import router as examen_fisico_router
 from routers.recomendaciones import router as recomendaciones_router
 from routers.configuracion_legal import router as configuracion_legal_router
+from routers.configuracion_whatsapp import router as configuracion_whatsapp_router
+from routers.whatsapp_webhook import router as whatsapp_webhook_router
+from routers.roles import router as roles_router
 from routers import despacho
 from routers.plantillas import router as plantillas_router
 
@@ -201,6 +204,9 @@ def create_app() -> FastAPI:
     app.include_router(examen_fisico_router)
     app.include_router(recomendaciones_router)
     app.include_router(configuracion_legal_router)
+    app.include_router(configuracion_whatsapp_router)
+    app.include_router(whatsapp_webhook_router)
+    app.include_router(roles_router)
 
     app.include_router(despacho.router)
 

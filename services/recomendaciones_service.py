@@ -25,7 +25,7 @@ def crear(paciente_id, programacion_id, profesional_id, datos: dict, usuario) ->
     if not datos.get("diagnostico_ppal_codigo"):
         raise ValueError("Debe indicar el diagnóstico principal.")
 
-    return ejecutar(
+    _id = ejecutar(
         """
         INSERT INTO recomendaciones_medicas(
             paciente_id, programacion_id, profesional_id,
@@ -67,6 +67,25 @@ def crear(paciente_id, programacion_id, profesional_id, datos: dict, usuario) ->
             "usuario_creacion": usuario,
         },
     )
+
+    # Aviso corto y sin detalle clínico sensible -- si el
+    # paciente/acudiente quiere el detalle completo, lo puede
+    # pedir por el chatbot (que sí verifica primero que sea de
+    # verdad su número registrado) o directamente con la IPS.
+    try:
+        from services.notificaciones_service import enviar_whatsapp
+        paciente = consultar_uno("SELECT celular, primer_nombre FROM pacientes WHERE id=?", (paciente_id,))
+        if paciente:
+            paciente = dict(paciente)
+            enviar_whatsapp(
+                paciente.get("celular"),
+                f"Hola {paciente.get('primer_nombre','')}, su médico acaba de registrar una nueva recomendación "
+                "en su historia clínica. Escríbanos *menu* por este medio si desea más información.",
+            )
+    except Exception:
+        pass  # un fallo al avisar por WhatsApp no debe impedir que la recomendacion quede guardada
+
+    return _id
 
 
 def listar_por_paciente(paciente_id: int):
