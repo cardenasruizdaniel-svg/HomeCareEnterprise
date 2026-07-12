@@ -197,7 +197,24 @@
                     usando su usuario). Tome una foto de frente, con buena luz, sin gafas oscuras ni gorra.
                     Es opcional — si no la carga, simplemente no se hace esta verificación con él.
                 </p>
-                <input type="file" accept="image/*" capture="user" class="form-control mb-2" id="campo-foto-enrolamiento-archivo">
+                <div class="d-flex gap-2 mb-2">
+                    <button type="button" class="btn btn-outline-primary" id="btn-abrir-camara-enrolamiento">
+                        <i class="fa-solid fa-camera"></i> Tomar foto con la cámara
+                    </button>
+                    <label class="btn btn-outline-secondary mb-0" for="campo-foto-enrolamiento-archivo" style="cursor:pointer;">
+                        <i class="fa-solid fa-upload"></i> Subir archivo
+                    </label>
+                </div>
+                <input type="file" accept="image/*" class="d-none" id="campo-foto-enrolamiento-archivo">
+
+                <div id="camara-enrolamiento-contenedor" style="display:none; position:relative; max-width:360px; margin-bottom:10px;">
+                    <video id="video-camara-enrolamiento" autoplay playsinline style="width:100%; border-radius:8px; background:#000;"></video>
+                    <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:65%; aspect-ratio:1/1.25; border:3px solid #0fb9ae; border-radius:50%; pointer-events:none;"></div>
+                    <button type="button" class="btn btn-primary w-100 mt-2" id="btn-capturar-foto-camara">📸 Capturar</button>
+                    <button type="button" class="btn btn-secondary w-100 mt-1" id="btn-cancelar-camara-enrolamiento">Cancelar</button>
+                </div>
+                <canvas id="canvas-captura-enrolamiento" style="display:none;"></canvas>
+
                 <img id="vista-previa-enrolamiento" style="max-height:150px; display:none;" class="mb-2 border rounded">
                 <input type="hidden" name="foto_enrolamiento_base64" id="campo-foto-enrolamiento-oculto">
 
@@ -329,5 +346,45 @@ document.getElementById('campo-foto-enrolamiento-archivo').addEventListener('cha
     };
     lector.readAsDataURL(archivo);
 });
+
+let flujoCamaraEnrolamiento = null;
+
+document.getElementById('btn-abrir-camara-enrolamiento').addEventListener('click', async () => {
+    try {
+        flujoCamaraEnrolamiento = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+        const video = document.getElementById('video-camara-enrolamiento');
+        video.srcObject = flujoCamaraEnrolamiento;
+        document.getElementById('camara-enrolamiento-contenedor').style.display = 'block';
+    } catch (error) {
+        alert('No se pudo acceder a la cámara. Puede subir un archivo en su lugar.');
+    }
+});
+
+function cerrarCamaraEnrolamiento() {
+    if (flujoCamaraEnrolamiento) {
+        flujoCamaraEnrolamiento.getTracks().forEach((pista) => pista.stop());
+        flujoCamaraEnrolamiento = null;
+    }
+    document.getElementById('camara-enrolamiento-contenedor').style.display = 'none';
+}
+
+document.getElementById('btn-cancelar-camara-enrolamiento').addEventListener('click', cerrarCamaraEnrolamiento);
+
+document.getElementById('btn-capturar-foto-camara').addEventListener('click', () => {
+    const video = document.getElementById('video-camara-enrolamiento');
+    const lienzo = document.getElementById('canvas-captura-enrolamiento');
+    lienzo.width = video.videoWidth;
+    lienzo.height = video.videoHeight;
+    lienzo.getContext('2d').drawImage(video, 0, 0);
+    const fotoBase64 = lienzo.toDataURL('image/jpeg', 0.9);
+
+    document.getElementById('campo-foto-enrolamiento-oculto').value = fotoBase64;
+    const vista = document.getElementById('vista-previa-enrolamiento');
+    vista.src = fotoBase64;
+    vista.style.display = 'block';
+
+    cerrarCamaraEnrolamiento();
+});
+</script>
 
 {% endblock %}

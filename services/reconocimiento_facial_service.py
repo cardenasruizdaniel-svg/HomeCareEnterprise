@@ -58,9 +58,12 @@ def _decodificar_imagen(imagen_base64: str):
 
 def _extraer_rostro(imagen_base64: str, tamano=(200, 200)):
     """
-    Detecta el rostro más grande de la foto y lo recorta,
-    en escala de grises y con un tamaño estándar (necesario
-    para poder comparar rostros de fotos distintas).
+    Detecta el rostro más grande de la foto, lo recorta, y le
+    aplica una máscara ovalada -- así, las esquinas (que suelen
+    tener fondo, pared, ropa, cabello) quedan en un gris neutro
+    parejo en vez de información real, y la comparación se
+    concentra en el óvalo central del rostro (ojos, nariz,
+    boca, mejillas), no en lo que rodea a la persona.
     Devuelve None si no se detecta ningún rostro.
     """
     imagen = _decodificar_imagen(imagen_base64)
@@ -77,10 +80,30 @@ def _extraer_rostro(imagen_base64: str, tamano=(200, 200)):
     # grande (el más cercano a la cámara -- lo más probable es
     # que sea la persona que está tomando la foto).
     x, y, w, h = max(rostros, key=lambda r: r[2] * r[3])
-    rostro_recortado = gris[y:y + h, x:x + w]
+
+    # Se reduce un poco el recuadro detectado (10% en cada
+    # lado) para acercarse más a la cara y alejarse del pelo,
+    # las orejas y el fondo que Haar Cascade suele incluir.
+    margen_x, margen_y = int(w * 0.08), int(h * 0.08)
+    x2, y2 = max(0, x + margen_x), max(0, y + margen_y)
+    w2, h2 = max(1, w - 2 * margen_x), max(1, h - 2 * margen_y)
+
+    rostro_recortado = gris[y2:y2 + h2, x2:x2 + w2]
     rostro_redimensionado = cv2.resize(rostro_recortado, tamano)
 
-    return rostro_redimensionado
+    # Máscara ovalada: todo lo que quede FUERA del óvalo
+    # central (esquinas -- fondo, cabello, orejas) se vuelve un
+    # gris parejo, para que no afecte la comparación. Lo de
+    # ADENTRO del óvalo (el rostro en sí) queda intacto.
+    mascara = np.zeros(tamano, dtype=np.uint8)
+    centro = (tamano[0] // 2, tamano[1] // 2)
+    ejes = (int(tamano[0] * 0.42), int(tamano[1] * 0.48))
+    cv2.ellipse(mascara, centro, ejes, 0, 0, 360, 255, -1)
+
+    rostro_con_fondo_neutro = np.full(tamano, 127, dtype=np.uint8)
+    rostro_con_fondo_neutro[mascara == 255] = rostro_redimensionado[mascara == 255]
+
+    return rostro_con_fondo_neutro
 
 
 def diagnostico_disponibilidad() -> dict:

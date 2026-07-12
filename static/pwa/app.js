@@ -2168,30 +2168,72 @@ function renderCapturaFotoIngreso(visita, accion) {
   contenedor().innerHTML = `
     <div class="card">
       <h3>${titulo}</h3>
-      <p class="text-muted small">Tome una foto en el domicilio del paciente para corroborar que usted se encuentra en el lugar (junto con la ubicación GPS).</p>
-      <div class="form-group">
-        <label>Foto</label>
-        <input type="file" accept="image/*" capture="environment" id="foto-ingreso-input">
+      <p class="text-muted small">Ubique su rostro dentro del círculo y tome la foto, para corroborar que usted se encuentra en el lugar (junto con la ubicación GPS).</p>
+
+      <div id="camara-ingreso-contenedor" style="position:relative; max-width:100%; margin-bottom:10px;">
+        <video id="video-camara-ingreso" autoplay playsinline style="width:100%; border-radius:8px; background:#000;"></video>
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:62%; aspect-ratio:1/1.25; border:4px solid #0fb9ae; border-radius:50%; pointer-events:none; box-shadow:0 0 0 2000px rgba(0,0,0,0.35);"></div>
       </div>
-      <img id="foto-ingreso-preview" style="max-width:100%; max-height:200px; display:none;" class="mb-2">
+      <canvas id="canvas-captura-ingreso" style="display:none;"></canvas>
+
+      <button class="btn btn-primary w-100" id="btn-tomar-foto-ingreso">📸 Tomar foto</button>
+
+      <img id="foto-ingreso-preview" style="max-width:100%; max-height:200px; display:none;" class="mb-2 mt-2">
       <div id="foto-ingreso-estado" class="small text-muted mb-2"></div>
-      <button class="btn btn-primary w-100" id="btn-confirmar-foto-ingreso">✔ Confirmar</button>
-      <button class="btn btn-secondary w-100 mt-2" onclick="irA('detalle_visita', ${visita.id})">Cancelar</button>
+      <button class="btn btn-primary w-100" id="btn-confirmar-foto-ingreso" style="display:none;">✔ Confirmar</button>
+      <button class="btn btn-secondary w-100 mt-2" id="btn-repetir-foto-ingreso" style="display:none;">↺ Repetir foto</button>
+      <button class="btn btn-secondary w-100 mt-2" onclick="detenerCamaraIngreso(); irA('detalle_visita', ${visita.id})">Cancelar</button>
     </div>`;
 
   let fotoCapturada = null;
+  let flujoCamaraIngreso = null;
 
-  document.getElementById("foto-ingreso-input").addEventListener("change", (e) => {
-    const archivo = e.target.files[0];
-    if (!archivo) return;
-    const lector = new FileReader();
-    lector.onload = () => {
-      fotoCapturada = lector.result;
-      const vista = document.getElementById("foto-ingreso-preview");
-      vista.src = lector.result;
-      vista.style.display = "block";
-    };
-    lector.readAsDataURL(archivo);
+  async function iniciarCamaraIngreso() {
+    try {
+      flujoCamaraIngreso = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      document.getElementById("video-camara-ingreso").srcObject = flujoCamaraIngreso;
+    } catch (error) {
+      document.getElementById("foto-ingreso-estado").innerHTML =
+        `<span style="color:#c71c22;">No se pudo acceder a la cámara: ${error.message}</span>`;
+    }
+  }
+
+  window.detenerCamaraIngreso = () => {
+    if (flujoCamaraIngreso) {
+      flujoCamaraIngreso.getTracks().forEach((pista) => pista.stop());
+      flujoCamaraIngreso = null;
+    }
+  };
+
+  iniciarCamaraIngreso();
+
+  document.getElementById("btn-tomar-foto-ingreso").addEventListener("click", () => {
+    const video = document.getElementById("video-camara-ingreso");
+    const lienzo = document.getElementById("canvas-captura-ingreso");
+    lienzo.width = video.videoWidth;
+    lienzo.height = video.videoHeight;
+    lienzo.getContext("2d").drawImage(video, 0, 0);
+    fotoCapturada = lienzo.toDataURL("image/jpeg", 0.9);
+
+    const vista = document.getElementById("foto-ingreso-preview");
+    vista.src = fotoCapturada;
+    vista.style.display = "block";
+
+    detenerCamaraIngreso();
+    document.getElementById("camara-ingreso-contenedor").style.display = "none";
+    document.getElementById("btn-tomar-foto-ingreso").style.display = "none";
+    document.getElementById("btn-confirmar-foto-ingreso").style.display = "block";
+    document.getElementById("btn-repetir-foto-ingreso").style.display = "block";
+  });
+
+  document.getElementById("btn-repetir-foto-ingreso").addEventListener("click", () => {
+    fotoCapturada = null;
+    document.getElementById("foto-ingreso-preview").style.display = "none";
+    document.getElementById("camara-ingreso-contenedor").style.display = "block";
+    document.getElementById("btn-tomar-foto-ingreso").style.display = "block";
+    document.getElementById("btn-confirmar-foto-ingreso").style.display = "none";
+    document.getElementById("btn-repetir-foto-ingreso").style.display = "none";
+    iniciarCamaraIngreso();
   });
 
   document.getElementById("btn-confirmar-foto-ingreso").addEventListener("click", async () => {
