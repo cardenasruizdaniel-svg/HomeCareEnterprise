@@ -926,12 +926,12 @@ async function renderDetalleVisita(visitaId) {
     </button>
 
     ${esPerfilCuidador() ? "" : `
-    ${!visita.ubicacion_confirmada || esPerfilAdministrativo() ? `
+    ${!visita.ubicacion_confirmada ? `
     <button class="btn btn-secondary btn-block" id="btn-actualizar-ubicacion-paciente">
-      📍 ${visita.ubicacion_confirmada ? "Corregir" : "Registrar"} ubicación exacta del paciente
+      📍 Registrar ubicación exacta del paciente
     </button>
     ` : `
-    <div class="alerta alerta-info">📍 La ubicación de este paciente ya fue registrada en la visita de valoración inicial.</div>
+    <div class="alerta alerta-info">📍 La ubicación de este paciente ya fue registrada. Para volver a tomarla, un administrador debe borrarla primero desde la ficha del paciente en la web.</div>
     `}
     `}
 

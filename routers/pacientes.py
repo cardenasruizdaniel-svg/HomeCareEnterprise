@@ -230,6 +230,11 @@ async def actualizar(
         "departamento": departamento,
         "latitud": float(latitud) if latitud else None,
         "longitud": float(longitud) if longitud else None,
+        # Se sincroniza con el estado real de las coordenadas: si
+        # se borran desde aquí, se resetea (para que la app vuelva
+        # a pedirle al profesional que la registre); si se
+        # diligencian, queda marcada como confirmada.
+        "ubicacion_confirmada": 1 if (latitud and longitud) else 0,
         "codigo_municipio_divipola": codigo_municipio_divipola or None,
         "estado": estado,
     }
