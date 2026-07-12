@@ -756,9 +756,11 @@ body.sidebar-oculta .contenido-principal{
     --hc-navy-950:#0a0f1d;
     --hc-navy-900:#0f172a;
     --hc-navy-800:#17233f;
-    --hc-teal:#0fb9ae;
+    --hc-teal:#00c2b8;
     --hc-teal-dark:#0a8f86;
     --hc-teal-soft:#e5fbf9;
+    --hc-rosa:#ff3399;
+    --hc-rosa-soft:#ffe3f2;
     --hc-blue:#2f6fed;
     --hc-bg:#f2f5fa;
     --hc-surface:#ffffff;
@@ -803,6 +805,18 @@ h1,h2,h3,h4,h5,h6{
 .sidebar .sidebar-header{
     border-bottom:1px solid rgba(255,255,255,.08);
     margin-bottom:6px;
+    position:relative;
+}
+.sidebar .sidebar-header::after{
+    content:"";
+    position:absolute;
+    left:16px; right:16px; bottom:-1px;
+    height:2px;
+    background:linear-gradient(90deg, var(--hc-teal), var(--hc-rosa));
+}
+.sidebar .sidebar-header .logo{
+    border-radius:50%;
+    box-shadow:0 0 0 3px rgba(255,255,255,.9), 0 4px 12px rgba(0,0,0,.25);
 }
 
 .sidebar .menu-title{
@@ -812,6 +826,16 @@ h1,h2,h3,h4,h5,h6{
     text-transform:uppercase;
     font-weight:700;
     padding:18px 16px 6px !important;
+    position:relative;
+}
+.sidebar .menu-title::before{
+    content:"";
+    display:inline-block;
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--hc-rosa);
+    margin-right:6px;
+    vertical-align:middle;
 }
 
 .sidebar .menu a,

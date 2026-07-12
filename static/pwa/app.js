@@ -595,11 +595,139 @@ function renderLogin() {
       localStorage.setItem("homecare_perfil", JSON.stringify(perfil));
 
       mostrarNav(true);
+
+      if (perfilDatos.tiene_foto_enrolamiento === false) {
+        renderEnrolamientoFacial();
+      } else {
+        irA("agenda");
+        reanudarMonitoreoSiHayTurnoAbierto();
+        iniciarRecordatoriosDeTurno();
+      }
+    } catch (error) {
+      errorEl.innerHTML = `<div class="alerta alerta-danger">No hay conexión. Debe iniciar sesión la primera vez con internet.</div>`;
+    }
+  });
+}
+
+// ==========================================================
+// ENROLAMIENTO FACIAL EN EL PRIMER INGRESO A LA APP
+//
+// Si el profesional todavia no tiene una foto de enrolamiento
+// guardada, se le pide tomarse una ANTES de dejarlo continuar
+// -- esa foto queda registrada como su foto de enrolamiento, y
+// desde ese momento se usa para verificar que sea la misma
+// persona cada vez que registre un ingreso/salida de visita.
+// Esto es EXCLUSIVO de la app (en la web, el enrolamiento lo
+// hace el administrador desde la ficha del profesional).
+// ==========================================================
+
+function renderEnrolamientoFacial() {
+  mostrarNav(false);
+  titulo("Enrolamiento facial");
+
+  contenedor().innerHTML = `
+    <div class="card">
+      <h3>📸 Registre su rostro</h3>
+      <p class="text-muted small">
+        Es la primera vez que ingresa a la app. Antes de continuar, tómese una foto de su rostro —
+        esta quedará guardada como su foto de referencia, y se usará para confirmar que es usted quien
+        registra el ingreso y la salida de cada visita. Ubique su rostro dentro del círculo, con buena luz.
+      </p>
+
+      <div id="camara-enrolamiento-app-contenedor" style="position:relative; max-width:100%; margin-bottom:10px;">
+        <video id="video-enrolamiento-app" autoplay playsinline style="width:100%; border-radius:8px; background:#000;"></video>
+        <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:62%; aspect-ratio:1/1.25; border:4px solid #00c2b8; border-radius:50%; pointer-events:none; box-shadow:0 0 0 2000px rgba(0,0,0,0.35);"></div>
+      </div>
+      <canvas id="canvas-enrolamiento-app" style="display:none;"></canvas>
+
+      <button class="btn btn-primary w-100" id="btn-tomar-foto-enrolamiento-app">📸 Tomar foto</button>
+
+      <img id="preview-enrolamiento-app" style="max-width:100%; max-height:220px; display:none; border-radius:8px;" class="mb-2 mt-2">
+      <div id="estado-enrolamiento-app" class="small text-muted mb-2"></div>
+      <button class="btn btn-primary w-100" id="btn-confirmar-enrolamiento-app" style="display:none;">✔ Guardar y continuar</button>
+      <button class="btn btn-secondary w-100 mt-2" id="btn-repetir-enrolamiento-app" style="display:none;">↺ Repetir foto</button>
+    </div>`;
+
+  let fotoEnrolamientoCapturada = null;
+  let flujoCamaraEnrolamientoApp = null;
+
+  async function iniciarCamaraEnrolamientoApp() {
+    try {
+      flujoCamaraEnrolamientoApp = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      document.getElementById("video-enrolamiento-app").srcObject = flujoCamaraEnrolamientoApp;
+    } catch (error) {
+      document.getElementById("estado-enrolamiento-app").innerHTML =
+        `<span style="color:#c71c22;">No se pudo acceder a la cámara: ${error.message}. Debe permitir el acceso a la cámara para poder usar la app.</span>`;
+    }
+  }
+
+  function detenerCamaraEnrolamientoApp() {
+    if (flujoCamaraEnrolamientoApp) {
+      flujoCamaraEnrolamientoApp.getTracks().forEach((pista) => pista.stop());
+      flujoCamaraEnrolamientoApp = null;
+    }
+  }
+
+  iniciarCamaraEnrolamientoApp();
+
+  document.getElementById("btn-tomar-foto-enrolamiento-app").addEventListener("click", () => {
+    const video = document.getElementById("video-enrolamiento-app");
+    const lienzo = document.getElementById("canvas-enrolamiento-app");
+    lienzo.width = video.videoWidth;
+    lienzo.height = video.videoHeight;
+    lienzo.getContext("2d").drawImage(video, 0, 0);
+    fotoEnrolamientoCapturada = lienzo.toDataURL("image/jpeg", 0.9);
+
+    const vista = document.getElementById("preview-enrolamiento-app");
+    vista.src = fotoEnrolamientoCapturada;
+    vista.style.display = "block";
+
+    detenerCamaraEnrolamientoApp();
+    document.getElementById("camara-enrolamiento-app-contenedor").style.display = "none";
+    document.getElementById("btn-tomar-foto-enrolamiento-app").style.display = "none";
+    document.getElementById("btn-confirmar-enrolamiento-app").style.display = "block";
+    document.getElementById("btn-repetir-enrolamiento-app").style.display = "block";
+  });
+
+  document.getElementById("btn-repetir-enrolamiento-app").addEventListener("click", () => {
+    fotoEnrolamientoCapturada = null;
+    document.getElementById("preview-enrolamiento-app").style.display = "none";
+    document.getElementById("camara-enrolamiento-app-contenedor").style.display = "block";
+    document.getElementById("btn-tomar-foto-enrolamiento-app").style.display = "block";
+    document.getElementById("btn-confirmar-enrolamiento-app").style.display = "none";
+    document.getElementById("btn-repetir-enrolamiento-app").style.display = "none";
+    document.getElementById("estado-enrolamiento-app").textContent = "";
+    iniciarCamaraEnrolamientoApp();
+  });
+
+  document.getElementById("btn-confirmar-enrolamiento-app").addEventListener("click", async () => {
+    const estadoEl = document.getElementById("estado-enrolamiento-app");
+    const botonConfirmar = document.getElementById("btn-confirmar-enrolamiento-app");
+    botonConfirmar.disabled = true;
+    estadoEl.textContent = "Guardando...";
+
+    try {
+      const respuesta = await fetch("/api/movil/enrolamiento-facial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ foto_base64: fotoEnrolamientoCapturada }),
+      });
+
+      if (!respuesta.ok) {
+        const datosError = await respuesta.json().catch(() => ({}));
+        estadoEl.innerHTML = `<span style="color:#c71c22;">${datosError.detail || "No se pudo guardar la foto."}</span>`;
+        botonConfirmar.disabled = false;
+        return;
+      }
+
+      alert("Foto de enrolamiento guardada correctamente. Ya puede usar la app normalmente.");
       irA("agenda");
       reanudarMonitoreoSiHayTurnoAbierto();
       iniciarRecordatoriosDeTurno();
     } catch (error) {
-      errorEl.innerHTML = `<div class="alerta alerta-danger">No hay conexión. Debe iniciar sesión la primera vez con internet.</div>`;
+      estadoEl.innerHTML = `<span style="color:#c71c22;">Sin conexión — necesita internet para guardar su foto de enrolamiento la primera vez.</span>`;
+      botonConfirmar.disabled = false;
     }
   });
 }

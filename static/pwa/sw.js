@@ -15,7 +15,7 @@
 // IMPORTANTE: cambiar este numero cada vez que se publique
 // una actualizacion de la app movil, para que los celulares
 // boten la cache vieja y descarguen la version nueva.
-const VERSION_APP = "2";
+const VERSION_APP = "3";
 const CACHE_NAME = "homecare-app-v" + VERSION_APP;
 
 const ARCHIVOS_APP_SHELL = [

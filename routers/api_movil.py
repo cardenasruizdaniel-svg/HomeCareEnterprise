@@ -187,11 +187,48 @@ async def perfil(usuario=Depends(usuario_actual)):
         "SELECT * FROM profesionales WHERE usuario_id=?",
         (usuario.get("id"),),
     )
+    profesional_dict = dict(profesional) if profesional else None
 
     return {
         "usuario": usuario,
-        "profesional_id": dict(profesional)["id"] if profesional else None,
+        "profesional_id": profesional_dict["id"] if profesional_dict else None,
+        "tiene_foto_enrolamiento": bool(profesional_dict.get("foto_enrolamiento_base64")) if profesional_dict else True,
     }
+
+
+@router.post("/enrolamiento-facial")
+async def guardar_enrolamiento_facial(
+    datos: dict = Body(...),
+    usuario=Depends(usuario_actual),
+):
+    """
+    Guarda la foto de enrolamiento tomada por el propio
+    profesional en su primer ingreso a la app -- desde ese
+    momento en adelante, esa foto es contra la que se compara
+    cada ingreso/salida que registre.
+    """
+    profesional = consultar_uno("SELECT id FROM profesionales WHERE usuario_id=?", (usuario.get("id"),))
+    if not profesional:
+        raise HTTPException(status_code=404, detail="Este usuario no tiene una ficha de profesional asociada.")
+
+    foto_base64 = datos.get("foto_base64")
+    if not foto_base64:
+        raise HTTPException(status_code=400, detail="Falta la foto.")
+
+    try:
+        from services.reconocimiento_facial_service import _extraer_rostro
+        if _extraer_rostro(foto_base64) is None:
+            raise HTTPException(
+                status_code=400,
+                detail="No se detectó un rostro claro en la foto. Tome la foto de frente, con buena luz.",
+            )
+    except ImportError:
+        pass  # si OpenCV no esta disponible en este servidor, se guarda igual sin poder validarla aqui
+
+    from repositories.profesionales_repository import ProfesionalesRepository
+    ProfesionalesRepository.actualizar_foto_enrolamiento(dict(profesional)["id"], foto_base64)
+
+    return {"ok": True}
 
 
 # ==========================================
