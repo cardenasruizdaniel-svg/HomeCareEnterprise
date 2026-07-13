@@ -609,20 +609,57 @@ class MigrationManager:
             )
         return cambios
 
+    def migrar_whatsapp_hilos(self):
+        cambios = []
+        if not self.existe_tabla("whatsapp_hilos"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS whatsapp_hilos(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    numero_celular TEXT NOT NULL UNIQUE,
+                    paciente_id INTEGER,
+                    atendido_por_humano INTEGER DEFAULT 0,
+                    agente_asignado_id INTEGER,
+                    estado TEXT DEFAULT 'Abierto',
+                    ultimo_mensaje TEXT,
+                    ultima_actividad TEXT DEFAULT CURRENT_TIMESTAMP,
+                    no_leidos INTEGER DEFAULT 0,
+                    FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
+                    FOREIGN KEY(agente_asignado_id) REFERENCES usuarios(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla whatsapp_hilos")
+        return cambios
+
     def migrar_perfil_asistencial(self):
         cambios = []
-        existente = self.connection.execute("SELECT id FROM roles WHERE nombre='Asistencial'").fetchone()
+        cursor = self.connection.cursor()
+        existente = cursor.execute("SELECT id FROM roles WHERE nombre='Asistencial'").fetchone()
+
         if not existente:
-            cursor = self.connection.cursor()
             cursor.execute(
                 "INSERT INTO roles(nombre, descripcion, acceso_total, es_del_sistema) VALUES "
-                "('Asistencial', 'Chatbot de WhatsApp, creación de pacientes, programación de agendas, inventario y facturación.', 0, 1)"
+                "('Asistencial', 'Chatbot y agente de WhatsApp, creación de pacientes, programación de agendas, "
+                "inventario y facturación.', 0, 1)"
             )
             rol_id = cursor.lastrowid
-            for modulo in ("chatbot_whatsapp", "pacientes", "programacion", "inventario", "facturacion"):
+            for modulo in ("chatbot_whatsapp", "agente_whatsapp", "pacientes", "programacion", "inventario", "facturacion"):
                 cursor.execute("INSERT INTO roles_permisos(rol_id, modulo) VALUES (?, ?)", (rol_id, modulo))
             self.connection.commit()
             cambios.append("Se creó el perfil 'Asistencial'")
+        else:
+            # Si el perfil ya existía de una version anterior (antes de
+            # que existiera el panel de Agente WhatsApp), se le agrega
+            # ese permiso nuevo, sin tocar el resto de sus permisos.
+            rol_id = existente[0]
+            tiene_agente = cursor.execute(
+                "SELECT 1 FROM roles_permisos WHERE rol_id=? AND modulo='agente_whatsapp'", (rol_id,)
+            ).fetchone()
+            if not tiene_agente:
+                cursor.execute("INSERT INTO roles_permisos(rol_id, modulo) VALUES (?, 'agente_whatsapp')", (rol_id,))
+                self.connection.commit()
+                cambios.append("Se agregó el permiso 'agente_whatsapp' al perfil 'Asistencial'")
+
         return cambios
 
     def migrar_roles_permisos(self):
@@ -1801,6 +1838,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_roles_permisos()
+        )
+
+        cambios.extend(
+            self.migrar_whatsapp_hilos()
         )
 
         cambios.extend(

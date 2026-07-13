@@ -30,7 +30,8 @@ CATALOGO_MODULOS = [
     ("rips", "RIPS"),
     ("auditoria", "Auditoría"),
     ("reportes", "Reportes"),
-    ("chatbot_whatsapp", "Chatbot de WhatsApp"),
+    ("chatbot_whatsapp", "Chatbot de WhatsApp (configuración)"),
+    ("agente_whatsapp", "Agente WhatsApp (panel de chat en vivo)"),
 ]
 
 

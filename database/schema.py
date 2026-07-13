@@ -2506,4 +2506,41 @@ CREATE TABLE IF NOT EXISTS roles_permisos(
 );
 """,
 
+# =====================================================
+# HILOS DE CONVERSACIÓN (para el panel de Agente WhatsApp)
+# whatsapp_conversaciones ya guarda cada mensaje suelto;
+# esta tabla agrupa esos mensajes por PACIENTE/número, con
+# el estado de la conversación (si la está llevando el bot
+# automático o un agente humano, y cuál), para poder
+# construir una bandeja de entrada como la de un chat de
+# atención al cliente profesional.
+# =====================================================
+
+"""
+CREATE TABLE IF NOT EXISTS whatsapp_hilos(
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    numero_celular TEXT NOT NULL UNIQUE,
+
+    paciente_id INTEGER,
+
+    atendido_por_humano INTEGER DEFAULT 0,
+
+    agente_asignado_id INTEGER,
+
+    estado TEXT DEFAULT 'Abierto',
+
+    ultimo_mensaje TEXT,
+
+    ultima_actividad TEXT DEFAULT CURRENT_TIMESTAMP,
+
+    no_leidos INTEGER DEFAULT 0,
+
+    FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
+    FOREIGN KEY(agente_asignado_id) REFERENCES usuarios(id)
+
+);
+""",
+
 ]

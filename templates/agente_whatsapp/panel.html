@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block titulo %}Agente WhatsApp{% endblock %}
+{% block css %}
+<style>
+.aw-contenedor { display:flex; height:calc(100vh - 140px); border:1px solid var(--hc-border,#e7ebf3); border-radius:12px; overflow:hidden; background:#fff; }
+.aw-lista { width:340px; border-right:1px solid var(--hc-border,#e7ebf3); overflow-y:auto; flex-shrink:0; }
+.aw-lista-item { padding:12px 14px; border-bottom:1px solid #f1f5f9; cursor:pointer; display:flex; justify-content:space-between; align-items:flex-start; }
+.aw-lista-item:hover { background:#f8fafc; }
+.aw-lista-item.activo { background:var(--hc-teal-soft,#e5fbf9); }
+.aw-lista-nombre { font-weight:700; font-size:14px; }
+.aw-lista-preview { font-size:12px; color:#64748b; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.aw-badge-no-leidos { background:#25D366; color:#fff; border-radius:50%; min-width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; }
+.aw-badge-estado { font-size:10px; padding:2px 6px; border-radius:8px; }
+.aw-chat { flex:1; display:flex; flex-direction:column; background:#e9edf1; }
+.aw-chat-header { background:#fff; padding:12px 16px; border-bottom:1px solid var(--hc-border,#e7ebf3); display:flex; justify-content:space-between; align-items:center; }
+.aw-chat-mensajes { flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:8px; }
+.aw-burbuja { max-width:65%; padding:8px 12px; border-radius:10px; font-size:14px; line-height:1.4; }
+.aw-burbuja.entrante { background:#fff; align-self:flex-start; border-bottom-left-radius:2px; }
+.aw-burbuja.saliente { background:#d9fdd3; align-self:flex-end; border-bottom-right-radius:2px; }
+.aw-burbuja small { display:block; color:#64748b; font-size:10px; margin-top:4px; }
+.aw-chat-input { background:#fff; padding:10px 14px; border-top:1px solid var(--hc-border,#e7ebf3); display:flex; gap:8px; }
+.aw-sin-seleccion { display:flex; align-items:center; justify-content:center; height:100%; color:#94a3b8; flex-direction:column; }
+</style>
+{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-brands fa-whatsapp text-success"></i> Agente WhatsApp</h2>
+    <p class="text-muted">Chat en vivo con los pacientes — atienda las conversaciones que el chatbot le pase, o tome cualquiera manualmente.</p>
+
+    <div class="aw-contenedor">
+        <div class="aw-lista" id="aw-lista"></div>
+        <div class="aw-chat" id="aw-chat">
+            <div class="aw-sin-seleccion">
+                <i class="fa-brands fa-whatsapp fa-3x mb-2"></i>
+                <p>Seleccione una conversación de la izquierda</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let hiloActivoId = null;
+let usuarioActualId = {{ usuario.id if usuario is mapping and usuario.id else 'null' }};
+
+function escapeHtml(texto) {
+    const div = document.createElement('div');
+    div.textContent = texto || '';
+    return div.innerHTML;
+}
+
+async function cargarLista() {
+    const resp = await fetch('/agente-whatsapp/hilos');
+    const hilos = await resp.json();
+    const lista = document.getElementById('aw-lista');
+
+    lista.innerHTML = hilos.map((h) => {
+        const nombre = h.primer_nombre ? `${h.primer_nombre} ${h.primer_apellido || ''}` : h.numero_celular;
+        const badgeEstado = h.atendido_por_humano
+            ? `<span class="aw-badge-estado" style="background:#fde68a;">Agente${h.agente_nombre ? ': ' + h.agente_nombre.split(' ')[0] : ''}</span>`
+            : `<span class="aw-badge-estado" style="background:#dbeafe;">Bot</span>`;
+        return `
+            <div class="aw-lista-item ${h.id === hiloActivoId ? 'activo' : ''}" onclick="abrirHilo(${h.id})">
+                <div>
+                    <div class="aw-lista-nombre">${escapeHtml(nombre)}</div>
+                    <div class="aw-lista-preview">${escapeHtml(h.ultimo_mensaje || '')}</div>
+                    <div class="mt-1">${badgeEstado}</div>
+                </div>
+                ${h.no_leidos > 0 ? `<span class="aw-badge-no-leidos">${h.no_leidos}</span>` : ''}
+            </div>
+        `;
+    }).join('') || '<p class="text-center text-muted p-4">Sin conversaciones todavía.</p>';
+}
+
+async function abrirHilo(hiloId) {
+    hiloActivoId = hiloId;
+    await cargarLista(); // para resaltar el activo y limpiar el contador
+    await cargarChat();
+}
+
+async function cargarChat() {
+    if (!hiloActivoId) return;
+    const resp = await fetch(`/agente-whatsapp/hilos/${hiloActivoId}`);
+    if (!resp.ok) return;
+    const datos = await resp.json();
+    const hilo = datos.hilo;
+    const nombre = hilo.primer_nombre ? `${hilo.primer_nombre} ${hilo.primer_apellido || ''}` : hilo.numero_celular;
+
+    const chat = document.getElementById('aw-chat');
+    chat.innerHTML = `
+        <div class="aw-chat-header">
+            <div>
+                <strong>${escapeHtml(nombre)}</strong><br>
+                <small class="text-muted">${hilo.numero_celular}${hilo.documento ? ' · CC ' + hilo.documento : ''}</small>
+            </div>
+            <div class="d-flex gap-2">
+                ${hilo.atendido_por_humano
+                    ? `<button class="btn btn-outline-secondary btn-sm" id="aw-btn-devolver"><i class="fa-solid fa-robot"></i> Devolver al bot</button>`
+                    : `<button class="btn btn-primary btn-sm" id="aw-btn-tomar"><i class="fa-solid fa-headset"></i> Tomar conversación</button>`
+                }
+                <button class="btn btn-outline-success btn-sm" id="aw-btn-orden" ${!hilo.paciente_id ? 'disabled title="Sin paciente vinculado"' : ''}><i class="fa-solid fa-file-medical"></i> Enviar última orden</button>
+                <button class="btn btn-outline-info btn-sm" id="aw-btn-reco" ${!hilo.paciente_id ? 'disabled' : ''}><i class="fa-solid fa-notes-medical"></i> Enviar recomendación</button>
+            </div>
+        </div>
+        <div class="aw-chat-mensajes" id="aw-mensajes"></div>
+        <div class="aw-chat-input">
+            <input type="text" class="form-control" id="aw-input-texto" placeholder="Escriba un mensaje..." ${!hilo.atendido_por_humano ? 'disabled' : ''}>
+            <button class="btn btn-success" id="aw-btn-enviar" ${!hilo.atendido_por_humano ? 'disabled' : ''}><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+        ${!hilo.atendido_por_humano ? '<p class="text-center text-muted small mb-2">Tome la conversación para poder escribirle directamente.</p>' : ''}
+    `;
+
+    const mensajesEl = document.getElementById('aw-mensajes');
+    mensajesEl.innerHTML = datos.mensajes.map((m) => `
+        <div class="aw-burbuja ${m.direccion}">
+            ${escapeHtml(m.mensaje)}
+            <small>${new Date(m.fecha).toLocaleString('es-CO')}</small>
+        </div>
+    `).join('');
+    mensajesEl.scrollTop = mensajesEl.scrollHeight;
+
+    const botonTomar = document.getElementById('aw-btn-tomar');
+    if (botonTomar) botonTomar.addEventListener('click', async () => {
+        await fetch(`/agente-whatsapp/hilos/${hiloActivoId}/tomar`, { method: 'POST' });
+        await cargarChat();
+    });
+
+    const botonDevolver = document.getElementById('aw-btn-devolver');
+    if (botonDevolver) botonDevolver.addEventListener('click', async () => {
+        if (!confirm('¿Devolver esta conversación al chatbot automático?')) return;
+        await fetch(`/agente-whatsapp/hilos/${hiloActivoId}/devolver-a-bot`, { method: 'POST' });
+        await cargarChat();
+    });
+
+    document.getElementById('aw-btn-orden').addEventListener('click', async () => {
+        const resp = await fetch(`/agente-whatsapp/hilos/${hiloActivoId}/enviar-orden`, { method: 'POST' });
+        const datosResp = await resp.json();
+        if (!resp.ok) { alert(datosResp.detail || 'No se pudo enviar.'); return; }
+        await cargarChat();
+    });
+
+    document.getElementById('aw-btn-reco').addEventListener('click', async () => {
+        const resp = await fetch(`/agente-whatsapp/hilos/${hiloActivoId}/enviar-recomendacion`, { method: 'POST' });
+        const datosResp = await resp.json();
+        if (!resp.ok) { alert(datosResp.detail || 'No se pudo enviar.'); return; }
+        await cargarChat();
+    });
+
+    const botonEnviar = document.getElementById('aw-btn-enviar');
+    const inputTexto = document.getElementById('aw-input-texto');
+    async function enviarMensaje() {
+        const texto = inputTexto.value.trim();
+        if (!texto) return;
+        inputTexto.value = '';
+        await fetch(`/agente-whatsapp/hilos/${hiloActivoId}/enviar`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ texto }),
+        });
+        await cargarChat();
+    }
+    botonEnviar.addEventListener('click', enviarMensaje);
+    inputTexto.addEventListener('keydown', (e) => { if (e.key === 'Enter') enviarMensaje(); });
+}
+
+cargarLista();
+setInterval(() => { cargarLista(); if (hiloActivoId) cargarChat(); }, 4000);
+</script>
+{% endblock %}

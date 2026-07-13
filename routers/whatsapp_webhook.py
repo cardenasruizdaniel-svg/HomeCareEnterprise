@@ -89,8 +89,18 @@ async def recibir_mensaje(request: Request):
                         texto = ""
 
                     if numero_remitente and texto:
-                        from services.whatsapp_chatbot_service import procesar_mensaje_entrante
-                        procesar_mensaje_entrante(numero_remitente, texto)
+                        from services.whatsapp_agente_service import registrar_actividad_entrante, esta_atendido_por_humano
+
+                        registrar_actividad_entrante(numero_remitente, None, texto)
+
+                        # Si un agente humano ya tomó esta conversación,
+                        # el chatbot automático NO responde -- se deja
+                        # que el agente conteste desde el panel de
+                        # Agente WhatsApp, para que no se crucen las
+                        # respuestas del bot con las del humano.
+                        if not esta_atendido_por_humano(numero_remitente):
+                            from services.whatsapp_chatbot_service import procesar_mensaje_entrante
+                            procesar_mensaje_entrante(numero_remitente, texto)
 
     except Exception:
         # Nunca se le devuelve un error a Meta por un problema

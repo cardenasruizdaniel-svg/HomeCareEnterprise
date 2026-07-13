@@ -60,9 +60,10 @@ def _buscar_paciente_por_celular(numero: str):
 
 
 def _registrar_mensaje(numero: str, paciente_id, direccion: str, mensaje: str):
+    numero_normalizado = normalizar_celular(numero)
     ejecutar(
         "INSERT INTO whatsapp_conversaciones(numero_celular, paciente_id, direccion, mensaje) VALUES (?, ?, ?, ?)",
-        (numero, paciente_id, direccion, mensaje),
+        (numero_normalizado, paciente_id, direccion, mensaje),
     )
 
 
@@ -164,6 +165,17 @@ def procesar_mensaje_entrante(numero_celular: str, texto_mensaje: str) -> dict:
     _registrar_mensaje(numero_celular, None, "entrante", texto_mensaje)
 
     paciente = _buscar_paciente_por_celular(numero_celular)
+
+    if paciente:
+        try:
+            from services.whatsapp_agente_service import vincular_paciente
+            from database.database import consultar_uno as _consultar_uno
+            from services.notificaciones_service import normalizar_celular as _normalizar
+            hilo = _consultar_uno("SELECT id FROM whatsapp_hilos WHERE numero_celular=?", (_normalizar(numero_celular),))
+            if hilo:
+                vincular_paciente(dict(hilo)["id"], paciente["id"])
+        except Exception:
+            pass  # esto es solo para que el panel de agentes muestre el nombre -- si falla, no debe romper la respuesta del bot
 
     if not paciente:
         respuesta = (

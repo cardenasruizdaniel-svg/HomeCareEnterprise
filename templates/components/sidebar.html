@@ -115,11 +115,20 @@
         </li>
         {% endif %}
 
+        {% if usuario and tiene_permiso(usuario.rol, "agente_whatsapp") %}
+        <li>
+            <a href="/agente-whatsapp">
+                <i class="fa-brands fa-whatsapp"></i>
+                <span>Agente WhatsApp</span>
+            </a>
+        </li>
+        {% endif %}
+
         {% if usuario and tiene_permiso(usuario.rol, "chatbot_whatsapp") %}
         <li>
             <a href="/configuracion-whatsapp">
-                <i class="fa-brands fa-whatsapp"></i>
-                <span>Chatbot WhatsApp</span>
+                <i class="fa-solid fa-gears"></i>
+                <span>Configuración Chatbot</span>
             </a>
         </li>
         {% endif %}
