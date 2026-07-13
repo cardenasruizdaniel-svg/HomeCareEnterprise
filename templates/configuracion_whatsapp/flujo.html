@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block titulo %}Flujo de Conversación{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/configuracion-whatsapp" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver a Configuración Chatbot</a>
+    <h2 class="mb-1"><i class="fa-solid fa-diagram-project text-primary"></i> Flujo de Conversación del Chatbot</h2>
+    <p class="text-muted">
+        Arme el menú que el paciente ve al escribirle al chatbot. Cada opción puede: responder automáticamente,
+        abrir un submenú con más opciones, o derivar la conversación a un agente humano de un departamento
+        (aparecerá en <strong>Agente WhatsApp</strong> para que alguien la atienda).
+    </p>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="card shadow border-info mb-3">
+        <div class="card-body">
+            <strong>Marcadores disponibles</strong> para usar dentro del texto de una respuesta automática (se reemplazan con los datos reales del paciente):
+            <ul class="mb-0 mt-1">
+                {% for marcador, descripcion in marcadores %}
+                <li><code>{{ marcador }}</code> — {{ descripcion }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalCrearOpcion">
+        <i class="fa-solid fa-plus"></i> Agregar opción
+    </button>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-white"><h6 class="mb-0">Menú principal (lo que el paciente ve primero)</h6></div>
+        <div class="card-body">
+            {% macro pintar_nivel(opciones, nivel) %}
+                {% for op in opciones %}
+                <div class="border rounded p-2 mb-2" style="margin-left:{{ nivel * 30 }}px; {% if not op.activo %}opacity:.5;{% endif %}">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <strong>{{ op.orden }}. {{ op.texto_boton }}</strong>
+                            {% if op.tipo_accion == 'submenu' %}<span class="badge bg-primary ms-1">Submenú</span>
+                            {% elif op.tipo_accion == 'derivar_departamento' %}<span class="badge bg-danger ms-1">→ {{ op.departamento }}</span>
+                            {% else %}<span class="badge bg-secondary ms-1">Respuesta automática</span>
+                            {% endif %}
+                            {% if not op.activo %}<span class="badge bg-warning text-dark ms-1">Inactiva</span>{% endif %}
+                            {% if op.contenido_respuesta %}<br><small class="text-muted">{{ op.contenido_respuesta[:100] }}</small>{% endif %}
+                        </div>
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#editar-op-{{ op.id }}">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            {% if op.activo %}
+                            <form method="post" action="/configuracion-whatsapp/flujo/{{ op.id }}/desactivar" class="d-inline">
+                                <button class="btn btn-outline-warning btn-sm"><i class="fa-solid fa-eye-slash"></i></button>
+                            </form>
+                            {% else %}
+                            <form method="post" action="/configuracion-whatsapp/flujo/{{ op.id }}/activar" class="d-inline">
+                                <button class="btn btn-outline-success btn-sm"><i class="fa-solid fa-eye"></i></button>
+                            </form>
+                            {% endif %}
+                            <form method="post" action="/configuracion-whatsapp/flujo/{{ op.id }}/eliminar" class="d-inline" onsubmit="return confirm('¿Eliminar esta opción y todas sus subopciones?');">
+                                <button class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </div>
+                    </div>
+                    <div class="collapse mt-2" id="editar-op-{{ op.id }}">
+                        <form method="post" action="/configuracion-whatsapp/flujo/{{ op.id }}/actualizar" class="border-top pt-2">
+                            <div class="row">
+                                <div class="col-md-6 mb-2"><label>Texto de la opción</label><input type="text" name="texto_boton" class="form-control" value="{{ op.texto_boton }}" required></div>
+                                <div class="col-md-2 mb-2"><label>Orden</label><input type="number" name="orden" class="form-control" value="{{ op.orden }}"></div>
+                                <div class="col-md-4 mb-2">
+                                    <label>Tipo de acción</label>
+                                    <select name="tipo_accion" class="form-select">
+                                        {% for clave, nombre in tipos_accion %}
+                                        <option value="{{ clave }}" {% if clave == op.tipo_accion %}selected{% endif %}>{{ nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-8 mb-2"><label>Texto de respuesta / mensaje de derivación</label><textarea name="contenido_respuesta" class="form-control" rows="2">{{ op.contenido_respuesta or '' }}</textarea></div>
+                                <div class="col-md-4 mb-2"><label>Departamento (si deriva a humano)</label><input type="text" name="departamento" class="form-control" value="{{ op.departamento or '' }}"></div>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
+                        </form>
+                    </div>
+                </div>
+                {% if op.hijos %}
+                    {{ pintar_nivel(op.hijos, nivel + 1) }}
+                {% endif %}
+                {% endfor %}
+            {% endmacro %}
+
+            {{ pintar_nivel(arbol, 0) }}
+
+            {% if not arbol %}
+            <p class="text-center text-muted py-4">Todavía no hay ninguna opción en el menú.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalCrearOpcion" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <form method="post" action="/configuracion-whatsapp/flujo/crear">
+            <div class="modal-header"><h5 class="modal-title">Agregar opción al menú</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <label>¿A qué menú pertenece?</label>
+                    <select name="padre_id" class="form-select">
+                        <option value="">Menú principal (nivel raíz)</option>
+                        {% for op in opciones_padre %}
+                        <option value="{{ op.id }}">{{ op.ruta }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="row">
+                    <div class="col-md-8 mb-2"><label>Texto de la opción</label><input type="text" name="texto_boton" class="form-control" required placeholder="Ej: Facturación y cartera"></div>
+                    <div class="col-md-4 mb-2"><label>Orden</label><input type="number" name="orden" class="form-control" value="0"></div>
+                </div>
+                <div class="mb-2">
+                    <label>Tipo de acción</label>
+                    <select name="tipo_accion" class="form-select" id="nuevo-tipo-accion">
+                        {% for clave, nombre in tipos_accion %}
+                        <option value="{{ clave }}">{{ nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2"><label>Texto de respuesta / mensaje de derivación</label><textarea name="contenido_respuesta" class="form-control" rows="2"></textarea></div>
+                <div class="mb-2" id="nuevo-campo-departamento"><label>Departamento (solo si deriva a un humano)</label><input type="text" name="departamento" class="form-control" placeholder="Ej: Facturación"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success">Agregar</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+{% endblock %}

@@ -2537,8 +2537,50 @@ CREATE TABLE IF NOT EXISTS whatsapp_hilos(
 
     no_leidos INTEGER DEFAULT 0,
 
+    departamento TEXT,
+
+    opcion_actual_id INTEGER,
+
     FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
     FOREIGN KEY(agente_asignado_id) REFERENCES usuarios(id)
+
+);
+""",
+
+# =====================================================
+# FLUJO CONFIGURABLE DEL CHATBOT (árbol de opciones)
+# Cada fila es un botón/opción de un menú -- si tiene
+# "padre_id", es una opción de un submenú (aparece cuando
+# el paciente elige la opción padre). El tipo de acción
+# define qué pasa cuando el paciente elige esa opción:
+#   - submenu: muestra las opciones hijas
+#   - respuesta_automatica: contesta con un texto (puede
+#     usar datos reales del paciente con marcadores como
+#     {proxima_visita}, {ultima_orden}, {ultima_recomendacion})
+#   - derivar_departamento: pasa la conversación a un
+#     agente humano, etiquetada con el departamento
+# =====================================================
+
+"""
+CREATE TABLE IF NOT EXISTS whatsapp_flujo_opciones(
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    padre_id INTEGER,
+
+    orden INTEGER DEFAULT 0,
+
+    texto_boton TEXT NOT NULL,
+
+    tipo_accion TEXT NOT NULL DEFAULT 'respuesta_automatica',
+
+    contenido_respuesta TEXT,
+
+    departamento TEXT,
+
+    activo INTEGER DEFAULT 1,
+
+    FOREIGN KEY(padre_id) REFERENCES whatsapp_flujo_opciones(id)
 
 );
 """,

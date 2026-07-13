@@ -58,12 +58,13 @@ async function cargarLista() {
         const badgeEstado = h.atendido_por_humano
             ? `<span class="aw-badge-estado" style="background:#fde68a;">Agente${h.agente_nombre ? ': ' + h.agente_nombre.split(' ')[0] : ''}</span>`
             : `<span class="aw-badge-estado" style="background:#dbeafe;">Bot</span>`;
+        const badgeDepartamento = h.departamento ? `<span class="aw-badge-estado ms-1" style="background:#e0e7ff;">${escapeHtml(h.departamento)}</span>` : '';
         return `
             <div class="aw-lista-item ${h.id === hiloActivoId ? 'activo' : ''}" onclick="abrirHilo(${h.id})">
                 <div>
                     <div class="aw-lista-nombre">${escapeHtml(nombre)}</div>
                     <div class="aw-lista-preview">${escapeHtml(h.ultimo_mensaje || '')}</div>
-                    <div class="mt-1">${badgeEstado}</div>
+                    <div class="mt-1">${badgeEstado}${badgeDepartamento}</div>
                 </div>
                 ${h.no_leidos > 0 ? `<span class="aw-badge-no-leidos">${h.no_leidos}</span>` : ''}
             </div>

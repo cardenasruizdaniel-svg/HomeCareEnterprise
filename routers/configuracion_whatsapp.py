@@ -67,3 +67,86 @@ async def guardar(
         usuario.get("id") if isinstance(usuario, dict) else None,
     )
     return RedirectResponse(url="/configuracion-whatsapp?guardado=1", status_code=303)
+
+
+# ==========================================================
+# FLUJO DE CONVERSACIÓN (árbol de opciones del chatbot)
+# ==========================================================
+
+@router.get("/flujo", response_class=HTMLResponse)
+async def ver_flujo(request: Request, usuario=Depends(requiere_permiso("chatbot_whatsapp"))):
+    from services import whatsapp_flujo_service as flujo_service
+    return templates.TemplateResponse(
+        request=request, name="configuracion_whatsapp/flujo.html",
+        context={
+            "usuario": usuario,
+            "arbol": flujo_service.arbol_completo(),
+            "opciones_padre": flujo_service.opciones_planas_para_padre(),
+            "tipos_accion": flujo_service.TIPOS_ACCION,
+            "marcadores": flujo_service.MARCADORES_DISPONIBLES,
+            "error": request.query_params.get("error"),
+            "guardado": request.query_params.get("guardado"),
+        },
+    )
+
+
+@router.post("/flujo/crear")
+async def crear_opcion_flujo(
+    request: Request,
+    padre_id: str = Form(""),
+    texto_boton: str = Form(...),
+    tipo_accion: str = Form(...),
+    contenido_respuesta: str = Form(""),
+    departamento: str = Form(""),
+    orden: str = Form("0"),
+    usuario=Depends(requiere_permiso("chatbot_whatsapp")),
+):
+    from services import whatsapp_flujo_service as flujo_service
+    try:
+        flujo_service.crear_opcion(
+            int(padre_id) if padre_id else None, texto_boton, tipo_accion,
+            contenido_respuesta, departamento, int(orden or 0),
+        )
+    except ValueError as error:
+        return RedirectResponse(url=f"/configuracion-whatsapp/flujo?error={error}", status_code=303)
+    return RedirectResponse(url="/configuracion-whatsapp/flujo?guardado=1", status_code=303)
+
+
+@router.post("/flujo/{opcion_id}/actualizar")
+async def actualizar_opcion_flujo(
+    request: Request,
+    opcion_id: int,
+    texto_boton: str = Form(...),
+    tipo_accion: str = Form(...),
+    contenido_respuesta: str = Form(""),
+    departamento: str = Form(""),
+    orden: str = Form("0"),
+    usuario=Depends(requiere_permiso("chatbot_whatsapp")),
+):
+    from services import whatsapp_flujo_service as flujo_service
+    try:
+        flujo_service.actualizar_opcion(opcion_id, texto_boton, tipo_accion, contenido_respuesta, departamento, int(orden or 0))
+    except ValueError as error:
+        return RedirectResponse(url=f"/configuracion-whatsapp/flujo?error={error}", status_code=303)
+    return RedirectResponse(url="/configuracion-whatsapp/flujo?guardado=1", status_code=303)
+
+
+@router.post("/flujo/{opcion_id}/eliminar")
+async def eliminar_opcion_flujo(opcion_id: int, usuario=Depends(requiere_permiso("chatbot_whatsapp"))):
+    from services import whatsapp_flujo_service as flujo_service
+    flujo_service.eliminar_opcion(opcion_id)
+    return RedirectResponse(url="/configuracion-whatsapp/flujo?guardado=1", status_code=303)
+
+
+@router.post("/flujo/{opcion_id}/desactivar")
+async def desactivar_opcion_flujo(opcion_id: int, usuario=Depends(requiere_permiso("chatbot_whatsapp"))):
+    from services import whatsapp_flujo_service as flujo_service
+    flujo_service.desactivar_opcion(opcion_id)
+    return RedirectResponse(url="/configuracion-whatsapp/flujo?guardado=1", status_code=303)
+
+
+@router.post("/flujo/{opcion_id}/activar")
+async def activar_opcion_flujo(opcion_id: int, usuario=Depends(requiere_permiso("chatbot_whatsapp"))):
+    from services import whatsapp_flujo_service as flujo_service
+    flujo_service.activar_opcion(opcion_id)
+    return RedirectResponse(url="/configuracion-whatsapp/flujo?guardado=1", status_code=303)
