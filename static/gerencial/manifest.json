@@ -1,0 +1,15 @@
+{
+  "name": "HomeCare Enterprise - App Gerencial",
+  "short_name": "HC Gerencial",
+  "description": "Dashboard ejecutivo para gerencia y administración: indicadores financieros y operativos en tiempo real, desde donde estén.",
+  "start_url": "/gerencial/",
+  "scope": "/gerencial/",
+  "display": "standalone",
+  "background_color": "#0a8f86",
+  "theme_color": "#0a8f86",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/gerencial/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/gerencial/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

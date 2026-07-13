@@ -296,6 +296,16 @@ footer{
 
     }
 
+    .contenido-principal{
+
+        margin-left:0;
+
+        width:100%;
+
+        max-width:100%;
+
+    }
+
     .main{
 
         margin-left:0;
@@ -659,6 +669,12 @@ footer{
 
     margin-left:270px;
 
+    width:calc(100% - 270px);
+
+    max-width:calc(100% - 270px);
+
+    box-sizing:border-box;
+
     margin-top:70px;
 
     padding:25px;
@@ -671,9 +687,25 @@ footer{
        pantalla (comun en ventanas mas chicas/no maximizadas),
        que el DESPLAZAMIENTO quede DENTRO de esta area de
        contenido -- asi la barra lateral (que es fija) nunca
-       queda tapando ni cortando lo que se sale de ancho. */
+       queda tapando ni cortando lo que se sale de ancho. El
+       ancho explicito de arriba (calc) es lo que de verdad
+       obliga a que esto se cumpla siempre, sin importar qué
+       tan ancho sea el contenido de adentro (tablas, tarjetas,
+       etc.) -- antes solo tenia el margen, y sin un ancho
+       maximo fijo el navegador podia dejar que el contenido
+       empujara toda la pagina de todos modos. */
     overflow-x:auto;
 
+}
+
+.contenido-principal .row{
+    margin-left:0;
+    margin-right:0;
+    max-width:100%;
+}
+
+.contenido-principal .table-responsive{
+    max-width:100%;
 }
 
 

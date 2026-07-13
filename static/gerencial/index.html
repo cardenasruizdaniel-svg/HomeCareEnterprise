@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#0a8f86">
+<title>HomeCare Enterprise - App Gerencial</title>
+<link rel="manifest" href="/gerencial/manifest.json">
+<link rel="apple-touch-icon" href="/gerencial/icons/icon-192.png">
+<link rel="stylesheet" href="/gerencial/estilos.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-marca">
+    <img src="/static/img/logo_homecare.png" alt="HomeCare" class="topbar-logo">
+    <div>
+      <h1 id="titulo-pantalla">App Gerencial</h1>
+      <small id="subtitulo-pantalla"></small>
+    </div>
+  </div>
+  <span id="estado-conexion" class="estado-conexion">...</span>
+</div>
+
+<div id="contenedor" class="contenedor"></div>
+
+<script src="/gerencial/app.js"></script>
+</body>
+</html>

@@ -41,6 +41,7 @@ from routers.configuracion_whatsapp import router as configuracion_whatsapp_rout
 from routers.whatsapp_webhook import router as whatsapp_webhook_router
 from routers.roles import router as roles_router
 from routers.agente_whatsapp import router as agente_whatsapp_router
+from routers.app_gerencial import router as app_gerencial_router
 from routers import despacho
 from routers.plantillas import router as plantillas_router
 
@@ -170,6 +171,16 @@ def create_app() -> FastAPI:
 
     )
 
+    app.mount(
+
+        "/gerencial",
+
+        StaticFiles(directory=str(STATIC_DIR) + "/gerencial", html=True),
+
+        name="gerencial",
+
+    )
+
     # ==========================================
     # ROUTERS
     # ==========================================
@@ -209,6 +220,7 @@ def create_app() -> FastAPI:
     app.include_router(whatsapp_webhook_router)
     app.include_router(roles_router)
     app.include_router(agente_whatsapp_router)
+    app.include_router(app_gerencial_router)
 
     app.include_router(despacho.router)
 
