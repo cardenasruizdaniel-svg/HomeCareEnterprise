@@ -221,6 +221,14 @@
                 <span>App Móvil de Campo</span>
             </a>
         </li>
+        {% if usuario and usuario.rol in ("Administrador", "Director Médico", "Coordinador") %}
+        <li>
+            <a href="/gerencial/" target="_blank">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>App Gerencial</span>
+            </a>
+        </li>
+        {% endif %}
         <li>
             <a href="/logout">
                 <i class="fa-solid fa-right-from-bracket"></i>
