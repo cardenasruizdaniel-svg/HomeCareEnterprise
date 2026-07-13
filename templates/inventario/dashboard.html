@@ -2,27 +2,64 @@
 {% block titulo %}Inventario de Insumos{% endblock %}
 {% block contenido %}
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h2 class="mb-0"><i class="fa-solid fa-boxes-stacked text-primary"></i> Inventario de Insumos Médicos</h2>
-        <a href="/inventario/proveedores" class="btn btn-outline-dark"><i class="fa-solid fa-truck"></i> Proveedores</a>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="/inventario/informes/existencias" class="btn btn-outline-primary"><i class="fa-solid fa-clipboard-list"></i> Existencias</a>
+            <a href="/inventario/informes/compras" class="btn btn-outline-success"><i class="fa-solid fa-cart-shopping"></i> Compras</a>
+            <a href="/inventario/informes/movimientos" class="btn btn-outline-info"><i class="fa-solid fa-right-left"></i> Ingresos/Egresos</a>
+            <a href="/inventario/convenios" class="btn btn-outline-dark"><i class="fa-solid fa-file-signature"></i> Convenios</a>
+            <a href="/inventario/proveedores" class="btn btn-outline-dark"><i class="fa-solid fa-truck"></i> Proveedores</a>
+        </div>
     </div>
 
     {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
 
+    {% if resumen.lotes_vencidos > 0 %}
+    <div class="alert alert-danger"><i class="fa-solid fa-triangle-exclamation"></i> <strong>{{ resumen.lotes_vencidos }}</strong> lote(s) ya vencido(s) en el inventario — revíselos cuanto antes.</div>
+    {% endif %}
+    {% if resumen.lotes_por_vencer > 0 %}
+    <div class="alert alert-warning"><i class="fa-solid fa-clock"></i> <strong>{{ resumen.lotes_por_vencer }}</strong> lote(s) por vencer en los próximos 90 días.</div>
+    {% endif %}
+
     <div class="row mb-4">
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="card shadow text-center">
                 <div class="card-body">
-                    <div class="display-6 text-primary">{{ insumos|length }}</div>
+                    <div class="display-6 text-primary">{{ resumen.total_insumos }}</div>
                     <div class="small text-muted">Insumos en catálogo</div>
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
+        <div class="col-md-2">
             <div class="card shadow text-center border-danger">
                 <div class="card-body">
-                    <div class="display-6 text-danger">{{ insumos|selectattr("stock_bajo")|list|length }}</div>
+                    <div class="display-6 text-danger">{{ resumen.insumos_stock_bajo }}</div>
                     <div class="small text-muted">Con stock bajo</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <div class="card shadow text-center border-warning">
+                <div class="card-body">
+                    <div class="display-6 text-warning">{{ resumen.lotes_por_vencer + resumen.lotes_vencidos }}</div>
+                    <div class="small text-muted">Lotes por vencer / vencidos</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow text-center border-success">
+                <div class="card-body">
+                    <div class="h3 text-success mb-0">${{ "{:,.0f}".format(resumen.total_valorizado) }}</div>
+                    <div class="small text-muted">Valor total del inventario</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow text-center">
+                <div class="card-body">
+                    <div class="display-6">{{ resumen.total_convenios_vigentes }}</div>
+                    <div class="small text-muted">Convenios vigentes</div>
                 </div>
             </div>
         </div>
@@ -34,6 +71,7 @@
                 <div class="card-header bg-white"><h5 class="mb-0">Nuevo insumo</h5></div>
                 <div class="card-body">
                     <form method="post" action="/inventario/insumos/crear">
+                        <div class="mb-2"><label>Código (opcional)</label><input type="text" name="codigo" class="form-control" placeholder="Ej: INS-001"></div>
                         <div class="mb-2"><label>Nombre</label><input type="text" name="nombre" class="form-control" required></div>
                         <div class="mb-2">
                             <label>Categoría</label>
@@ -42,7 +80,14 @@
                             </select>
                         </div>
                         <div class="mb-2"><label>Unidad de medida</label><input type="text" name="unidad_medida" class="form-control" value="Unidad"></div>
-                        <div class="mb-2"><label>Stock mínimo (alerta)</label><input type="number" name="stock_minimo" class="form-control" value="0"></div>
+                        <div class="row">
+                            <div class="col-6 mb-2"><label>Stock mínimo</label><input type="number" name="stock_minimo" class="form-control" value="0"></div>
+                            <div class="col-6 mb-2"><label>Stock máximo</label><input type="number" name="stock_maximo" class="form-control" value="0"></div>
+                        </div>
+                        <div class="mb-2 form-check">
+                            <input type="checkbox" name="requiere_lote_vencimiento" value="1" class="form-check-input" id="ck-requiere-vencimiento">
+                            <label class="form-check-label" for="ck-requiere-vencimiento">Requiere control de lote y fecha de vencimiento</label>
+                        </div>
                         <button class="btn btn-success w-100">Crear insumo</button>
                     </form>
                 </div>
@@ -67,6 +112,10 @@
                         </div>
                         <div class="mb-2"><label>N.° Factura</label><input type="text" name="numero_factura" class="form-control"></div>
                         <div class="mb-2"><label>Costo unitario</label><input type="number" step="0.01" name="costo_unitario" class="form-control"></div>
+                        <div class="row">
+                            <div class="col-6 mb-2"><label>Lote (si aplica)</label><input type="text" name="lote" class="form-control"></div>
+                            <div class="col-6 mb-2"><label>Fecha de vencimiento</label><input type="date" name="fecha_vencimiento" class="form-control"></div>
+                        </div>
                         <button class="btn btn-success w-100">Registrar entrada</button>
                     </form>
                 </div>
@@ -101,14 +150,16 @@
                 <div class="card-header bg-white"><h5 class="mb-0">Stock actual por insumo</h5></div>
                 <div class="card-body">
                     <table class="table table-hover align-middle">
-                        <thead class="table-light"><tr><th>Insumo</th><th>Categoría</th><th class="text-center">Stock</th><th class="text-center">Mínimo</th><th></th></tr></thead>
+                        <thead class="table-light"><tr><th>Código</th><th>Insumo</th><th>Categoría</th><th class="text-center">Stock</th><th class="text-center">Mínimo</th><th class="text-end">Valor</th><th></th></tr></thead>
                         <tbody>
                             {% for i in insumos %}
-                            <tr class="{% if i.stock_bajo %}table-danger{% endif %}">
+                            <tr class="{% if i.stock_bajo %}table-danger{% elif i.stock_exceso %}table-warning{% endif %}">
+                                <td class="small text-muted">{{ i.codigo or "-" }}</td>
                                 <td>{{ i.nombre }}</td>
                                 <td>{{ i.categoria }}</td>
                                 <td class="text-center"><strong>{{ i.stock_actual }}</strong> {{ i.unidad_medida }}</td>
                                 <td class="text-center">{{ i.stock_minimo }}</td>
+                                <td class="text-end">${{ "{:,.0f}".format(i.valor_existencia) }}</td>
                                 <td>
                                     <a href="/inventario/movimientos/{{ i.id }}" class="btn btn-outline-primary btn-sm">Historial</a>
                                     <a href="/inventario/insumos/desactivar/{{ i.id }}" class="btn btn-outline-danger btn-sm"
@@ -116,7 +167,7 @@
                                 </td>
                             </tr>
                             {% else %}
-                            <tr><td colspan="5" class="text-center text-muted py-4">Sin insumos creados.</td></tr>
+                            <tr><td colspan="7" class="text-center text-muted py-4">Sin insumos creados.</td></tr>
                             {% endfor %}
                         </tbody>
                     </table>

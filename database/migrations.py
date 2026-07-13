@@ -821,6 +821,52 @@ class MigrationManager:
 
         return cambios
 
+    def migrar_inventario_profesional(self):
+        cambios = []
+        if self.existe_tabla("insumos"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "insumos",
+                    {
+                        "codigo": "codigo TEXT",
+                        "stock_maximo": "stock_maximo INTEGER DEFAULT 0",
+                        "costo_promedio": "costo_promedio REAL DEFAULT 0",
+                        "requiere_lote_vencimiento": "requiere_lote_vencimiento INTEGER DEFAULT 0",
+                    },
+                )
+            )
+        if self.existe_tabla("inventario_movimientos"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "inventario_movimientos",
+                    {
+                        "lote": "lote TEXT",
+                        "fecha_vencimiento": "fecha_vencimiento TEXT",
+                        "saldo_despues": "saldo_despues REAL",
+                    },
+                )
+            )
+        if not self.existe_tabla("convenios"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS convenios(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    proveedor_id INTEGER NOT NULL,
+                    numero_convenio TEXT,
+                    tipo TEXT DEFAULT 'Suministro',
+                    fecha_inicio TEXT,
+                    fecha_fin TEXT,
+                    valor REAL,
+                    condiciones TEXT,
+                    estado TEXT DEFAULT 'Vigente',
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    usuario_creacion INTEGER,
+                    FOREIGN KEY(proveedor_id) REFERENCES proveedores(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla convenios")
+        return cambios
+
     def migrar_roles_permisos(self):
         cambios = []
         if not self.existe_tabla("roles"):
@@ -1993,6 +2039,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_bloqueo_login()
+        )
+
+        cambios.extend(
+            self.migrar_inventario_profesional()
         )
 
         cambios.extend(

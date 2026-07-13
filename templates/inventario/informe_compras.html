@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block titulo %}Informe de Compras{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/inventario" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver a Inventario</a>
+    <h2 class="mb-3"><i class="fa-solid fa-cart-shopping text-success"></i> Informe de Compras</h2>
+
+    <div class="card shadow mb-3">
+        <div class="card-body">
+            <form method="get" class="row align-items-end">
+                <div class="col-md-3 mb-2"><label>Desde</label><input type="date" name="fecha_desde" class="form-control" value="{{ fecha_desde }}"></div>
+                <div class="col-md-3 mb-2"><label>Hasta</label><input type="date" name="fecha_hasta" class="form-control" value="{{ fecha_hasta }}"></div>
+                <div class="col-md-3 mb-2">
+                    <label>Proveedor (opcional)</label>
+                    <select name="proveedor_id" class="form-select">
+                        <option value="">-- Todos --</option>
+                        {% for p in proveedores %}<option value="{{ p.id }}" {% if proveedor_id|string == p.id|string %}selected{% endif %}>{{ p.nombre }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2 d-flex gap-2">
+                    <button class="btn btn-primary flex-fill">Filtrar</button>
+                    <a href="/inventario/informes/compras/pdf?fecha_desde={{ fecha_desde }}&fecha_hasta={{ fecha_hasta }}&proveedor_id={{ proveedor_id }}" class="btn btn-danger" target="_blank"><i class="fa-solid fa-file-pdf"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6"><div class="card shadow text-center border-success"><div class="card-body"><div class="h3 text-success">${{ "{:,.0f}".format(informe.total_comprado) }}</div><div class="small text-muted">Total comprado en el período</div></div></div></div>
+        <div class="col-md-6"><div class="card shadow text-center"><div class="card-body"><div class="display-6">{{ informe.total_movimientos }}</div><div class="small text-muted">Compras registradas</div></div></div></div>
+    </div>
+
+    {% if informe.por_proveedor %}
+    <div class="card shadow mb-3">
+        <div class="card-header bg-white"><h6 class="mb-0">Total comprado por proveedor</h6></div>
+        <div class="card-body">
+            <table class="table table-sm"><thead class="table-light"><tr><th>Proveedor</th><th class="text-end">Valor</th></tr></thead>
+            <tbody>{% for p in informe.por_proveedor %}<tr><td>{{ p.proveedor }}</td><td class="text-end">${{ "{:,.2f}".format(p.valor) }}</td></tr>{% endfor %}</tbody></table>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light"><tr><th>Fecha</th><th>Insumo</th><th>Proveedor</th><th>N.° Factura</th><th class="text-center">Cant.</th><th class="text-end">Costo Unit.</th><th class="text-end">Valor Total</th></tr></thead>
+                <tbody>
+                    {% for m in informe.movimientos %}
+                    <tr>
+                        <td>{{ m.fecha[:10] }}</td>
+                        <td>{{ m.insumo }}</td>
+                        <td>{{ m.proveedor or "-" }}</td>
+                        <td>{{ m.numero_factura or "-" }}</td>
+                        <td class="text-center">{{ m.cantidad }}</td>
+                        <td class="text-end">${{ "{:,.2f}".format(m.costo_unitario or 0) }}</td>
+                        <td class="text-end">${{ "{:,.2f}".format(m.valor_total) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">Sin compras en este período.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

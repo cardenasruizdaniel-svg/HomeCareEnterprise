@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block titulo %}Convenios con Proveedores{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/inventario" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver a Inventario</a>
+    <h2 class="mb-3"><i class="fa-solid fa-file-signature text-dark"></i> Convenios con Proveedores</h2>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalNuevoConvenio">
+        <i class="fa-solid fa-plus"></i> Nuevo convenio
+    </button>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light"><tr><th>N.°</th><th>Proveedor</th><th>Tipo</th><th>Inicio</th><th>Fin</th><th class="text-end">Valor</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                    {% for c in convenios %}
+                    <tr>
+                        <td>{{ c.numero_convenio or c.id }}</td>
+                        <td>{{ c.proveedor }}</td>
+                        <td>{{ c.tipo }}</td>
+                        <td>{{ c.fecha_inicio or "-" }}</td>
+                        <td>{{ c.fecha_fin or "Indefinido" }}</td>
+                        <td class="text-end">{{ "${:,.2f}".format(c.valor) if c.valor else "-" }}</td>
+                        <td><span class="badge {% if c.estado == 'Vigente' %}bg-success{% else %}bg-secondary{% endif %}">{{ c.estado }}</span></td>
+                        <td>
+                            <a href="/inventario/convenios/{{ c.id }}/pdf" class="btn btn-outline-danger btn-sm" target="_blank"><i class="fa-solid fa-file-pdf"></i> PDF</a>
+                            {% if c.estado == "Vigente" %}
+                            <form method="post" action="/inventario/convenios/{{ c.id }}/finalizar" class="d-inline" onsubmit="return confirm('¿Marcar este convenio como finalizado?');">
+                                <button class="btn btn-outline-secondary btn-sm">Finalizar</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="8" class="text-center text-muted py-4">Sin convenios registrados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNuevoConvenio" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <form method="post" action="/inventario/convenios/crear">
+            <div class="modal-header"><h5 class="modal-title">Nuevo convenio</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <label>Proveedor</label>
+                        <select name="proveedor_id" class="form-select" required>
+                            <option value="">-- Seleccione --</option>
+                            {% for p in proveedores %}<option value="{{ p.id }}">{{ p.nombre }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label>Tipo de convenio</label>
+                        <select name="tipo" class="form-select" required>
+                            {% for t in tipos_convenio %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-2"><label>Número de convenio (opcional)</label><input type="text" name="numero_convenio" class="form-control"></div>
+                    <div class="col-md-6 mb-2"><label>Valor (opcional)</label><input type="number" step="0.01" name="valor" class="form-control"></div>
+                    <div class="col-md-6 mb-2"><label>Fecha de inicio</label><input type="date" name="fecha_inicio" class="form-control"></div>
+                    <div class="col-md-6 mb-2"><label>Fecha de finalización (opcional)</label><input type="date" name="fecha_fin" class="form-control"></div>
+                    <div class="col-md-12 mb-2"><label>Condiciones / cláusulas adicionales</label><textarea name="condiciones" class="form-control" rows="4" placeholder="Ej: Plazos de entrega, descuentos, condiciones de pago..."></textarea></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success">Crear convenio</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+{% endblock %}

@@ -1906,6 +1906,8 @@ CREATE TABLE IF NOT EXISTS insumos(
 
     id INTEGER PRIMARY KEY AUTOINCREMENT,
 
+    codigo TEXT,
+
     nombre TEXT NOT NULL,
 
     categoria TEXT,
@@ -1913,6 +1915,12 @@ CREATE TABLE IF NOT EXISTS insumos(
     unidad_medida TEXT DEFAULT 'Unidad',
 
     stock_minimo INTEGER DEFAULT 0,
+
+    stock_maximo INTEGER DEFAULT 0,
+
+    costo_promedio REAL DEFAULT 0,
+
+    requiere_lote_vencimiento INTEGER DEFAULT 0,
 
     activo INTEGER DEFAULT 1,
 
@@ -1946,6 +1954,12 @@ CREATE TABLE IF NOT EXISTS inventario_movimientos(
 
     motivo TEXT,
 
+    lote TEXT,
+
+    fecha_vencimiento TEXT,
+
+    saldo_despues REAL,
+
     usuario_creacion INTEGER,
 
     FOREIGN KEY(insumo_id)
@@ -1966,6 +1980,40 @@ CREATE TABLE IF NOT EXISTS inventario_movimientos(
 """
 CREATE INDEX IF NOT EXISTS idx_inventario_movimientos_insumo
 ON inventario_movimientos(insumo_id);
+""",
+
+# =====================================================
+# CONVENIOS CON PROVEEDORES
+# =====================================================
+
+"""
+CREATE TABLE IF NOT EXISTS convenios(
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    proveedor_id INTEGER NOT NULL,
+
+    numero_convenio TEXT,
+
+    tipo TEXT DEFAULT 'Suministro',
+
+    fecha_inicio TEXT,
+
+    fecha_fin TEXT,
+
+    valor REAL,
+
+    condiciones TEXT,
+
+    estado TEXT DEFAULT 'Vigente',
+
+    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+
+    usuario_creacion INTEGER,
+
+    FOREIGN KEY(proveedor_id) REFERENCES proveedores(id)
+
+);
 """,
 
 # =====================================================

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block titulo %}Ingresos y Egresos{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/inventario" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver a Inventario</a>
+    <h2 class="mb-3"><i class="fa-solid fa-right-left text-info"></i> Informe de Ingresos y Egresos (Kardex)</h2>
+
+    <div class="card shadow mb-3">
+        <div class="card-body">
+            <form method="get" class="row align-items-end">
+                <div class="col-md-2 mb-2"><label>Desde</label><input type="date" name="fecha_desde" class="form-control" value="{{ fecha_desde }}"></div>
+                <div class="col-md-2 mb-2"><label>Hasta</label><input type="date" name="fecha_hasta" class="form-control" value="{{ fecha_hasta }}"></div>
+                <div class="col-md-3 mb-2">
+                    <label>Insumo (opcional)</label>
+                    <select name="insumo_id" class="form-select">
+                        <option value="">-- Todos --</option>
+                        {% for i in insumos %}<option value="{{ i.id }}" {% if insumo_id|string == i.id|string %}selected{% endif %}>{{ i.nombre }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label>Tipo</label>
+                    <select name="tipo" class="form-select">
+                        <option value="">-- Todos --</option>
+                        <option value="Entrada" {% if tipo == "Entrada" %}selected{% endif %}>Entrada</option>
+                        <option value="Salida" {% if tipo == "Salida" %}selected{% endif %}>Salida</option>
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2 d-flex gap-2">
+                    <button class="btn btn-primary flex-fill">Filtrar</button>
+                    <a href="/inventario/informes/movimientos/pdf?fecha_desde={{ fecha_desde }}&fecha_hasta={{ fecha_hasta }}&insumo_id={{ insumo_id }}&tipo={{ tipo }}" class="btn btn-danger" target="_blank"><i class="fa-solid fa-file-pdf"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4"><div class="card shadow text-center border-success"><div class="card-body"><div class="display-6 text-success">{{ informe.total_entradas }}</div><div class="small text-muted">Total ingresos</div></div></div></div>
+        <div class="col-md-4"><div class="card shadow text-center border-warning"><div class="card-body"><div class="display-6 text-warning">{{ informe.total_salidas }}</div><div class="small text-muted">Total egresos</div></div></div></div>
+        <div class="col-md-4"><div class="card shadow text-center"><div class="card-body"><div class="display-6">{{ informe.total_movimientos }}</div><div class="small text-muted">Movimientos</div></div></div></div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <div class="table-responsive">
+            <table class="table table-hover align-middle table-sm">
+                <thead class="table-light"><tr><th>Fecha</th><th>Insumo</th><th>Tipo</th><th class="text-center">Cant.</th><th>Proveedor / Paciente</th><th>Motivo</th><th class="text-center">Saldo</th></tr></thead>
+                <tbody>
+                    {% for m in informe.movimientos %}
+                    <tr>
+                        <td>{{ m.fecha[:16] }}</td>
+                        <td>{{ m.insumo }}</td>
+                        <td><span class="badge {% if m.tipo == 'Entrada' %}bg-success{% else %}bg-warning text-dark{% endif %}">{{ m.tipo }}</span></td>
+                        <td class="text-center">{{ m.cantidad }}</td>
+                        <td class="small">
+                            {% if m.tipo == "Entrada" %}{{ m.proveedor or "-" }}
+                            {% else %}{{ (m.primer_nombre + " " + m.primer_apellido) if m.primer_nombre else "-" }}{% endif %}
+                        </td>
+                        <td class="small text-muted">{{ m.motivo or "-" }}</td>
+                        <td class="text-center"><strong>{{ m.saldo_despues if m.saldo_despues is not none else "-" }}</strong></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">Sin movimientos en este período.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
