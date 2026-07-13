@@ -228,12 +228,23 @@ async function renderDashboard() {
     </div>
 
     <div class="card">
+      <h3>🗓 Programados hoy (${op.visitas_hoy_total})</h3>
+      ${(!op.visitas_hoy || op.visitas_hoy.length === 0) ? `<p class="muted">Sin visitas programadas hoy.</p>` :
+        op.visitas_hoy.map((v) => `
+          <div class="lista-item">
+            <strong>${v.hora_inicio || ""}</strong> — ${v.paciente || "Paciente sin nombre"}
+            <span class="badge ${v.estado === 'Completada' ? 'badge-success' : v.estado === 'En Curso' ? 'badge-info' : 'badge-danger'}" style="float:right;">${v.estado || ""}</span>
+            <br><span class="muted">${v.servicio || ""} · Con: ${v.profesional || "Sin asignar"}</span>
+          </div>`).join("")}
+    </div>
+
+    <div class="card">
       <h3>🚶 En visita ahora (${op.en_visita_ahora.length})</h3>
       ${op.en_visita_ahora.length === 0 ? `<p class="muted">Nadie está en visita en este momento.</p>` :
         op.en_visita_ahora.map((v) => `
           <div class="lista-item">
-            <strong>${v.profesional}</strong> — ${v.paciente}<br>
-            <span class="muted">Ingresó: ${v.hora_real_inicio || ""} · ${v.servicio || ""}</span>
+            <strong>${v.paciente || "Paciente sin nombre"}</strong>
+            <br><span class="muted">Con: ${v.profesional || "Sin asignar"} · Ingresó: ${v.hora_real_inicio || ""} · ${v.servicio || ""}</span>
           </div>`).join("")}
     </div>
 
@@ -242,8 +253,8 @@ async function renderDashboard() {
       ${op.finalizaron_hoy.length === 0 ? `<p class="muted">Nadie ha finalizado visitas todavía hoy.</p>` :
         op.finalizaron_hoy.map((v) => `
           <div class="lista-item">
-            <strong>${v.profesional}</strong> — ${v.paciente}<br>
-            <span class="muted">${v.hora_real_inicio || ""} a ${v.hora_real_fin || ""}</span>
+            <strong>${v.paciente || "Paciente sin nombre"}</strong>
+            <br><span class="muted">Con: ${v.profesional || "Sin asignar"} · ${v.hora_real_inicio || ""} a ${v.hora_real_fin || ""}</span>
           </div>`).join("")}
     </div>
 
@@ -252,9 +263,9 @@ async function renderDashboard() {
       <h3>🗓 Servicios sin programar (${op.total_servicios_sin_programar})</h3>
       ${op.servicios_sin_programar.map((s) => `
         <div class="lista-item">
-          <strong>${s.servicio}</strong>
+          <strong>${s.paciente || "Paciente sin nombre"}</strong>
           <span class="badge badge-danger" style="float:right;">${s.pendientes}/${s.total_visitas}</span>
-          <br><span class="muted">Desde ${s.fecha_inicio}</span>
+          <br><span class="muted">${s.tipo_servicio || ""}${s.subtipo ? " - " + s.subtipo : ""} · Desde ${s.fecha_inicio}</span>
         </div>`).join("")}
     </div>` : ""}
   `;

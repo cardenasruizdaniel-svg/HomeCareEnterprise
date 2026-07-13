@@ -221,7 +221,7 @@
                 <span>App Móvil de Campo</span>
             </a>
         </li>
-        {% if usuario and usuario.rol in ("Administrador", "Director Médico", "Coordinador") %}
+        {% if usuario and tiene_permiso(usuario.rol, "app_gerencial") %}
         <li>
             <a href="/gerencial/" target="_blank">
                 <i class="fa-solid fa-chart-line"></i>

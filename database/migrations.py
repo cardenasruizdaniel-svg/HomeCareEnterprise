@@ -790,6 +790,30 @@ class MigrationManager:
             cambios.append("Se creó la tabla whatsapp_hilos")
         return cambios
 
+    def migrar_permiso_app_gerencial(self):
+        """
+        Administrador y Director Médico ya tienen acceso total
+        (ven todo), así que no necesitan este permiso aparte.
+        Coordinador sí es un rol con permisos limitados, así
+        que se le agrega explícitamente -- y desde Roles y
+        Permisos se le puede dar o quitar este permiso a
+        cualquier otro rol (por ejemplo, uno nuevo tipo "Super
+        Usuario") sin tocar código.
+        """
+        cambios = []
+        cursor = self.connection.cursor()
+        rol_coordinador = cursor.execute("SELECT id, acceso_total FROM roles WHERE nombre='Coordinador'").fetchone()
+        if rol_coordinador and not rol_coordinador[1]:
+            rol_id = rol_coordinador[0]
+            tiene_permiso = cursor.execute(
+                "SELECT 1 FROM roles_permisos WHERE rol_id=? AND modulo='app_gerencial'", (rol_id,)
+            ).fetchone()
+            if not tiene_permiso:
+                cursor.execute("INSERT INTO roles_permisos(rol_id, modulo) VALUES (?, 'app_gerencial')", (rol_id,))
+                self.connection.commit()
+                cambios.append("Se agregó el permiso 'app_gerencial' al rol Coordinador")
+        return cambios
+
     def migrar_perfil_asistencial(self):
         cambios = []
         cursor = self.connection.cursor()
@@ -2047,6 +2071,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_roles_permisos()
+        )
+
+        cambios.extend(
+            self.migrar_permiso_app_gerencial()
         )
 
         cambios.extend(

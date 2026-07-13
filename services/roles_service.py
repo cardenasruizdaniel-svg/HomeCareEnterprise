@@ -32,6 +32,7 @@ CATALOGO_MODULOS = [
     ("reportes", "Reportes"),
     ("chatbot_whatsapp", "Chatbot de WhatsApp (configuración)"),
     ("agente_whatsapp", "Agente WhatsApp (panel de chat en vivo)"),
+    ("app_gerencial", "App Gerencial (dashboard ejecutivo móvil)"),
 ]
 
 

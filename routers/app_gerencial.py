@@ -16,11 +16,10 @@ normal o un cuidador no pueden entrar aquí.
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 
 from core.dependencies import usuario_actual
+from core.permissions.permissions import tiene_permiso
 from services.auth_service import AuthService
 
 router = APIRouter(prefix="/api/gerencial", tags=["App Gerencial"])
-
-ROLES_CON_ACCESO_GERENCIAL = ("Administrador", "Director Médico", "Coordinador")
 
 
 # ==========================================================
@@ -32,10 +31,19 @@ ROLES_CON_ACCESO_GERENCIAL = ("Administrador", "Director Médico", "Coordinador"
 
 
 def _verificar_acceso_gerencial(usuario: dict):
-    if not usuario or usuario.get("rol") not in ROLES_CON_ACCESO_GERENCIAL:
+    """
+    Igual que cualquier otro módulo del sistema: el acceso lo
+    define el permiso "app_gerencial" del rol (configurable
+    desde Roles y Permisos) -- Administrador y Director Médico
+    ya lo tienen por su acceso total, y cualquier rol nuevo que
+    se cree (ej. un "Super Usuario") puede recibir este permiso
+    ahí mismo, sin tocar código.
+    """
+    if not usuario or not tiene_permiso(usuario.get("rol"), "app_gerencial"):
         raise HTTPException(
             status_code=403,
-            detail="Este usuario no tiene un perfil de dirección/gerencia y no puede usar la App Gerencial.",
+            detail="Este usuario no tiene permiso para usar la App Gerencial "
+                   "(se activa desde Roles y Permisos, módulo 'App Gerencial').",
         )
 
 
@@ -54,11 +62,11 @@ async def login_gerencial(datos: dict = Body(...), request: Request = None):
 
     resultado = dict(resultado)
 
-    if resultado["rol"] not in ROLES_CON_ACCESO_GERENCIAL:
+    if not tiene_permiso(resultado["rol"], "app_gerencial"):
         raise HTTPException(
             status_code=403,
-            detail="Este usuario no tiene un perfil de dirección/gerencia. "
-                   "La App Gerencial es exclusiva para Administrador, Director Médico y Coordinador.",
+            detail="Este usuario no tiene permiso para usar la App Gerencial "
+                   "(se activa desde Roles y Permisos, módulo 'App Gerencial').",
         )
 
     resultado.pop("password", None)
@@ -104,6 +112,7 @@ async def dashboard_gerencial(usuario=Depends(usuario_actual)):
         "gerencial": gerencial,
         "operativo": {
             "visitas_hoy_total": len(operativo["visitas_hoy"]),
+            "visitas_hoy": operativo["visitas_hoy"][:20],
             "en_visita_ahora": operativo["en_visita_ahora"],
             "finalizaron_hoy": operativo["finalizaron_hoy"],
             "servicios_sin_programar": operativo["servicios_sin_programar"][:10],
