@@ -99,9 +99,10 @@
                     <form method="post" action="/inventario/entrada">
                         <div class="mb-2">
                             <label>Insumo</label>
-                            <select name="insumo_id" class="form-select" required>
-                                {% for i in insumos %}<option value="{{ i.id }}">{{ i.nombre }} (stock: {{ i.stock_actual }})</option>{% endfor %}
+                            <select name="insumo_id" class="form-select" id="select-insumo-entrada" required>
+                                {% for i in insumos %}<option value="{{ i.id }}" data-costo-promedio="{{ i.costo_promedio or 0 }}">{{ i.nombre }} (stock: {{ i.stock_actual }})</option>{% endfor %}
                             </select>
+                            <small class="text-muted d-block mt-1" id="texto-costo-promedio-actual"></small>
                         </div>
                         <div class="mb-2"><label>Cantidad</label><input type="number" name="cantidad" min="1" class="form-control" required></div>
                         <div class="mb-2">
@@ -111,7 +112,11 @@
                             </select>
                         </div>
                         <div class="mb-2"><label>N.° Factura</label><input type="text" name="numero_factura" class="form-control"></div>
-                        <div class="mb-2"><label>Costo unitario</label><input type="number" step="0.01" name="costo_unitario" class="form-control"></div>
+                        <div class="mb-2">
+                            <label>Costo unitario de esta compra</label>
+                            <input type="number" step="0.01" name="costo_unitario" class="form-control" id="campo-costo-unitario-entrada">
+                            <small class="d-block mt-1" id="texto-comparacion-costo"></small>
+                        </div>
                         <div class="row">
                             <div class="col-6 mb-2"><label>Lote (si aplica)</label><input type="text" name="lote" class="form-control"></div>
                             <div class="col-6 mb-2"><label>Fecha de vencimiento</label><input type="date" name="fecha_vencimiento" class="form-control"></div>
@@ -210,6 +215,47 @@ async function cargarProveedores() {
         proveedores.map(p => `<option value="${p.id}">${p.nombre}</option>`).join("");
 }
 cargarProveedores();
+
+// Muestra el costo promedio actual del insumo elegido, y
+// compara el costo de esta compra contra ese promedio -- para
+// detectar de un vistazo si el proveedor subió o bajó el
+// precio, y llevar mejor control de costos.
+const selectInsumoEntrada = document.getElementById("select-insumo-entrada");
+const textoCostoPromedio = document.getElementById("texto-costo-promedio-actual");
+const campoCostoUnitario = document.getElementById("campo-costo-unitario-entrada");
+const textoComparacionCosto = document.getElementById("texto-comparacion-costo");
+
+function costoPromedioActual() {
+    const opcion = selectInsumoEntrada.selectedOptions[0];
+    return opcion ? parseFloat(opcion.dataset.costoPromedio) || 0 : 0;
+}
+
+function actualizarTextoCostoPromedio() {
+    const costo = costoPromedioActual();
+    textoCostoPromedio.textContent = costo > 0
+        ? `Costo promedio actual de este insumo: $${costo.toLocaleString("es-CO", {minimumFractionDigits: 2})}`
+        : "Este insumo todavía no tiene compras registradas.";
+    actualizarComparacionCosto();
+}
+
+function actualizarComparacionCosto() {
+    const costoPromedio = costoPromedioActual();
+    const costoNuevo = parseFloat(campoCostoUnitario.value);
+    if (!costoPromedio || !costoNuevo) { textoComparacionCosto.innerHTML = ""; return; }
+
+    const diferenciaPorcentaje = ((costoNuevo - costoPromedio) / costoPromedio) * 100;
+    if (Math.abs(diferenciaPorcentaje) < 1) {
+        textoComparacionCosto.innerHTML = `<span class="text-muted">Precio similar al promedio actual.</span>`;
+    } else if (diferenciaPorcentaje > 0) {
+        textoComparacionCosto.innerHTML = `<span class="text-danger">⚠ ${diferenciaPorcentaje.toFixed(1)}% más caro que el promedio actual.</span>`;
+    } else {
+        textoComparacionCosto.innerHTML = `<span class="text-success">✔ ${Math.abs(diferenciaPorcentaje).toFixed(1)}% más barato que el promedio actual.</span>`;
+    }
+}
+
+selectInsumoEntrada.addEventListener("change", actualizarTextoCostoPromedio);
+campoCostoUnitario.addEventListener("input", actualizarComparacionCosto);
+actualizarTextoCostoPromedio();
 
 const buscadorPaciente = document.getElementById("buscar-paciente-salida");
 const resultadosPaciente = document.getElementById("resultados-paciente-salida");

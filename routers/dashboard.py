@@ -46,6 +46,8 @@ async def dashboard(
     from services.dashboard_operativo_service import panel_operativo_completo
     contexto["panel_operativo"] = panel_operativo_completo()
 
+    contexto["gerencial"] = dashboard_service.resumen_gerencial()
+
     contexto["request"] = request
 
     contexto["usuario"] = usuario

@@ -13,12 +13,85 @@
             </h2>
 
             <p class="text-muted">
-                HomeCare Enterprise
+                HomeCare Enterprise — resumen gerencial
             </p>
 
         </div>
 
-        <div class="row g-4">
+    </div>
+
+    <!-- ============ RESUMEN GERENCIAL ============ -->
+    <div class="row g-3 mb-2">
+        <div class="col-12"><h5 class="text-muted mb-0"><i class="fa-solid fa-chart-line"></i> Financiero</h5></div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100" style="background:linear-gradient(135deg,#0a8f86,#00c2b8); color:white;">
+                <div class="card-body">
+                    <h6 class="text-white-50 mb-1">💰 Facturado este mes</h6>
+                    <h3 class="fw-bold mb-1">{{ gerencial.facturado_mes_texto }}</h3>
+                    <small>
+                        <i class="fa-solid fa-{{ gerencial.tendencia_facturacion.icono }}"></i>
+                        {{ gerencial.tendencia_facturacion.valor }}% vs mes anterior · {{ gerencial.facturas_mes }} factura(s)
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100 {% if gerencial.cartera_pendiente > 0 %}border-start border-4 border-warning{% endif %}">
+                <div class="card-body">
+                    <h6 class="text-secondary mb-1">📋 Cartera pendiente de cobro</h6>
+                    <h3 class="fw-bold mb-1 {% if gerencial.cartera_pendiente > 0 %}text-warning{% endif %}">{{ gerencial.cartera_pendiente_texto }}</h3>
+                    <small class="text-muted">{{ gerencial.facturas_pendientes }} factura(s) sin pagar</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-body">
+                    <h6 class="text-secondary mb-1">📦 Valor del inventario</h6>
+                    <h3 class="fw-bold mb-1">{{ gerencial.valor_inventario_texto }}</h3>
+                    <small class="text-muted">Compras este mes: {{ gerencial.compras_mes_texto }}</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="card shadow-sm border-0 rounded-4 h-100">
+                <div class="card-body">
+                    <h6 class="text-secondary mb-1">✅ Cumplimiento de agenda (mes)</h6>
+                    <h3 class="fw-bold mb-1">{{ gerencial.porcentaje_cumplimiento }}%</h3>
+                    <small class="text-muted">{{ gerencial.visitas_completadas_mes }} de {{ gerencial.visitas_mes }} visita(s) completadas</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if gerencial.insumos_stock_bajo > 0 or gerencial.lotes_vencidos > 0 or gerencial.lotes_por_vencer > 0 or gerencial.cartera_pendiente > 0 %}
+    <div class="row g-2 mb-4">
+        <div class="col-12"><h6 class="text-muted mb-1"><i class="fa-solid fa-triangle-exclamation"></i> Alertas gerenciales</h6></div>
+        {% if gerencial.insumos_stock_bajo > 0 %}
+        <div class="col-auto"><a href="/inventario" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-box"></i> {{ gerencial.insumos_stock_bajo }} insumo(s) con stock bajo</a></div>
+        {% endif %}
+        {% if gerencial.lotes_vencidos > 0 %}
+        <div class="col-auto"><a href="/inventario" class="btn btn-sm btn-outline-dark"><i class="fa-solid fa-skull-crossbones"></i> {{ gerencial.lotes_vencidos }} lote(s) vencido(s)</a></div>
+        {% endif %}
+        {% if gerencial.lotes_por_vencer > 0 %}
+        <div class="col-auto"><a href="/inventario" class="btn btn-sm btn-outline-warning"><i class="fa-solid fa-clock"></i> {{ gerencial.lotes_por_vencer }} lote(s) por vencer (60 días)</a></div>
+        {% endif %}
+        {% if gerencial.cartera_pendiente > 0 %}
+        <div class="col-auto"><a href="/facturacion" class="btn btn-sm btn-outline-warning"><i class="fa-solid fa-file-invoice-dollar"></i> Cartera pendiente por gestionar</a></div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- ============ INDICADORES OPERATIVOS (ya existentes) ============ -->
+    <div class="row mb-2">
+        <div class="col-12"><h5 class="text-muted mb-0"><i class="fa-solid fa-heart-pulse"></i> Operación</h5></div>
+    </div>
+
+    <div class="row g-4">
 
     <!-- Pacientes -->
     <div class="col-xl-3 col-md-6">

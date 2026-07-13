@@ -44,6 +44,20 @@ async def login_post(
             },
         )
 
+    # El rol Cuidador solo puede ingresar desde la app móvil de
+    # campo -- no tiene acceso a la plataforma web, por
+    # seguridad y porque todas sus tareas (informes de cuidado,
+    # registro de ingreso/salida) ya están cubiertas ahí.
+    if datos["rol"] == "Cuidador":
+        return templates.TemplateResponse(
+            request=request,
+            name="login.html",
+            context={
+                "request": request,
+                "error": "Este usuario es de tipo Cuidador y solo puede ingresar desde la aplicación móvil, no desde esta página web.",
+            },
+        )
+
     request.session["usuario_id"] = datos["id"]
     request.session["usuario"] = datos["usuario"]
     request.session["nombre"] = datos["nombre"]
