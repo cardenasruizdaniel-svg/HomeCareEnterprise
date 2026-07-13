@@ -603,6 +603,7 @@ cargarProduccion();
             <h5 class="mb-0"><i class="fa-solid fa-triangle-exclamation"></i> Pacientes con programa/servicio asignado y visitas SIN programar</h5>
         </div>
         <div class="card-body">
+            <div class="table-responsive">
             <table class="table table-sm table-hover align-middle">
                 <thead class="table-light">
                     <tr><th>Paciente</th><th>Programa asignado</th><th>Servicio</th><th>Fecha inicio</th><th class="text-center">Pendientes / Total</th><th></th></tr>
@@ -628,6 +629,7 @@ cargarProduccion();
                     {% endfor %}
                 </tbody>
             </table>
+            </div>
         </div>
     </div>
     {% endif %}
