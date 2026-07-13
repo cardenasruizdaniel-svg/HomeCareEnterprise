@@ -2431,6 +2431,10 @@ CREATE TABLE IF NOT EXISTS configuracion_whatsapp(
 
     mensaje_bienvenida TEXT DEFAULT 'Hola, soy el asistente virtual de HomeCare del Quindío I.P.S. 👋',
 
+    mensaje_despedida TEXT DEFAULT '✨ Gracias por confiar en HomeCare del Quindío I.P.S. Trabajamos cada día para brindarte una atención humana, oportuna y de calidad.',
+
+    url_encuesta_satisfaccion TEXT,
+
     fecha_actualizacion TEXT DEFAULT CURRENT_TIMESTAMP,
 
     usuario_actualizacion INTEGER
@@ -2541,9 +2545,30 @@ CREATE TABLE IF NOT EXISTS whatsapp_hilos(
 
     opcion_actual_id INTEGER,
 
+    politica_aceptada INTEGER DEFAULT 0,
+
+    esperando_datos_libres INTEGER DEFAULT 0,
+
     FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
     FOREIGN KEY(agente_asignado_id) REFERENCES usuarios(id)
 
+);
+""",
+
+# =====================================================
+# DATOS LIBRES RECOLECTADOS POR EL BOT
+# =====================================================
+
+"""
+CREATE TABLE IF NOT EXISTS whatsapp_datos_recolectados(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    hilo_id INTEGER NOT NULL,
+    opcion_id INTEGER,
+    texto_solicitado TEXT,
+    respuesta_paciente TEXT,
+    fecha TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(hilo_id) REFERENCES whatsapp_hilos(id),
+    FOREIGN KEY(opcion_id) REFERENCES whatsapp_flujo_opciones(id)
 );
 """,
 
@@ -2577,6 +2602,8 @@ CREATE TABLE IF NOT EXISTS whatsapp_flujo_opciones(
     contenido_respuesta TEXT,
 
     departamento TEXT,
+
+    campos_solicitados TEXT,
 
     activo INTEGER DEFAULT 1,
 

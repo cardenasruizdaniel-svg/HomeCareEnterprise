@@ -707,6 +707,67 @@ class MigrationManager:
 
         return cambios
 
+    def migrar_flujo_avanzado_chatbot(self):
+        """
+        Columnas y tabla nuevas para el flujo profesional del
+        chatbot: aceptación de políticas, recolección guiada de
+        datos (nombre, documento, etc.), y mensaje de despedida
+        con encuesta de satisfacción.
+        """
+        cambios = []
+
+        if self.existe_tabla("whatsapp_hilos"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "whatsapp_hilos",
+                    {
+                        "politica_aceptada": "politica_aceptada INTEGER DEFAULT 0",
+                        "esperando_datos_libres": "esperando_datos_libres INTEGER DEFAULT 0",
+                    },
+                )
+            )
+
+        if self.existe_tabla("whatsapp_flujo_opciones"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "whatsapp_flujo_opciones",
+                    {"campos_solicitados": "campos_solicitados TEXT"},
+                )
+            )
+
+        if self.existe_tabla("configuracion_whatsapp"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "configuracion_whatsapp",
+                    {
+                        "mensaje_despedida": (
+                            "mensaje_despedida TEXT DEFAULT "
+                            "'✨ Gracias por confiar en HomeCare del Quindío I.P.S. "
+                            "Trabajamos cada día para brindarte una atención humana, oportuna y de calidad.'"
+                        ),
+                        "url_encuesta_satisfaccion": "url_encuesta_satisfaccion TEXT",
+                    },
+                )
+            )
+
+        if not self.existe_tabla("whatsapp_datos_recolectados"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS whatsapp_datos_recolectados(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    hilo_id INTEGER NOT NULL,
+                    opcion_id INTEGER,
+                    texto_solicitado TEXT,
+                    respuesta_paciente TEXT,
+                    fecha TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(hilo_id) REFERENCES whatsapp_hilos(id),
+                    FOREIGN KEY(opcion_id) REFERENCES whatsapp_flujo_opciones(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla whatsapp_datos_recolectados")
+
+        return cambios
+
     def migrar_whatsapp_hilos(self):
         cambios = []
         if not self.existe_tabla("whatsapp_hilos"):
@@ -1936,6 +1997,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_roles_permisos()
+        )
+
+        cambios.extend(
+            self.migrar_flujo_avanzado_chatbot()
         )
 
         cambios.extend(

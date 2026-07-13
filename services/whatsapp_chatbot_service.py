@@ -1,53 +1,52 @@
 """
 HomeCare Enterprise - Chatbot de WhatsApp para pacientes
 
-El menú y las respuestas del bot ahora son CONFIGURABLES desde
-la web (Configuración Chatbot → Flujo de Conversación), en vez
-de estar escritos fijos en este archivo -- un administrador
-puede armar menús con submenús, cambiar los textos, y decidir
-a qué departamento se deriva cada opción, sin tocar código.
+Flujo profesional configurable, tipo Whaticket:
 
-Cómo funciona la conversación:
-1. El paciente escribe -- si dice "menu"/"hola" o es su primer
-   mensaje, se le muestra el menú principal.
-2. Si responde con un número, se interpreta contra las
-   opciones del nivel de menú en el que esté en ese momento
-   (se guarda en whatsapp_hilos.opcion_actual_id).
-3. Cada opción puede ser: un SUBMENÚ (abre más opciones), una
+1. Primer contacto -> mensaje de bienvenida + nota legal de
+   tratamiento de datos. Cualquier mensaje que el paciente
+   escriba después de esto se toma como que acepta continuar
+   (igual que en el ejemplo de las capturas: no hace falta que
+   escriba "acepto", basta con que siga escribiendo).
+2. Menú principal (configurable en el árbol de opciones) --
+   típicamente empieza con la selección de ciudad, y de ahí
+   se abre el menú de servicios.
+3. Cada opción puede ser: SUBMENÚ (abre más opciones),
    RESPUESTA AUTOMÁTICA (contesta con datos reales del
-   paciente), o DERIVAR A UN DEPARTAMENTO (pasa la conversación
-   a un agente humano, etiquetada con el departamento, y el bot
-   deja de responder ahí -- ver whatsapp_agente_service).
+   paciente), RECOLECCIÓN DE DATOS (le pide al paciente que
+   escriba varios datos en un solo mensaje -- nombre,
+   documento, etc. -- y cuando responde, se guarda todo y se
+   deriva a un agente humano), o DERIVAR A UN DEPARTAMENTO
+   directamente.
+4. Al terminar una recolección de datos o una derivación, se
+   envía el mensaje de despedida configurado, con el enlace a
+   la encuesta de satisfacción si está configurada.
 
-SEGURIDAD Y PRIVACIDAD: antes de responder CUALQUIER cosa, se
-verifica que el número de celular que escribe corresponda a un
-paciente registrado en el sistema -- si no coincide con nadie,
-no se revela ninguna información.
+Todo el árbol de opciones, los mensajes, y los campos que se
+piden en cada recolección de datos son configurables desde
+Configuración Chatbot → Flujo de Conversación.
 """
 
 from database.database import consultar_todos, consultar_uno, ejecutar
 from services.notificaciones_service import enviar_whatsapp, normalizar_celular
 
-PALABRAS_REINICIO = ("menu", "menú", "hola", "buenas", "inicio", "hi", "")
+PALABRAS_REINICIO = ("menu", "menú", "#", "hola", "buenas", "inicio", "hi")
 
 
 def _buscar_paciente_por_celular(numero: str):
     numero_normalizado = normalizar_celular(numero)
     if not numero_normalizado:
         return None
-
     candidatos = consultar_todos("SELECT * FROM pacientes WHERE celular IS NOT NULL AND celular != ''")
     for candidato in candidatos:
         candidato = dict(candidato)
         if normalizar_celular(candidato.get("celular")) == numero_normalizado:
             return candidato
-
     candidatos_tel = consultar_todos("SELECT * FROM pacientes WHERE telefono IS NOT NULL AND telefono != ''")
     for candidato in candidatos_tel:
         candidato = dict(candidato)
         if normalizar_celular(candidato.get("telefono")) == numero_normalizado:
             return candidato
-
     return None
 
 
@@ -59,11 +58,18 @@ def _registrar_mensaje(numero: str, paciente_id, direccion: str, mensaje: str):
     )
 
 
-def _obtener_mensaje_bienvenida() -> str:
-    config = consultar_uno("SELECT mensaje_bienvenida FROM configuracion_whatsapp WHERE id=1")
-    if config and dict(config).get("mensaje_bienvenida"):
-        return dict(config)["mensaje_bienvenida"]
-    return "Hola, soy el asistente virtual de HomeCare del Quindío I.P.S. 👋"
+def _config() -> dict:
+    fila = consultar_uno("SELECT * FROM configuracion_whatsapp WHERE id=1")
+    return dict(fila) if fila else {}
+
+
+def _obtener_o_crear_hilo(numero_celular: str):
+    numero_normalizado = normalizar_celular(numero_celular)
+    hilo = consultar_uno("SELECT * FROM whatsapp_hilos WHERE numero_celular=?", (numero_normalizado,))
+    if hilo:
+        return dict(hilo)
+    hilo_id = ejecutar("INSERT INTO whatsapp_hilos(numero_celular) VALUES (?)", (numero_normalizado,))
+    return dict(consultar_uno("SELECT * FROM whatsapp_hilos WHERE id=?", (hilo_id,)))
 
 
 def _listar_opciones(padre_id):
@@ -78,20 +84,17 @@ def _listar_opciones(padre_id):
     return [dict(f) for f in filas]
 
 
-def _texto_menu(nombre_paciente: str, padre_id, es_inicio: bool) -> str:
+def _texto_menu(padre_id) -> str:
     opciones = _listar_opciones(padre_id)
-
-    if es_inicio:
-        encabezado = f"{_obtener_mensaje_bienvenida()}\n\nHola {nombre_paciente}, ¿en qué le puedo ayudar? Responda con el número:\n\n"
-    else:
-        encabezado = "¿Algo más? Responda con el número:\n\n"
-
-    lineas = [f"{indice}️⃣ {op['texto_boton']}" for indice, op in enumerate(opciones, start=1)]
-    pie = "\n\nEn cualquier momento escriba *menu* para volver al inicio."
-    return encabezado + "\n".join(lineas) + pie
+    lineas = [f"{indice} - {op['texto_boton']}" for indice, op in enumerate(opciones, start=1)]
+    pie = "\n\n# - Volver al menú principal"
+    return "Seleccione la opción que necesita:\n\n" + "\n".join(lineas) + pie
 
 
 def _reemplazar_marcadores(texto: str, paciente: dict) -> str:
+    nombre_formal = f"Sr.(a) {paciente.get('primer_nombre','')} {paciente.get('primer_apellido','')}".strip()
+    if "{nombre_formal}" in texto:
+        texto = texto.replace("{nombre_formal}", nombre_formal)
     if "{proxima_visita}" in texto:
         texto = texto.replace("{proxima_visita}", _dato_proxima_visita(paciente))
     if "{ultima_orden}" in texto:
@@ -146,21 +149,27 @@ def _dato_ultimas_recomendaciones(paciente: dict) -> str:
     return texto
 
 
+def _enviar_despedida(numero_celular: str, paciente_id):
+    config = _config()
+    texto = config.get("mensaje_despedida") or "✨ Gracias por confiar en nosotros."
+    if config.get("url_encuesta_satisfaccion"):
+        texto += f"\n\n📋 Nos encantaría conocer su opinión, por favor responda esta breve encuesta:\n{config['url_encuesta_satisfaccion']}"
+    enviar_whatsapp(numero_celular, texto)
+    _registrar_mensaje(numero_celular, paciente_id, "saliente", texto)
+
+
 def procesar_mensaje_entrante(numero_celular: str, texto_mensaje: str) -> dict:
-    texto_normalizado = (texto_mensaje or "").strip().lower()
+    texto_original = (texto_mensaje or "").strip()
+    texto_normalizado = texto_original.lower()
 
     _registrar_mensaje(numero_celular, None, "entrante", texto_mensaje)
 
     paciente = _buscar_paciente_por_celular(numero_celular)
 
+    hilo = _obtener_o_crear_hilo(numero_celular)
+
     if paciente:
-        try:
-            from services.whatsapp_agente_service import vincular_paciente
-            hilo_fila = consultar_uno("SELECT id FROM whatsapp_hilos WHERE numero_celular=?", (normalizar_celular(numero_celular),))
-            if hilo_fila:
-                vincular_paciente(dict(hilo_fila)["id"], paciente["id"])
-        except Exception:
-            pass
+        ejecutar("UPDATE whatsapp_hilos SET paciente_id=COALESCE(paciente_id, ?) WHERE id=?", (paciente["id"], hilo["id"]))
 
     if not paciente:
         respuesta = (
@@ -172,21 +181,45 @@ def procesar_mensaje_entrante(numero_celular: str, texto_mensaje: str) -> dict:
         _registrar_mensaje(numero_celular, None, "saliente", respuesta)
         return {"ok": True, "reconocido": False}
 
-    nombre_paciente = paciente.get("primer_nombre", "")
-    numero_normalizado = normalizar_celular(numero_celular)
-    hilo = consultar_uno("SELECT * FROM whatsapp_hilos WHERE numero_celular=?", (numero_normalizado,))
-    hilo = dict(hilo) if hilo else {"id": None, "opcion_actual_id": None}
-
-    # "menu"/"hola"/mensaje vacío -> se reinicia al menú principal
-    if texto_normalizado in PALABRAS_REINICIO:
-        if hilo.get("id"):
-            ejecutar("UPDATE whatsapp_hilos SET opcion_actual_id=NULL WHERE id=?", (hilo["id"],))
-        respuesta = _texto_menu(nombre_paciente, None, es_inicio=True)
+    # ---------- Paso 1: bienvenida + nota legal (una sola vez) ----------
+    if not hilo.get("politica_aceptada"):
+        ejecutar("UPDATE whatsapp_hilos SET politica_aceptada=1 WHERE id=?", (hilo["id"],))
+        config = _config()
+        bienvenida = config.get("mensaje_bienvenida") or "Hola, soy el asistente virtual de HomeCare del Quindío I.P.S. 👋"
+        respuesta = bienvenida + "\n\n" + _texto_menu(None)
         enviar_whatsapp(numero_celular, respuesta)
         _registrar_mensaje(numero_celular, paciente["id"], "saliente", respuesta)
         return {"ok": True, "reconocido": True}
 
-    # Interpretar el mensaje como el numero de una opcion del nivel actual
+    # ---------- Paso 2: esperando la respuesta de una recolección de datos ----------
+    if hilo.get("esperando_datos_libres"):
+        opcion = consultar_uno("SELECT * FROM whatsapp_flujo_opciones WHERE id=?", (hilo.get("opcion_actual_id"),))
+        opcion = dict(opcion) if opcion else {}
+
+        ejecutar(
+            "INSERT INTO whatsapp_datos_recolectados(hilo_id, opcion_id, texto_solicitado, respuesta_paciente) VALUES (?, ?, ?, ?)",
+            (hilo["id"], opcion.get("id"), opcion.get("campos_solicitados"), texto_original),
+        )
+        ejecutar(
+            "UPDATE whatsapp_hilos SET esperando_datos_libres=0, atendido_por_humano=1, departamento=?, opcion_actual_id=NULL WHERE id=?",
+            (opcion.get("departamento") or "General", hilo["id"]),
+        )
+
+        agradecimiento = "Una vez recibamos la información, nuestro equipo realizará la validación correspondiente y gestionará su solicitud en el menor tiempo posible."
+        enviar_whatsapp(numero_celular, agradecimiento)
+        _registrar_mensaje(numero_celular, paciente["id"], "saliente", agradecimiento)
+        _enviar_despedida(numero_celular, paciente["id"])
+        return {"ok": True, "reconocido": True}
+
+    # ---------- Paso 3: "#"/"menu" -> volver al menú principal ----------
+    if texto_normalizado in PALABRAS_REINICIO:
+        ejecutar("UPDATE whatsapp_hilos SET opcion_actual_id=NULL WHERE id=?", (hilo["id"],))
+        respuesta = _texto_menu(None)
+        enviar_whatsapp(numero_celular, respuesta)
+        _registrar_mensaje(numero_celular, paciente["id"], "saliente", respuesta)
+        return {"ok": True, "reconocido": True}
+
+    # ---------- Paso 4: navegación normal del árbol ----------
     opciones_nivel = _listar_opciones(hilo.get("opcion_actual_id"))
     opcion_elegida = None
     if texto_normalizado.isdigit():
@@ -195,27 +228,47 @@ def procesar_mensaje_entrante(numero_celular: str, texto_mensaje: str) -> dict:
             opcion_elegida = opciones_nivel[indice - 1]
 
     if opcion_elegida is None:
-        respuesta = "No entendí su respuesta. 🤔\n\n" + _texto_menu(nombre_paciente, hilo.get("opcion_actual_id"), es_inicio=False)
+        respuesta = "No entendí su respuesta. 🤔\n\n" + _texto_menu(hilo.get("opcion_actual_id"))
         enviar_whatsapp(numero_celular, respuesta)
         _registrar_mensaje(numero_celular, paciente["id"], "saliente", respuesta)
         return {"ok": True, "reconocido": True}
 
-    if opcion_elegida["tipo_accion"] == "submenu":
-        if hilo.get("id"):
-            ejecutar("UPDATE whatsapp_hilos SET opcion_actual_id=? WHERE id=?", (opcion_elegida["id"], hilo["id"]))
-        respuesta = _texto_menu(nombre_paciente, opcion_elegida["id"], es_inicio=False)
+    tipo = opcion_elegida["tipo_accion"]
 
-    elif opcion_elegida["tipo_accion"] == "derivar_departamento":
-        if hilo.get("id"):
-            ejecutar(
-                "UPDATE whatsapp_hilos SET atendido_por_humano=1, departamento=?, opcion_actual_id=NULL WHERE id=?",
-                (opcion_elegida.get("departamento") or "General", hilo["id"]),
-            )
+    if tipo == "submenu":
+        ejecutar("UPDATE whatsapp_hilos SET opcion_actual_id=? WHERE id=?", (opcion_elegida["id"], hilo["id"]))
+        nombre_formal = f"Sr.(a) {paciente.get('primer_nombre','')} {paciente.get('primer_apellido','')}".strip()
+        respuesta = f"{nombre_formal} gracias por continuar con HomeCare del Quindío I.P.S. 💙\n\n" + _texto_menu(opcion_elegida["id"])
+
+    elif tipo == "recoleccion_datos":
+        ejecutar(
+            "UPDATE whatsapp_hilos SET esperando_datos_libres=1, opcion_actual_id=? WHERE id=?",
+            (opcion_elegida["id"], hilo["id"]),
+        )
+        campos = (opcion_elegida.get("campos_solicitados") or "").strip()
+        lista_campos = "\n".join(f"• {c.strip()}" for c in campos.split("\n") if c.strip())
+        respuesta = (
+            "Gracias por comunicarse con HomeCare del Quindío I.P.S. 💙\n\n"
+            "Con gusto le ayudaremos a gestionar su solicitud.\n\n"
+            "Para continuar, por favor compártanos la siguiente información en un solo mensaje:\n\n"
+            f"{lista_campos}\n\n"
+            "Una vez recibamos la información, nuestro equipo la validará y gestionará su solicitud."
+        )
+
+    elif tipo == "derivar_departamento":
+        ejecutar(
+            "UPDATE whatsapp_hilos SET atendido_por_humano=1, departamento=?, opcion_actual_id=NULL WHERE id=?",
+            (opcion_elegida.get("departamento") or "General", hilo["id"]),
+        )
         respuesta = opcion_elegida.get("contenido_respuesta") or "Ya lo comunicamos con uno de nuestros asesores."
+        enviar_whatsapp(numero_celular, respuesta)
+        _registrar_mensaje(numero_celular, paciente["id"], "saliente", respuesta)
+        _enviar_despedida(numero_celular, paciente["id"])
+        return {"ok": True, "reconocido": True, "paciente_id": paciente["id"]}
 
     else:  # respuesta_automatica
         respuesta = _reemplazar_marcadores(opcion_elegida.get("contenido_respuesta") or "", paciente)
-        respuesta += "\n\n" + _texto_menu(nombre_paciente, hilo.get("opcion_actual_id"), es_inicio=False)
+        respuesta += "\n\n" + _texto_menu(hilo.get("opcion_actual_id"))
 
     enviar_whatsapp(numero_celular, respuesta)
     _registrar_mensaje(numero_celular, paciente["id"], "saliente", respuesta)

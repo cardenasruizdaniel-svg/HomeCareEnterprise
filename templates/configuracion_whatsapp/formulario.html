@@ -39,8 +39,18 @@
                     <label class="form-check-label" for="ck-habilitado"><strong>Chatbot habilitado</strong></label>
                 </div>
                 <div class="col-md-9 mb-3">
-                    <label>Mensaje de bienvenida</label>
-                    <input type="text" name="mensaje_bienvenida" class="form-control" value="{{ config.mensaje_bienvenida or '' }}">
+                    <label>Mensaje de bienvenida (con la nota legal, si aplica)</label>
+                    <textarea name="mensaje_bienvenida" class="form-control" rows="4">{{ config.mensaje_bienvenida or '' }}</textarea>
+                </div>
+                <div class="col-md-9 mb-3">
+                    <label>Mensaje de despedida</label>
+                    <textarea name="mensaje_despedida" class="form-control" rows="3">{{ config.mensaje_despedida or '' }}</textarea>
+                    <small class="text-muted">Se envía automáticamente al terminar de recolectar datos o al derivar a un departamento.</small>
+                </div>
+                <div class="col-md-9 mb-3">
+                    <label>Enlace a la encuesta de satisfacción (Google Forms)</label>
+                    <input type="url" name="url_encuesta_satisfaccion" class="form-control" value="{{ config.url_encuesta_satisfaccion or '' }}" placeholder="https://forms.gle/...">
+                    <small class="text-muted">Se incluye automáticamente al final del mensaje de despedida. Déjelo en blanco si no quiere enviarla.</small>
                 </div>
                 <div class="col-md-6 mb-3">
                     <label>Token de acceso (Meta) {% if config._token_acceso_configurado %}<span class="badge bg-success">ya configurado</span>{% endif %}</label>

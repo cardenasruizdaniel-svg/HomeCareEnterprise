@@ -27,6 +27,12 @@
     <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalCrearOpcion">
         <i class="fa-solid fa-plus"></i> Agregar opción
     </button>
+    <form method="post" action="/configuracion-whatsapp/flujo/restaurar-plantilla" class="d-inline"
+          onsubmit="return confirm('Esto BORRA todo el menú actual y lo reemplaza por la plantilla de HomeCare (ciudades → servicios → submenús → recolección de datos). ¿Continuar?');">
+        <button type="submit" class="btn btn-outline-primary mb-3">
+            <i class="fa-solid fa-arrows-rotate"></i> Restaurar plantilla predeterminada de HomeCare
+        </button>
+    </form>
 
     <div class="card shadow mb-4">
         <div class="card-header bg-white"><h6 class="mb-0">Menú principal (lo que el paciente ve primero)</h6></div>
@@ -69,14 +75,18 @@
                                 <div class="col-md-2 mb-2"><label>Orden</label><input type="number" name="orden" class="form-control" value="{{ op.orden }}"></div>
                                 <div class="col-md-4 mb-2">
                                     <label>Tipo de acción</label>
-                                    <select name="tipo_accion" class="form-select">
+                                    <select name="tipo_accion" class="form-select campo-tipo-accion" data-destino="campos-op-{{ op.id }}">
                                         {% for clave, nombre in tipos_accion %}
                                         <option value="{{ clave }}" {% if clave == op.tipo_accion %}selected{% endif %}>{{ nombre }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
                                 <div class="col-md-8 mb-2"><label>Texto de respuesta / mensaje de derivación</label><textarea name="contenido_respuesta" class="form-control" rows="2">{{ op.contenido_respuesta or '' }}</textarea></div>
-                                <div class="col-md-4 mb-2"><label>Departamento (si deriva a humano)</label><input type="text" name="departamento" class="form-control" value="{{ op.departamento or '' }}"></div>
+                                <div class="col-md-4 mb-2"><label>Departamento (si deriva o recolecta datos)</label><input type="text" name="departamento" class="form-control" value="{{ op.departamento or '' }}"></div>
+                                <div class="col-md-12 mb-2 campos-recoleccion" id="campos-op-{{ op.id }}" style="{% if op.tipo_accion != 'recoleccion_datos' %}display:none;{% endif %}">
+                                    <label>Campos a solicitar (uno por línea)</label>
+                                    <textarea name="campos_solicitados" class="form-control" rows="4" placeholder="Nombre completo del paciente&#10;Número de documento de identidad&#10;Número de contacto">{{ op.campos_solicitados or '' }}</textarea>
+                                </div>
                             </div>
                             <button type="submit" class="btn btn-primary btn-sm">Guardar</button>
                         </form>
@@ -117,14 +127,18 @@
                 </div>
                 <div class="mb-2">
                     <label>Tipo de acción</label>
-                    <select name="tipo_accion" class="form-select" id="nuevo-tipo-accion">
+                    <select name="tipo_accion" class="form-select campo-tipo-accion" id="nuevo-tipo-accion" data-destino="nuevo-campos-recoleccion">
                         {% for clave, nombre in tipos_accion %}
                         <option value="{{ clave }}">{{ nombre }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div class="mb-2"><label>Texto de respuesta / mensaje de derivación</label><textarea name="contenido_respuesta" class="form-control" rows="2"></textarea></div>
-                <div class="mb-2" id="nuevo-campo-departamento"><label>Departamento (solo si deriva a un humano)</label><input type="text" name="departamento" class="form-control" placeholder="Ej: Facturación"></div>
+                <div class="mb-2" id="nuevo-campo-departamento"><label>Departamento (si deriva o recolecta datos)</label><input type="text" name="departamento" class="form-control" placeholder="Ej: Facturación"></div>
+                <div class="mb-2 campos-recoleccion" id="nuevo-campos-recoleccion" style="display:none;">
+                    <label>Campos a solicitar (uno por línea)</label>
+                    <textarea name="campos_solicitados" class="form-control" rows="4" placeholder="Nombre completo del paciente&#10;Número de documento de identidad&#10;Número de contacto"></textarea>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -133,4 +147,15 @@
         </form>
     </div></div>
 </div>
+
+<script>
+document.querySelectorAll('.campo-tipo-accion').forEach((select) => {
+    function actualizar() {
+        const destino = document.getElementById(select.dataset.destino);
+        if (destino) destino.style.display = select.value === 'recoleccion_datos' ? 'block' : 'none';
+    }
+    select.addEventListener('change', actualizar);
+    actualizar();
+});
+</script>
 {% endblock %}

@@ -54,6 +54,8 @@ async def guardar(
     id_numero_telefono: str = Form(""),
     token_verificacion_webhook: str = Form(""),
     mensaje_bienvenida: str = Form(""),
+    mensaje_despedida: str = Form(""),
+    url_encuesta_satisfaccion: str = Form(""),
     usuario=Depends(requiere_permiso("chatbot_whatsapp")),
 ):
     wa_config_service.guardar(
@@ -63,6 +65,8 @@ async def guardar(
             "id_numero_telefono": id_numero_telefono,
             "token_verificacion_webhook": token_verificacion_webhook,
             "mensaje_bienvenida": mensaje_bienvenida,
+            "mensaje_despedida": mensaje_despedida,
+            "url_encuesta_satisfaccion": url_encuesta_satisfaccion,
         },
         usuario.get("id") if isinstance(usuario, dict) else None,
     )
@@ -90,6 +94,13 @@ async def ver_flujo(request: Request, usuario=Depends(requiere_permiso("chatbot_
     )
 
 
+@router.post("/flujo/restaurar-plantilla")
+async def restaurar_plantilla(request: Request, usuario=Depends(requiere_permiso("chatbot_whatsapp"))):
+    from services import whatsapp_flujo_service as flujo_service
+    flujo_service.restaurar_plantilla_homecare(usuario.get("id") if isinstance(usuario, dict) else None)
+    return RedirectResponse(url="/configuracion-whatsapp/flujo?guardado=1", status_code=303)
+
+
 @router.post("/flujo/crear")
 async def crear_opcion_flujo(
     request: Request,
@@ -99,13 +110,14 @@ async def crear_opcion_flujo(
     contenido_respuesta: str = Form(""),
     departamento: str = Form(""),
     orden: str = Form("0"),
+    campos_solicitados: str = Form(""),
     usuario=Depends(requiere_permiso("chatbot_whatsapp")),
 ):
     from services import whatsapp_flujo_service as flujo_service
     try:
         flujo_service.crear_opcion(
             int(padre_id) if padre_id else None, texto_boton, tipo_accion,
-            contenido_respuesta, departamento, int(orden or 0),
+            contenido_respuesta, departamento, int(orden or 0), campos_solicitados,
         )
     except ValueError as error:
         return RedirectResponse(url=f"/configuracion-whatsapp/flujo?error={error}", status_code=303)
@@ -121,11 +133,12 @@ async def actualizar_opcion_flujo(
     contenido_respuesta: str = Form(""),
     departamento: str = Form(""),
     orden: str = Form("0"),
+    campos_solicitados: str = Form(""),
     usuario=Depends(requiere_permiso("chatbot_whatsapp")),
 ):
     from services import whatsapp_flujo_service as flujo_service
     try:
-        flujo_service.actualizar_opcion(opcion_id, texto_boton, tipo_accion, contenido_respuesta, departamento, int(orden or 0))
+        flujo_service.actualizar_opcion(opcion_id, texto_boton, tipo_accion, contenido_respuesta, departamento, int(orden or 0), campos_solicitados)
     except ValueError as error:
         return RedirectResponse(url=f"/configuracion-whatsapp/flujo?error={error}", status_code=303)
     return RedirectResponse(url="/configuracion-whatsapp/flujo?guardado=1", status_code=303)

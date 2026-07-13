@@ -5,10 +5,12 @@ from database.database import consultar_todos, consultar_uno, ejecutar
 TIPOS_ACCION = [
     ("respuesta_automatica", "Responder automáticamente (puede usar datos del paciente)"),
     ("submenu", "Abrir un submenú con más opciones"),
-    ("derivar_departamento", "Derivar a un agente humano de un departamento"),
+    ("recoleccion_datos", "Pedirle datos al paciente (nombre, documento, etc.) y derivar a un departamento"),
+    ("derivar_departamento", "Derivar directamente a un agente humano de un departamento"),
 ]
 
 MARCADORES_DISPONIBLES = [
+    ("{nombre_formal}", "Nombre del paciente en formato formal (Sr.(a) Nombre Apellido)"),
     ("{proxima_visita}", "Próxima visita programada del paciente"),
     ("{ultima_orden}", "Última orden médica del paciente"),
     ("{ultimas_recomendaciones}", "Últimas recomendaciones médicas del paciente"),
@@ -44,30 +46,34 @@ def opciones_planas_para_padre():
     return [{"id": o["id"], "ruta": ruta(o)} for o in todas]
 
 
-def crear_opcion(padre_id, texto_boton, tipo_accion, contenido_respuesta, departamento, orden) -> int:
+def crear_opcion(padre_id, texto_boton, tipo_accion, contenido_respuesta, departamento, orden, campos_solicitados=None) -> int:
     if not texto_boton or not texto_boton.strip():
         raise ValueError("Debe indicar el texto del botón/opción.")
     if tipo_accion not in dict(TIPOS_ACCION):
         raise ValueError("Tipo de acción no válido.")
     if tipo_accion == "derivar_departamento" and not departamento:
         raise ValueError("Debe indicar a qué departamento se deriva.")
+    if tipo_accion == "recoleccion_datos" and not (departamento and campos_solicitados):
+        raise ValueError("Para recolección de datos debe indicar el departamento y los campos a solicitar.")
 
     return ejecutar(
-        "INSERT INTO whatsapp_flujo_opciones(padre_id, orden, texto_boton, tipo_accion, contenido_respuesta, departamento) "
-        "VALUES (?, ?, ?, ?, ?, ?)",
-        (padre_id or None, orden or 0, texto_boton.strip(), tipo_accion, contenido_respuesta or None, departamento or None),
+        "INSERT INTO whatsapp_flujo_opciones(padre_id, orden, texto_boton, tipo_accion, contenido_respuesta, departamento, campos_solicitados) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (padre_id or None, orden or 0, texto_boton.strip(), tipo_accion, contenido_respuesta or None, departamento or None, campos_solicitados or None),
     )
 
 
-def actualizar_opcion(opcion_id, texto_boton, tipo_accion, contenido_respuesta, departamento, orden):
+def actualizar_opcion(opcion_id, texto_boton, tipo_accion, contenido_respuesta, departamento, orden, campos_solicitados=None):
     if not texto_boton or not texto_boton.strip():
         raise ValueError("Debe indicar el texto del botón/opción.")
     if tipo_accion == "derivar_departamento" and not departamento:
         raise ValueError("Debe indicar a qué departamento se deriva.")
+    if tipo_accion == "recoleccion_datos" and not (departamento and campos_solicitados):
+        raise ValueError("Para recolección de datos debe indicar el departamento y los campos a solicitar.")
 
     ejecutar(
-        "UPDATE whatsapp_flujo_opciones SET texto_boton=?, tipo_accion=?, contenido_respuesta=?, departamento=?, orden=? WHERE id=?",
-        (texto_boton.strip(), tipo_accion, contenido_respuesta or None, departamento or None, orden or 0, opcion_id),
+        "UPDATE whatsapp_flujo_opciones SET texto_boton=?, tipo_accion=?, contenido_respuesta=?, departamento=?, orden=?, campos_solicitados=? WHERE id=?",
+        (texto_boton.strip(), tipo_accion, contenido_respuesta or None, departamento or None, orden or 0, campos_solicitados or None, opcion_id),
     )
 
 
@@ -85,3 +91,81 @@ def desactivar_opcion(opcion_id):
 
 def activar_opcion(opcion_id):
     ejecutar("UPDATE whatsapp_flujo_opciones SET activo=1 WHERE id=?", (opcion_id,))
+
+
+def restaurar_plantilla_homecare(usuario_id=None):
+    """
+    Borra el árbol de opciones actual y lo reemplaza por la
+    plantilla profesional de HomeCare del Quindío: selección de
+    ciudad -> menú de servicios -> submenús -> recolección de
+    datos -> derivación al departamento correspondiente. Úsela
+    cuando quiera empezar de cero con una base ya armada, y
+    luego ajústela a su gusto.
+    """
+    ejecutar("DELETE FROM whatsapp_flujo_opciones")
+
+    # Se asegura que exista la fila de configuración antes de
+    # actualizarla -- si nunca se había guardado nada desde la
+    # pantalla de Configuración Chatbot, un UPDATE por sí solo
+    # no crea la fila, y los mensajes personalizados no
+    # quedarían aplicados.
+    if not consultar_uno("SELECT id FROM configuracion_whatsapp WHERE id=1"):
+        ejecutar("INSERT INTO configuracion_whatsapp(id) VALUES (1)")
+
+    ejecutar(
+        "UPDATE configuracion_whatsapp SET "
+        "mensaje_bienvenida=?, mensaje_despedida=? WHERE id=1",
+        (
+            "IPS HOMECARE DEL QUINDÍO.\n\n"
+            "💙 Nos alegra atenderte. Tu bienestar y el de tu familia son nuestra prioridad.\n\n"
+            "Estoy aquí para ayudarte de forma rápida y sencilla con información sobre nuestros servicios, "
+            "programación de citas, autorizaciones, atención domiciliaria y cualquier inquietud que tengas.\n\n"
+            "✨ Gracias por confiar en nosotros. Trabajamos cada día para brindarte una atención humana, "
+            "oportuna y de calidad.\n\n"
+            "📝 Nota legal: Al interactuar con este canal, aceptas los términos de nuestra Política de "
+            "Tratamiento de Datos Personales y nos autorizas a utilizarlos para gestionar tu solicitud.",
+
+            "✨ Gracias por confiar en HomeCare del Quindío I.P.S. Estamos comprometidos con brindarte "
+            "una atención oportuna y de calidad.",
+        ),
+    )
+
+    # Nivel 0: selección de ciudad
+    ciudades = ["Armenia", "Calarcá", "La Tebaida", "Montenegro"]
+    ids_ciudad = []
+    for orden, ciudad in enumerate(ciudades, start=1):
+        id_ciudad = crear_opcion(None, ciudad, "submenu", None, None, orden)
+        ids_ciudad.append(id_ciudad)
+
+    # Nivel 1: menú de servicios (igual bajo cada ciudad)
+    servicios = [
+        (1, "🩺 Procedimientos", "recoleccion_datos", "Procedimientos",
+         "Nombre completo del paciente\nNúmero de documento de identidad\nNúmero de contacto\nProcedimiento que requiere"),
+        (2, "📁 Solicitudes", "submenu", None, None),
+        (3, "🏥 Consultas Esp. y Terapias", "recoleccion_datos", "Consultas y Terapias",
+         "Nombre completo del paciente\nNúmero de documento de identidad\nNúmero de contacto\nEspecialidad o terapia que requiere"),
+        (4, "💳 Pagos", "recoleccion_datos", "Pagos y Cartera",
+         "Nombre completo del paciente\nNúmero de documento de identidad\nNúmero de contacto\nConcepto del pago"),
+        (5, "📝 Actualización de Datos", "recoleccion_datos", "Actualización de Datos",
+         "Nombre completo del paciente\nNúmero de documento de identidad\nDato que desea actualizar y nuevo valor"),
+        (6, "ℹ️ PQR", "recoleccion_datos", "PQR",
+         "Nombre completo\nNúmero de documento de identidad\nNúmero de contacto\nDescripción de su petición, queja o reclamo"),
+    ]
+
+    for id_ciudad in ids_ciudad:
+        ids_servicio = {}
+        for orden, texto, tipo, depto, campos in servicios:
+            id_servicio = crear_opcion(id_ciudad, texto, tipo, None, depto, orden, campos)
+            ids_servicio[orden] = id_servicio
+
+        # Nivel 2: submenú de "Solicitudes"
+        solicitudes = [
+            (1, "🗓️ Asignación de servicios", "Asignación de Servicios",
+             "Nombre completo del paciente\nNúmero de documento de identidad\nNúmero de contacto\nServicio que requiere"),
+            (2, "📋 Historias Clínicas", "Historias Clínicas",
+             "Nombre completo del paciente\nNúmero de documento de identidad\nNúmero de contacto\nMotivo de la solicitud"),
+            (3, "📝 Órdenes Médicas", "Órdenes Médicas",
+             "Nombre completo del paciente\nNúmero de documento de identidad\nNúmero de contacto\nServicio o especialidad para la cual requiere la orden médica"),
+        ]
+        for orden, texto, depto, campos in solicitudes:
+            crear_opcion(ids_servicio[2], texto, "recoleccion_datos", None, depto, orden, campos)
