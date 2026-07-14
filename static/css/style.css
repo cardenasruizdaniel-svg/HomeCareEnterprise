@@ -521,7 +521,19 @@ footer{
 
     color:white;
 
-    overflow-y:auto;
+    /* "scroll" en vez de "auto": reserva siempre el espacio de
+       la barra de scroll, aunque no haga falta en ese momento
+       -- si no, cada vez que el contenido del menú cruza el
+       límite del alto de la pantalla, la barra aparece y
+       desaparece de golpe, empujando el ancho disponible de
+       las opciones de un lado a otro -- eso es lo que se veía
+       como "temblor" y distorsión justo en las últimas
+       opciones del menú. */
+    overflow-y:scroll;
+
+    /* Refuerzo para navegadores más nuevos que sí entienden
+       esta propiedad -- mismo objetivo que arriba. */
+    scrollbar-gutter:stable;
 
     z-index:1000;
 
