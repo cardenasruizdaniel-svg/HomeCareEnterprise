@@ -6,6 +6,7 @@ Configuración General
 """
 
 import os
+import sys
 from pathlib import Path
 
 try:
@@ -16,13 +17,44 @@ except ImportError:
 
 # ==========================================================
 # RUTAS DEL PROYECTO
+#
+# Cuando la aplicación corre normal (en Render, o en
+# desarrollo), BASE_DIR es la carpeta del proyecto, como
+# siempre.
+#
+# Cuando queda empaquetada como ejecutable de Windows (con
+# PyInstaller), hay que separar dos cosas:
+#   - Los RECURSOS de la aplicación (plantillas, estáticos)
+#     quedan empacados DENTRO del .exe, y se extraen a una
+#     carpeta temporal cada vez que se abre (sys._MEIPASS) --
+#     son de solo lectura y se recrean cada vez.
+#   - Los DATOS del usuario (base de datos, documentos
+#     subidos, copias de seguridad, logs) no pueden vivir
+#     ahí, porque esa carpeta se borra sola -- tienen que
+#     guardarse en una carpeta normal de datos del usuario en
+#     Windows, para que no se pierda nada entre una sesión y
+#     otra, ni al reinstalar una versión nueva.
 # ==========================================================
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+EMPAQUETADO_COMO_EXE = getattr(sys, "frozen", False)
 
-STATIC_DIR = BASE_DIR / "static"
+if EMPAQUETADO_COMO_EXE:
+    RECURSOS_DIR = Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent))
 
-TEMPLATES_DIR = BASE_DIR / "templates"
+    _carpeta_datos_windows = os.environ.get("LOCALAPPDATA")
+    if _carpeta_datos_windows:
+        BASE_DIR = Path(_carpeta_datos_windows) / "HomeCareEnterprise"
+    else:
+        BASE_DIR = Path(sys.executable).parent / "datos"
+
+    BASE_DIR.mkdir(parents=True, exist_ok=True)
+else:
+    RECURSOS_DIR = Path(__file__).resolve().parent.parent.parent
+    BASE_DIR = RECURSOS_DIR
+
+STATIC_DIR = RECURSOS_DIR / "static"
+
+TEMPLATES_DIR = RECURSOS_DIR / "templates"
 
 LOG_DIR = BASE_DIR / "logs"
 
@@ -31,6 +63,9 @@ UPLOAD_DIR = BASE_DIR / "uploads"
 DATABASE_DIR = BASE_DIR / "database"
 
 EXPORTS_DIR = BASE_DIR / "exports"
+
+for _directorio in (LOG_DIR, UPLOAD_DIR, EXPORTS_DIR, BASE_DIR / "backups"):
+    _directorio.mkdir(parents=True, exist_ok=True)
 
 # --------------------------------------------------------
 # Aplicación
@@ -107,10 +142,12 @@ COOKIE_SAMESITE = "lax"
 # --------------------------------------------------------
 # Directorios
 # --------------------------------------------------------
-
-STATIC_DIR = "static"
-
-TEMPLATES_DIR = "templates"
+# (STATIC_DIR y TEMPLATES_DIR ya quedaron definidos arriba,
+# como rutas absolutas correctas -- antes aquí se volvían a
+# definir como texto plano relativo ("static", "templates"),
+# lo cual las hacía depender de cuál fuera la carpeta de
+# trabajo al momento de arrancar, y se rompían al empaquetar
+# como ejecutable. Se quita esa duplicación.)
 
 # ==========================================================
 # NOTIFICACIONES - CORREO (SMTP)

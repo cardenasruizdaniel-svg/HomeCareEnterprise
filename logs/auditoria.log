@@ -1,8 +1,1 @@
-{"fecha": "2026-07-09T02:44:50.489898", "usuario": "sistema", "accion": "CREAR", "modulo": "PACIENTES", "registro": "1094777001", "resultado": "OK"}
-{"fecha": "2026-07-09T02:44:50.577297", "usuario": "sistema", "accion": "CREAR", "modulo": "PACIENTES", "registro": "1094777002", "resultado": "OK"}
-{"fecha": "2026-07-09T02:44:50.654246", "usuario": "sistema", "accion": "CREAR", "modulo": "PACIENTES", "registro": "1094777003", "resultado": "OK"}
-{"fecha": "2026-07-09T02:44:50.740461", "usuario": "sistema", "accion": "CREAR", "modulo": "PACIENTES", "registro": "1094777004", "resultado": "OK"}
-{"fecha": "2026-07-09T02:44:50.835573", "usuario": "sistema", "accion": "CREAR", "modulo": "PACIENTES", "registro": "1094777005", "resultado": "OK"}
-{"fecha": "2026-07-09T02:44:50.914207", "usuario": "sistema", "accion": "CREAR", "modulo": "PACIENTES", "registro": "1094777006", "resultado": "OK"}
-{"fecha": "2026-07-09T14:35:12.384891", "usuario": "sistema", "accion": "ACTUALIZAR", "modulo": "PACIENTES", "registro": "4", "resultado": "OK"}
-{"fecha": "2026-07-09T14:48:56.526470", "usuario": "sistema", "accion": "CREAR", "modulo": "PACIENTES", "registro": "42000238", "resultado": "OK"}
+{"fecha": "2026-07-14T22:02:31.433312", "usuario": "sistema", "accion": "CREAR", "modulo": "PACIENTES", "registro": "9999999", "resultado": "OK"}

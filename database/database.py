@@ -16,8 +16,19 @@ from contextlib import contextmanager
 from database.schema import SCHEMA
 from database.indexes import INDEXES
 
-
-DB_PATH = Path("database.db")
+# Antes esto era Path("database.db") -- una ruta RELATIVA a la
+# carpeta desde donde se arranca el programa. En Render eso
+# funciona porque siempre arranca desde la misma carpeta, pero
+# en un ejecutable de Windows la carpeta "actual" al hacer
+# doble clic no es confiable, así que la base de datos se
+# guarda en la carpeta de datos persistente de la aplicación
+# (BASE_DIR ya sabe distinguir si está empaquetada como .exe
+# o no, y elegir la carpeta correcta en cada caso).
+try:
+    from core.config import BASE_DIR
+    DB_PATH = BASE_DIR / "database.db"
+except ImportError:
+    DB_PATH = Path("database.db")
 
 
 # =====================================================

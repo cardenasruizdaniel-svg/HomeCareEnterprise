@@ -9,19 +9,19 @@ import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from core.config import LOGS_DIR
+from core.config import LOG_DIR
 
 # ==========================================================
 # CREAR CARPETA DE LOGS
 # ==========================================================
 
-LOGS_DIR.mkdir(parents=True, exist_ok=True)
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 # ==========================================================
 # ARCHIVO LOG
 # ==========================================================
 
-LOG_FILE = LOGS_DIR / "homecare.log"
+LOG_FILE = LOG_DIR / "homecare.log"
 
 # ==========================================================
 # LOGGER PRINCIPAL
