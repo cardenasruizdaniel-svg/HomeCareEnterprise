@@ -27,6 +27,13 @@
 .aw-chat-input { background:#fff; padding:10px 14px; border-top:1px solid var(--hc-border,#e7ebf3); display:flex; gap:8px; align-items:center; }
 .aw-sin-seleccion { display:flex; align-items:center; justify-content:center; height:100%; color:#94a3b8; flex-direction:column; }
 .aw-accion-espera { background:#fff8e5; border-top:1px solid #f0d896; padding:12px 16px; text-align:center; }
+.aw-autocompletar { position:absolute; bottom:100%; left:0; right:0; margin-bottom:6px; background:#fff; border:1px solid var(--hc-border,#e7ebf3); border-radius:10px; box-shadow:0 4px 16px rgba(0,0,0,.12); max-height:260px; overflow-y:auto; z-index:20; }
+.aw-autocompletar-item { padding:8px 12px; cursor:pointer; border-bottom:1px solid #f1f5f9; }
+.aw-autocompletar-item:last-child { border-bottom:none; }
+.aw-autocompletar-item:hover, .aw-autocompletar-item.activo { background:#fff8e5; }
+.aw-autocompletar-item .titulo { font-weight:700; font-size:13px; }
+.aw-autocompletar-item .texto { font-size:12px; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.aw-autocompletar-vacio { padding:10px 12px; font-size:12px; color:#94a3b8; text-align:center; }
 </style>
 {% endblock %}
 {% block contenido %}
@@ -195,17 +202,20 @@ async function cargarChat() {
         ${esMia ? `
         <div class="aw-chat-input">
             <div class="dropdown dropup">
-                <button class="btn btn-outline-warning" id="aw-btn-respuestas-rapidas" data-bs-toggle="dropdown" title="Respuestas rápidas"><i class="fa-solid fa-bolt"></i></button>
+                <button class="btn btn-warning" id="aw-btn-respuestas-rapidas" data-bs-toggle="dropdown" title="Respuestas rápidas"><i class="fa-solid fa-bolt"></i> <span class="d-none d-md-inline">Respuestas rápidas</span></button>
                 <ul class="dropdown-menu" id="aw-menu-respuestas-rapidas" style="max-height:300px; overflow-y:auto; min-width:280px;">
                     <li><span class="dropdown-item-text text-muted small">Cargando...</span></li>
                 </ul>
             </div>
             <button class="btn btn-outline-secondary" id="aw-btn-adjuntar" title="Enviar foto o archivo"><i class="fa-solid fa-paperclip"></i></button>
-            <input type="text" class="form-control" id="aw-input-texto" placeholder="Escriba un mensaje...">
+            <div style="position:relative; flex:1;">
+                <div id="aw-autocompletar-rapidas" class="aw-autocompletar" style="display:none;"></div>
+                <input type="text" class="form-control" id="aw-input-texto" placeholder="Escriba un mensaje... (escriba // para ver respuestas rápidas)">
+            </div>
             <button class="btn btn-success" id="aw-btn-enviar"><i class="fa-solid fa-paper-plane"></i></button>
         </div>` : `
         <div class="aw-accion-espera">
-            <strong>Esta conversación está en espera.</strong> Acéptela para poder escribirle directamente, o transfiérala a otro agente.
+            <strong>Esta conversación está en espera.</strong> Acéptela para poder escribirle directamente, usar las respuestas rápidas ⚡, o transfiérala a otro agente.
         </div>`}
     `;
 
@@ -290,7 +300,88 @@ async function cargarChat() {
             await cargarChat();
         }
         botonEnviar.addEventListener('click', enviarMensaje);
-        inputTexto.addEventListener('keydown', (e) => { if (e.key === 'Enter') enviarMensaje(); });
+
+        // --- Patrón "//" para respuestas rápidas, como en WhatsApp Business/Slack ---
+        const contenedorAutocompletar = document.getElementById('aw-autocompletar-rapidas');
+        let coincidenciasActuales = [];
+        let indiceResaltado = -1;
+
+        function ocultarAutocompletar() {
+            contenedorAutocompletar.style.display = 'none';
+            contenedorAutocompletar.innerHTML = '';
+            coincidenciasActuales = [];
+            indiceResaltado = -1;
+        }
+
+        function pintarAutocompletar() {
+            if (coincidenciasActuales.length === 0) {
+                contenedorAutocompletar.innerHTML = `<div class="aw-autocompletar-vacio">Sin respuestas rápidas que coincidan. <a href="/agente-whatsapp/respuestas-rapidas/administrar" target="_blank">Configurar</a></div>`;
+            } else {
+                contenedorAutocompletar.innerHTML = coincidenciasActuales.map((r, i) => `
+                    <div class="aw-autocompletar-item ${i === indiceResaltado ? 'activo' : ''}" data-indice="${i}">
+                        <div class="titulo">${escapeHtml(r.titulo)}</div>
+                        <div class="texto">${escapeHtml(r.texto)}</div>
+                    </div>`).join('');
+                contenedorAutocompletar.querySelectorAll('.aw-autocompletar-item').forEach((el) => {
+                    el.addEventListener('click', () => seleccionarCoincidencia(parseInt(el.dataset.indice)));
+                });
+            }
+            contenedorAutocompletar.style.display = 'block';
+        }
+
+        function seleccionarCoincidencia(indice) {
+            const respuesta = coincidenciasActuales[indice];
+            if (!respuesta) return;
+            inputTexto.value = respuesta.texto;
+            ocultarAutocompletar();
+            inputTexto.focus();
+        }
+
+        function revisarPatronDobleBarra() {
+            const valor = inputTexto.value;
+            const coincidePatron = valor.match(/(?:^|\s)\/\/(\S*)$/);
+            if (!coincidePatron) { ocultarAutocompletar(); return; }
+
+            const busqueda = coincidePatron[1].toLowerCase();
+            const todas = window._respuestasRapidasCache || [];
+            coincidenciasActuales = todas.filter((r) =>
+                r.titulo.toLowerCase().includes(busqueda) || r.texto.toLowerCase().includes(busqueda)
+            );
+            indiceResaltado = coincidenciasActuales.length ? 0 : -1;
+            pintarAutocompletar();
+        }
+
+        inputTexto.addEventListener('input', revisarPatronDobleBarra);
+
+        inputTexto.addEventListener('keydown', (e) => {
+            const hayAutocompletarAbierto = contenedorAutocompletar.style.display === 'block' && coincidenciasActuales.length > 0;
+
+            if (hayAutocompletarAbierto) {
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    indiceResaltado = (indiceResaltado + 1) % coincidenciasActuales.length;
+                    pintarAutocompletar();
+                    return;
+                }
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    indiceResaltado = (indiceResaltado - 1 + coincidenciasActuales.length) % coincidenciasActuales.length;
+                    pintarAutocompletar();
+                    return;
+                }
+                if (e.key === 'Enter' || e.key === 'Tab') {
+                    e.preventDefault();
+                    seleccionarCoincidencia(indiceResaltado);
+                    return;
+                }
+                if (e.key === 'Escape') {
+                    ocultarAutocompletar();
+                    return;
+                }
+            }
+
+            if (e.key === 'Enter' && !hayAutocompletarAbierto) enviarMensaje();
+        });
 
         document.getElementById('aw-btn-adjuntar').addEventListener('click', () => {
             document.getElementById('input-archivo-oculto').click();
