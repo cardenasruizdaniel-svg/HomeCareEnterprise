@@ -908,6 +908,21 @@ async function renderDetalleVisita(visitaId) {
   const nombrePaciente = [visita.primer_nombre, visita.primer_apellido].filter(Boolean).join(" ");
   const yaFinalizada = !!visita.hora_real_fin;
 
+  // Si el paciente ya tiene un programa de atención asignado,
+  // ya no tiene sentido mostrar el botón para asignarlo de
+  // nuevo -- en su lugar se muestra "Servicios Asignados", para
+  // poder agregarle servicios puntuales nuevos (ej. Toma de
+  // muestras) sin rehacer todo el programa. Si no se puede
+  // verificar (sin conexión), se asume que no tiene y se
+  // muestra el botón normal, para no bloquear la pantalla.
+  let tieneProgramaAsignado = false;
+  try {
+    const programaExistente = await apiGet(`/api/movil/paciente/${visita.paciente_id}/programa-atencion`);
+    tieneProgramaAsignado = !!programaExistente;
+  } catch (error) {
+    tieneProgramaAsignado = false;
+  }
+
   // Si ya se registró la ubicación de este paciente pero
   // todavía está pendiente de enviar (sin conexión en ese
   // momento), no se debe dejar volver a registrarla -- si no,
@@ -1010,7 +1025,9 @@ async function renderDetalleVisita(visitaId) {
 
     ${esPerfilCuidador() ? "" : `
     ${esPerfilConOrdenes() ? `<button class="btn btn-secondary btn-block" id="btn-ordenes">📋 Órdenes Médicas</button>` : ""}
-    <button class="btn btn-secondary btn-block" id="btn-programa-atencion">📑 Programa de Atención</button>
+    ${tieneProgramaAsignado
+      ? `<button class="btn btn-secondary btn-block" id="btn-servicios-asignados">🧾 Servicios Asignados</button>`
+      : `<button class="btn btn-secondary btn-block" id="btn-programa-atencion">📑 Programa de Atención</button>`}
     <button class="btn btn-secondary btn-block" id="btn-ultima-nota-medica">🩺 Última Nota Médica</button>
     <button class="btn btn-secondary btn-block" id="btn-recomendaciones">📝 Recomendaciones</button>
     ${esPerfilConMedicamentos() ? `<button class="btn btn-secondary btn-block" id="btn-medicamento">💊 Registrar medicamento administrado</button>` : ""}
@@ -1058,7 +1075,10 @@ async function renderDetalleVisita(visitaId) {
     const botonOrdenes = document.getElementById("btn-ordenes");
     if (botonOrdenes) botonOrdenes.addEventListener("click", () => renderOrdenMedica(visita));
     document.getElementById("btn-ultima-nota-medica").addEventListener("click", () => renderUltimaNotaMedica(visita));
-    document.getElementById("btn-programa-atencion").addEventListener("click", () => renderProgramaAtencion(visita));
+    const botonProgramaAtencion = document.getElementById("btn-programa-atencion");
+    if (botonProgramaAtencion) botonProgramaAtencion.addEventListener("click", () => renderProgramaAtencion(visita));
+    const botonServiciosAsignados = document.getElementById("btn-servicios-asignados");
+    if (botonServiciosAsignados) botonServiciosAsignados.addEventListener("click", () => renderServiciosAsignados(visita));
     document.getElementById("btn-alergias").addEventListener("click", () => renderAlergias(visita));
     document.getElementById("btn-antecedentes").addEventListener("click", () => renderAntecedentes(visita));
     document.getElementById("btn-examen-fisico").addEventListener("click", () => renderExamenFisico(visita));
@@ -1767,6 +1787,9 @@ async function renderProgramaAtencion(visita) {
       </div>
       <select class="campo-frecuencia" style="margin-top:4px;">
         <option value="Diaria">Diaria</option>
+        <option value="2 veces al día">2 veces al día</option>
+        <option value="3 veces al día">3 veces al día</option>
+        <option value="4 veces al día">4 veces al día</option>
         <option value="Interdiaria">Interdiaria</option>
         <option value="1 vez por semana">1 vez por semana</option>
         <option value="2 veces por semana">2 veces por semana</option>
@@ -1820,6 +1843,106 @@ async function renderProgramaAtencion(visita) {
     });
 
     alert("Programa y actividades guardados. Se sincronizarán cuando haya conexión.");
+    irA("detalle_visita", visita.id);
+  });
+}
+
+async function renderServiciosAsignados(visita) {
+  titulo("Servicios Asignados");
+  const nombrePaciente = [visita.primer_nombre, visita.primer_apellido].filter(Boolean).join(" ");
+  contenedor().innerHTML = `<p class="text-center">Cargando...</p>`;
+
+  let servicios = [];
+  let catalogo = { actividades: [] };
+  try {
+    servicios = await apiGet(`/api/movil/paciente/${visita.paciente_id}/servicios-asignados`);
+    catalogo = await apiGet("/api/movil/programa-atencion/catalogo");
+  } catch (error) {
+    contenedor().innerHTML = `<div class="alerta alerta-danger">No se pudo cargar. Necesita conexión para esta pantalla.</div>
+      <button class="btn btn-secondary btn-block" onclick="irA('detalle_visita', ${visita.id})">← Volver</button>`;
+    return;
+  }
+
+  let html = `
+    <div class="card">
+      <h3>🧾 Servicios Asignados</h3>
+      <small>${nombrePaciente}</small>
+    </div>
+  `;
+
+  if (servicios.length === 0) {
+    html += `<div class="alerta alerta-info">Este paciente todavía no tiene servicios puntuales adicionales.</div>`;
+  } else {
+    servicios.forEach((s) => {
+      html += `
+        <div class="card">
+          <strong>${s.tipo_servicio}${s.subtipo ? " - " + s.subtipo : ""}</strong><br>
+          <small>Frecuencia: ${s.frecuencia || "—"} · Sesiones: ${s.numero_sesiones ?? "—"}</small><br>
+          <small>Desde: ${s.fecha_inicio || "—"}${s.fecha_fin ? " hasta " + s.fecha_fin : ""}</small><br>
+          ${s.profesional ? `<small>Profesional: ${s.profesional}</small><br>` : ""}
+          <span class="badge" style="background:#198754;">${s.estado}</span>
+        </div>
+      `;
+    });
+  }
+
+  html += `
+    <div class="card">
+      <h3>➕ Agregar un servicio nuevo</h3>
+      <div class="form-group">
+        <label>Servicio / Actividad</label>
+        <select id="sa-actividad">
+          <option value="">-- Seleccione --</option>
+          ${catalogo.actividades.map((a) => `<option value="${a.id}">${a.nombre}${a.categoria ? " (" + a.categoria + ")" : ""}</option>`).join("")}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Fecha de inicio</label>
+        <input type="date" id="sa-fecha-inicio" value="${new Date().toISOString().slice(0, 10)}">
+      </div>
+      <div class="form-group">
+        <label>Frecuencia</label>
+        <select id="sa-frecuencia">
+          <option value="Diaria">Diaria (1 vez al día)</option>
+          <option value="2 veces al día">2 veces al día (mañana y noche)</option>
+          <option value="3 veces al día">3 veces al día (mañana, tarde y noche)</option>
+          <option value="4 veces al día">4 veces al día</option>
+          <option value="Interdiaria">Interdiaria</option>
+          <option value="1 vez por semana">1 vez por semana</option>
+          <option value="Cada 8 días">Cada 8 días</option>
+        </select>
+        <small style="color:#6c757d;">Para medicamentos o sueros varias veces al día, elija esa opción — el número de sesiones de abajo se reparte solo entre las visitas de cada día.</small>
+      </div>
+      <div class="form-group">
+        <label>Número de sesiones (total de visitas)</label>
+        <input type="number" id="sa-sesiones" value="1" min="1">
+      </div>
+      <div class="form-group">
+        <label>Indicaciones (opcional)</label>
+        <textarea id="sa-indicaciones" rows="2" placeholder="Ej: Muestra de sangre en ayunas"></textarea>
+      </div>
+      <button class="btn btn-primary btn-block" id="btn-guardar-servicio">Agregar servicio</button>
+    </div>
+    <button class="btn btn-secondary btn-block" onclick="irA('detalle_visita', ${visita.id})">← Volver</button>
+  `;
+
+  contenedor().innerHTML = html;
+
+  document.getElementById("btn-guardar-servicio").addEventListener("click", async () => {
+    const actividadId = document.getElementById("sa-actividad").value;
+    if (!actividadId) { alert("Debe seleccionar el servicio que va a asignar."); return; }
+
+    await encolarAccion("asignar_servicio_individual", {
+      paciente_id: visita.paciente_id,
+      actividad_id: actividadId,
+      profesional_id: perfil.profesional_id,
+      fecha_inicio: document.getElementById("sa-fecha-inicio").value,
+      frecuencia: document.getElementById("sa-frecuencia").value,
+      numero_sesiones: document.getElementById("sa-sesiones").value,
+      indicaciones: document.getElementById("sa-indicaciones").value,
+    });
+
+    alert("Servicio agregado. Se sincronizará cuando haya conexión.");
     irA("detalle_visita", visita.id);
   });
 }

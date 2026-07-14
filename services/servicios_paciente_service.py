@@ -34,9 +34,30 @@ INTERVALO_DIAS_POR_FRECUENCIA = {
     "Cada 15 días": 15,
     "Cada 20 días": 20,
     "1 vez al mes": 30,
+    # Estas cuatro son distintas a las de arriba: en vez de
+    # espaciar los DÍAS entre una visita y otra, reparten VARIAS
+    # visitas dentro del MISMO día -- para el caso de aplicación
+    # de medicamentos o sueros, donde el paciente puede necesitar
+    # que le apliquen 1, 2, 3 o hasta 4 veces al día. El número
+    # de sesiones que se indique sigue siendo el total de
+    # visitas a programar (no de días).
+    "2 veces al día": 1,
+    "3 veces al día": 1,
+    "4 veces al día": 1,
 }
 
 FRECUENCIAS_VALIDAS = list(INTERVALO_DIAS_POR_FRECUENCIA.keys())
+
+# Franjas horarias por defecto para cada visita del mismo día,
+# cuando la frecuencia es "N veces al día" -- pensadas para
+# aplicación de medicamentos/sueros (espaciadas parejo a lo
+# largo del día). Se pueden ajustar luego visita por visita
+# desde "Programar ahora", esto solo define el punto de partida.
+HORARIOS_POR_FRECUENCIA_DIARIA = {
+    "2 veces al día": [("07:00", "08:00"), ("19:00", "20:00")],
+    "3 veces al día": [("07:00", "08:00"), ("13:00", "14:00"), ("19:00", "20:00")],
+    "4 veces al día": [("06:00", "07:00"), ("12:00", "13:00"), ("18:00", "19:00"), ("00:00", "01:00")],
+}
 
 
 def listar_por_paciente(paciente_id: int):
@@ -47,12 +68,20 @@ def obtener(servicio_id: int):
     return ServiciosPacienteRepository.obtener(servicio_id)
 
 
-def _generar_fechas(fecha_inicio: str, fecha_fin: str, frecuencia: str, numero_sesiones=None) -> list:
+def _generar_fechas(fecha_inicio: str, fecha_fin: str, frecuencia: str, numero_sesiones=None,
+                      hora_inicio=None, hora_fin=None) -> list:
+    """
+    Devuelve la lista de visitas a crear, como tuplas
+    (fecha, hora_inicio, hora_fin) -- para las frecuencias
+    normales, hay una visita por fecha con el horario indicado;
+    para las de "N veces al día", cada fecha aparece varias
+    veces con las franjas horarias correspondientes (mañana,
+    tarde, noche, etc.), hasta completar el número de sesiones
+    pedido.
+    """
 
     if frecuencia not in INTERVALO_DIAS_POR_FRECUENCIA:
         raise ValueError(f"Frecuencia no válida. Use una de: {', '.join(FRECUENCIAS_VALIDAS)}")
-
-    intervalo = INTERVALO_DIAS_POR_FRECUENCIA[frecuencia]
 
     inicio = datetime.strptime(fecha_inicio, "%Y-%m-%d").date()
 
@@ -66,19 +95,30 @@ def _generar_fechas(fecha_inicio: str, fecha_fin: str, frecuencia: str, numero_s
     if not fecha_fin and not numero_sesiones:
         raise ValueError("Debe indicar la fecha de fin o el número de sesiones.")
 
-    fechas = []
+    visitas = []
+
+    if frecuencia in HORARIOS_POR_FRECUENCIA_DIARIA:
+        franjas = HORARIOS_POR_FRECUENCIA_DIARIA[frecuencia]
+        actual = inicio
+        while actual <= fin:
+            if numero_sesiones and len(visitas) >= numero_sesiones:
+                break
+            for hi, hf in franjas:
+                if numero_sesiones and len(visitas) >= numero_sesiones:
+                    break
+                visitas.append((actual.isoformat(), hi, hf))
+            actual += timedelta(days=1)
+        return visitas
+
+    intervalo = INTERVALO_DIAS_POR_FRECUENCIA[frecuencia]
     actual = inicio
-
     while actual <= fin:
-
-        if numero_sesiones and len(fechas) >= numero_sesiones:
+        if numero_sesiones and len(visitas) >= numero_sesiones:
             break
-
-        fechas.append(actual.isoformat())
-
+        visitas.append((actual.isoformat(), hora_inicio or "08:00", hora_fin or "09:00"))
         actual += timedelta(days=intervalo)
 
-    return fechas
+    return visitas
 
 
 def asignar_servicio(paciente_id, tipo_servicio, subtipo, profesional_id, frecuencia,
@@ -144,14 +184,14 @@ def asignar_servicio(paciente_id, tipo_servicio, subtipo, profesional_id, frecue
         fechas = []
         fecha_fin_guardar = fecha_fin_guardar or ""
     else:
-        fechas = _generar_fechas(fecha_inicio, fecha_fin, frecuencia, numero_sesiones)
+        fechas = _generar_fechas(fecha_inicio, fecha_fin, frecuencia, numero_sesiones, hora_inicio, hora_fin)
         # Si no se indico fecha de fin a mano, se calcula una de
         # REFERENCIA automaticamente (la fecha de la ultima sesion
         # generada, segun el numero de sesiones y la periodicidad),
         # para que quede un dato util en pantalla sin obligar al
         # usuario a calcularla el mismo. Igual se puede modificar
         # despues si se indica una fecha de fin manual.
-        fecha_fin_guardar = fecha_fin_guardar or (fechas[-1] if fechas else "")
+        fecha_fin_guardar = fecha_fin_guardar or (fechas[-1][0] if fechas else "")
 
     servicio_id = ServiciosPacienteRepository.crear({
         "paciente_id": paciente_id,
@@ -176,8 +216,10 @@ def asignar_servicio(paciente_id, tipo_servicio, subtipo, profesional_id, frecue
     # Todas las visitas quedan TENTATIVAS (Pendiente): no se
     # toca la agenda real todavia. Se guarda el profesional
     # planeado (si ya se sabe cual va a ser) para agilizar el
-    # paso de "Programar" mas adelante.
-    for fecha in fechas:
+    # paso de "Programar" mas adelante. Cada tupla trae su
+    # propia hora (para "N veces al día", cada visita del mismo
+    # día tiene una franja horaria distinta).
+    for fecha, hi, hf in fechas:
         ejecutar(
             """
             INSERT INTO planilla_visitas(
@@ -185,7 +227,7 @@ def asignar_servicio(paciente_id, tipo_servicio, subtipo, profesional_id, frecue
                 profesional_id, estado
             ) VALUES (?, ?, ?, ?, ?, ?, 'Pendiente')
             """,
-            (servicio_id, paciente_id, fecha, hora_inicio or "08:00", hora_fin or "09:00", profesional_id or None),
+            (servicio_id, paciente_id, fecha, hi, hf, profesional_id or None),
         )
 
     return {
@@ -259,9 +301,12 @@ def renovar_si_corresponde(servicio_id: int):
 
     numero_sesiones = servicio.get("numero_sesiones") or 10
 
-    fechas = _generar_fechas(siguiente_inicio, None, servicio["frecuencia"], numero_sesiones)
+    fechas = _generar_fechas(
+        siguiente_inicio, None, servicio["frecuencia"], numero_sesiones,
+        servicio["hora_inicio"], servicio["hora_fin"],
+    )
 
-    for fecha in fechas:
+    for fecha, hi, hf in fechas:
         ejecutar(
             """
             INSERT INTO planilla_visitas(
@@ -269,7 +314,7 @@ def renovar_si_corresponde(servicio_id: int):
                 profesional_id, estado
             ) VALUES (?, ?, ?, ?, ?, ?, 'Pendiente')
             """,
-            (servicio_id, servicio["paciente_id"], fecha, servicio["hora_inicio"], servicio["hora_fin"],
+            (servicio_id, servicio["paciente_id"], fecha, hi, hf,
              servicio.get("profesional_id")),
         )
 

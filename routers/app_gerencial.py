@@ -115,6 +115,8 @@ async def dashboard_gerencial(usuario=Depends(usuario_actual)):
             "visitas_hoy": operativo["visitas_hoy"][:20],
             "en_visita_ahora": operativo["en_visita_ahora"],
             "finalizaron_hoy": operativo["finalizaron_hoy"],
+            "no_realizadas_hoy": operativo["no_realizadas_hoy"],
+            "servicios_criticos": operativo["servicios_criticos"],
             "servicios_sin_programar": operativo["servicios_sin_programar"][:10],
             "total_servicios_sin_programar": len(operativo["servicios_sin_programar"]),
         },

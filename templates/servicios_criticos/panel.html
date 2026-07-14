@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block titulo %}Servicios Críticos{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-syringe text-danger"></i> Medicamentos, Sueros y Toma de Muestras</h2>
+    <p class="text-muted">Seguimiento del día para los servicios donde el horario es más delicado — se actualiza solo cada 30 segundos.</p>
+
+    {% if panel.alertas %}
+    <div class="alert alert-danger">
+        <h5 class="mb-2"><i class="fa-solid fa-triangle-exclamation"></i> {{ panel.alertas|length }} visita(s) SIN CUMPLIR — ya pasó la hora y nadie las completó ni canceló</h5>
+        <div id="lista-alertas"></div>
+    </div>
+    {% endif %}
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card shadow text-center">
+                <div class="card-body">
+                    <div class="display-6">{{ panel.programadas|length }}</div>
+                    <div class="small text-muted">Programadas (a tiempo)</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow text-center border-info">
+                <div class="card-body">
+                    <div class="display-6 text-info">{{ panel.en_curso|length }}</div>
+                    <div class="small text-muted">En curso ahora</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow text-center border-success">
+                <div class="card-body">
+                    <div class="display-6 text-success">{{ panel.completadas|length }}</div>
+                    <div class="small text-muted">Completadas hoy</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow text-center border-danger">
+                <div class="card-body">
+                    <div class="display-6 text-danger">{{ panel.alertas|length }}</div>
+                    <div class="small text-muted">Sin cumplir</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h6 class="mb-0">🗓 Programadas</h6></div>
+                <div class="card-body" id="lista-programadas"></div>
+            </div>
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h6 class="mb-0">🚶 En curso</h6></div>
+                <div class="card-body" id="lista-en-curso"></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h6 class="mb-0">✅ Completadas</h6></div>
+                <div class="card-body" id="lista-completadas"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const panelInicial = {{ panel | tojson }};
+
+function fila(v, mostrarBadgeVencida) {
+    return `
+        <div class="border-bottom py-2">
+            <strong>${v.paciente || "Paciente sin nombre"}</strong>
+            ${mostrarBadgeVencida ? `<span class="badge bg-danger float-end">Debía ser ${v.hora_fin}</span>` : `<span class="badge bg-secondary float-end">${v.hora_inicio}-${v.hora_fin}</span>`}
+            <br><small class="text-muted">${v.servicio} · Con: ${v.profesional || "Sin asignar"}</small>
+        </div>`;
+}
+
+function pintarPanel(panel) {
+    document.getElementById("lista-programadas").innerHTML = panel.programadas.length
+        ? panel.programadas.map((v) => fila(v, false)).join("")
+        : `<p class="text-muted text-center py-3">Nada programado por ahora.</p>`;
+
+    document.getElementById("lista-en-curso").innerHTML = panel.en_curso.length
+        ? panel.en_curso.map((v) => fila(v, false)).join("")
+        : `<p class="text-muted text-center py-3">Nadie en visita en este momento.</p>`;
+
+    document.getElementById("lista-completadas").innerHTML = panel.completadas.length
+        ? panel.completadas.map((v) => fila(v, false)).join("")
+        : `<p class="text-muted text-center py-3">Todavía ninguna completada hoy.</p>`;
+
+    const contenedorAlertas = document.getElementById("lista-alertas");
+    if (contenedorAlertas) {
+        contenedorAlertas.innerHTML = panel.alertas.map((v) => fila(v, true)).join("");
+    }
+}
+
+pintarPanel(panelInicial);
+
+setInterval(async () => {
+    const respuesta = await fetch("/servicios-criticos/datos");
+    const panel = await respuesta.json();
+    pintarPanel(panel);
+}, 30000);
+</script>
+{% endblock %}

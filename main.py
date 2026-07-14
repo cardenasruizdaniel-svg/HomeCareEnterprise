@@ -43,6 +43,7 @@ from routers.roles import router as roles_router
 from routers.agente_whatsapp import router as agente_whatsapp_router
 from routers.app_gerencial import router as app_gerencial_router
 from routers.carpeta_paciente import router as carpeta_paciente_router
+from routers.servicios_criticos import router as servicios_criticos_router
 from routers import despacho
 from routers.plantillas import router as plantillas_router
 
@@ -223,6 +224,7 @@ def create_app() -> FastAPI:
     app.include_router(agente_whatsapp_router)
     app.include_router(app_gerencial_router)
     app.include_router(carpeta_paciente_router)
+    app.include_router(servicios_criticos_router)
 
     app.include_router(despacho.router)
 

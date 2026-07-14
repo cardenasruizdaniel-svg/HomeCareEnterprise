@@ -715,6 +715,25 @@ footer{
     max-width:100%;
 }
 
+/* Bootstrap arma las filas con "display:flex", y por defecto
+   los elementos flex (las columnas) tienen min-width:auto --
+   eso significa que NO se encogen por debajo del ancho de su
+   contenido, sin importar que la fila tenga max-width:100%.
+   Esta es la causa real de por qué una tabla ancha (o
+   cualquier otro contenido ancho) dentro de una columna podia
+   seguir empujando el layout, aunque la fila que la contiene
+   ya estuviera limitada -- se soluciona dejando que las
+   columnas sí se puedan encoger. */
+.contenido-principal .row > [class*="col-"]{
+    min-width:0;
+}
+
+.contenido-principal .container-fluid{
+    padding-left:0;
+    padding-right:0;
+    max-width:100%;
+}
+
 .contenido-principal .table-responsive{
     max-width:100%;
 }

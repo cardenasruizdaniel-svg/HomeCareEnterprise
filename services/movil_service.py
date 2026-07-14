@@ -262,6 +262,53 @@ def crear_orden_medica(paciente_id, profesional_id, tipo, descripcion, codigo_cu
     )
 
 
+def listar_servicios_asignados(paciente_id: int):
+    """
+    Los servicios/actividades que el paciente ya tiene
+    asignados (además del programa general) -- para la
+    pantalla "Servicios Asignados" de la app, donde se pueden
+    agregar servicios puntuales nuevos (ej. Toma de muestras
+    para laboratorio) sin tener que rehacer todo el programa.
+    """
+    filas = consultar_todos(
+        """
+        SELECT sp.id, sp.tipo_servicio, sp.subtipo, sp.frecuencia, sp.fecha_inicio, sp.fecha_fin,
+               sp.numero_sesiones, sp.estado, pr.nombre_completo AS profesional
+        FROM servicios_paciente sp
+        LEFT JOIN profesionales pr ON pr.id = sp.profesional_id
+        WHERE sp.paciente_id=? AND sp.estado='Activo'
+        ORDER BY sp.fecha_inicio DESC
+        """,
+        (paciente_id,),
+    )
+    return [dict(f) for f in filas]
+
+
+def asignar_servicio_individual(paciente_id, actividad_id, profesional_id, fecha_inicio, fecha_fin,
+                                  hora_inicio, hora_fin, frecuencia, numero_sesiones, indicaciones, usuario_id) -> dict:
+    """
+    Agrega UN servicio puntual nuevo al paciente (ej. Toma de
+    muestras para laboratorio) sin afectar el resto de su
+    programa -- genera sus visitas tentativas igual que
+    cualquier otro servicio, listas para programar desde
+    "Pendientes de Agendar".
+    """
+    from services import servicios_paciente_service as sps
+
+    if not actividad_id:
+        raise ValueError("Debe seleccionar qué servicio se va a asignar.")
+    if not fecha_inicio:
+        raise ValueError("Debe indicar la fecha de inicio.")
+
+    return sps.asignar_servicio(
+        paciente_id, None, None, int(profesional_id) if profesional_id else None,
+        frecuencia or "Diaria", fecha_inicio, fecha_fin or fecha_inicio,
+        hora_inicio or "08:00", hora_fin or "09:00", indicaciones or "",
+        usuario_id, actividad_id=int(actividad_id),
+        numero_sesiones=int(numero_sesiones) if numero_sesiones else 1,
+    )
+
+
 def asignar_programa_paciente(paciente_id, programa_id, profesional_id, motivo, actividades, usuario_id) -> dict:
     """
     Permite que el médico, durante la visita de valoración

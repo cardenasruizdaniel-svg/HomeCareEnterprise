@@ -248,6 +248,29 @@ async function renderDashboard() {
           </div>`).join("")}
     </div>
 
+    ${op.no_realizadas_hoy && op.no_realizadas_hoy.length > 0 ? `
+    <div class="card" style="border:1px solid #dc3545;">
+      <h3 style="color:#dc3545;">⚠ Visitas NO realizadas hoy (${op.no_realizadas_hoy.length})</h3>
+      <p class="muted" style="font-size:11px;">Ya pasó la hora programada y nadie las marcó como completadas ni canceladas.</p>
+      ${op.no_realizadas_hoy.map((v) => `
+        <div class="lista-item">
+          <strong>${v.paciente || "Paciente sin nombre"}</strong> — ${v.servicio || ""}
+          <span class="badge badge-danger" style="float:right;">${v.hora_inicio}-${v.hora_fin}</span>
+          <br><span class="muted">Con: ${v.profesional || "Sin asignar"}</span>
+        </div>`).join("")}
+    </div>` : ""}
+
+    ${op.servicios_criticos ? `
+    <div class="card">
+      <h3>💉 Medicamentos, Sueros y Muestras — hoy</h3>
+      <div class="kpi-grid">
+        <div class="kpi-card light"><div class="kpi-label">Programadas</div><div class="kpi-valor">${op.servicios_criticos.programadas.length}</div></div>
+        <div class="kpi-card light"><div class="kpi-label">En curso</div><div class="kpi-valor">${op.servicios_criticos.en_curso.length}</div></div>
+        <div class="kpi-card light"><div class="kpi-label">Completadas</div><div class="kpi-valor">${op.servicios_criticos.completadas.length}</div></div>
+        <div class="kpi-card ${op.servicios_criticos.alertas.length > 0 ? 'rosa' : 'light'}"><div class="kpi-label">⚠ Sin cumplir</div><div class="kpi-valor">${op.servicios_criticos.alertas.length}</div></div>
+      </div>
+    </div>` : ""}
+
     <div class="card">
       <h3>✅ Finalizaron hoy (${op.finalizaron_hoy.length})</h3>
       ${op.finalizaron_hoy.length === 0 ? `<p class="muted">Nadie ha finalizado visitas todavía hoy.</p>` :

@@ -339,6 +339,18 @@ async def programa_atencion_del_paciente(paciente_id: int, usuario=Depends(requi
     return programa_actual(paciente_id)
 
 
+@router.get("/paciente/{paciente_id}/servicios-asignados")
+async def servicios_asignados_del_paciente(paciente_id: int, usuario=Depends(requiere_permiso("pacientes"))):
+    """
+    Los servicios/actividades puntuales que ya tiene asignados
+    el paciente -- se muestra cuando ya tiene un programa
+    asignado, para poder agregarle servicios nuevos (ej. Toma
+    de muestras para laboratorio) sin rehacer todo el programa.
+    """
+    verificar_acceso_paciente_movil(paciente_id, usuario)
+    return movil_service.listar_servicios_asignados(paciente_id)
+
+
 @router.get("/paciente/{paciente_id}/alergias")
 async def alergias_paciente(paciente_id: int, usuario=Depends(requiere_permiso("programacion"))):
     verificar_acceso_paciente_movil(paciente_id, usuario)
@@ -559,6 +571,14 @@ def _procesar_accion(tipo: str, p: dict, usuario: dict):
         return movil_service.asignar_programa_paciente(
             p["paciente_id"], p.get("programa_id"), p.get("profesional_id"), p.get("motivo"),
             p.get("actividades", []), usuario.get("id") if isinstance(usuario, dict) else None,
+        )
+
+    if tipo == "asignar_servicio_individual":
+        return movil_service.asignar_servicio_individual(
+            p["paciente_id"], p.get("actividad_id"), p.get("profesional_id"),
+            p.get("fecha_inicio"), p.get("fecha_fin"), p.get("hora_inicio"), p.get("hora_fin"),
+            p.get("frecuencia"), p.get("numero_sesiones"), p.get("indicaciones"),
+            usuario.get("id") if isinstance(usuario, dict) else None,
         )
 
     if tipo == "crear_alergia":

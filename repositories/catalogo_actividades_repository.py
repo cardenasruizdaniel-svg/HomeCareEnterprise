@@ -27,9 +27,18 @@ ACTIVIDADES_INICIALES = [
 # borran, para no perder el historial de lo ya asignado con
 # ellas) en las instalaciones que ya las tenian sembradas.
 ACTIVIDADES_RETIRADAS = [
-    "Toma y traslado de muestras de laboratorio",
     "Manejo de insumos y elementos de protección",
     "Manejo y recolección de residuos hospitalarios",
+]
+
+# Actividades que se habían retirado antes, pero que ahora se
+# vuelven a ofrecer -- se reactivan (con el MISMO nombre
+# histórico, para que las asignaciones anteriores que ya
+# existieran con esta actividad sigan enlazadas correctamente),
+# en vez de crear una nueva actividad parecida y dejar la vieja
+# desactivada por error.
+ACTIVIDADES_REACTIVADAS = [
+    ("Toma y traslado de muestras de laboratorio", "Laboratorio"),
 ]
 
 
@@ -59,6 +68,25 @@ class CatalogoActividadesRepository:
             ejecutar(
                 "UPDATE catalogo_actividades SET activo=0 WHERE nombre=?", (nombre,)
             )
+
+        # Las que se habian retirado y ahora se vuelven a
+        # ofrecer: si ya existian (aunque estuvieran
+        # desactivadas), se reactivan tal cual, para no perder
+        # el enlace con lo que ya se hubiera asignado antes; si
+        # nunca habian existido, se crean de una vez.
+        for nombre, categoria in ACTIVIDADES_REACTIVADAS:
+            existe = consultar_escalar(
+                "SELECT COUNT(*) FROM catalogo_actividades WHERE nombre=?", (nombre,)
+            )
+            if existe:
+                ejecutar(
+                    "UPDATE catalogo_actividades SET activo=1 WHERE nombre=?", (nombre,)
+                )
+            else:
+                ejecutar(
+                    "INSERT INTO catalogo_actividades(nombre, categoria) VALUES (?, ?)",
+                    (nombre, categoria),
+                )
 
     @staticmethod
     def listar_activas():
