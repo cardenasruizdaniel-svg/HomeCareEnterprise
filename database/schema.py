@@ -86,6 +86,12 @@ CREATE TABLE IF NOT EXISTS pacientes(
 
     estado TEXT DEFAULT 'Activo',
 
+    estado_vital TEXT DEFAULT 'Vivo',
+
+    fecha_fallecimiento TEXT,
+
+    fecha_cambio_estado TEXT,
+
     fecha_registro TEXT
 
 );

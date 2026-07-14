@@ -416,6 +416,142 @@ class DashboardService:
             "porcentaje_cumplimiento": porcentaje_cumplimiento,
         }
 
+    def grafico_produccion_detallado(self):
+        """
+        A diferencia del grafico anterior (que solo contaba
+        TODAS las visitas sin distinguir su estado, lo cual
+        confundia), este muestra por separado, mes a mes:
+        cuantas visitas se PROGRAMARON vs cuantas se
+        COMPLETARON de verdad -- asi se ve claramente la
+        diferencia entre lo planeado y lo realmente entregado.
+        """
+        from database.database import consultar_todos
+
+        filas = consultar_todos(
+            """
+            SELECT
+                strftime('%Y-%m', fecha) AS periodo,
+                COUNT(*) AS programadas,
+                SUM(CASE WHEN estado='Completada' THEN 1 ELSE 0 END) AS completadas,
+                SUM(CASE WHEN estado='Cancelada' THEN 1 ELSE 0 END) AS canceladas
+            FROM programaciones
+            WHERE eliminado = 0
+            GROUP BY periodo
+            ORDER BY periodo ASC
+            LIMIT 12
+            """
+        )
+        filas = [dict(f) for f in filas]
+        return {
+            "labels": [f["periodo"] for f in filas],
+            "programadas": [f["programadas"] for f in filas],
+            "completadas": [f["completadas"] for f in filas],
+            "canceladas": [f["canceladas"] for f in filas],
+        }
+
+    def grafico_cumplimiento_historico(self, meses=6):
+        """
+        Tendencia del % de cumplimiento (visitas completadas /
+        visitas programadas) mes a mes, para ver si la
+        operación está mejorando o empeorando en el tiempo, no
+        solo el dato de este mes.
+        """
+        from database.database import consultar_todos
+
+        filas = consultar_todos(
+            """
+            SELECT
+                strftime('%Y-%m', fecha) AS periodo,
+                COUNT(*) AS total,
+                SUM(CASE WHEN estado='Completada' THEN 1 ELSE 0 END) AS completadas
+            FROM programaciones
+            WHERE eliminado = 0 AND fecha >= date('now', ?)
+            GROUP BY periodo
+            ORDER BY periodo ASC
+            """,
+            (f"-{meses} months",),
+        )
+        filas = [dict(f) for f in filas]
+        return {
+            "labels": [f["periodo"] for f in filas],
+            "porcentajes": [round((f["completadas"] / f["total"]) * 100, 1) if f["total"] else 0 for f in filas],
+        }
+
+    def grafico_altas_bajas(self, meses=6):
+        """
+        Cuántos pacientes y cuánto personal (profesionales y
+        cuidadores) se activaron vs se inactivaron cada mes --
+        para tener una idea de la rotación real del negocio.
+
+        IMPORTANTE: esto solo es preciso desde que se empezó a
+        registrar la fecha de cambio de estado (columna
+        fecha_cambio_estado) -- los cambios de estado que
+        pasaron ANTES de esa actualización no quedan reflejados
+        aquí, porque no había forma de saber cuándo pasaron.
+        """
+        from database.database import consultar_todos
+
+        pacientes_altas = consultar_todos(
+            """
+            SELECT strftime('%Y-%m', fecha_registro) AS periodo, COUNT(*) AS total
+            FROM pacientes WHERE fecha_registro >= date('now', ?)
+            GROUP BY periodo ORDER BY periodo ASC
+            """,
+            (f"-{meses} months",),
+        )
+        pacientes_bajas = consultar_todos(
+            """
+            SELECT strftime('%Y-%m', fecha_cambio_estado) AS periodo, COUNT(*) AS total
+            FROM pacientes WHERE UPPER(estado)='INACTIVO' AND fecha_cambio_estado >= date('now', ?)
+            GROUP BY periodo ORDER BY periodo ASC
+            """,
+            (f"-{meses} months",),
+        )
+        personal_altas = consultar_todos(
+            """
+            SELECT strftime('%Y-%m', fecha_registro) AS periodo, COUNT(*) AS total
+            FROM profesionales WHERE fecha_registro >= date('now', ?)
+            GROUP BY periodo ORDER BY periodo ASC
+            """,
+            (f"-{meses} months",),
+        )
+        personal_bajas = consultar_todos(
+            """
+            SELECT strftime('%Y-%m', fecha_cambio_estado) AS periodo, COUNT(*) AS total
+            FROM profesionales WHERE UPPER(estado)='INACTIVO' AND fecha_cambio_estado >= date('now', ?)
+            GROUP BY periodo ORDER BY periodo ASC
+            """,
+            (f"-{meses} months",),
+        )
+
+        def _a_diccionario(filas):
+            return {dict(f)["periodo"]: dict(f)["total"] for f in filas if dict(f)["periodo"]}
+
+        pa, pb = _a_diccionario(pacientes_altas), _a_diccionario(pacientes_bajas)
+        na, nb = _a_diccionario(personal_altas), _a_diccionario(personal_bajas)
+
+        # Se arma la lista de los ultimos N meses en orden, aunque algun mes no tenga ningun movimiento
+        # (sin depender de dateutil, para no agregar una dependencia nueva al proyecto)
+        from datetime import date
+        hoy = date.today()
+        periodos = []
+        anio, mes = hoy.year, hoy.month
+        for _ in range(meses):
+            periodos.append(f"{anio:04d}-{mes:02d}")
+            mes -= 1
+            if mes == 0:
+                mes = 12
+                anio -= 1
+        periodos.reverse()
+
+        return {
+            "labels": periodos,
+            "pacientes_altas": [pa.get(p, 0) for p in periodos],
+            "pacientes_bajas": [pb.get(p, 0) for p in periodos],
+            "personal_altas": [na.get(p, 0) for p in periodos],
+            "personal_bajas": [nb.get(p, 0) for p in periodos],
+        }
+
     def dashboard_context(self):
 
         return {

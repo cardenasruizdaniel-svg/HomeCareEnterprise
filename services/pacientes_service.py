@@ -82,6 +82,19 @@ class PacientesService:
 
     @staticmethod
     def actualizar(paciente_id:int,datos:dict):
+        # Si el estado (Activo/Inactivo) viene en los datos y es
+        # distinto al que ya tenia, se guarda la fecha del
+        # cambio -- esto es lo que permite despues armar la
+        # grafica de cuantos pacientes se activan/inactivan
+        # cada mes.
+        if "estado" in datos:
+            from database.database import consultar_uno
+            actual = consultar_uno("SELECT estado FROM pacientes WHERE id=?", (paciente_id,))
+            estado_actual = dict(actual)["estado"] if actual else None
+            if estado_actual != datos["estado"]:
+                from datetime import datetime
+                datos["fecha_cambio_estado"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         resultado=PacientesRepository.actualizar(paciente_id,datos)
         guardar_evento(crear_evento("sistema","ACTUALIZAR","PACIENTES",str(paciente_id)))
         return resultado

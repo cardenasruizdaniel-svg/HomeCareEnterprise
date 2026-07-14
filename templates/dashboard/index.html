@@ -187,25 +187,54 @@
 
 <div class="row mt-4">
 
-    <div class="col-12">
+    <div class="col-12 col-xl-6 mb-4">
 
-        <div class="card shadow-sm border-0 rounded-4">
+        <div class="card shadow-sm border-0 rounded-4 h-100">
 
             <div class="card-header bg-white">
-
-                <h5 class="mb-0">
-
-                    📈 Producción Mensual
-
-                </h5>
-
+                <h5 class="mb-0">📈 Visitas: Programadas vs Completadas vs Canceladas</h5>
+                <small class="text-muted">Por mes, últimos 12 meses — para ver cuánto de lo planeado se cumplió de verdad.</small>
             </div>
 
             <div class="card-body">
+                <canvas id="graficoProduccionDetallada" height="220"></canvas>
+            </div>
 
-                <canvas id="graficoProduccion"
-                        height="120"></canvas>
+        </div>
 
+    </div>
+
+    <div class="col-12 col-xl-6 mb-4">
+
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+
+            <div class="card-header bg-white">
+                <h5 class="mb-0">✅ Tendencia de Cumplimiento</h5>
+                <small class="text-muted">% de visitas completadas sobre las programadas, mes a mes — para ver si la operación mejora o empeora.</small>
+            </div>
+
+            <div class="card-body">
+                <canvas id="graficoCumplimiento" height="220"></canvas>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-12 mb-4">
+
+        <div class="card shadow-sm border-0 rounded-4 h-100">
+
+            <div class="card-header bg-white">
+                <h5 class="mb-0">👥 Altas y Bajas — Pacientes y Personal</h5>
+                <small class="text-muted">
+                    Cuántos pacientes y cuánto personal (profesionales/cuidadores) se activaron vs. se inactivaron cada mes.
+                    Nota: solo cuenta con precisión los cambios de estado registrados desde esta actualización en adelante.
+                </small>
+            </div>
+
+            <div class="card-body">
+                <canvas id="graficoAltasBajas" height="200"></canvas>
             </div>
 
         </div>
@@ -296,63 +325,13 @@
 
     </div>
 
-    <!-- Alertas -->
+    <!-- La tarjeta de "Alertas" que antes iba aquí se quitó por
+         confusa: solo repetía números que ya se ven arriba, sin
+         decir nada realmente accionable. Las alertas de verdad
+         (stock bajo, cartera pendiente, lotes por vencer) ya
+         están arriba, en "Alertas gerenciales", con enlaces
+         directos a cada módulo. -->
 
-    <div class="col-lg-4">
-
-        <div class="card shadow-sm border-0 rounded-4">
-
-            <div class="card-header bg-white">
-
-                <h5 class="mb-0">
-                    🚨 Alertas
-                </h5>
-
-            </div>
-
-            <div class="card-body">
-
-                <div class="mb-4">
-
-                    <h2 class="text-danger">
-
-                        {{ dashboard.alertas.cantidad }}
-
-                    </h2>
-
-                    <small class="text-muted">
-
-                        Alertas activas
-
-                    </small>
-
-                </div>
-
-                <hr>
-
-                <p>
-
-                    <strong>Visitas hoy:</strong>
-
-                    {{ dashboard.alertas.datos.visitas_hoy }}
-
-                </p>
-
-                <p>
-
-                    <strong>Pendientes:</strong>
-
-                    {{ dashboard.alertas.datos.visitas_pendientes }}
-
-                </p>
-
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
 
 <!-- ===================================================== -->
 <!-- PROFESIONALES / FACTURACIÓN / INVENTARIO -->
@@ -531,63 +510,65 @@
 
 <script>
 
-async function cargarProduccion(){
+const datosProduccion = {{ produccion_detallada | tojson }};
+const datosCumplimiento = {{ cumplimiento_historico | tojson }};
+const datosAltasBajas = {{ altas_bajas | tojson }};
 
-    const respuesta = await fetch("/dashboard/produccion");
+new Chart(document.getElementById("graficoProduccionDetallada"), {
+    type: "bar",
+    data: {
+        labels: datosProduccion.labels,
+        datasets: [
+            { label: "Programadas", data: datosProduccion.programadas, backgroundColor: "#94a3b8" },
+            { label: "Completadas", data: datosProduccion.completadas, backgroundColor: "#00c2b8" },
+            { label: "Canceladas", data: datosProduccion.canceladas, backgroundColor: "#ff3399" },
+        ],
+    },
+    options: { responsive: true, plugins: { legend: { display: true, position: "bottom" } } },
+});
 
-    const datos = await respuesta.json();
+new Chart(document.getElementById("graficoCumplimiento"), {
+    type: "line",
+    data: {
+        labels: datosCumplimiento.labels,
+        datasets: [{
+            label: "% Cumplimiento",
+            data: datosCumplimiento.porcentajes,
+            borderColor: "#0a8f86",
+            backgroundColor: "rgba(0,194,184,0.15)",
+            fill: true,
+            tension: 0.3,
+        }],
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { min: 0, max: 100, ticks: { callback: (v) => v + "%" } } },
+    },
+});
 
-    new Chart(
-
-        document.getElementById("graficoProduccion"),
-
-        {
-
-            type: "bar",
-
-            data: {
-
-                labels: datos.labels,
-
-                datasets: [
-
-                    {
-
-                        label: "Visitas",
-
-                        data: datos.values,
-
-                        borderWidth: 1
-
-                    }
-
-                ]
-
+new Chart(document.getElementById("graficoAltasBajas"), {
+    type: "bar",
+    data: {
+        labels: datosAltasBajas.labels,
+        datasets: [
+            { label: "Pacientes - Altas", data: datosAltasBajas.pacientes_altas, backgroundColor: "#00c2b8" },
+            { label: "Pacientes - Bajas", data: datosAltasBajas.pacientes_bajas.map((v) => -v), backgroundColor: "#c71c22" },
+            { label: "Personal - Altas", data: datosAltasBajas.personal_altas, backgroundColor: "#0a8f86" },
+            { label: "Personal - Bajas", data: datosAltasBajas.personal_bajas.map((v) => -v), backgroundColor: "#dd9d00" },
+        ],
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: true, position: "bottom" } },
+        scales: {
+            y: {
+                ticks: { callback: (v) => Math.abs(v) },
+                title: { display: true, text: "◀ Bajas          Altas ▶" },
             },
-
-            options: {
-
-                responsive: true,
-
-                plugins: {
-
-                    legend: {
-
-                        display: false
-
-                    }
-
-                }
-
-            }
-
-        }
-
-    );
-
-}
-
-cargarProduccion();
+        },
+    },
+});
 
 </script>
 

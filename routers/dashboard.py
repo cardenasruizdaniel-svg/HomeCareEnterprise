@@ -48,6 +48,10 @@ async def dashboard(
 
     contexto["gerencial"] = dashboard_service.resumen_gerencial()
 
+    contexto["produccion_detallada"] = dashboard_service.grafico_produccion_detallado()
+    contexto["cumplimiento_historico"] = dashboard_service.grafico_cumplimiento_historico(6)
+    contexto["altas_bajas"] = dashboard_service.grafico_altas_bajas(6)
+
     contexto["request"] = request
 
     contexto["usuario"] = usuario

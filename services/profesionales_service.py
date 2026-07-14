@@ -172,6 +172,13 @@ def actualizar(profesional_id: int, datos: dict, usuario_id=None):
         actual = dict(fila) if fila else {}
         datos["usuario_id"] = actual.get("usuario_id")
 
+    if "estado" in datos:
+        fila = ProfesionalesRepository.obtener(profesional_id)
+        estado_actual = dict(fila).get("estado") if fila else None
+        if estado_actual != datos["estado"]:
+            from datetime import datetime
+            datos["fecha_cambio_estado"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     datos["usuario_actualizacion"] = usuario_id
 
     return ProfesionalesRepository.actualizar(profesional_id, datos)

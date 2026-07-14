@@ -206,6 +206,8 @@ async def actualizar(
     latitud: str = Form(""),
     longitud: str = Form(""),
     estado: str = Form("ACTIVO"),
+    estado_vital: str = Form("Vivo"),
+    fecha_fallecimiento: str = Form(""),
     usuario=Depends(requiere_permiso("pacientes")),
 ):
     datos = {
@@ -237,6 +239,8 @@ async def actualizar(
         "ubicacion_confirmada": 1 if (latitud and longitud) else 0,
         "codigo_municipio_divipola": codigo_municipio_divipola or None,
         "estado": estado,
+        "estado_vital": estado_vital,
+        "fecha_fallecimiento": fecha_fallecimiento if estado_vital == "Fallecido" else None,
     }
 
     try:

@@ -188,10 +188,22 @@
                 <h5 class="text-muted mb-3">Estado</h5>
                 <div class="row">
                     <div class="col-md-3 mb-3">
+                        <label class="small text-muted">Estado del servicio</label>
                         <select name="estado" class="form-select">
                             <option value="ACTIVO" {% if paciente.estado=="ACTIVO" %}selected{% endif %}>Activo</option>
                             <option value="INACTIVO" {% if paciente.estado=="INACTIVO" %}selected{% endif %}>Inactivo</option>
                         </select>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <label class="small text-muted">Estado vital</label>
+                        <select name="estado_vital" class="form-select" id="select-estado-vital">
+                            <option value="Vivo" {% if paciente.estado_vital != "Fallecido" %}selected{% endif %}>Vivo</option>
+                            <option value="Fallecido" {% if paciente.estado_vital == "Fallecido" %}selected{% endif %}>Fallecido</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 mb-3" id="campo-fecha-fallecimiento" style="{% if paciente.estado_vital != 'Fallecido' %}display:none;{% endif %}">
+                        <label class="small text-muted">Fecha de fallecimiento</label>
+                        <input type="date" name="fecha_fallecimiento" class="form-control" value="{{ paciente.fecha_fallecimiento or '' }}">
                     </div>
                 </div>
 
@@ -267,6 +279,10 @@ document.getElementById('btn-borrar-ubicacion').addEventListener('click', () => 
     if (!confirm('¿Borrar la ubicación registrada de este paciente? La próxima vez que un profesional entre a su visita en la app, se le volverá a pedir que la registre.')) return;
     document.getElementById('paciente_latitud').value = '';
     document.getElementById('paciente_longitud').value = '';
+});
+
+document.getElementById('select-estado-vital').addEventListener('change', (evento) => {
+    document.getElementById('campo-fecha-fallecimiento').style.display = evento.target.value === 'Fallecido' ? 'block' : 'none';
 });
 </script>
 

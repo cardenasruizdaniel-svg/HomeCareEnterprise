@@ -683,17 +683,20 @@ footer{
 
     background:#f5f7fb;
 
+    /* "contain:layout" es la proteccion mas fuerte que existe
+       en CSS para esto: le dice al navegador que absolutamente
+       NADA de lo que este adentro de esta caja puede afectar
+       ni desbordar lo que esta AFUERA de ella -- sin importar
+       que tan ancha sea una tabla, un grafico, o cualquier
+       tarjeta. Es la garantia definitiva de que la barra
+       lateral (fija) nunca vuelva a quedar tapada. */
+    contain:layout;
+
     /* Si alguna tabla u otro contenido es mas ancho que la
        pantalla (comun en ventanas mas chicas/no maximizadas),
        que el DESPLAZAMIENTO quede DENTRO de esta area de
        contenido -- asi la barra lateral (que es fija) nunca
-       queda tapando ni cortando lo que se sale de ancho. El
-       ancho explicito de arriba (calc) es lo que de verdad
-       obliga a que esto se cumpla siempre, sin importar qué
-       tan ancho sea el contenido de adentro (tablas, tarjetas,
-       etc.) -- antes solo tenia el margen, y sin un ancho
-       maximo fijo el navegador podia dejar que el contenido
-       empujara toda la pagina de todos modos. */
+       queda tapando ni cortando lo que se sale de ancho. */
     overflow-x:auto;
 
 }

@@ -55,6 +55,9 @@
                                 <span class="badge {% if p.estado == 'ACTIVO' %}bg-success{% else %}bg-secondary{% endif %}">
                                     {{ p.estado }}
                                 </span>
+                                {% if p.estado_vital == 'Fallecido' %}
+                                <span class="badge bg-dark">✝ Fallecido</span>
+                                {% endif %}
                             </td>
                             <td class="text-center">
                                 <a href="/pacientes/{{ p.id }}" class="btn btn-primary btn-sm">

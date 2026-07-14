@@ -891,6 +891,40 @@ class MigrationManager:
             cambios.append("Se creó la tabla convenios")
         return cambios
 
+    def migrar_estado_vital_y_seguimiento(self):
+        """
+        Agrega: el estado vital del paciente (Vivo/Fallecido,
+        separado del estado Activo/Inactivo del servicio), y la
+        fecha en que cambió por última vez el estado tanto de
+        pacientes como de profesionales -- esto último es lo
+        que permite construir la gráfica de cuántos se activan
+        y cuántos se inactivan cada mes. Ojo: para los registros
+        que YA EXISTÍAN antes de esta actualización, esa fecha
+        queda en blanco (no se puede saber cuándo cambiaron en
+        el pasado) -- el seguimiento es hacia adelante, desde
+        ahora.
+        """
+        cambios = []
+        if self.existe_tabla("pacientes"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "pacientes",
+                    {
+                        "estado_vital": "estado_vital TEXT DEFAULT 'Vivo'",
+                        "fecha_fallecimiento": "fecha_fallecimiento TEXT",
+                        "fecha_cambio_estado": "fecha_cambio_estado TEXT",
+                    },
+                )
+            )
+        if self.existe_tabla("profesionales"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "profesionales",
+                    {"fecha_cambio_estado": "fecha_cambio_estado TEXT"},
+                )
+            )
+        return cambios
+
     def migrar_roles_permisos(self):
         cambios = []
         if not self.existe_tabla("roles"):
@@ -2067,6 +2101,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_inventario_profesional()
+        )
+
+        cambios.extend(
+            self.migrar_estado_vital_y_seguimiento()
         )
 
         cambios.extend(
