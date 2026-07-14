@@ -74,7 +74,7 @@ def panel_servicios_criticos():
     filas = consultar_todos(
         """
         SELECT
-            p.id, p.hora_inicio, p.hora_fin, p.hora_real_inicio, p.hora_real_fin,
+            p.id, p.fecha, p.hora_inicio, p.hora_fin, p.hora_real_inicio, p.hora_real_fin,
             p.servicio, p.estado,
             (pa.primer_nombre || ' ' || pa.primer_apellido) AS paciente,
             pa.id AS paciente_id,

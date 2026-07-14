@@ -65,6 +65,38 @@
             </div>
         </div>
     </div>
+    <div class="card shadow">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="fa-solid fa-list"></i> Listado completo del día</h6>
+            <div>
+                <input type="text" class="form-control form-control-sm d-inline-block" id="buscar-listado" placeholder="Buscar paciente o profesional..." style="width:220px;">
+                <select class="form-select form-select-sm d-inline-block" id="filtro-estado-listado" style="width:160px;">
+                    <option value="">Todos los estados</option>
+                    <option value="Programada">Programada</option>
+                    <option value="En curso">En curso</option>
+                    <option value="Completada">Completada</option>
+                    <option value="Sin cumplir">Sin cumplir</option>
+                </select>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Paciente</th>
+                            <th>Profesional</th>
+                            <th>Servicio</th>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-listado-completo"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -77,6 +109,27 @@ function fila(v, mostrarBadgeVencida) {
             ${mostrarBadgeVencida ? `<span class="badge bg-danger float-end">Debía ser ${v.hora_fin}</span>` : `<span class="badge bg-secondary float-end">${v.hora_inicio}-${v.hora_fin}</span>`}
             <br><small class="text-muted">${v.servicio} · Con: ${v.profesional || "Sin asignar"}</small>
         </div>`;
+}
+
+const ESTADO_INFO = {
+    "Programada": { color: "secondary", icono: "🗓" },
+    "En curso": { color: "info", icono: "🚶" },
+    "Completada": { color: "success", icono: "✅" },
+    "Sin cumplir": { color: "danger", icono: "⚠" },
+};
+
+function filaListado(v, estado) {
+    const fecha = v.fecha || new Date().toISOString().slice(0, 10);
+    const info = ESTADO_INFO[estado];
+    return `
+        <tr data-paciente="${(v.paciente || "").toLowerCase()}" data-profesional="${(v.profesional || "").toLowerCase()}" data-estado="${estado}">
+            <td><strong>${v.paciente || "Paciente sin nombre"}</strong></td>
+            <td>${v.profesional || "Sin asignar"}</td>
+            <td>${v.servicio}</td>
+            <td>${fecha}</td>
+            <td>${v.hora_inicio}${v.hora_fin ? " - " + v.hora_fin : ""}</td>
+            <td><span class="badge bg-${info.color}">${info.icono} ${estado}</span></td>
+        </tr>`;
 }
 
 function pintarPanel(panel) {
@@ -96,7 +149,35 @@ function pintarPanel(panel) {
     if (contenedorAlertas) {
         contenedorAlertas.innerHTML = panel.alertas.map((v) => fila(v, true)).join("");
     }
+
+    // Listado consolidado: todo junto, con su estado, ordenado por hora
+    const todas = [
+        ...panel.programadas.map((v) => ({ ...v, _estado: "Programada" })),
+        ...panel.en_curso.map((v) => ({ ...v, _estado: "En curso" })),
+        ...panel.completadas.map((v) => ({ ...v, _estado: "Completada" })),
+        ...panel.alertas.map((v) => ({ ...v, _estado: "Sin cumplir" })),
+    ].sort((a, b) => (a.hora_inicio || "").localeCompare(b.hora_inicio || ""));
+
+    const cuerpo = document.getElementById("cuerpo-listado-completo");
+    cuerpo.innerHTML = todas.length
+        ? todas.map((v) => filaListado(v, v._estado)).join("")
+        : `<tr><td colspan="6" class="text-center text-muted py-4">Sin visitas de estos servicios hoy.</td></tr>`;
+
+    aplicarFiltros();
 }
+
+function aplicarFiltros() {
+    const texto = document.getElementById("buscar-listado").value.toLowerCase();
+    const estado = document.getElementById("filtro-estado-listado").value;
+    document.querySelectorAll("#cuerpo-listado-completo tr[data-paciente]").forEach((fila) => {
+        const coincideTexto = !texto || fila.dataset.paciente.includes(texto) || fila.dataset.profesional.includes(texto);
+        const coincideEstado = !estado || fila.dataset.estado === estado;
+        fila.style.display = (coincideTexto && coincideEstado) ? "" : "none";
+    });
+}
+
+document.getElementById("buscar-listado").addEventListener("input", aplicarFiltros);
+document.getElementById("filtro-estado-listado").addEventListener("change", aplicarFiltros);
 
 pintarPanel(panelInicial);
 
