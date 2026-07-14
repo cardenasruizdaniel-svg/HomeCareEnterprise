@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block titulo %}Carpeta del Paciente{% endblock %}
+{% block css %}
+<style>
+.cp-fecha-header { background:#0a8f86; color:white; padding:8px 14px; border-radius:8px 8px 0 0; font-weight:600; margin-top:16px; }
+.cp-item { border:1px solid #e7ebf3; border-top:none; padding:10px 14px; display:flex; align-items:flex-start; gap:10px; background:#fff; }
+.cp-item:hover { background:#f8fafc; }
+.cp-item-icono { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.cp-item-cuerpo { flex:1; min-width:0; }
+.cp-item-titulo { font-weight:600; font-size:14px; }
+.cp-item-detalle { font-size:12px; color:#6c757d; margin-top:2px; }
+.cp-barra-acciones { position:sticky; top:70px; z-index:5; background:#fff; padding:10px; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,.08); margin-bottom:10px; }
+</style>
+{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/pacientes/ficha/{{ paciente.id }}" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver a la ficha</a>
+
+    <h2 class="mb-1"><i class="fa-solid fa-folder-open text-warning"></i> Carpeta del Paciente</h2>
+    <p class="text-muted">
+        {{ paciente.primer_nombre }} {{ paciente.primer_apellido }} — {{ paciente.tipo_documento }} {{ paciente.documento }}<br>
+        Todo lo que se le ha registrado, agrupado por fecha (incluye informes de cuidador y consentimientos —
+        esto es distinto de la <a href="/historia-clinica/{{ paciente.id }}">Historia Clínica</a> formal).
+    </p>
+
+    <div class="cp-barra-acciones d-flex flex-wrap gap-2 align-items-center">
+        <div class="form-check">
+            <input type="checkbox" class="form-check-input" id="ck-todos" onchange="marcarTodos(this.checked)">
+            <label class="form-check-label" for="ck-todos">Seleccionar todo/ninguno</label>
+        </div>
+        <button class="btn btn-outline-primary btn-sm" onclick="descargarSeleccionados()"><i class="fa-solid fa-download"></i> Descargar PDF seleccionados</button>
+        <button class="btn btn-outline-dark btn-sm" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimir esta vista</button>
+        <span class="text-muted small ms-auto">{{ carpeta.total_eventos }} registro(s) en total</span>
+    </div>
+
+    {% for grupo in carpeta.eventos_por_fecha %}
+    <div class="cp-fecha-header"><i class="fa-solid fa-calendar-day"></i> {{ grupo.fecha }}</div>
+    {% for e in grupo.eventos %}
+    <div class="cp-item">
+        <input type="checkbox" class="form-check-input cp-check mt-1" value="{{ e.clave_unica }}">
+        <div class="cp-item-icono bg-{{ e.color }}-subtle text-{{ e.color }}">
+            <i class="fa-solid {{ e.icono }}"></i>
+        </div>
+        <div class="cp-item-cuerpo">
+            <div class="cp-item-titulo">
+                <span class="badge bg-{{ e.color }}">{{ e.tipo }}</span>
+                {{ e.titulo }}
+            </div>
+            {% if e.detalle %}<div class="cp-item-detalle">{{ e.detalle[:200] }}{% if e.detalle|length > 200 %}...{% endif %}</div>{% endif %}
+            {% if e.profesional %}<div class="cp-item-detalle"><i class="fa-solid fa-user-nurse"></i> {{ e.profesional }}</div>{% endif %}
+            {% if e.imagen %}<img src="data:image/jpeg;base64,{{ e.imagen }}" style="max-width:120px; border-radius:6px; margin-top:6px;">{% endif %}
+        </div>
+        {% if e.es_informe %}
+        <a href="/historia-clinica/informe/{{ e.id }}/imprimir" target="_blank" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-print"></i></a>
+        {% endif %}
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="card shadow mt-3"><div class="card-body text-center text-muted py-5">Este paciente todavía no tiene ningún registro.</div></div>
+    {% endfor %}
+</div>
+
+<script>
+function marcarTodos(marcar) {
+    document.querySelectorAll('.cp-check').forEach((c) => c.checked = marcar);
+}
+
+async function descargarSeleccionados() {
+    const ids = Array.from(document.querySelectorAll('.cp-check:checked')).map((c) => c.value);
+    if (ids.length === 0) { alert('Seleccione al menos un registro.'); return; }
+
+    const respuesta = await fetch('/pacientes/{{ paciente.id }}/carpeta/generar-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+    });
+    if (!respuesta.ok) {
+        const error = await respuesta.json().catch(() => ({}));
+        alert(error.detail || 'No se pudo generar el PDF.');
+        return;
+    }
+    const blob = await respuesta.blob();
+    const url = window.URL.createObjectURL(blob);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = 'carpeta_paciente_{{ paciente.id }}.pdf';
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+}
+</script>
+{% endblock %}

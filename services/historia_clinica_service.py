@@ -275,6 +275,68 @@ def obtener_linea_tiempo(paciente_id: int) -> list:
     return eventos
 
 
+def obtener_carpeta_completa(paciente_id: int) -> dict:
+    """
+    La "Carpeta del Paciente" -- a diferencia de la Historia
+    Clínica (que es el documento clínico formal, reservado al
+    personal de salud), esta es una vista administrativa de
+    TODO lo que se le ha registrado al paciente, agrupada por
+    fecha: notas clínicas, órdenes, exámenes, y también los
+    informes de los cuidadores y los consentimientos firmados
+    -- todo junto, para poder revisar o imprimir rápidamente lo
+    que se necesite (por ejemplo, la historia clínica reciente
+    junto con una orden médica, para enviárselas juntas al
+    paciente).
+    """
+    eventos = obtener_linea_tiempo(paciente_id)
+
+    informes_cuidador = obtener_informes_cuidador(paciente_id)
+    for c in informes_cuidador:
+        eventos.append({
+            "id": c["id"], "fecha": c["fecha"], "tipo": "Informe de Cuidador",
+            "icono": "fa-hands-holding-child", "color": "info",
+            "titulo": "Informe de cuidador" + (" (nota aclaratoria)" if c["tipo_registro"] == "NOTA_ACLARATORIA" else ""),
+            "detalle": c["nota"], "profesional": c["profesional"],
+            "consecutivo": c["consecutivo"], "tipo_registro": c["tipo_registro"],
+            "nota_aclaratoria_de": c["nota_aclaratoria_de"], "firma": c["firma_profesional_base64"],
+            "es_informe_cuidador": True,
+        })
+
+    consentimientos = consultar_todos(
+        "SELECT * FROM consentimientos_informados WHERE paciente_id=? ORDER BY fecha_diligenciamiento DESC",
+        (paciente_id,),
+    )
+    for cons in consentimientos:
+        cons = dict(cons)
+        eventos.append({
+            "id": cons["id"], "fecha": cons["fecha_diligenciamiento"], "tipo": "Consentimiento Informado",
+            "icono": "fa-file-signature", "color": "dark",
+            "titulo": f"Consentimiento — {cons['tipo']}",
+            "detalle": f"Firmado por: {cons.get('nombre_firmante') or '—'} ({cons.get('firmante') or 'paciente'})",
+            "profesional": None, "es_consentimiento": True,
+        })
+
+    eventos.sort(key=lambda e: e["fecha"] or "", reverse=True)
+
+    # Cada evento necesita una clave única para poder
+    # seleccionarlo en la pantalla -- algunos tipos (medicamentos,
+    # fotos, insumos, laboratorios, examen físico, recomendaciones)
+    # no traen un "id" individual desde su consulta original, así
+    # que se les asigna uno aquí, basado en su posición.
+    for indice, evento in enumerate(eventos):
+        evento["clave_unica"] = f"{evento['tipo']}-{evento.get('id') if evento.get('id') is not None else indice}"
+
+    grupos = {}
+    for e in eventos:
+        clave_fecha = (e["fecha"] or "")[:10] or "Sin fecha"
+        grupos.setdefault(clave_fecha, []).append(e)
+
+    return {
+        "eventos_por_fecha": [{"fecha": f, "eventos": grupos[f]} for f in sorted(grupos.keys(), reverse=True)],
+        "total_eventos": len(eventos),
+    }
+
+
 def obtener_informe_para_imprimir(evolucion_id: int) -> dict:
     """
     Junta todo lo necesario para imprimir UN informe (o nota
