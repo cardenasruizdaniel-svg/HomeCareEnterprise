@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block titulo %}Contactos Internos{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/agente-whatsapp" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver al Agente WhatsApp</a>
+    <h2 class="mb-1"><i class="fa-solid fa-address-book text-primary"></i> Contactos Internos</h2>
+    <p class="text-muted">
+        Marque aquí los números de WhatsApp que son de la propia empresa (recepción, coordinación, otras sedes, etc.) —
+        así se pueden identificar dentro del panel del Agente y no confundirlos con números de pacientes.
+    </p>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalNuevoContacto">
+        <i class="fa-solid fa-plus"></i> Agregar contacto interno
+    </button>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light"><tr><th>Nombre</th><th>Número</th><th>Área</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                    {% for c in contactos %}
+                    <tr class="{% if not c.activo %}opacity-50{% endif %}">
+                        <td>{{ c.nombre }}</td>
+                        <td>{{ c.numero_celular }}</td>
+                        <td>{{ c.area or "-" }}</td>
+                        <td><span class="badge {% if c.activo %}bg-success{% else %}bg-secondary{% endif %}">{{ "Activo" if c.activo else "Inactivo" }}</span></td>
+                        <td>
+                            {% if c.activo %}
+                            <form method="post" action="/agente-whatsapp/contactos-internos/{{ c.id }}/desactivar" class="d-inline" onsubmit="return confirm('¿Desactivar este contacto interno?');">
+                                <button class="btn btn-outline-danger btn-sm">Desactivar</button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">Sin contactos internos registrados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNuevoContacto" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/agente-whatsapp/contactos-internos/crear">
+            <div class="modal-header"><h5 class="modal-title">Nuevo contacto interno</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Nombre</label><input type="text" name="nombre" class="form-control" required placeholder="Ej: Recepción Principal"></div>
+                <div class="mb-2"><label>Número de celular</label><input type="text" name="numero_celular" class="form-control" required placeholder="Ej: 3001234567"></div>
+                <div class="mb-2"><label>Área (opcional)</label><input type="text" name="area" class="form-control" placeholder="Ej: Recepción, Coordinación, Sede Norte"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success">Guardar</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+{% endblock %}

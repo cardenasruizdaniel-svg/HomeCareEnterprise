@@ -56,18 +56,55 @@ ROLES_CON_DEPARTAMENTO_ASIGNADO = {
 }
 
 
-def listar_hilos(rol_usuario=None):
+def listar_hilos_en_espera(rol_usuario=None):
     """
-    Bandeja de entrada, ordenada por actividad más reciente
-    primero -- igual que la lista de chats de WhatsApp.
+    Chats "en espera": los que TODAVÍA no ha aceptado ningún
+    agente -- pueden estar siendo atendidos por el bot en ese
+    momento, o ya haber terminado con el bot y estar esperando
+    a que alguien los tome. Un agente puede aceptar o
+    transferir cualquiera de estos, así el bot todavía no haya
+    terminado la conversación.
 
-    Si el rol del agente tiene un departamento asignado (ej.
-    "Asistencial Procedimientos"), solo ve las conversaciones
-    derivadas a ESE departamento -- así cada quien atiende lo
-    suyo, sin ver de más. El perfil "Asistencial" general y los
-    roles de dirección (Administrador, Coordinador, etc.) ven
-    todas las conversaciones sin filtrar.
+    Se filtran por el departamento del rol del agente (si
+    aplica) -- así cada quien solo ve lo que le corresponde.
     """
+    filtro_departamento = ROLES_CON_DEPARTAMENTO_ASIGNADO.get(rol_usuario)
+
+    sql = """
+        SELECT wh.*, p.primer_nombre, p.primer_apellido, u.nombre AS agente_nombre
+        FROM whatsapp_hilos wh
+        LEFT JOIN pacientes p ON p.id = wh.paciente_id
+        LEFT JOIN usuarios u ON u.id = wh.agente_asignado_id
+        WHERE wh.agente_asignado_id IS NULL AND wh.estado != 'Cerrado'
+    """
+    parametros = []
+    if filtro_departamento:
+        sql += " AND wh.departamento LIKE ?"
+        parametros.append(f"%{filtro_departamento}%")
+    sql += " ORDER BY wh.ultima_actividad DESC"
+
+    filas = consultar_todos(sql, tuple(parametros))
+    return [dict(f) for f in filas]
+
+
+def listar_mis_conversaciones(usuario_id):
+    """Las conversaciones que ESTE agente ya aceptó y está atendiendo."""
+    filas = consultar_todos(
+        """
+        SELECT wh.*, p.primer_nombre, p.primer_apellido, u.nombre AS agente_nombre
+        FROM whatsapp_hilos wh
+        LEFT JOIN pacientes p ON p.id = wh.paciente_id
+        LEFT JOIN usuarios u ON u.id = wh.agente_asignado_id
+        WHERE wh.agente_asignado_id=? AND wh.estado != 'Cerrado'
+        ORDER BY wh.ultima_actividad DESC
+        """,
+        (usuario_id,),
+    )
+    return [dict(f) for f in filas]
+
+
+def listar_hilos(rol_usuario=None):
+    """Se conserva por compatibilidad -- todas las conversaciones abiertas, sin separar en espera/mías."""
     filtro_departamento = ROLES_CON_DEPARTAMENTO_ASIGNADO.get(rol_usuario)
 
     sql = """
@@ -115,11 +152,48 @@ def marcar_leido(hilo_id: int):
 
 
 def tomar_conversacion(hilo_id: int, usuario_id: int):
-    """El agente humano toma el control: el chatbot automático deja de responder en este hilo."""
+    """
+    El agente ACEPTA la conversación (desde "en espera" o
+    reasignándosela) -- el chatbot automático deja de responder
+    en este hilo, y pasa a la bandeja de "Mis conversaciones"
+    de este agente. Funciona sin importar si el bot ya había
+    terminado con ella o todavía la estaba atendiendo.
+    """
     ejecutar(
         "UPDATE whatsapp_hilos SET atendido_por_humano=1, agente_asignado_id=?, estado='Abierto' WHERE id=?",
         (usuario_id, hilo_id),
     )
+
+
+def transferir_conversacion(hilo_id: int, de_agente_id, a_agente_id: int, motivo: str):
+    """Pasa la conversación a otro agente conectado, dejando registro de quién la transfirió y por qué."""
+    if not a_agente_id:
+        raise ValueError("Debe indicar a qué agente se transfiere.")
+    if not motivo or not motivo.strip():
+        raise ValueError("Debe indicar el motivo de la transferencia.")
+
+    ejecutar(
+        "UPDATE whatsapp_hilos SET agente_asignado_id=?, atendido_por_humano=1, estado='Abierto' WHERE id=?",
+        (a_agente_id, hilo_id),
+    )
+    ejecutar(
+        "INSERT INTO whatsapp_transferencias(hilo_id, de_agente_id, a_agente_id, motivo) VALUES (?, ?, ?, ?)",
+        (hilo_id, de_agente_id, a_agente_id, motivo.strip()),
+    )
+
+
+def historial_transferencias(hilo_id: int):
+    filas = consultar_todos(
+        """
+        SELECT t.*, ua.nombre AS de_nombre, ub.nombre AS a_nombre
+        FROM whatsapp_transferencias t
+        LEFT JOIN usuarios ua ON ua.id = t.de_agente_id
+        LEFT JOIN usuarios ub ON ub.id = t.a_agente_id
+        WHERE t.hilo_id=? ORDER BY t.fecha ASC
+        """,
+        (hilo_id,),
+    )
+    return [dict(f) for f in filas]
 
 
 def devolver_a_bot(hilo_id: int):
@@ -129,8 +203,119 @@ def devolver_a_bot(hilo_id: int):
     )
 
 
-def cerrar_conversacion(hilo_id: int):
+def finalizar_conversacion(hilo_id: int, con_respuesta: bool):
+    """
+    Termina la conversación. Si es "con respuesta", se envía el
+    mensaje de despedida configurado (con el enlace a la
+    encuesta de satisfacción si está configurado) antes de
+    cerrarla -- si es "sin respuesta", solo se cierra.
+    """
+    hilo = obtener_hilo(hilo_id)
+    if not hilo:
+        raise ValueError("La conversación no existe.")
+
+    if con_respuesta:
+        config = consultar_uno("SELECT mensaje_despedida, url_encuesta_satisfaccion FROM configuracion_whatsapp WHERE id=1")
+        config = dict(config) if config else {}
+        texto = config.get("mensaje_despedida") or "✨ Gracias por confiar en nosotros."
+        if config.get("url_encuesta_satisfaccion"):
+            texto += f"\n\n📋 Nos encantaría conocer su opinión, por favor responda esta breve encuesta:\n{config['url_encuesta_satisfaccion']}"
+
+        enviar_whatsapp(hilo["numero_celular"], texto)
+        ejecutar(
+            "INSERT INTO whatsapp_conversaciones(numero_celular, paciente_id, direccion, mensaje) VALUES (?, ?, 'saliente', ?)",
+            (hilo["numero_celular"], hilo.get("paciente_id"), texto),
+        )
+
     ejecutar("UPDATE whatsapp_hilos SET estado='Cerrado' WHERE id=?", (hilo_id,))
+
+
+def cerrar_conversacion(hilo_id: int):
+    """Se conserva por compatibilidad -- equivale a finalizar sin respuesta."""
+    finalizar_conversacion(hilo_id, con_respuesta=False)
+
+
+def actualizar_etiquetas(hilo_id: int, etiquetas: list):
+    texto_etiquetas = ",".join(e.strip() for e in etiquetas if e.strip())
+    ejecutar("UPDATE whatsapp_hilos SET etiquetas=? WHERE id=?", (texto_etiquetas, hilo_id))
+
+
+def enviar_archivo_agente(hilo_id: int, archivo_base64: str, nombre_archivo: str, usuario_id: int) -> dict:
+    """Envía una foto o documento al paciente desde el chat del agente."""
+    hilo = obtener_hilo(hilo_id)
+    if not hilo:
+        raise ValueError("La conversación no existe.")
+    if not archivo_base64:
+        raise ValueError("Debe adjuntar un archivo.")
+
+    es_imagen = nombre_archivo.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".webp"))
+    resultado = enviar_whatsapp(hilo["numero_celular"], f"📎 {nombre_archivo}", adjunto_url=archivo_base64)
+
+    ejecutar(
+        "INSERT INTO whatsapp_conversaciones(numero_celular, paciente_id, direccion, mensaje, tipo_mensaje, url_adjunto) "
+        "VALUES (?, ?, 'saliente', ?, ?, ?)",
+        (hilo["numero_celular"], hilo.get("paciente_id"), nombre_archivo, "imagen" if es_imagen else "documento", archivo_base64),
+    )
+    ejecutar("UPDATE whatsapp_hilos SET ultimo_mensaje=?, ultima_actividad=CURRENT_TIMESTAMP WHERE id=?", (f"📎 {nombre_archivo}", hilo_id))
+    return resultado
+
+
+# ==========================================================
+# PRESENCIA DE AGENTES (quién está conectado ahora mismo)
+# ==========================================================
+
+def marcar_presencia(usuario_id: int):
+    ejecutar(
+        "INSERT INTO whatsapp_agentes_presencia(usuario_id, ultima_actividad) VALUES (?, CURRENT_TIMESTAMP) "
+        "ON CONFLICT(usuario_id) DO UPDATE SET ultima_actividad=CURRENT_TIMESTAMP",
+        (usuario_id,),
+    )
+
+
+def listar_agentes_conectados(minutos=3):
+    """Agentes que han estado activos en el panel en los últimos N minutos -- para poder transferirles una conversación."""
+    filas = consultar_todos(
+        """
+        SELECT u.id, u.nombre, u.rol
+        FROM whatsapp_agentes_presencia p
+        JOIN usuarios u ON u.id = p.usuario_id
+        WHERE p.ultima_actividad >= datetime('now', ?)
+        ORDER BY u.nombre
+        """,
+        (f"-{minutos} minutes",),
+    )
+    return [dict(f) for f in filas]
+
+
+# ==========================================================
+# CONTACTOS INTERNOS (números de la propia empresa)
+# ==========================================================
+
+def listar_contactos_internos():
+    filas = consultar_todos("SELECT * FROM whatsapp_contactos_internos ORDER BY nombre")
+    return [dict(f) for f in filas]
+
+
+def crear_contacto_interno(nombre: str, numero_celular: str, area: str, usuario_id=None) -> int:
+    if not nombre or not numero_celular:
+        raise ValueError("Debe indicar el nombre y el número de celular.")
+    numero_normalizado = normalizar_celular(numero_celular)
+    return ejecutar(
+        "INSERT INTO whatsapp_contactos_internos(nombre, numero_celular, area, usuario_creacion) VALUES (?, ?, ?, ?)",
+        (nombre.strip(), numero_normalizado, area or "", usuario_id),
+    )
+
+
+def desactivar_contacto_interno(contacto_id: int):
+    ejecutar("UPDATE whatsapp_contactos_internos SET activo=0 WHERE id=?", (contacto_id,))
+
+
+def es_contacto_interno(numero_celular: str) -> bool:
+    numero_normalizado = normalizar_celular(numero_celular)
+    fila = consultar_uno(
+        "SELECT id FROM whatsapp_contactos_internos WHERE numero_celular=? AND activo=1", (numero_normalizado,)
+    )
+    return bool(fila)
 
 
 def enviar_mensaje_agente(hilo_id: int, texto: str, usuario_id: int) -> dict:

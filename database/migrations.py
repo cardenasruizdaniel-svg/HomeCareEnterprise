@@ -640,70 +640,18 @@ class MigrationManager:
         # Siembra el flujo por defecto SOLO si la tabla esta
         # vacia -- para que un administrador que ya haya
         # personalizado el suyo no se lo pisen en una
-        # actualizacion futura.
+        # actualizacion futura. Este es el flujo REAL que se
+        # definió con la IPS (bienvenida, menú de 6 servicios,
+        # Procedimientos/Terapias con sus 4 opciones de cita,
+        # Solicitudes, Pagos, Actualización de Datos, PQR) --
+        # así, en una instalación nueva, ya aparece correcto
+        # desde el primer momento, sin tener que entrar a
+        # buscar el botón para cargarlo.
         total_opciones = self.connection.execute("SELECT COUNT(*) FROM whatsapp_flujo_opciones").fetchone()[0]
         if total_opciones == 0:
-            cursor = self.connection.cursor()
-
-            raiz = [
-                (1, "Mi próxima visita programada", "respuesta_automatica", "{proxima_visita}", None),
-                (2, "Mi última orden médica", "respuesta_automatica", "{ultima_orden}", None),
-                (3, "Últimas recomendaciones del médico", "respuesta_automatica", "{ultimas_recomendaciones}", None),
-                (4, "Facturación y cartera", "submenu", None, None),
-                (5, "Programación / Agendamiento de visitas", "submenu", None, None),
-                (6, "Coordinación médica / Historia clínica", "submenu", None, None),
-                (7, "Hablar con un asesor", "derivar_departamento", "Ya lo comunicamos con un asesor de Atención al Usuario. En un momento le atenderán por este mismo medio.", "Atención al Usuario"),
-            ]
-            ids_raiz = {}
-            for orden, texto, tipo, contenido, depto in raiz:
-                cursor.execute(
-                    "INSERT INTO whatsapp_flujo_opciones(padre_id, orden, texto_boton, tipo_accion, contenido_respuesta, departamento) "
-                    "VALUES (NULL, ?, ?, ?, ?, ?)",
-                    (orden, texto, tipo, contenido, depto),
-                )
-                ids_raiz[orden] = cursor.lastrowid
-
-            submenu_facturacion = [
-                (1, "Consultar el estado de una factura", "derivar_departamento",
-                 "Lo comunicamos con Facturación para revisar el estado de su factura.", "Facturación"),
-                (2, "Reportar un problema de cobro", "derivar_departamento",
-                 "Lo comunicamos con Facturación para revisar su caso.", "Facturación"),
-            ]
-            for orden, texto, tipo, contenido, depto in submenu_facturacion:
-                cursor.execute(
-                    "INSERT INTO whatsapp_flujo_opciones(padre_id, orden, texto_boton, tipo_accion, contenido_respuesta, departamento) "
-                    "VALUES (?, ?, ?, ?, ?, ?)",
-                    (ids_raiz[4], orden, texto, tipo, contenido, depto),
-                )
-
-            submenu_programacion = [
-                (1, "Solicitar o cambiar una cita", "derivar_departamento",
-                 "Lo comunicamos con el área de Programación para agendar o modificar su cita.", "Programación"),
-                (2, "Cancelar una visita", "derivar_departamento",
-                 "Lo comunicamos con el área de Programación para cancelar su visita.", "Programación"),
-            ]
-            for orden, texto, tipo, contenido, depto in submenu_programacion:
-                cursor.execute(
-                    "INSERT INTO whatsapp_flujo_opciones(padre_id, orden, texto_boton, tipo_accion, contenido_respuesta, departamento) "
-                    "VALUES (?, ?, ?, ?, ?, ?)",
-                    (ids_raiz[5], orden, texto, tipo, contenido, depto),
-                )
-
-            submenu_medico = [
-                (1, "Hablar con Coordinación Médica", "derivar_departamento",
-                 "Lo comunicamos con Coordinación Médica.", "Coordinación Médica"),
-                (2, "Solicitar copia de mi historia clínica", "derivar_departamento",
-                 "Lo comunicamos con Coordinación Médica para tramitar su solicitud.", "Coordinación Médica"),
-            ]
-            for orden, texto, tipo, contenido, depto in submenu_medico:
-                cursor.execute(
-                    "INSERT INTO whatsapp_flujo_opciones(padre_id, orden, texto_boton, tipo_accion, contenido_respuesta, departamento) "
-                    "VALUES (?, ?, ?, ?, ?, ?)",
-                    (ids_raiz[6], orden, texto, tipo, contenido, depto),
-                )
-
-            self.connection.commit()
-            cambios.append("Se sembró el flujo por defecto del chatbot")
+            from services.whatsapp_flujo_service import construir_flujo_personalizado_homecare
+            construir_flujo_personalizado_homecare(None)
+            cambios.append("Se sembró el flujo de conversación de HomeCare (bienvenida, servicios, Procedimientos/Terapias, Solicitudes, Pagos, PQR)")
 
         return cambios
 
@@ -765,6 +713,80 @@ class MigrationManager:
             """)
             self.connection.commit()
             cambios.append("Se creó la tabla whatsapp_datos_recolectados")
+
+        return cambios
+
+    def migrar_agente_whatsapp_profesional(self):
+        """
+        Reorganización completa del panel de Agente WhatsApp:
+        contactos internos de la empresa, etiquetas por
+        conversación, historial de transferencias (con motivo),
+        presencia de agentes conectados, y soporte para enviar
+        y recibir fotos/archivos dentro del chat.
+        """
+        cambios = []
+
+        if self.existe_tabla("whatsapp_hilos"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "whatsapp_hilos",
+                    {"etiquetas": "etiquetas TEXT"},
+                )
+            )
+
+        if self.existe_tabla("whatsapp_conversaciones"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "whatsapp_conversaciones",
+                    {
+                        "tipo_mensaje": "tipo_mensaje TEXT DEFAULT 'texto'",
+                        "url_adjunto": "url_adjunto TEXT",
+                    },
+                )
+            )
+
+        if not self.existe_tabla("whatsapp_contactos_internos"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS whatsapp_contactos_internos(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nombre TEXT NOT NULL,
+                    numero_celular TEXT NOT NULL UNIQUE,
+                    area TEXT,
+                    activo INTEGER DEFAULT 1,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    usuario_creacion INTEGER
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla whatsapp_contactos_internos")
+
+        if not self.existe_tabla("whatsapp_transferencias"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS whatsapp_transferencias(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    hilo_id INTEGER NOT NULL,
+                    de_agente_id INTEGER,
+                    a_agente_id INTEGER NOT NULL,
+                    motivo TEXT,
+                    fecha TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(hilo_id) REFERENCES whatsapp_hilos(id),
+                    FOREIGN KEY(de_agente_id) REFERENCES usuarios(id),
+                    FOREIGN KEY(a_agente_id) REFERENCES usuarios(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla whatsapp_transferencias")
+
+        if not self.existe_tabla("whatsapp_agentes_presencia"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS whatsapp_agentes_presencia(
+                    usuario_id INTEGER PRIMARY KEY,
+                    ultima_actividad TEXT,
+                    FOREIGN KEY(usuario_id) REFERENCES usuarios(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla whatsapp_agentes_presencia")
 
         return cambios
 
@@ -2152,6 +2174,10 @@ class MigrationManager:
         )
 
         cambios.extend(
+            self.migrar_chatbot_whatsapp()
+        )
+
+        cambios.extend(
             self.migrar_flujo_avanzado_chatbot()
         )
 
@@ -2160,15 +2186,15 @@ class MigrationManager:
         )
 
         cambios.extend(
+            self.migrar_agente_whatsapp_profesional()
+        )
+
+        cambios.extend(
             self.migrar_whatsapp_hilos()
         )
 
         cambios.extend(
             self.migrar_perfil_asistencial()
-        )
-
-        cambios.extend(
-            self.migrar_chatbot_whatsapp()
         )
 
         cambios.extend(
