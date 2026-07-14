@@ -23,7 +23,7 @@ async def panel(request: Request, usuario=Depends(requiere_permiso("agente_whats
 
 @router.get("/hilos")
 async def api_listar_hilos(usuario=Depends(requiere_permiso("agente_whatsapp"))):
-    return agente_service.listar_hilos()
+    return agente_service.listar_hilos(usuario.get("rol") if isinstance(usuario, dict) else None)
 
 
 @router.get("/hilos/{hilo_id}")

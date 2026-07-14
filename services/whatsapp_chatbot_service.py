@@ -245,15 +245,22 @@ def procesar_mensaje_entrante(numero_celular: str, texto_mensaje: str) -> dict:
             "UPDATE whatsapp_hilos SET esperando_datos_libres=1, opcion_actual_id=? WHERE id=?",
             (opcion_elegida["id"], hilo["id"]),
         )
-        campos = (opcion_elegida.get("campos_solicitados") or "").strip()
-        lista_campos = "\n".join(f"• {c.strip()}" for c in campos.split("\n") if c.strip())
-        respuesta = (
-            "Gracias por comunicarse con HomeCare del Quindío I.P.S. 💙\n\n"
-            "Con gusto le ayudaremos a gestionar su solicitud.\n\n"
-            "Para continuar, por favor compártanos la siguiente información en un solo mensaje:\n\n"
-            f"{lista_campos}\n\n"
-            "Una vez recibamos la información, nuestro equipo la validará y gestionará su solicitud."
-        )
+        # Si se configuró un texto personalizado para esta
+        # opción, se usa tal cual (respetando exactamente lo
+        # que se haya redactado) -- si no, se arma uno genérico
+        # a partir de la lista de campos solicitados.
+        if opcion_elegida.get("contenido_respuesta"):
+            respuesta = opcion_elegida["contenido_respuesta"]
+        else:
+            campos = (opcion_elegida.get("campos_solicitados") or "").strip()
+            lista_campos = "\n".join(f"• {c.strip()}" for c in campos.split("\n") if c.strip())
+            respuesta = (
+                "Gracias por comunicarse con HomeCare del Quindío I.P.S. 💙\n\n"
+                "Con gusto le ayudaremos a gestionar su solicitud.\n\n"
+                "Para continuar, por favor compártanos la siguiente información en un solo mensaje:\n\n"
+                f"{lista_campos}\n\n"
+                "Una vez recibamos la información, nuestro equipo la validará y gestionará su solicitud."
+            )
 
     elif tipo == "derivar_departamento":
         ejecutar(

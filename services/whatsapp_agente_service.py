@@ -50,20 +50,39 @@ def esta_atendido_por_humano(numero_celular: str) -> bool:
     return bool(dict(hilo)["atendido_por_humano"]) if hilo else False
 
 
-def listar_hilos():
+ROLES_CON_DEPARTAMENTO_ASIGNADO = {
+    "Asistencial Procedimientos": "Procedimientos",
+    "Asistencial Terapias": "Terapias",
+}
+
+
+def listar_hilos(rol_usuario=None):
     """
     Bandeja de entrada, ordenada por actividad más reciente
     primero -- igual que la lista de chats de WhatsApp.
+
+    Si el rol del agente tiene un departamento asignado (ej.
+    "Asistencial Procedimientos"), solo ve las conversaciones
+    derivadas a ESE departamento -- así cada quien atiende lo
+    suyo, sin ver de más. El perfil "Asistencial" general y los
+    roles de dirección (Administrador, Coordinador, etc.) ven
+    todas las conversaciones sin filtrar.
     """
-    filas = consultar_todos(
-        """
+    filtro_departamento = ROLES_CON_DEPARTAMENTO_ASIGNADO.get(rol_usuario)
+
+    sql = """
         SELECT wh.*, p.primer_nombre, p.primer_apellido, u.nombre AS agente_nombre
         FROM whatsapp_hilos wh
         LEFT JOIN pacientes p ON p.id = wh.paciente_id
         LEFT JOIN usuarios u ON u.id = wh.agente_asignado_id
-        ORDER BY wh.ultima_actividad DESC
-        """
-    )
+    """
+    parametros = ()
+    if filtro_departamento:
+        sql += " WHERE wh.departamento LIKE ?"
+        parametros = (f"%{filtro_departamento}%",)
+    sql += " ORDER BY wh.ultima_actividad DESC"
+
+    filas = consultar_todos(sql, parametros)
     return [dict(f) for f in filas]
 
 

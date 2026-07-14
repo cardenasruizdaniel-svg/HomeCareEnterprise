@@ -15,7 +15,7 @@ router = APIRouter(prefix="/configuracion-whatsapp", tags=["Configuración Whats
 
 @router.get("/manual-pdf")
 async def descargar_manual_whatsapp(usuario=Depends(requiere_permiso("chatbot_whatsapp"))):
-    ruta = BASE_DIR / "docs" / "manuales" / "MANUAL_CONEXION_WHATSAPP.pdf"
+    ruta = BASE_DIR / "docs" / "manuales" / "MANUAL_CONEXION_WHATSAPP_ILUSTRADO.pdf"
     return FileResponse(ruta, media_type="application/pdf", filename="Manual_Conexion_WhatsApp_HomeCare.pdf")
 
 
@@ -106,6 +106,13 @@ async def ver_flujo(request: Request, usuario=Depends(requiere_permiso("chatbot_
             "guardado": request.query_params.get("guardado"),
         },
     )
+
+
+@router.post("/flujo/construir-personalizado")
+async def construir_personalizado(request: Request, usuario=Depends(requiere_permiso("chatbot_whatsapp"))):
+    from services import whatsapp_flujo_service as flujo_service
+    flujo_service.construir_flujo_personalizado_homecare(usuario.get("id") if isinstance(usuario, dict) else None)
+    return RedirectResponse(url="/configuracion-whatsapp/flujo?guardado=1", status_code=303)
 
 
 @router.post("/flujo/restaurar-plantilla")

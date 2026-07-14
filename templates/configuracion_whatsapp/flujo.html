@@ -30,10 +30,16 @@
     <a href="/configuracion-whatsapp/flujo/diagrama" class="btn btn-outline-primary mb-3">
         <i class="fa-solid fa-diagram-project"></i> Ver como mapa visual
     </a>
+    <form method="post" action="/configuracion-whatsapp/flujo/construir-personalizado" class="d-inline"
+          onsubmit="return confirm('Esto BORRA el menú actual y lo reemplaza por el flujo personalizado de HomeCare (Procedimientos, Solicitudes, Terapias, Pagos, Actualización de Datos, PQR) que se definió. ¿Continuar?');">
+        <button type="submit" class="btn btn-primary mb-3">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Cargar el flujo personalizado de HomeCare
+        </button>
+    </form>
     <form method="post" action="/configuracion-whatsapp/flujo/restaurar-plantilla" class="d-inline"
-          onsubmit="return confirm('Esto BORRA todo el menú actual y lo reemplaza por la plantilla de HomeCare (ciudades → servicios → submenús → recolección de datos). ¿Continuar?');">
-        <button type="submit" class="btn btn-outline-primary mb-3">
-            <i class="fa-solid fa-arrows-rotate"></i> Restaurar plantilla predeterminada de HomeCare
+          onsubmit="return confirm('Esto BORRA todo el menú actual y lo reemplaza por la plantilla base con selección de ciudad. ¿Continuar?');">
+        <button type="submit" class="btn btn-outline-secondary mb-3">
+            <i class="fa-solid fa-arrows-rotate"></i> Restaurar plantilla base (con ciudades)
         </button>
     </form>
 

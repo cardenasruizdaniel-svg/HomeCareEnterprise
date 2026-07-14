@@ -790,6 +790,38 @@ class MigrationManager:
             cambios.append("Se creó la tabla whatsapp_hilos")
         return cambios
 
+    def migrar_roles_asistencial_departamentos(self):
+        """
+        Los agentes de WhatsApp se van a dividir por
+        especialidad: uno que atienda las solicitudes de
+        Procedimientos, otro el de Terapias y Especialistas, y
+        el resto (Solicitudes, Pagos, Actualización de Datos,
+        PQR) lo sigue atendiendo el perfil "Asistencial" general
+        que ya existía.
+        """
+        cambios = []
+        cursor = self.connection.cursor()
+
+        nuevos_roles = [
+            ("Asistencial Procedimientos", "Atiende las conversaciones de WhatsApp derivadas al departamento de Procedimientos."),
+            ("Asistencial Terapias", "Atiende las conversaciones de WhatsApp derivadas al departamento de Terapias y Especialistas."),
+        ]
+
+        for nombre_rol, descripcion in nuevos_roles:
+            existente = cursor.execute("SELECT id FROM roles WHERE nombre=?", (nombre_rol,)).fetchone()
+            if not existente:
+                cursor.execute(
+                    "INSERT INTO roles(nombre, descripcion, acceso_total, es_del_sistema) VALUES (?, ?, 0, 1)",
+                    (nombre_rol, descripcion),
+                )
+                rol_id = cursor.lastrowid
+                for modulo in ("agente_whatsapp", "pacientes", "programacion"):
+                    cursor.execute("INSERT INTO roles_permisos(rol_id, modulo) VALUES (?, ?)", (rol_id, modulo))
+                self.connection.commit()
+                cambios.append(f"Se creó el perfil '{nombre_rol}'")
+
+        return cambios
+
     def migrar_permiso_app_gerencial(self):
         """
         Administrador y Director Médico ya tienen acceso total
@@ -2109,6 +2141,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_roles_permisos()
+        )
+
+        cambios.extend(
+            self.migrar_roles_asistencial_departamentos()
         )
 
         cambios.extend(
