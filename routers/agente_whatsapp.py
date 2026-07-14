@@ -52,6 +52,71 @@ async def api_agentes_conectados(usuario=Depends(requiere_permiso("agente_whatsa
     return agente_service.listar_agentes_conectados()
 
 
+# ==========================================================
+# RESPUESTAS RÁPIDAS
+# ==========================================================
+
+@router.get("/respuestas-rapidas")
+async def api_listar_respuestas_rapidas(usuario=Depends(requiere_permiso("agente_whatsapp"))):
+    return agente_service.listar_respuestas_rapidas()
+
+
+@router.get("/respuestas-rapidas/administrar", response_class=HTMLResponse)
+async def ver_respuestas_rapidas(request: Request, usuario=Depends(requiere_permiso("chatbot_whatsapp"))):
+    return templates.TemplateResponse(
+        request=request, name="agente_whatsapp/respuestas_rapidas.html",
+        context={
+            "usuario": usuario, "respuestas": agente_service.listar_todas_respuestas_rapidas(),
+            "guardado": request.query_params.get("guardado"), "error": request.query_params.get("error"),
+        },
+    )
+
+
+@router.post("/respuestas-rapidas/crear")
+async def crear_respuesta_rapida(
+    request: Request,
+    titulo: str = Form(...),
+    texto: str = Form(...),
+    categoria: str = Form("General"),
+    orden: str = Form("0"),
+    usuario=Depends(requiere_permiso("chatbot_whatsapp")),
+):
+    try:
+        agente_service.crear_respuesta_rapida(titulo, texto, categoria, int(orden or 0), _id_usuario(usuario))
+    except ValueError as error:
+        return RedirectResponse(url=f"/agente-whatsapp/respuestas-rapidas/administrar?error={error}", status_code=303)
+    return RedirectResponse(url="/agente-whatsapp/respuestas-rapidas/administrar?guardado=1", status_code=303)
+
+
+@router.post("/respuestas-rapidas/{respuesta_id}/actualizar")
+async def actualizar_respuesta_rapida(
+    request: Request,
+    respuesta_id: int,
+    titulo: str = Form(...),
+    texto: str = Form(...),
+    categoria: str = Form("General"),
+    orden: str = Form("0"),
+    usuario=Depends(requiere_permiso("chatbot_whatsapp")),
+):
+    try:
+        agente_service.actualizar_respuesta_rapida(respuesta_id, titulo, texto, categoria, int(orden or 0))
+    except ValueError as error:
+        return RedirectResponse(url=f"/agente-whatsapp/respuestas-rapidas/administrar?error={error}", status_code=303)
+    return RedirectResponse(url="/agente-whatsapp/respuestas-rapidas/administrar?guardado=1", status_code=303)
+
+
+@router.post("/respuestas-rapidas/{respuesta_id}/desactivar")
+async def desactivar_respuesta_rapida(respuesta_id: int, usuario=Depends(requiere_permiso("chatbot_whatsapp"))):
+    agente_service.desactivar_respuesta_rapida(respuesta_id)
+    return RedirectResponse(url="/agente-whatsapp/respuestas-rapidas/administrar?guardado=1", status_code=303)
+
+
+@router.post("/respuestas-rapidas/{respuesta_id}/activar")
+async def activar_respuesta_rapida(respuesta_id: int, usuario=Depends(requiere_permiso("chatbot_whatsapp"))):
+    agente_service.activar_respuesta_rapida(respuesta_id)
+    return RedirectResponse(url="/agente-whatsapp/respuestas-rapidas/administrar?guardado=1", status_code=303)
+
+
 @router.get("/hilos/{hilo_id}")
 async def api_hilo(hilo_id: int, usuario=Depends(requiere_permiso("agente_whatsapp"))):
     hilo = agente_service.obtener_hilo(hilo_id)

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block titulo %}Respuestas Rápidas{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/agente-whatsapp" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver al Agente WhatsApp</a>
+    <h2 class="mb-1"><i class="fa-solid fa-bolt text-warning"></i> Respuestas Rápidas</h2>
+    <p class="text-muted">Mensajes predefinidos que los agentes pueden usar con un clic al atender una conversación de WhatsApp.</p>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalNuevaRespuesta">
+        <i class="fa-solid fa-plus"></i> Agregar respuesta rápida
+    </button>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light"><tr><th>Orden</th><th>Título</th><th>Categoría</th><th>Texto</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                    {% for r in respuestas %}
+                    <tr class="{% if not r.activo %}opacity-50{% endif %}">
+                        <td>{{ r.orden }}</td>
+                        <td><strong>{{ r.titulo }}</strong></td>
+                        <td><span class="badge bg-secondary">{{ r.categoria }}</span></td>
+                        <td class="small text-muted">{{ r.texto[:80] }}{% if r.texto|length > 80 %}...{% endif %}</td>
+                        <td><span class="badge {% if r.activo %}bg-success{% else %}bg-secondary{% endif %}">{{ "Activa" if r.activo else "Inactiva" }}</span></td>
+                        <td>
+                            <button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#editar-rr-{{ r.id }}"><i class="fa-solid fa-pen"></i></button>
+                            {% if r.activo %}
+                            <form method="post" action="/agente-whatsapp/respuestas-rapidas/{{ r.id }}/desactivar" class="d-inline"><button class="btn btn-outline-danger btn-sm">Desactivar</button></form>
+                            {% else %}
+                            <form method="post" action="/agente-whatsapp/respuestas-rapidas/{{ r.id }}/activar" class="d-inline"><button class="btn btn-outline-success btn-sm">Activar</button></form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr class="collapse" id="editar-rr-{{ r.id }}"><td colspan="6">
+                        <form method="post" action="/agente-whatsapp/respuestas-rapidas/{{ r.id }}/actualizar" class="p-2">
+                            <div class="row">
+                                <div class="col-md-4 mb-2"><label>Título</label><input type="text" name="titulo" class="form-control" value="{{ r.titulo }}" required></div>
+                                <div class="col-md-3 mb-2"><label>Categoría</label><input type="text" name="categoria" class="form-control" value="{{ r.categoria }}"></div>
+                                <div class="col-md-2 mb-2"><label>Orden</label><input type="number" name="orden" class="form-control" value="{{ r.orden }}"></div>
+                                <div class="col-md-12 mb-2"><label>Texto</label><textarea name="texto" class="form-control" rows="2" required>{{ r.texto }}</textarea></div>
+                            </div>
+                            <button class="btn btn-primary btn-sm">Guardar</button>
+                        </form>
+                    </td></tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">Sin respuestas rápidas creadas.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNuevaRespuesta" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/agente-whatsapp/respuestas-rapidas/crear">
+            <div class="modal-header"><h5 class="modal-title">Nueva respuesta rápida</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Título (para identificarla en la lista)</label><input type="text" name="titulo" class="form-control" required placeholder="Ej: Saludo inicial"></div>
+                <div class="mb-2"><label>Categoría</label><input type="text" name="categoria" class="form-control" value="General" placeholder="Ej: General, Información, Facturación"></div>
+                <div class="mb-2"><label>Orden</label><input type="number" name="orden" class="form-control" value="0"></div>
+                <div class="mb-2"><label>Texto del mensaje</label><textarea name="texto" class="form-control" rows="3" required placeholder="Este es el texto que se enviará al paciente"></textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success">Guardar</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+{% endblock %}

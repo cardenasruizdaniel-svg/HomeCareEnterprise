@@ -106,7 +106,9 @@ async def dashboard_gerencial(usuario=Depends(usuario_actual)):
 
     gerencial = ds.resumen_gerencial()
     operativo = panel_operativo_completo()
-    grafico = ds.grafico_produccion()
+    produccion_detallada = ds.grafico_produccion_detallado()
+    cumplimiento_historico = ds.grafico_cumplimiento_historico(6)
+    altas_bajas = ds.grafico_altas_bajas(6)
 
     return {
         "gerencial": gerencial,
@@ -120,7 +122,9 @@ async def dashboard_gerencial(usuario=Depends(usuario_actual)):
             "servicios_sin_programar": operativo["servicios_sin_programar"][:10],
             "total_servicios_sin_programar": len(operativo["servicios_sin_programar"]),
         },
-        "grafico_produccion": grafico,
+        "produccion_detallada": produccion_detallada,
+        "cumplimiento_historico": cumplimiento_historico,
+        "altas_bajas": altas_bajas,
     }
 
 

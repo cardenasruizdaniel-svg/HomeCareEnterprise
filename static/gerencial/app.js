@@ -160,6 +160,8 @@ function marcarNavActivo(vista) {
 // ==========================================================
 
 let graficoProduccion = null;
+let graficoCumplimiento = null;
+let graficoAltasBajas = null;
 
 async function renderDashboard() {
   marcarNavActivo("dashboard");
@@ -223,8 +225,21 @@ async function renderDashboard() {
     </div>` : ""}
 
     <div class="card">
-      <h3>📈 Producción mensual</h3>
+      <h3>📈 Visitas: Programadas vs Completadas vs Canceladas</h3>
+      <small class="muted">Por mes, últimos 12 meses.</small>
       <div class="grafico-contenedor"><canvas id="canvas-produccion"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h3>✅ Tendencia de Cumplimiento</h3>
+      <small class="muted">% de visitas completadas sobre las programadas, mes a mes.</small>
+      <div class="grafico-contenedor"><canvas id="canvas-cumplimiento"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h3>👥 Altas y Bajas — Pacientes y Personal</h3>
+      <small class="muted">Últimos 6 meses.</small>
+      <div class="grafico-contenedor"><canvas id="canvas-altas-bajas"></canvas></div>
     </div>
 
     <div class="card">
@@ -269,6 +284,21 @@ async function renderDashboard() {
         <div class="kpi-card light"><div class="kpi-label">Completadas</div><div class="kpi-valor">${op.servicios_criticos.completadas.length}</div></div>
         <div class="kpi-card ${op.servicios_criticos.alertas.length > 0 ? 'rosa' : 'light'}"><div class="kpi-label">⚠ Sin cumplir</div><div class="kpi-valor">${op.servicios_criticos.alertas.length}</div></div>
       </div>
+      ${(() => {
+        const todas = [
+          ...op.servicios_criticos.alertas.map((v) => ({ ...v, _estado: "⚠ Sin cumplir", _color: "#c71c22" })),
+          ...op.servicios_criticos.en_curso.map((v) => ({ ...v, _estado: "🚶 En curso", _color: "#0d6efd" })),
+          ...op.servicios_criticos.programadas.map((v) => ({ ...v, _estado: "🗓 Programada", _color: "#6c757d" })),
+          ...op.servicios_criticos.completadas.map((v) => ({ ...v, _estado: "✅ Completada", _color: "#198754" })),
+        ];
+        if (todas.length === 0) return `<p class="muted" style="margin-top:10px;">Sin visitas de estos servicios hoy.</p>`;
+        return `<div style="margin-top:10px;">` + todas.map((v) => `
+          <div class="lista-item">
+            <strong>${v.paciente || "Paciente sin nombre"}</strong>
+            <span class="badge" style="float:right; background:${v._color};">${v._estado}</span>
+            <br><span class="muted">${v.servicio} · ${v.hora_inicio}${v.hora_fin ? "-" + v.hora_fin : ""} · Con: ${v.profesional || "Sin asignar"}</span>
+          </div>`).join("") + `</div>`;
+      })()}
     </div>` : ""}
 
     <div class="card">
@@ -293,16 +323,61 @@ async function renderDashboard() {
     </div>` : ""}
   `;
 
-  const ctx = document.getElementById("canvas-produccion");
-  if (ctx && datos.grafico_produccion) {
+  const ctxProduccion = document.getElementById("canvas-produccion");
+  if (ctxProduccion && datos.produccion_detallada) {
     if (graficoProduccion) graficoProduccion.destroy();
-    graficoProduccion = new Chart(ctx, {
+    graficoProduccion = new Chart(ctxProduccion, {
       type: "bar",
       data: {
-        labels: datos.grafico_produccion.labels,
-        datasets: [{ label: "Visitas", data: datos.grafico_produccion.values, backgroundColor: "#00c2b8" }],
+        labels: datos.produccion_detallada.labels,
+        datasets: [
+          { label: "Programadas", data: datos.produccion_detallada.programadas, backgroundColor: "#94a3b8" },
+          { label: "Completadas", data: datos.produccion_detallada.completadas, backgroundColor: "#00c2b8" },
+          { label: "Canceladas", data: datos.produccion_detallada.canceladas, backgroundColor: "#ff3399" },
+        ],
       },
-      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: "bottom", labels: { boxWidth: 10, font: { size: 10 } } } } },
+    });
+  }
+
+  const ctxCumplimiento = document.getElementById("canvas-cumplimiento");
+  if (ctxCumplimiento && datos.cumplimiento_historico) {
+    if (graficoCumplimiento) graficoCumplimiento.destroy();
+    graficoCumplimiento = new Chart(ctxCumplimiento, {
+      type: "line",
+      data: {
+        labels: datos.cumplimiento_historico.labels,
+        datasets: [{
+          label: "% Cumplimiento", data: datos.cumplimiento_historico.porcentajes,
+          borderColor: "#0a8f86", backgroundColor: "rgba(0,194,184,0.15)", fill: true, tension: 0.3,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+        scales: { y: { min: 0, max: 100, ticks: { callback: (v) => v + "%" } } },
+      },
+    });
+  }
+
+  const ctxAltasBajas = document.getElementById("canvas-altas-bajas");
+  if (ctxAltasBajas && datos.altas_bajas) {
+    if (graficoAltasBajas) graficoAltasBajas.destroy();
+    graficoAltasBajas = new Chart(ctxAltasBajas, {
+      type: "bar",
+      data: {
+        labels: datos.altas_bajas.labels,
+        datasets: [
+          { label: "Pacientes - Altas", data: datos.altas_bajas.pacientes_altas, backgroundColor: "#00c2b8" },
+          { label: "Pacientes - Bajas", data: datos.altas_bajas.pacientes_bajas.map((v) => -v), backgroundColor: "#c71c22" },
+          { label: "Personal - Altas", data: datos.altas_bajas.personal_altas, backgroundColor: "#0a8f86" },
+          { label: "Personal - Bajas", data: datos.altas_bajas.personal_bajas.map((v) => -v), backgroundColor: "#dd9d00" },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: true, position: "bottom", labels: { boxWidth: 10, font: { size: 9 } } } },
+        scales: { y: { ticks: { callback: (v) => Math.abs(v) } } },
+      },
     });
   }
 }

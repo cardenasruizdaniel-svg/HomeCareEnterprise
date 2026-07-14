@@ -318,6 +318,53 @@ def es_contacto_interno(numero_celular: str) -> bool:
     return bool(fila)
 
 
+# ==========================================================
+# RESPUESTAS RÁPIDAS (mensajes predefinidos para el agente)
+# ==========================================================
+
+def listar_respuestas_rapidas():
+    filas = consultar_todos(
+        "SELECT * FROM whatsapp_respuestas_rapidas WHERE activo=1 ORDER BY categoria, orden, titulo"
+    )
+    return [dict(f) for f in filas]
+
+
+def listar_todas_respuestas_rapidas():
+    """Incluye las inactivas también -- para la pantalla de administración."""
+    filas = consultar_todos("SELECT * FROM whatsapp_respuestas_rapidas ORDER BY categoria, orden, titulo")
+    return [dict(f) for f in filas]
+
+
+def crear_respuesta_rapida(titulo: str, texto: str, categoria: str, orden: int, usuario_id=None) -> int:
+    if not titulo or not titulo.strip():
+        raise ValueError("Debe indicar un título corto para identificar la respuesta.")
+    if not texto or not texto.strip():
+        raise ValueError("El texto de la respuesta no puede estar vacío.")
+    return ejecutar(
+        "INSERT INTO whatsapp_respuestas_rapidas(titulo, texto, categoria, orden, usuario_creacion) VALUES (?, ?, ?, ?, ?)",
+        (titulo.strip(), texto.strip(), categoria or "General", orden or 0, usuario_id),
+    )
+
+
+def actualizar_respuesta_rapida(respuesta_id: int, titulo: str, texto: str, categoria: str, orden: int):
+    if not titulo or not titulo.strip():
+        raise ValueError("Debe indicar un título corto para identificar la respuesta.")
+    if not texto or not texto.strip():
+        raise ValueError("El texto de la respuesta no puede estar vacío.")
+    ejecutar(
+        "UPDATE whatsapp_respuestas_rapidas SET titulo=?, texto=?, categoria=?, orden=? WHERE id=?",
+        (titulo.strip(), texto.strip(), categoria or "General", orden or 0, respuesta_id),
+    )
+
+
+def desactivar_respuesta_rapida(respuesta_id: int):
+    ejecutar("UPDATE whatsapp_respuestas_rapidas SET activo=0 WHERE id=?", (respuesta_id,))
+
+
+def activar_respuesta_rapida(respuesta_id: int):
+    ejecutar("UPDATE whatsapp_respuestas_rapidas SET activo=1 WHERE id=?", (respuesta_id,))
+
+
 def enviar_mensaje_agente(hilo_id: int, texto: str, usuario_id: int) -> dict:
     hilo = obtener_hilo(hilo_id)
     if not hilo:

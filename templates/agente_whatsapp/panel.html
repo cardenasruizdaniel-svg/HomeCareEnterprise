@@ -33,7 +33,10 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-1">
         <h2 class="mb-0"><i class="fa-brands fa-whatsapp text-success"></i> Agente WhatsApp</h2>
-        <a href="/agente-whatsapp/contactos-internos" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-address-book"></i> Contactos Internos</a>
+        <div class="d-flex gap-2">
+            <a href="/agente-whatsapp/respuestas-rapidas/administrar" class="btn btn-outline-warning btn-sm"><i class="fa-solid fa-bolt"></i> Respuestas Rápidas</a>
+            <a href="/agente-whatsapp/contactos-internos" class="btn btn-outline-secondary btn-sm"><i class="fa-solid fa-address-book"></i> Contactos Internos</a>
+        </div>
     </div>
     <p class="text-muted">Acepte conversaciones en espera, atienda las suyas, transfiera a otro agente conectado, o finalice cuando termine.</p>
 
@@ -191,6 +194,12 @@ async function cargarChat() {
         <div class="aw-chat-mensajes" id="aw-mensajes"></div>
         ${esMia ? `
         <div class="aw-chat-input">
+            <div class="dropdown dropup">
+                <button class="btn btn-outline-warning" id="aw-btn-respuestas-rapidas" data-bs-toggle="dropdown" title="Respuestas rápidas"><i class="fa-solid fa-bolt"></i></button>
+                <ul class="dropdown-menu" id="aw-menu-respuestas-rapidas" style="max-height:300px; overflow-y:auto; min-width:280px;">
+                    <li><span class="dropdown-item-text text-muted small">Cargando...</span></li>
+                </ul>
+            </div>
             <button class="btn btn-outline-secondary" id="aw-btn-adjuntar" title="Enviar foto o archivo"><i class="fa-solid fa-paperclip"></i></button>
             <input type="text" class="form-control" id="aw-input-texto" placeholder="Escriba un mensaje...">
             <button class="btn btn-success" id="aw-btn-enviar"><i class="fa-solid fa-paper-plane"></i></button>
@@ -286,6 +295,47 @@ async function cargarChat() {
         document.getElementById('aw-btn-adjuntar').addEventListener('click', () => {
             document.getElementById('input-archivo-oculto').click();
         });
+
+        cargarRespuestasRapidas();
+    }
+}
+
+async function cargarRespuestasRapidas() {
+    const menu = document.getElementById('aw-menu-respuestas-rapidas');
+    if (!menu) return;
+    try {
+        const resp = await fetch('/agente-whatsapp/respuestas-rapidas');
+        const respuestas = await resp.json();
+        window._respuestasRapidasCache = respuestas;
+
+        if (respuestas.length === 0) {
+            menu.innerHTML = `<li><span class="dropdown-item-text text-muted small">No hay respuestas rápidas configuradas. <a href="/agente-whatsapp/respuestas-rapidas/administrar">Crear una</a></span></li>`;
+            return;
+        }
+
+        let categoriaActual = null;
+        let html = '';
+        respuestas.forEach((r, indice) => {
+            if (r.categoria !== categoriaActual) {
+                categoriaActual = r.categoria;
+                html += `<li><h6 class="dropdown-header">${escapeHtml(categoriaActual)}</h6></li>`;
+            }
+            html += `<li><a class="dropdown-item" href="#" data-indice="${indice}"><strong>${escapeHtml(r.titulo)}</strong><br><small class="text-muted">${escapeHtml(r.texto.slice(0, 60))}${r.texto.length > 60 ? '...' : ''}</small></a></li>`;
+        });
+        html += `<li><hr class="dropdown-divider"></li><li><a class="dropdown-item small text-muted" href="/agente-whatsapp/respuestas-rapidas/administrar" target="_blank"><i class="fa-solid fa-gear"></i> Administrar respuestas rápidas</a></li>`;
+        menu.innerHTML = html;
+
+        menu.querySelectorAll('a[data-indice]').forEach((elemento) => {
+            elemento.addEventListener('click', (evento) => {
+                evento.preventDefault();
+                const respuesta = window._respuestasRapidasCache[parseInt(elemento.dataset.indice)];
+                const inputTexto = document.getElementById('aw-input-texto');
+                inputTexto.value = respuesta.texto;
+                inputTexto.focus();
+            });
+        });
+    } catch (error) {
+        menu.innerHTML = `<li><span class="dropdown-item-text text-muted small">No se pudieron cargar.</span></li>`;
     }
 }
 

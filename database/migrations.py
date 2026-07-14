@@ -788,6 +788,43 @@ class MigrationManager:
             self.connection.commit()
             cambios.append("Se creó la tabla whatsapp_agentes_presencia")
 
+        if not self.existe_tabla("whatsapp_respuestas_rapidas"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS whatsapp_respuestas_rapidas(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    titulo TEXT NOT NULL,
+                    texto TEXT NOT NULL,
+                    categoria TEXT,
+                    orden INTEGER DEFAULT 0,
+                    activo INTEGER DEFAULT 1,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    usuario_creacion INTEGER,
+                    FOREIGN KEY(usuario_creacion) REFERENCES usuarios(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla whatsapp_respuestas_rapidas")
+
+            # Se siembran algunas respuestas de ejemplo, listas
+            # para usar desde el primer momento -- se pueden
+            # editar, borrar o agregar más desde Configuración.
+            cursor = self.connection.cursor()
+            respuestas_iniciales = [
+                ("Saludo inicial", "¡Hola! Un gusto saludarle, soy parte del equipo de HomeCare del Quindío I.P.S. ¿En qué le puedo colaborar hoy? 💙", "General", 1),
+                ("Un momento por favor", "Con gusto reviso su solicitud, deme un momento por favor 🙏", "General", 2),
+                ("Solicitar documento", "Para continuar, ¿me podría compartir su nombre completo y número de documento por favor?", "General", 3),
+                ("Confirmar recepción", "Ya recibimos su información, en un momento le confirmamos ✅", "General", 4),
+                ("Horario de atención", "Nuestro horario de atención es de lunes a viernes de 7:00 a.m. a 5:00 p.m., y sábados de 8:00 a.m. a 12:00 m.", "Información", 5),
+                ("Despedida", "Fue un gusto atenderle. ¡Que tenga un excelente día! 💙", "General", 6),
+            ]
+            for titulo, texto, categoria, orden in respuestas_iniciales:
+                cursor.execute(
+                    "INSERT INTO whatsapp_respuestas_rapidas(titulo, texto, categoria, orden) VALUES (?, ?, ?, ?)",
+                    (titulo, texto, categoria, orden),
+                )
+            self.connection.commit()
+            cambios.append("Se sembraron respuestas rápidas de ejemplo")
+
         return cambios
 
     def migrar_whatsapp_hilos(self):
