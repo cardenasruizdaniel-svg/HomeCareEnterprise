@@ -77,6 +77,20 @@ async def guardar(
 # FLUJO DE CONVERSACIÓN (árbol de opciones del chatbot)
 # ==========================================================
 
+@router.get("/flujo/diagrama", response_class=HTMLResponse)
+async def ver_diagrama_flujo(request: Request, usuario=Depends(requiere_permiso("chatbot_whatsapp"))):
+    from services import whatsapp_flujo_service as flujo_service
+    resultado = flujo_service.diagrama_mermaid()
+    return templates.TemplateResponse(
+        request=request, name="configuracion_whatsapp/diagrama.html",
+        context={
+            "usuario": usuario,
+            "definicion_mermaid": resultado["definicion"],
+            "detalles": resultado["detalles"],
+        },
+    )
+
+
 @router.get("/flujo", response_class=HTMLResponse)
 async def ver_flujo(request: Request, usuario=Depends(requiere_permiso("chatbot_whatsapp"))):
     from services import whatsapp_flujo_service as flujo_service

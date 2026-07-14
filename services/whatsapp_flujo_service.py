@@ -89,6 +89,81 @@ def desactivar_opcion(opcion_id):
     ejecutar("UPDATE whatsapp_flujo_opciones SET activo=0 WHERE id=?", (opcion_id,))
 
 
+def diagrama_mermaid():
+    """
+    Arma la definición del flujo completo en formato Mermaid
+    (una librería que dibuja diagramas de flujo interactivos en
+    el navegador), para poder VER de un vistazo cómo corre el
+    bot: qué responde cada opción, y a dónde sigue después de
+    que el paciente elige un número.
+    """
+    todas = [dict(f) for f in consultar_todos("SELECT * FROM whatsapp_flujo_opciones ORDER BY padre_id, orden")]
+
+    lineas = ["flowchart TD"]
+    lineas.append('    inicio(["👋 Bienvenida + Nota Legal"])')
+
+    detalles = {"inicio": {"titulo": "Mensaje de bienvenida", "tipo": "Inicio", "texto": "Se envía una sola vez, la primera vez que el paciente escribe."}}
+
+    raiz = [o for o in todas if o["padre_id"] is None]
+    for opcion in raiz:
+        nodo_id = f"op{opcion['id']}"
+        lineas.append(f'    inicio --> {nodo_id}')
+        _agregar_nodo_mermaid(lineas, detalles, opcion, todas)
+
+    lineas.append("")
+    lineas.append('    classDef submenu fill:#dbeafe,stroke:#2563eb,color:#1e3a8a;')
+    lineas.append('    classDef respuesta fill:#e5fbf9,stroke:#0a8f86,color:#0a8f86;')
+    lineas.append('    classDef recoleccion fill:#fff7e0,stroke:#dd9d00,color:#7a5600;')
+    lineas.append('    classDef derivar fill:#ffe3f2,stroke:#c2185b,color:#7a0e3d;')
+    lineas.append('    classDef inicio fill:#0a8f86,stroke:#0a8f86,color:#fff;')
+    lineas.append('    class inicio inicio;')
+
+    for opcion in todas:
+        nodo_id = f"op{opcion['id']}"
+        clase = {"submenu": "submenu", "respuesta_automatica": "respuesta", "recoleccion_datos": "recoleccion", "derivar_departamento": "derivar"}.get(opcion["tipo_accion"], "respuesta")
+        lineas.append(f'    class {nodo_id} {clase};')
+
+    return {"definicion": "\n".join(lineas), "detalles": detalles}
+
+
+def _agregar_nodo_mermaid(lineas, detalles, opcion, todas):
+    nodo_id = f"op{opcion['id']}"
+
+    def texto_seguro(texto, largo=28):
+        texto = (texto or "").replace('"', "'").replace("\n", " ").replace("{", "(").replace("}", ")")
+        return (texto[:largo] + "…") if len(texto) > largo else texto
+
+    etiqueta = texto_seguro(f"{opcion['orden']}. {opcion['texto_boton']}")
+
+    if opcion["tipo_accion"] == "submenu":
+        lineas.append(f'    {nodo_id}{{{{"{etiqueta}"}}}}')
+    elif opcion["tipo_accion"] == "derivar_departamento":
+        lineas.append(f'    {nodo_id}[/"{etiqueta}<br/>→ {texto_seguro(opcion.get("departamento") or "", 20)}"/]')
+    elif opcion["tipo_accion"] == "recoleccion_datos":
+        lineas.append(f'    {nodo_id}[["{etiqueta}<br/>📋 pide datos"]]')
+    else:
+        lineas.append(f'    {nodo_id}("{etiqueta}")')
+
+    detalles[nodo_id] = {
+        "titulo": opcion["texto_boton"],
+        "tipo": {
+            "submenu": "Abre un submenú",
+            "respuesta_automatica": "Responde automáticamente",
+            "recoleccion_datos": "Pide datos y deriva a un departamento",
+            "derivar_departamento": "Deriva directamente a un agente humano",
+        }.get(opcion["tipo_accion"], opcion["tipo_accion"]),
+        "texto": opcion.get("contenido_respuesta") or "",
+        "departamento": opcion.get("departamento") or "",
+        "campos": opcion.get("campos_solicitados") or "",
+    }
+
+    hijas = [o for o in todas if o["padre_id"] == opcion["id"]]
+    for hija in hijas:
+        hijo_id = f"op{hija['id']}"
+        lineas.append(f'    {nodo_id} --> {hijo_id}')
+        _agregar_nodo_mermaid(lineas, detalles, hija, todas)
+
+
 def activar_opcion(opcion_id):
     ejecutar("UPDATE whatsapp_flujo_opciones SET activo=1 WHERE id=?", (opcion_id,))
 
