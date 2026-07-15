@@ -136,6 +136,14 @@ async def cartera_gerencial(usuario=Depends(usuario_actual)):
     return [dict(f) for f in filas][:30]
 
 
+@router.get("/servicios-criticos")
+async def servicios_criticos_gerencial(usuario=Depends(usuario_actual)):
+    """Medicamentos, sueros y toma de muestras del día -- para revisar como pantalla propia dentro de la App Gerencial."""
+    _verificar_acceso_gerencial(usuario)
+    from services.dashboard_operativo_service import panel_servicios_criticos
+    return panel_servicios_criticos()
+
+
 @router.get("/inventario-resumen")
 async def inventario_resumen_gerencial(usuario=Depends(usuario_actual)):
     _verificar_acceso_gerencial(usuario)

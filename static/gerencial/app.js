@@ -130,6 +130,7 @@ function mostrarNav() {
   nav.id = "bottom-nav-fijo";
   nav.innerHTML = `
     <button data-vista="dashboard"><span class="icono">📊</span>Dashboard</button>
+    <button data-vista="criticos"><span class="icono">💉</span>Med/Sueros</button>
     <button data-vista="cartera"><span class="icono">💳</span>Cartera</button>
     <button data-vista="inventario"><span class="icono">📦</span>Inventario</button>
     <button data-vista="perfil"><span class="icono">👤</span>Perfil</button>
@@ -142,6 +143,7 @@ function mostrarNav() {
       boton.classList.add("activo");
       const vista = boton.dataset.vista;
       if (vista === "dashboard") renderDashboard();
+      else if (vista === "criticos") renderServiciosCriticos();
       else if (vista === "cartera") renderCartera();
       else if (vista === "inventario") renderInventario();
       else if (vista === "perfil") renderPerfil();
@@ -284,21 +286,7 @@ async function renderDashboard() {
         <div class="kpi-card light"><div class="kpi-label">Completadas</div><div class="kpi-valor">${op.servicios_criticos.completadas.length}</div></div>
         <div class="kpi-card ${op.servicios_criticos.alertas.length > 0 ? 'rosa' : 'light'}"><div class="kpi-label">⚠ Sin cumplir</div><div class="kpi-valor">${op.servicios_criticos.alertas.length}</div></div>
       </div>
-      ${(() => {
-        const todas = [
-          ...op.servicios_criticos.alertas.map((v) => ({ ...v, _estado: "⚠ Sin cumplir", _color: "#c71c22" })),
-          ...op.servicios_criticos.en_curso.map((v) => ({ ...v, _estado: "🚶 En curso", _color: "#0d6efd" })),
-          ...op.servicios_criticos.programadas.map((v) => ({ ...v, _estado: "🗓 Programada", _color: "#6c757d" })),
-          ...op.servicios_criticos.completadas.map((v) => ({ ...v, _estado: "✅ Completada", _color: "#198754" })),
-        ];
-        if (todas.length === 0) return `<p class="muted" style="margin-top:10px;">Sin visitas de estos servicios hoy.</p>`;
-        return `<div style="margin-top:10px;">` + todas.map((v) => `
-          <div class="lista-item">
-            <strong>${v.paciente || "Paciente sin nombre"}</strong>
-            <span class="badge" style="float:right; background:${v._color};">${v._estado}</span>
-            <br><span class="muted">${v.servicio} · ${v.hora_inicio}${v.hora_fin ? "-" + v.hora_fin : ""} · Con: ${v.profesional || "Sin asignar"}</span>
-          </div>`).join("") + `</div>`;
-      })()}
+      <button class="btn" style="margin-top:10px;" onclick="renderServiciosCriticos()">Ver el detalle completo →</button>
     </div>` : ""}
 
     <div class="card">
@@ -411,6 +399,80 @@ async function renderCartera() {
             <br><span class="muted">${f.prefijo || ""}${f.numero || ""} · ${(f.fecha_emision || "").slice(0,10)} · ${f.estado || ""}</span>
           </div>`).join("")}
     </div>`;
+}
+
+// ==========================================================
+// MEDICAMENTOS, SUEROS Y TOMA DE MUESTRAS (pantalla propia)
+// ==========================================================
+
+async function renderServiciosCriticos() {
+  marcarNavActivo("criticos");
+  titulo("Medicamentos, Sueros y Muestras", "Seguimiento del día");
+  contenedor().innerHTML = `<div class="spinner-centro">Cargando...</div>`;
+
+  let panel;
+  try {
+    panel = await apiGet("/api/gerencial/servicios-criticos");
+  } catch (error) {
+    if (error.esAuth) { cerrarSesionForzado(error.mensaje); return; }
+    contenedor().innerHTML = `<div class="alerta-error">No se pudo cargar la información.</div>
+      <button class="btn btn-secondary" onclick="renderServiciosCriticos()">Reintentar</button>`;
+    return;
+  }
+
+  const todas = [
+    ...panel.alertas.map((v) => ({ ...v, _estado: "⚠ Sin cumplir", _color: "#c71c22" })),
+    ...panel.en_curso.map((v) => ({ ...v, _estado: "🚶 En curso", _color: "#0d6efd" })),
+    ...panel.programadas.map((v) => ({ ...v, _estado: "🗓 Programada", _color: "#6c757d" })),
+    ...panel.completadas.map((v) => ({ ...v, _estado: "✅ Completada", _color: "#198754" })),
+  ];
+
+  contenedor().innerHTML = `
+    <div class="kpi-grid">
+      <div class="kpi-card light"><div class="kpi-label">Programadas</div><div class="kpi-valor">${panel.programadas.length}</div></div>
+      <div class="kpi-card light"><div class="kpi-label">En curso</div><div class="kpi-valor">${panel.en_curso.length}</div></div>
+      <div class="kpi-card light"><div class="kpi-label">Completadas</div><div class="kpi-valor">${panel.completadas.length}</div></div>
+      <div class="kpi-card ${panel.alertas.length > 0 ? 'rosa' : 'light'}"><div class="kpi-label">⚠ Sin cumplir</div><div class="kpi-valor">${panel.alertas.length}</div></div>
+    </div>
+
+    ${panel.alertas.length > 0 ? `
+    <div class="card" style="border:1px solid #dc3545;">
+      <h3 style="color:#dc3545;">⚠ Sin cumplir (${panel.alertas.length})</h3>
+      <p class="muted" style="font-size:11px;">Ya pasó la hora programada y nadie las marcó como completadas ni canceladas.</p>
+      ${panel.alertas.map((v) => `
+        <div class="lista-item">
+          <strong>${v.paciente || "Paciente sin nombre"}</strong>
+          <span class="badge badge-danger" style="float:right;">Debía ser ${v.hora_fin}</span>
+          <br><span class="muted">${v.servicio} · Con: ${v.profesional || "Sin asignar"}</span>
+        </div>`).join("")}
+    </div>` : ""}
+
+    <div class="card">
+      <h3>📋 Listado completo del día (${todas.length})</h3>
+      <div class="form-group">
+        <input type="text" id="sc-buscar" placeholder="Buscar paciente o profesional...">
+      </div>
+      <div id="sc-listado">
+        ${todas.length === 0 ? `<p class="muted">Sin visitas de estos servicios hoy.</p>` :
+          todas.map((v) => `
+            <div class="lista-item" data-texto="${((v.paciente || "") + " " + (v.profesional || "")).toLowerCase()}">
+              <strong>${v.paciente || "Paciente sin nombre"}</strong>
+              <span class="badge" style="float:right; background:${v._color};">${v._estado}</span>
+              <br><span class="muted">${v.servicio} · ${v.hora_inicio}${v.hora_fin ? "-" + v.hora_fin : ""} · Con: ${v.profesional || "Sin asignar"}</span>
+            </div>`).join("")}
+      </div>
+    </div>
+  `;
+
+  const inputBuscar = document.getElementById("sc-buscar");
+  if (inputBuscar) {
+    inputBuscar.addEventListener("input", () => {
+      const texto = inputBuscar.value.toLowerCase();
+      document.querySelectorAll("#sc-listado [data-texto]").forEach((el) => {
+        el.style.display = el.dataset.texto.includes(texto) ? "" : "none";
+      });
+    });
+  }
 }
 
 // ==========================================================
