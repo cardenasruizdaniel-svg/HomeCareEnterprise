@@ -716,6 +716,102 @@ class MigrationManager:
 
         return cambios
 
+    def migrar_convenios_eps(self):
+        """
+        Sistema de convenios con EPS: cada convenio define un
+        plan de servicios (cuántas sesiones/visitas de cada
+        tipo están incluidas, cada cuántos días se reinicia el
+        tope, y el valor pactado tanto para lo incluido como
+        para lo que se pase del tope). Al asignarle un convenio
+        a un paciente, cada servicio que se le preste genera
+        automáticamente una cuenta por cobrar a la EPS, con el
+        valor que corresponda según si ya se pasó del tope o no.
+        """
+        cambios = []
+
+        if not self.existe_tabla("convenios_eps"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS convenios_eps(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    eps TEXT NOT NULL,
+                    nit_eps TEXT,
+                    nombre_plan TEXT NOT NULL,
+                    numero_convenio TEXT,
+                    fecha_inicio TEXT,
+                    fecha_fin TEXT,
+                    estado TEXT DEFAULT 'Vigente',
+                    observaciones TEXT,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    usuario_creacion INTEGER
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla convenios_eps")
+
+        if not self.existe_tabla("convenios_eps_servicios"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS convenios_eps_servicios(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    convenio_id INTEGER NOT NULL,
+                    tipo_servicio TEXT NOT NULL,
+                    grupo_tope TEXT,
+                    limite_cantidad INTEGER NOT NULL,
+                    dias_ciclo INTEGER NOT NULL DEFAULT 30,
+                    valor_normal REAL NOT NULL DEFAULT 0,
+                    valor_adicional REAL NOT NULL DEFAULT 0,
+                    activo INTEGER DEFAULT 1,
+                    FOREIGN KEY(convenio_id) REFERENCES convenios_eps(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla convenios_eps_servicios")
+
+        if not self.existe_tabla("paciente_convenio"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS paciente_convenio(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    paciente_id INTEGER NOT NULL,
+                    convenio_id INTEGER NOT NULL,
+                    fecha_ingreso TEXT NOT NULL,
+                    fecha_fin TEXT,
+                    es_actual INTEGER DEFAULT 1,
+                    usuario_creacion INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
+                    FOREIGN KEY(convenio_id) REFERENCES convenios_eps(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla paciente_convenio")
+
+        if not self.existe_tabla("cuentas_por_cobrar_eps"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS cuentas_por_cobrar_eps(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    paciente_id INTEGER NOT NULL,
+                    convenio_id INTEGER NOT NULL,
+                    convenio_servicio_id INTEGER,
+                    programacion_id INTEGER,
+                    tipo_servicio TEXT NOT NULL,
+                    grupo_tope TEXT,
+                    fecha_servicio TEXT NOT NULL,
+                    numero_ciclo INTEGER,
+                    es_adicional INTEGER DEFAULT 0,
+                    valor REAL NOT NULL DEFAULT 0,
+                    estado TEXT DEFAULT 'Pendiente',
+                    factura_id INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
+                    FOREIGN KEY(convenio_id) REFERENCES convenios_eps(id),
+                    FOREIGN KEY(programacion_id) REFERENCES programaciones(id),
+                    FOREIGN KEY(factura_id) REFERENCES facturas_electronicas(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla cuentas_por_cobrar_eps")
+
+        return cambios
+
     def migrar_agente_whatsapp_profesional(self):
         """
         Reorganización completa del panel de Agente WhatsApp:
@@ -2220,6 +2316,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_flujo_chatbot()
+        )
+
+        cambios.extend(
+            self.migrar_convenios_eps()
         )
 
         cambios.extend(

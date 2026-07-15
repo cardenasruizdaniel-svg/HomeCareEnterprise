@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block titulo %}Facturación por Plan EPS{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/convenios-eps" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver a Convenios EPS</a>
+    <h2 class="mb-1"><i class="fa-solid fa-file-invoice-dollar text-success"></i> Facturación por Plan EPS</h2>
+    <p class="text-muted">Las cuentas por cobrar se generan solas cada vez que se completa una visita de un paciente con convenio asignado. Aquí se consolidan en facturas.</p>
+
+    {% if mensaje %}<div class="alert {% if 'Error' in mensaje %}alert-danger{% else %}alert-success{% endif %}">{{ mensaje }}</div>{% endif %}
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="get" class="row align-items-end">
+                <div class="col-md-3 mb-2"><label>Desde</label><input type="date" name="fecha_desde" class="form-control" value="{{ fecha_desde }}"></div>
+                <div class="col-md-3 mb-2"><label>Hasta</label><input type="date" name="fecha_hasta" class="form-control" value="{{ fecha_hasta }}"></div>
+                <div class="col-md-3 mb-2">
+                    <label>EPS (opcional)</label>
+                    <select name="eps" class="form-select">
+                        <option value="">-- Todas --</option>
+                        {% for e in epses_disponibles %}<option value="{{ e }}" {% if eps == e %}selected{% endif %}>{{ e }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3 mb-2"><button class="btn btn-primary w-100">Filtrar</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        {% for r in resumen_eps %}
+        <div class="col-md-4 mb-2">
+            <div class="card shadow text-center">
+                <div class="card-body">
+                    <h6 class="text-muted">{{ r.eps }}</h6>
+                    <div class="h4 text-success">${{ "{:,.0f}".format(r.valor_total) }}</div>
+                    <small class="text-muted">{{ r.cantidad }} cuenta(s) pendiente(s)</small>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12"><p class="text-center text-muted py-3">No hay cuentas pendientes en este rango de fechas.</p></div>
+        {% endfor %}
+    </div>
+
+    {% if cuentas %}
+    <div class="card shadow mb-4">
+        <div class="card-header bg-white"><h6 class="mb-0">Generar facturas de lo pendiente</h6></div>
+        <div class="card-body">
+            <form method="post" action="/convenios-eps/facturacion/generar" class="row align-items-end" onsubmit="return confirm('¿Generar las facturas? Esto marca las cuentas seleccionadas como facturadas.');">
+                <input type="hidden" name="fecha_desde" value="{{ fecha_desde }}">
+                <input type="hidden" name="fecha_hasta" value="{{ fecha_hasta }}">
+                <input type="hidden" name="eps" value="{{ eps }}">
+                <div class="col-md-8 mb-2">
+                    <label>¿Cómo quiere agrupar la facturación?</label>
+                    <select name="modo" class="form-select" required>
+                        <option value="por_eps">Una sola factura por EPS (agrupa todos los pacientes y servicios)</option>
+                        <option value="por_paciente">Una factura por paciente (con todos sus servicios juntos)</option>
+                        <option value="por_paciente_servicio">Una factura por paciente y por cada servicio distinto</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-2"><button type="submit" class="btn btn-success w-100"><i class="fa-solid fa-file-invoice"></i> Generar facturas</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-white"><h6 class="mb-0">Detalle de cuentas pendientes ({{ cuentas|length }})</h6></div>
+        <div class="card-body">
+            <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle">
+                <thead class="table-light"><tr><th>EPS</th><th>Paciente</th><th>Servicio</th><th>Fecha</th><th>Tipo</th><th class="text-end">Valor</th></tr></thead>
+                <tbody>
+                    {% for c in cuentas %}
+                    <tr>
+                        <td>{{ c.eps }}</td>
+                        <td>{{ c.primer_nombre }} {{ c.primer_apellido }}</td>
+                        <td>{{ c.tipo_servicio }}</td>
+                        <td>{{ c.fecha_servicio[:10] }}</td>
+                        <td><span class="badge {% if c.es_adicional %}bg-warning text-dark{% else %}bg-success{% endif %}">{{ "Adicional" if c.es_adicional else "Incluido" }}</span></td>
+                        <td class="text-end">${{ "{:,.0f}".format(c.valor) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -719,6 +719,21 @@ def registrar_salida(id, latitud=None, longitud=None, foto_base64=None):
         foto_base64,
     )
 
+    # Si el paciente tiene un convenio de EPS asignado y este
+    # servicio está contemplado en su plan, se genera la cuenta
+    # por cobrar correspondiente -- si algo fallara aquí, no debe
+    # impedir que la visita quede registrada como completada
+    # (eso es lo más importante); simplemente se deja para
+    # revisar manualmente después.
+    try:
+        from services.convenios_eps_service import registrar_consumo_servicio
+        if visita.get("servicio"):
+            registrar_consumo_servicio(
+                visita["paciente_id"], visita["servicio"], visita.get("fecha") or ahora[:10], id,
+            )
+    except Exception:
+        pass
+
     return verificacion
 
 

@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block titulo %}{{ convenio.eps }} - {{ convenio.nombre_plan }}{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/convenios-eps" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver a Convenios EPS</a>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-white"><h5 class="mb-0"><i class="fa-solid fa-file-contract"></i> Datos del convenio</h5></div>
+        <div class="card-body">
+            <form method="post" action="/convenios-eps/{{ convenio.id }}/actualizar">
+                <div class="row">
+                    <div class="col-md-4 mb-2"><label>EPS</label><input type="text" name="eps" class="form-control" value="{{ convenio.eps }}" required></div>
+                    <div class="col-md-4 mb-2"><label>NIT de la EPS</label><input type="text" name="nit_eps" class="form-control" value="{{ convenio.nit_eps or '' }}"></div>
+                    <div class="col-md-4 mb-2"><label>Nombre del plan</label><input type="text" name="nombre_plan" class="form-control" value="{{ convenio.nombre_plan }}" required></div>
+                    <div class="col-md-3 mb-2"><label>N.° de convenio</label><input type="text" name="numero_convenio" class="form-control" value="{{ convenio.numero_convenio or '' }}"></div>
+                    <div class="col-md-3 mb-2"><label>Fecha de inicio</label><input type="date" name="fecha_inicio" class="form-control" value="{{ convenio.fecha_inicio or '' }}"></div>
+                    <div class="col-md-3 mb-2"><label>Fecha de fin</label><input type="date" name="fecha_fin" class="form-control" value="{{ convenio.fecha_fin or '' }}"></div>
+                    <div class="col-md-3 mb-2">
+                        <label>Estado</label>
+                        <select name="estado" class="form-select">
+                            <option value="Vigente" {% if convenio.estado == 'Vigente' %}selected{% endif %}>Vigente</option>
+                            <option value="Finalizado" {% if convenio.estado == 'Finalizado' %}selected{% endif %}>Finalizado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-12 mb-2"><label>Observaciones</label><textarea name="observaciones" class="form-control" rows="2">{{ convenio.observaciones or '' }}</textarea></div>
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fa-solid fa-list-check"></i> Plan de servicios</h5>
+            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalAgregarServicio">
+                <i class="fa-solid fa-plus"></i> Agregar servicio al plan
+            </button>
+        </div>
+        <div class="card-body">
+            <p class="text-muted small">
+                Los servicios que compartan el mismo texto en "Grupo" comparten un solo tope entre todos —
+                por ejemplo, ponga "Terapias" en las 4 terapias para que compartan el tope de 12, aunque cada una tenga su propio valor.
+            </p>
+            <table class="table table-sm table-hover align-middle">
+                <thead class="table-light"><tr><th>Servicio</th><th>Grupo (tope compartido)</th><th class="text-center">Incluidos</th><th class="text-center">Cada (días)</th><th class="text-end">Valor normal</th><th class="text-end">Valor adicional</th><th></th></tr></thead>
+                <tbody>
+                    {% for s in convenio.servicios %}
+                    <tr>
+                        <td>{{ s.tipo_servicio }}</td>
+                        <td>{{ s.grupo_tope or "-" }}</td>
+                        <td class="text-center">{{ s.limite_cantidad }}</td>
+                        <td class="text-center">{{ s.dias_ciclo }}</td>
+                        <td class="text-end">${{ "{:,.0f}".format(s.valor_normal) }}</td>
+                        <td class="text-end">${{ "{:,.0f}".format(s.valor_adicional) }}</td>
+                        <td>
+                            <form method="post" action="/convenios-eps/servicios/{{ s.id }}/quitar" onsubmit="return confirm('¿Quitar este servicio del plan?');">
+                                <input type="hidden" name="convenio_id" value="{{ convenio.id }}">
+                                <button class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">Este convenio todavía no tiene ningún servicio configurado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header bg-white"><h5 class="mb-0"><i class="fa-solid fa-user-plus"></i> Asignar este plan a un paciente</h5></div>
+        <div class="card-body">
+            <form method="post" action="/convenios-eps/asignar-paciente" class="row align-items-end">
+                <input type="hidden" name="convenio_id" value="{{ convenio.id }}">
+                <div class="col-md-6 mb-2">
+                    <label>Buscar paciente</label>
+                    <input type="text" class="form-control" id="buscar-paciente-convenio" placeholder="Nombre o documento...">
+                    <input type="hidden" name="paciente_id" id="paciente-id-convenio">
+                    <div id="resultados-paciente-convenio" class="list-group position-absolute" style="z-index:10; width:calc(50% - 24px);"></div>
+                </div>
+                <div class="col-md-4 mb-2"><label>Fecha de ingreso al plan</label><input type="date" name="fecha_ingreso" class="form-control" required></div>
+                <div class="col-md-2 mb-2"><button type="submit" class="btn btn-primary w-100">Asignar</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAgregarServicio" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/convenios-eps/{{ convenio.id }}/servicios/agregar">
+            <div class="modal-header"><h5 class="modal-title">Agregar servicio al plan</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Nombre del servicio (debe coincidir con el que se usa al programar la visita)</label><input type="text" name="tipo_servicio" class="form-control" required placeholder="Ej: Terapia Física"></div>
+                <div class="mb-2"><label>Grupo de tope compartido (opcional)</label><input type="text" name="grupo_tope" class="form-control" placeholder="Ej: Terapias"></div>
+                <div class="row">
+                    <div class="col-md-6 mb-2"><label>Cantidad incluida</label><input type="number" name="limite_cantidad" class="form-control" required min="1"></div>
+                    <div class="col-md-6 mb-2"><label>Se reinicia cada (días)</label><input type="number" name="dias_ciclo" class="form-control" value="30" required min="1"></div>
+                    <div class="col-md-6 mb-2"><label>Valor normal (dentro del tope)</label><input type="number" step="0.01" name="valor_normal" class="form-control" required></div>
+                    <div class="col-md-6 mb-2"><label>Valor adicional (al pasarse del tope)</label><input type="number" step="0.01" name="valor_adicional" class="form-control" required></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success">Agregar</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+
+<script>
+const inputBuscar = document.getElementById('buscar-paciente-convenio');
+const contenedorResultados = document.getElementById('resultados-paciente-convenio');
+let temporizador;
+inputBuscar.addEventListener('input', () => {
+    clearTimeout(temporizador);
+    const q = inputBuscar.value.trim();
+    if (q.length < 2) { contenedorResultados.innerHTML = ''; return; }
+    temporizador = setTimeout(async () => {
+        const resp = await fetch(`/convenios-eps/buscar-pacientes?q=${encodeURIComponent(q)}`);
+        const pacientes = await resp.json();
+        contenedorResultados.innerHTML = pacientes.map((p) => `
+            <button type="button" class="list-group-item list-group-item-action" data-id="${p.id}" data-nombre="${p.primer_nombre} ${p.primer_apellido}">
+                ${p.primer_nombre} ${p.primer_apellido} — ${p.documento} ${p.eps ? '(' + p.eps + ')' : ''}
+            </button>`).join('');
+        contenedorResultados.querySelectorAll('button').forEach((boton) => {
+            boton.addEventListener('click', () => {
+                document.getElementById('paciente-id-convenio').value = boton.dataset.id;
+                inputBuscar.value = boton.dataset.nombre;
+                contenedorResultados.innerHTML = '';
+            });
+        });
+    }, 300);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block titulo %}Convenios EPS{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="fa-solid fa-file-contract text-primary"></i> Convenios EPS</h2>
+        <a href="/convenios-eps/facturacion/panel" class="btn btn-success"><i class="fa-solid fa-file-invoice-dollar"></i> Facturación por Plan</a>
+    </div>
+    <p class="text-muted">Define aquí los planes de servicios pactados con cada EPS: qué está incluido, cuántas sesiones, y el valor de cada una.</p>
+
+    <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#modalNuevoConvenio">
+        <i class="fa-solid fa-plus"></i> Nuevo convenio
+    </button>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light"><tr><th>EPS</th><th>Plan</th><th>N.° Convenio</th><th>Vigencia</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                    {% for c in convenios %}
+                    <tr>
+                        <td><strong>{{ c.eps }}</strong></td>
+                        <td>{{ c.nombre_plan }}</td>
+                        <td>{{ c.numero_convenio or "-" }}</td>
+                        <td>{{ c.fecha_inicio or "-" }} {% if c.fecha_fin %}a {{ c.fecha_fin }}{% endif %}</td>
+                        <td><span class="badge {% if c.estado == 'Vigente' %}bg-success{% else %}bg-secondary{% endif %}">{{ c.estado }}</span></td>
+                        <td><a href="/convenios-eps/{{ c.id }}" class="btn btn-outline-primary btn-sm">Ver / Configurar plan</a></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">Sin convenios registrados.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNuevoConvenio" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/convenios-eps/crear">
+            <div class="modal-header"><h5 class="modal-title">Nuevo convenio EPS</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>EPS</label><input type="text" name="eps" class="form-control" required placeholder="Ej: Nueva EPS"></div>
+                <div class="mb-2"><label>NIT de la EPS (opcional, para facturar a nombre de la EPS)</label><input type="text" name="nit_eps" class="form-control"></div>
+                <div class="mb-2"><label>Nombre del plan</label><input type="text" name="nombre_plan" class="form-control" required placeholder="Ej: Plan Domiciliario Estándar"></div>
+                <div class="mb-2"><label>N.° de convenio (opcional)</label><input type="text" name="numero_convenio" class="form-control"></div>
+                <div class="row">
+                    <div class="col-md-6 mb-2"><label>Fecha de inicio</label><input type="date" name="fecha_inicio" class="form-control"></div>
+                    <div class="col-md-6 mb-2"><label>Fecha de fin (opcional)</label><input type="date" name="fecha_fin" class="form-control"></div>
+                </div>
+                <div class="mb-2"><label>Observaciones</label><textarea name="observaciones" class="form-control" rows="2"></textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Crear y configurar el plan</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+{% endblock %}

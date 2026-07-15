@@ -257,6 +257,113 @@ def generar_factura_servicio(servicio_paciente_id: int, valor_servicio: float, m
     }
 
 
+def _generar_factura_desde_items(items: list, usuario_id=None) -> dict:
+    """
+    Arma UNA factura a partir de una lista de cuentas por cobrar
+    ya agrupadas (según el modo elegido: por EPS, por paciente,
+    o por paciente+servicio) -- todas las cuentas de la lista
+    deben ser de la MISMA EPS. Si son de un solo paciente, la
+    factura queda a nombre de ese paciente (con su documento);
+    si son de varios pacientes de la misma EPS, la factura
+    queda a nombre de la EPS.
+    """
+    from datetime import datetime, timedelta
+
+    primero = items[0]
+    valor_total = sum(item["valor"] for item in items)
+    pacientes_distintos = {item["paciente_id"] for item in items}
+
+    numero = FacturacionRepository.siguiente_numero(PREFIJO_FACTURACION)
+    fecha_emision = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    fecha_vencimiento = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
+
+    if len(pacientes_distintos) == 1:
+        nombre_adquirente = f"{primero.get('primer_nombre','')} {primero.get('primer_apellido','')}".strip()
+        documento_adquirente = primero.get("documento", "")
+        tipo_documento_adquirente = primero.get("tipo_documento", "CC")
+        concepto = f"Servicios de salud domiciliaria — {primero['eps']} ({len(items)} concepto(s))"
+    else:
+        nombre_adquirente = primero["eps"]
+        documento_adquirente = ""  # se completa manualmente si se conoce el NIT exacto de la EPS
+        tipo_documento_adquirente = "NIT"
+        concepto = f"Servicios de salud domiciliaria — {primero['eps']} ({len(pacientes_distintos)} paciente(s), {len(items)} concepto(s))"
+
+    from services.convenios_eps_service import obtener_convenio
+    convenio = obtener_convenio(primero["convenio_id"])
+    if convenio and convenio.get("nit_eps") and len(pacientes_distintos) > 1:
+        documento_adquirente = convenio["nit_eps"]
+
+    datos_ubl = {
+        "prefijo": PREFIJO_FACTURACION,
+        "numero": numero,
+        "fecha_emision": fecha_emision,
+        "valor_subtotal": valor_total,
+        "valor_iva": 0,
+        "valor_total": valor_total,
+        "nit_emisor": RIPS_NIT_PRESTADOR or "PENDIENTE-CONFIGURAR-NIT",
+        "razon_social_emisor": RIPS_RAZON_SOCIAL,
+        "documento_adquirente": documento_adquirente,
+        "tipo_documento_adquirente": tipo_documento_adquirente,
+        "nombre_adquirente": nombre_adquirente,
+        "concepto": concepto,
+    }
+
+    factura_ubl = construir_factura_ubl(datos_ubl)
+    cufe = factura_ubl["_cufe_local"]
+
+    carpeta_xml = Path(EXPORTS_DIR) / "facturas"
+    carpeta_xml.mkdir(parents=True, exist_ok=True)
+    ruta_xml = carpeta_xml / f"factura_{PREFIJO_FACTURACION}{numero}.xml"
+    with open(ruta_xml, "w", encoding="utf-8") as archivo:
+        archivo.write(diccionario_a_xml(factura_ubl))
+
+    factura_id = FacturacionRepository.crear({
+        "prefijo": PREFIJO_FACTURACION,
+        "numero": numero,
+        "copago_id": None,
+        "servicio_paciente_id": None,
+        "concepto": concepto,
+        # La columna paciente_id de esta tabla es obligatoria (NOT NULL) y pensada
+        # para una factura de un solo paciente -- cuando la factura agrupa VARIOS
+        # pacientes (modo "por EPS"), se deja aquí el primero solo como referencia
+        # de enlace; el detalle real de TODOS los pacientes incluidos queda en el
+        # PDF/XML y en el enlace de cada cuenta_por_cobrar_eps.factura_id.
+        "paciente_id": primero["paciente_id"],
+        "valor_subtotal": valor_total,
+        "valor_iva": 0,
+        "valor_total": valor_total,
+        "forma_pago": "Contado",
+        "medio_pago": "EPS",
+        "cufe": cufe,
+        "estado": "Generada",
+        "entidad_responsable_pago": primero["eps"],
+        "fecha_vencimiento": fecha_vencimiento,
+        "xml_path": str(ruta_xml),
+        "pdf_path": None,
+        "usuario_creacion": usuario_id,
+    })
+
+    factura = dict(FacturacionRepository.obtener(factura_id))
+    factura["nombre_adquirente"] = nombre_adquirente
+    factura["documento_adquirente"] = documento_adquirente
+
+    from services.factura_eps_pdf_service import generar_pdf_factura_eps
+    from services.configuracion_empresa_service import obtener as obtener_config_empresa
+    config = obtener_config_empresa()
+    ruta_pdf = generar_pdf_factura_eps(factura, items, config.get("razon_social", ""))
+    FacturacionRepository.actualizar_pdf_path(factura_id, ruta_pdf)
+
+    return {
+        "factura_id": factura_id,
+        "numero_completo": f"{PREFIJO_FACTURACION}{numero}",
+        "eps": primero["eps"],
+        "pacientes": len(pacientes_distintos),
+        "items": len(items),
+        "valor_total": valor_total,
+        "pdf_path": ruta_pdf,
+    }
+
+
 def listar_por_paciente(paciente_id: int):
     return [dict(f) for f in FacturacionRepository.listar_por_paciente(paciente_id)]
 
