@@ -18,6 +18,20 @@
 const DB_NOMBRE = "homecare_app";
 const DB_VERSION = 2;
 
+// ==========================================================
+// BANDERA TEMPORAL -- "Registrar evolución" y "Órdenes
+// Médicas" en la app móvil (durante la visita), para médicos
+// y demás profesionales de la salud (NO afecta a cuidadores,
+// que siguen usando su propio "Registro Informe de Cuidador"
+// sin ningún cambio).
+//
+// Por ahora quedan OCULTOS a propósito: ese registro lo hacen
+// desde la web, en la oficina/casa, no durante la visita. Toda
+// la funcionalidad sigue intacta -- para volver a activarlos,
+// basta con cambiar esta única línea a "true".
+// ==========================================================
+const MOSTRAR_EVOLUCION_Y_ORDENES_EN_APP = false;
+
 let db = null;
 let perfil = JSON.parse(localStorage.getItem("homecare_perfil") || "null");
 let vistaActual = "login";
@@ -1021,10 +1035,12 @@ async function renderDetalleVisita(visitaId) {
     <button class="btn btn-secondary btn-block" id="btn-antecedentes">📖 Antecedentes</button>
     `}
 
+    ${esPerfilCuidador() || MOSTRAR_EVOLUCION_Y_ORDENES_EN_APP ? `
     <button class="btn btn-secondary btn-block" id="btn-evolucion">${esPerfilCuidador() ? "📋 Registro Informe de Cuidador" : "📝 Registrar evolución"}</button>
+    ` : ""}
 
     ${esPerfilCuidador() ? "" : `
-    ${esPerfilConOrdenes() ? `<button class="btn btn-secondary btn-block" id="btn-ordenes">📋 Órdenes Médicas</button>` : ""}
+    ${esPerfilConOrdenes() && MOSTRAR_EVOLUCION_Y_ORDENES_EN_APP ? `<button class="btn btn-secondary btn-block" id="btn-ordenes">📋 Órdenes Médicas</button>` : ""}
     ${tieneProgramaAsignado
       ? `<button class="btn btn-secondary btn-block" id="btn-servicios-asignados">🧾 Servicios Asignados</button>`
       : `<button class="btn btn-secondary btn-block" id="btn-programa-atencion">📑 Programa de Atención</button>`}
@@ -1066,7 +1082,8 @@ async function renderDetalleVisita(visitaId) {
 
   document.getElementById("btn-salida").addEventListener("click", () => renderCapturaFotoIngreso(visita, "salida"));
 
-  document.getElementById("btn-evolucion").addEventListener("click", () => renderFormularioEvolucion(visita));
+  const botonEvolucion = document.getElementById("btn-evolucion");
+  if (botonEvolucion) botonEvolucion.addEventListener("click", () => renderFormularioEvolucion(visita));
   if (!esPerfilCuidador()) {
     document.getElementById("btn-signos").addEventListener("click", () => renderFormularioSignos(visita));
     const botonMedicamento = document.getElementById("btn-medicamento");
