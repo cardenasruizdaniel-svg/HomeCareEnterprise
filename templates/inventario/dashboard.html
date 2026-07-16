@@ -13,6 +13,9 @@
         </div>
     </div>
 
+    {% if guardado %}<div class="alert alert-success">{{ guardado if guardado != "1" else "Guardado correctamente." }}</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
     {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
 
     {% if resumen.lotes_vencidos > 0 %}
@@ -94,6 +97,23 @@
             </div>
 
             <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h5 class="mb-0"><i class="fa-solid fa-file-excel text-success"></i> Carga masiva de productos</h5></div>
+                <div class="card-body">
+                    <p class="text-muted small">
+                        Descargue la plantilla, llénela con sus productos (uno por fila), y súbala aquí — se crean los nuevos
+                        y se actualizan los que ya existan (comparando por nombre), todo de una sola vez.
+                    </p>
+                    <a href="/inventario/insumos/plantilla/descargar" class="btn btn-outline-success w-100 mb-2">
+                        <i class="fa-solid fa-download"></i> Descargar plantilla
+                    </a>
+                    <form method="post" action="/inventario/insumos/plantilla/subir" enctype="multipart/form-data">
+                        <input type="file" name="archivo" class="form-control mb-2" accept=".xlsx,.xls" required>
+                        <button type="submit" class="btn btn-success w-100"><i class="fa-solid fa-upload"></i> Subir y procesar</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card shadow mb-3">
                 <div class="card-header bg-success text-white"><h5 class="mb-0">Registrar Entrada (compra)</h5></div>
                 <div class="card-body">
                     <form method="post" action="/inventario/entrada">
@@ -167,6 +187,10 @@
                                 <td class="text-end">${{ "{:,.0f}".format(i.valor_existencia) }}</td>
                                 <td>
                                     <a href="/inventario/movimientos/{{ i.id }}" class="btn btn-outline-primary btn-sm">Historial</a>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            onclick="abrirEdicionInsumo({{ i.id }}, {{ i.codigo|tojson }}, {{ i.nombre|tojson }}, {{ i.categoria|tojson }}, {{ i.unidad_medida|tojson }}, {{ i.stock_minimo }}, {{ i.stock_maximo }}, {{ i.requiere_lote_vencimiento|default(0) }})">
+                                        <i class="fa-solid fa-pen"></i> Editar
+                                    </button>
                                     <a href="/inventario/insumos/desactivar/{{ i.id }}" class="btn btn-outline-danger btn-sm"
                                        onclick="return confirm('¿Desactivar este insumo?');">Desactivar</a>
                                 </td>
@@ -281,5 +305,49 @@ resultadosPaciente.addEventListener("click", (e) => {
         resultadosPaciente.innerHTML = "";
     }
 });
+
+function abrirEdicionInsumo(id, codigo, nombre, categoria, unidadMedida, stockMinimo, stockMaximo, requiereLote) {
+    document.getElementById("edicion-form-insumo").action = `/inventario/insumos/${id}/actualizar`;
+    document.getElementById("edicion-codigo").value = codigo || "";
+    document.getElementById("edicion-nombre").value = nombre || "";
+    document.getElementById("edicion-categoria").value = categoria || "Otro";
+    document.getElementById("edicion-unidad").value = unidadMedida || "Unidad";
+    document.getElementById("edicion-stock-minimo").value = stockMinimo || 0;
+    document.getElementById("edicion-stock-maximo").value = stockMaximo || 0;
+    document.getElementById("edicion-requiere-lote").checked = !!requiereLote;
+    new bootstrap.Modal(document.getElementById("modalEditarInsumo")).show();
+}
 </script>
+
+<div class="modal fade" id="modalEditarInsumo" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" id="edicion-form-insumo" action="">
+            <div class="modal-header"><h5 class="modal-title"><i class="fa-solid fa-pen"></i> Editar insumo</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Código (opcional)</label><input type="text" name="codigo" id="edicion-codigo" class="form-control"></div>
+                <div class="mb-2"><label>Nombre</label><input type="text" name="nombre" id="edicion-nombre" class="form-control" required></div>
+                <div class="mb-2">
+                    <label>Categoría</label>
+                    <select name="categoria" id="edicion-categoria" class="form-select">
+                        {% for c in categorias %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2"><label>Unidad de medida</label><input type="text" name="unidad_medida" id="edicion-unidad" class="form-control"></div>
+                <div class="row">
+                    <div class="col-6 mb-2"><label>Stock mínimo</label><input type="number" name="stock_minimo" id="edicion-stock-minimo" class="form-control"></div>
+                    <div class="col-6 mb-2"><label>Stock máximo</label><input type="number" name="stock_maximo" id="edicion-stock-maximo" class="form-control"></div>
+                </div>
+                <div class="mb-2 form-check">
+                    <input type="checkbox" name="requiere_lote_vencimiento" value="1" class="form-check-input" id="edicion-requiere-lote">
+                    <label class="form-check-label" for="edicion-requiere-lote">Requiere control de lote y fecha de vencimiento</label>
+                </div>
+                <p class="text-muted small mb-0"><i class="fa-solid fa-circle-info"></i> El costo promedio no se edita aquí — se recalcula solo con cada entrada de compra registrada.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            </div>
+        </form>
+    </div></div>
+</div>
 {% endblock %}

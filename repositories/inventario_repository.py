@@ -57,6 +57,22 @@ class InsumosRepository:
         ejecutar("UPDATE insumos SET costo_promedio=? WHERE id=?", (nuevo_costo_promedio, insumo_id))
 
     @staticmethod
+    def actualizar(insumo_id: int, datos: dict):
+        ejecutar(
+            """
+            UPDATE insumos SET
+                codigo=:codigo, nombre=:nombre, categoria=:categoria, unidad_medida=:unidad_medida,
+                stock_minimo=:stock_minimo, stock_maximo=:stock_maximo, requiere_lote_vencimiento=:requiere_lote_vencimiento
+            WHERE id=:id
+            """,
+            {**datos, "id": insumo_id},
+        )
+
+    @staticmethod
+    def buscar_por_nombre_exacto(nombre: str):
+        return consultar_uno("SELECT * FROM insumos WHERE LOWER(nombre)=LOWER(?)", (nombre,))
+
+    @staticmethod
     def desactivar(insumo_id: int):
         ejecutar("UPDATE insumos SET activo=0 WHERE id=?", (insumo_id,))
 

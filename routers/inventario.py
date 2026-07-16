@@ -33,6 +33,8 @@ async def dashboard(request: Request, usuario=Depends(requiere_permiso("inventar
             "categorias": inventario_service.CATEGORIAS_INSUMO,
             "resumen": inventario_service.resumen_dashboard(),
             "alertas_vencimiento": inventario_service.alertas_vencimiento(90),
+            "guardado": request.query_params.get("guardado"),
+            "error": request.query_params.get("error"),
         },
     )
 
@@ -59,6 +61,79 @@ async def crear_insumo(
 async def desactivar_insumo(insumo_id: int, _actor=Depends(requiere_permiso("inventario"))):
     inventario_service.desactivar_insumo(insumo_id)
     return RedirectResponse(url="/inventario", status_code=303)
+
+
+@router.get("/insumos/{insumo_id}", response_class=JSONResponse)
+async def api_obtener_insumo(insumo_id: int, _actor=Depends(requiere_permiso("inventario"))):
+    insumo = inventario_service.obtener_insumo(insumo_id)
+    if not insumo:
+        raise HTTPException(status_code=404, detail="El insumo no existe.")
+    return insumo
+
+
+@router.post("/insumos/{insumo_id}/actualizar")
+async def actualizar_insumo(
+    insumo_id: int,
+    nombre: str = Form(...),
+    categoria: str = Form(""),
+    unidad_medida: str = Form("Unidad"),
+    stock_minimo: int = Form(0),
+    stock_maximo: int = Form(0),
+    codigo: str = Form(""),
+    requiere_lote_vencimiento: str = Form(""),
+    usuario=Depends(requiere_permiso("inventario")),
+):
+    try:
+        inventario_service.actualizar_insumo(
+            insumo_id, nombre, categoria, unidad_medida, stock_minimo,
+            codigo=codigo, stock_maximo=stock_maximo, requiere_lote_vencimiento=bool(requiere_lote_vencimiento),
+        )
+    except ValueError as error:
+        return RedirectResponse(url=f"/inventario?error={error}", status_code=303)
+    return RedirectResponse(url="/inventario?guardado=1", status_code=303)
+
+
+# ==========================================
+# CARGA MASIVA DE INSUMOS POR PLANTILLA EXCEL
+# ==========================================
+
+@router.get("/insumos/plantilla/descargar")
+async def descargar_plantilla_insumos(_actor=Depends(requiere_permiso("inventario"))):
+    from fastapi.responses import FileResponse
+    ruta = inventario_service.generar_plantilla_carga_masiva()
+    return FileResponse(
+        ruta, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename="plantilla_carga_insumos.xlsx",
+    )
+
+
+@router.post("/insumos/plantilla/subir", response_class=HTMLResponse)
+async def subir_plantilla_insumos(request: Request, usuario=Depends(requiere_permiso("inventario"))):
+    from fastapi import UploadFile, File
+    formulario = await request.form()
+    archivo = formulario.get("archivo")
+
+    if not archivo or not archivo.filename:
+        return RedirectResponse(url="/inventario?error=Debe seleccionar un archivo.", status_code=303)
+
+    import tempfile, os
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temporal:
+        temporal.write(await archivo.read())
+        ruta_temporal = temporal.name
+
+    try:
+        resultado = inventario_service.cargar_insumos_desde_excel(ruta_temporal)
+    except ValueError as error:
+        return RedirectResponse(url=f"/inventario?error={error}", status_code=303)
+    finally:
+        os.unlink(ruta_temporal)
+
+    mensaje = f"Carga masiva completa: {resultado['total_creados']} creado(s), {resultado['total_actualizados']} actualizado(s)"
+    if resultado["total_errores"]:
+        mensaje += f", {resultado['total_errores']} con error"
+
+    from urllib.parse import quote
+    return RedirectResponse(url=f"/inventario?guardado={quote(mensaje)}", status_code=303)
 
 
 # ==========================================
