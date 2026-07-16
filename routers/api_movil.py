@@ -30,6 +30,36 @@ from services.ordenes_service import OrdenesService
 
 router = APIRouter(prefix="/api/movil", tags=["App Móvil"])
 
+
+def _tipo_nota_segun_rol(rol: str):
+    """
+    Determina el ÚNICO tipo de nota clínica que le corresponde
+    a cada perfil -- para que un enfermero no pueda quedar con
+    una nota registrada como "Médico", un terapeuta como
+    "Enfermero", etc. Debe reflejar EXACTAMENTE la misma lógica
+    que "tipoNotaSegunPerfil()" en la app móvil (static/pwa/app.js).
+    Devuelve None para roles administrativos u otros sin un
+    tipo de nota clínica propio -- en ese caso se respeta lo
+    que se haya enviado.
+    """
+    rol = (rol or "").lower()
+    if "cuidador" in rol:
+        return "Cuidador"
+    if "médico" in rol or "medico" in rol:
+        return "Médico"
+    if "enfermer" in rol:
+        return "Enfermero"
+    if any(p in rol for p in (
+        "fisioterapeuta", "terapeuta respiratorio", "salud ocupacional", "terapeuta",
+        "fonoaudi", "psicólogo", "psicologo", "nutricionista", "trabajo social",
+    )):
+        return "Terapeuta"
+    if "aplicador" in rol:
+        return "Aplicador"
+    if "curaciones" in rol:
+        return "Curaciones"
+    return None
+
 # ==========================================
 # VERSIONADO DE LA API
 #
@@ -52,6 +82,31 @@ VERSION_API = "1.0"
 @router.get("/version")
 async def version_api():
     return {"version": VERSION_API, "nombre": "HomeCare Enterprise API Móvil"}
+
+
+@router.post("/verificar-convenio")
+async def verificar_convenio_endpoint(datos: dict = Body(...), usuario=Depends(requiere_permiso("pacientes"))):
+    """
+    Verificación INMEDIATA (no encolada) de si asignar N
+    sesiones de un servicio se pasaría del tope autorizado por
+    el convenio de EPS del paciente -- se llama justo antes de
+    guardar, para que si ya no hay cupo, quien esté asignando
+    lo sepa EN EL MOMENTO y pueda decidir si continúa (dejando
+    claro que esas sesiones quedan como adicionales, sujetas a
+    autorización de la EPS) o ajusta la cantidad.
+
+    Requiere conexión -- si el celular está sin internet en ese
+    momento, la app simplemente no muestra la advertencia previa
+    y sigue el camino normal (encola la acción; la cuenta por
+    cobrar se genera igual, correctamente, cuando se completen
+    las visitas más adelante).
+    """
+    from services.convenios_eps_service import verificar_disponibilidad_convenio
+
+    return verificar_disponibilidad_convenio(
+        datos.get("paciente_id"), datos.get("nombre_servicio"),
+        int(datos.get("cantidad_nueva") or 0), datos.get("fecha_referencia"),
+    )
 
 
 @router.post("/verificar-rostro")
@@ -508,7 +563,8 @@ def _procesar_accion(tipo: str, p: dict, usuario: dict):
 
     if tipo == "signos_vitales":
         return movil_service.registrar_signos_vitales(
-            p["paciente_id"], p.get("profesional", usuario.get("nombre", "")), p.get("datos", {}), usuario_id
+            p["paciente_id"], p.get("profesional", usuario.get("nombre", "")), p.get("datos", {}), usuario_id,
+            programacion_id=p.get("programacion_id"),
         )
 
     if tipo == "medicamento_administrado":
@@ -519,9 +575,21 @@ def _procesar_accion(tipo: str, p: dict, usuario: dict):
         )
 
     if tipo == "evolucion":
+        tipo_profesional_enviado = p.get("tipo_profesional", "")
+        tipo_profesional_correcto = _tipo_nota_segun_rol(usuario.get("rol", ""))
+        # Si el rol de quien inició sesión SÍ tiene un tipo de
+        # nota clínica propio, se usa ese siempre -- sin
+        # importar lo que haya llegado desde el celular. Esto
+        # evita que, por error o por un dato desactualizado en
+        # la app, una nota quede registrada con un tipo de
+        # profesional que no corresponde a quien realmente la
+        # está firmando. Si el rol no tiene uno propio (ej.
+        # administrativo), se respeta lo que haya enviado.
+        tipo_profesional_final = tipo_profesional_correcto or tipo_profesional_enviado
+
         return movil_service.registrar_evolucion(
             p["paciente_id"], p.get("programacion_id"), p.get("profesional_id"),
-            p.get("tipo_profesional", ""), p.get("nota", ""),
+            tipo_profesional_final, p.get("nota", ""),
             p.get("lat"), p.get("lon"), usuario_id,
             p.get("tipo_registro", "INFORME"), p.get("nota_aclaratoria_de"),
         )

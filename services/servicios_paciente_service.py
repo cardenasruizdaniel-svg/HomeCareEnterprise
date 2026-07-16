@@ -141,6 +141,24 @@ def asignar_servicio(paciente_id, tipo_servicio, subtipo, profesional_id, frecue
     if frecuencia not in FRECUENCIAS_VALIDAS:
         raise ValueError(f"Frecuencia no válida. Use una de: {', '.join(FRECUENCIAS_VALIDAS)}")
 
+    # Si el paciente tiene un convenio de EPS asignado y este
+    # servicio tiene un tope pactado, se revisa ANTES de crear
+    # nada si la cantidad de sesiones que se está por asignar
+    # se pasaría de lo autorizado -- no se bloquea (puede haber
+    # razones válidas para pasarse, con autorización aparte),
+    # pero queda la alerta clara en la respuesta para que quien
+    # esté asignando lo sepa y gestione la orden de servicio
+    # correspondiente si hace falta.
+    advertencia_convenio = None
+    if numero_sesiones:
+        try:
+            from services.convenios_eps_service import verificar_disponibilidad_convenio
+            chequeo = verificar_disponibilidad_convenio(paciente_id, tipo_servicio, int(numero_sesiones), fecha_inicio)
+            if chequeo["aplica"] and not chequeo["disponible"]:
+                advertencia_convenio = chequeo
+        except Exception:
+            pass
+
     # Protección contra duplicados: si por un doble clic, doble
     # envío del formulario, o un reintento de red ya se creó
     # HACE UN MOMENTO (últimos 15 segundos) un servicio
@@ -235,6 +253,7 @@ def asignar_servicio(paciente_id, tipo_servicio, subtipo, profesional_id, frecue
         "total_fechas": len(fechas),
         "visitas_creadas": 0,  # ya no se crean automaticamente; se programan una a una
         "es_cuidador": es_cuidador,
+        "advertencia_convenio": advertencia_convenio,
         "mensaje": (
             f"Se asignó la actividad de Cuidador con una meta de {numero_sesiones or 0} sesión(es)/día(s). "
             "Las fechas, horarios y el cuidador específico se programan desde la oficina en Programación Mensual."

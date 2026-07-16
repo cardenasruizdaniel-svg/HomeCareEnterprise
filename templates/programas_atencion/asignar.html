@@ -221,6 +221,9 @@ document.getElementById("btn-guardar-todo").addEventListener("click", async () =
         } else {
             html += `<div class="alert alert-light border">${a.actividad}: ${a.total_fechas} visitas tentativas generadas —
                 <a href="/gestion-visitas/${a.servicio_id}">programar fechas exactas</a></div>`;
+            if (a.advertencia_convenio) {
+                html += `<div class="alert alert-danger"><i class="fa-solid fa-triangle-exclamation"></i> <strong>${a.actividad} — tope del convenio EPS superado:</strong><br>${a.advertencia_convenio.mensaje}</div>`;
+            }
         }
     });
     alerta.innerHTML = html;

@@ -61,6 +61,7 @@ async def ver_convenio(request: Request, convenio_id: int, usuario=Depends(requi
         request=request, name="convenios_eps/detalle.html",
         context={
             "usuario": usuario, "convenio": convenio,
+            "actividades_catalogo": convenios.listar_actividades_catalogo(),
             "error": request.query_params.get("error"), "guardado": request.query_params.get("guardado"),
         },
     )
@@ -81,13 +82,13 @@ async def actualizar_convenio(
 @router.post("/{convenio_id}/servicios/agregar")
 async def agregar_servicio(
     request: Request, convenio_id: int,
-    tipo_servicio: str = Form(...), grupo_tope: str = Form(""),
+    actividad_id: str = Form(...), grupo_tope: str = Form(""),
     limite_cantidad: str = Form(...), dias_ciclo: str = Form("30"),
     valor_normal: str = Form("0"), valor_adicional: str = Form("0"),
     usuario=Depends(requiere_permiso("facturacion")),
 ):
     try:
-        convenios.agregar_servicio_convenio(convenio_id, tipo_servicio, grupo_tope, limite_cantidad, dias_ciclo, valor_normal, valor_adicional)
+        convenios.agregar_servicio_convenio(convenio_id, actividad_id, grupo_tope, limite_cantidad, dias_ciclo, valor_normal, valor_adicional)
     except ValueError as error:
         return RedirectResponse(url=f"/convenios-eps/{convenio_id}?error={error}", status_code=303)
     return RedirectResponse(url=f"/convenios-eps/{convenio_id}?guardado=1", status_code=303)

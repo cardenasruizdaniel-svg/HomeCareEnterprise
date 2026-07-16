@@ -1144,6 +1144,7 @@ function renderFormularioSignos(visita) {
 
     await encolarAccion("signos_vitales", {
       paciente_id: visita.paciente_id,
+      programacion_id: visita.id,
       profesional: perfil.nombre,
       datos,
     });
@@ -1195,21 +1196,47 @@ const TIPOS_NOTA_MOVIL = [
   { rol: "Terapeuta", nombre: "Nota de Terapia" },
 ];
 
+// Cada profesional solo debe ver y diligenciar el tipo de nota
+// que corresponde a SU propio perfil -- no tiene sentido (y
+// genera confusión en la historia clínica) que, por ejemplo,
+// un enfermero pueda elegir por error "Nota Médica", o un
+// terapeuta "Nota de Enfermería". Esta función determina cuál
+// es la única opción válida según el rol real con el que la
+// persona inició sesión.
+function tipoNotaSegunPerfil() {
+  const rol = (perfil && perfil.rol || "").toLowerCase();
+  if (rol.includes("cuidador")) return "Cuidador";
+  if (rol.includes("médico") || rol.includes("medico")) return "Médico";
+  if (rol.includes("enfermer")) return "Enfermero";
+  if (rol.includes("fisioterapeuta") || rol.includes("terapeuta respiratorio") || rol.includes("salud ocupacional")
+      || rol.includes("terapeuta") || rol.includes("fonoaudi") || rol.includes("psicólogo") || rol.includes("psicologo")
+      || rol.includes("nutricionista") || rol.includes("trabajo social")) return "Terapeuta";
+  if (rol.includes("aplicador")) return "Aplicador";
+  if (rol.includes("curaciones")) return "Curaciones";
+  return null; // rol administrativo u otro sin un tipo de nota clínica propio -- se le deja elegir
+}
+
 function renderFormularioEvolucion(visita, opciones) {
   opciones = opciones || {};
   const esCuidador = esPerfilCuidador();
+  const tipoFijo = tipoNotaSegunPerfil(); // null si el rol no tiene un tipo de nota clínica propio (ej. administrativo)
+  const infoTipoFijo = TIPOS_NOTA_MOVIL.find((t) => t.rol === tipoFijo);
 
   contenedor().innerHTML = `
     <div class="card">
       <h3>${esCuidador ? "Registro Informe de Cuidador" : "Registrar en la Historia Clínica"}</h3>
-      <div class="form-group" style="display:${esCuidador ? "none" : "block"};">
+      <div class="form-group" style="display:${tipoFijo ? "none" : "block"};">
         <label>¿Qué tipo de formato va a diligenciar?</label>
         <select id="ev-tipo-nota">
           <option value="">-- Seleccione --</option>
           ${TIPOS_NOTA_MOVIL.map(t => `<option value="${t.rol}" data-nombre="${t.nombre}">${t.nombre}</option>`).join("")}
         </select>
       </div>
-      <div id="ev-contenedor-resto" style="display:${esCuidador ? "block" : "none"};">
+      ${tipoFijo ? `
+      <div class="alerta alerta-info" style="margin-bottom:12px;">
+        Formato: <strong>${infoTipoFijo.nombre}</strong> (según su perfil de ${perfil.rol})
+      </div>` : ""}
+      <div id="ev-contenedor-resto" style="display:${tipoFijo ? "block" : "none"};">
         <div class="form-group">
           <label>Plantilla predefinida (opcional)</label>
           <select id="ev-plantilla">
@@ -1242,10 +1269,11 @@ function renderFormularioEvolucion(visita, opciones) {
   let rolNotaElegido = "";
   let nombreNotaElegida = "";
 
-  if (esCuidador) {
-    rolNotaElegido = "Cuidador";
-    nombreNotaElegida = "Nota de Cuidador";
+  if (tipoFijo) {
+    rolNotaElegido = tipoFijo;
+    nombreNotaElegida = infoTipoFijo.nombre;
     cargarPlantillasMovil();
+
   }
 
   async function cargarInformesParaAclarar(preseleccionar) {
@@ -1929,8 +1957,38 @@ async function renderServiciosAsignados(visita) {
   contenedor().innerHTML = html;
 
   document.getElementById("btn-guardar-servicio").addEventListener("click", async () => {
-    const actividadId = document.getElementById("sa-actividad").value;
+    const selectActividad = document.getElementById("sa-actividad");
+    const actividadId = selectActividad.value;
     if (!actividadId) { alert("Debe seleccionar el servicio que va a asignar."); return; }
+
+    const nombreServicio = selectActividad.selectedOptions[0].textContent.split(" (")[0].trim();
+    const sesiones = parseInt(document.getElementById("sa-sesiones").value) || 1;
+    const fechaInicio = document.getElementById("sa-fecha-inicio").value;
+
+    // Verificación inmediata (si hay conexión) contra el tope del convenio de EPS del paciente --
+    // si no hay conexión, simplemente no se alcanza a avisar aquí, y sigue el flujo normal.
+    try {
+      const respuestaChequeo = await fetch("/api/movil/verificar-convenio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({
+          paciente_id: visita.paciente_id, nombre_servicio: nombreServicio,
+          cantidad_nueva: sesiones, fecha_referencia: fechaInicio,
+        }),
+      });
+      if (respuestaChequeo.ok) {
+        const chequeo = await respuestaChequeo.json();
+        if (chequeo.aplica && !chequeo.disponible) {
+          const continuar = confirm(
+            `⚠ Tope del convenio EPS superado\n\n${chequeo.mensaje}\n\n¿Desea continuar de todas formas? (quedará pendiente tramitar la autorización con la EPS)`
+          );
+          if (!continuar) return;
+        }
+      }
+    } catch (error) {
+      // sin conexión u otro problema al verificar -- se sigue con el flujo normal, sin bloquear al usuario
+    }
 
     await encolarAccion("asignar_servicio_individual", {
       paciente_id: visita.paciente_id,

@@ -753,6 +753,7 @@ class MigrationManager:
                 CREATE TABLE IF NOT EXISTS convenios_eps_servicios(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     convenio_id INTEGER NOT NULL,
+                    actividad_id INTEGER,
                     tipo_servicio TEXT NOT NULL,
                     grupo_tope TEXT,
                     limite_cantidad INTEGER NOT NULL,
@@ -760,11 +761,20 @@ class MigrationManager:
                     valor_normal REAL NOT NULL DEFAULT 0,
                     valor_adicional REAL NOT NULL DEFAULT 0,
                     activo INTEGER DEFAULT 1,
-                    FOREIGN KEY(convenio_id) REFERENCES convenios_eps(id)
+                    FOREIGN KEY(convenio_id) REFERENCES convenios_eps(id),
+                    FOREIGN KEY(actividad_id) REFERENCES catalogo_actividades(id)
                 );
             """)
             self.connection.commit()
             cambios.append("Se creó la tabla convenios_eps_servicios")
+
+        if self.existe_tabla("convenios_eps_servicios"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "convenios_eps_servicios",
+                    {"actividad_id": "actividad_id INTEGER"},
+                )
+            )
 
         if not self.existe_tabla("paciente_convenio"):
             self.connection.executescript("""
@@ -810,6 +820,25 @@ class MigrationManager:
             self.connection.commit()
             cambios.append("Se creó la tabla cuentas_por_cobrar_eps")
 
+        return cambios
+
+    def migrar_consolidacion_nota_visita(self):
+        """
+        Para poder incorporar los signos vitales dentro de la
+        misma nota de la visita (en vez de quedar como un
+        registro suelto y aparte), hace falta poder enlazar
+        cada toma de signos vitales con la visita exacta en la
+        que se tomó -- igual que ya se hace con el examen
+        físico.
+        """
+        cambios = []
+        if self.existe_tabla("signos_vitales"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "signos_vitales",
+                    {"programacion_id": "programacion_id INTEGER"},
+                )
+            )
         return cambios
 
     def migrar_agente_whatsapp_profesional(self):
@@ -2316,6 +2345,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_flujo_chatbot()
+        )
+
+        cambios.extend(
+            self.migrar_consolidacion_nota_visita()
         )
 
         cambios.extend(

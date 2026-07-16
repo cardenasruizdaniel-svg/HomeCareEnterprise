@@ -149,16 +149,16 @@ def actualizar_ubicacion_paciente(paciente_id: int, latitud=None, longitud=None,
     return {"ok": True}
 
 
-def registrar_signos_vitales(paciente_id, profesional, datos: dict, usuario_id=None) -> dict:
+def registrar_signos_vitales(paciente_id, profesional, datos: dict, usuario_id=None, programacion_id=None) -> dict:
     ejecutar(
         """
         INSERT INTO signos_vitales(
-            paciente_id, profesional, fecha, hora, temperatura, presion_sistolica,
+            paciente_id, programacion_id, profesional, fecha, hora, temperatura, presion_sistolica,
             presion_diastolica, frecuencia_cardiaca, frecuencia_respiratoria,
             saturacion_oxigeno, glucemia, peso, talla, imc, dolor, observaciones,
             usuario_creacion
         ) VALUES (
-            :paciente_id, :profesional, :fecha, :hora, :temperatura, :presion_sistolica,
+            :paciente_id, :programacion_id, :profesional, :fecha, :hora, :temperatura, :presion_sistolica,
             :presion_diastolica, :frecuencia_cardiaca, :frecuencia_respiratoria,
             :saturacion_oxigeno, :glucemia, :peso, :talla, :imc, :dolor, :observaciones,
             :usuario_creacion
@@ -166,6 +166,7 @@ def registrar_signos_vitales(paciente_id, profesional, datos: dict, usuario_id=N
         """,
         {
             "paciente_id": paciente_id,
+            "programacion_id": programacion_id,
             "profesional": profesional,
             "fecha": datos.get("fecha") or datetime.now().strftime("%Y-%m-%d"),
             "hora": datos.get("hora") or datetime.now().strftime("%H:%M:%S"),

@@ -93,7 +93,16 @@
         <form method="post" action="/convenios-eps/{{ convenio.id }}/servicios/agregar">
             <div class="modal-header"><h5 class="modal-title">Agregar servicio al plan</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
-                <div class="mb-2"><label>Nombre del servicio (debe coincidir con el que se usa al programar la visita)</label><input type="text" name="tipo_servicio" class="form-control" required placeholder="Ej: Terapia Física"></div>
+                <div class="mb-2">
+                    <label>Servicio (de la lista de actividades del sistema)</label>
+                    <select name="actividad_id" class="form-select" required>
+                        <option value="">-- Seleccione --</option>
+                        {% for a in actividades_catalogo %}
+                        <option value="{{ a.id }}">{{ a.nombre }}{% if a.categoria %} ({{ a.categoria }}){% endif %}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Se toma exactamente el mismo nombre con el que se asignan los servicios a los pacientes — así no hay riesgo de que no coincida.</small>
+                </div>
                 <div class="mb-2"><label>Grupo de tope compartido (opcional)</label><input type="text" name="grupo_tope" class="form-control" placeholder="Ej: Terapias"></div>
                 <div class="row">
                     <div class="col-md-6 mb-2"><label>Cantidad incluida</label><input type="number" name="limite_cantidad" class="form-control" required min="1"></div>

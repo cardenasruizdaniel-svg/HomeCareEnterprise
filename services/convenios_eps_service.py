@@ -65,6 +65,12 @@ def finalizar_convenio(convenio_id: int):
 # PLAN DE SERVICIOS DEL CONVENIO
 # ==========================================
 
+def listar_actividades_catalogo():
+    """El mismo catálogo de servicios que se usa al asignarle actividades a un paciente -- para que el nombre siempre coincida exactamente."""
+    from repositories.catalogo_actividades_repository import CatalogoActividadesRepository
+    return [dict(a) for a in CatalogoActividadesRepository.listar_activas()]
+
+
 def listar_servicios_convenio(convenio_id: int):
     filas = consultar_todos(
         "SELECT * FROM convenios_eps_servicios WHERE convenio_id=? AND activo=1 ORDER BY tipo_servicio", (convenio_id,)
@@ -72,28 +78,38 @@ def listar_servicios_convenio(convenio_id: int):
     return [dict(f) for f in filas]
 
 
-def agregar_servicio_convenio(convenio_id, tipo_servicio, grupo_tope, limite_cantidad, dias_ciclo,
+def agregar_servicio_convenio(convenio_id, actividad_id, grupo_tope, limite_cantidad, dias_ciclo,
                                 valor_normal, valor_adicional) -> int:
-    if not tipo_servicio:
-        raise ValueError("Debe indicar el tipo de servicio.")
+    if not actividad_id:
+        raise ValueError("Debe seleccionar el servicio del catálogo.")
     if not limite_cantidad or int(limite_cantidad) <= 0:
         raise ValueError("El límite de cantidad debe ser mayor a cero.")
     if not dias_ciclo or int(dias_ciclo) <= 0:
         raise ValueError("Los días del ciclo deben ser mayores a cero.")
 
+    actividad = consultar_uno("SELECT nombre FROM catalogo_actividades WHERE id=?", (actividad_id,))
+    if not actividad:
+        raise ValueError("La actividad seleccionada no existe en el catálogo.")
+    tipo_servicio = dict(actividad)["nombre"]
+
     return ejecutar(
-        "INSERT INTO convenios_eps_servicios(convenio_id, tipo_servicio, grupo_tope, limite_cantidad, dias_ciclo, valor_normal, valor_adicional) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (convenio_id, tipo_servicio.strip(), (grupo_tope or "").strip() or None,
+        "INSERT INTO convenios_eps_servicios(convenio_id, actividad_id, tipo_servicio, grupo_tope, limite_cantidad, dias_ciclo, valor_normal, valor_adicional) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        (convenio_id, int(actividad_id), tipo_servicio, (grupo_tope or "").strip() or None,
          int(limite_cantidad), int(dias_ciclo), float(valor_normal or 0), float(valor_adicional or 0)),
     )
 
 
-def actualizar_servicio_convenio(servicio_id, tipo_servicio, grupo_tope, limite_cantidad, dias_ciclo,
+def actualizar_servicio_convenio(servicio_id, actividad_id, grupo_tope, limite_cantidad, dias_ciclo,
                                     valor_normal, valor_adicional):
+    actividad = consultar_uno("SELECT nombre FROM catalogo_actividades WHERE id=?", (actividad_id,))
+    if not actividad:
+        raise ValueError("La actividad seleccionada no existe en el catálogo.")
+    tipo_servicio = dict(actividad)["nombre"]
+
     ejecutar(
-        "UPDATE convenios_eps_servicios SET tipo_servicio=?, grupo_tope=?, limite_cantidad=?, dias_ciclo=?, valor_normal=?, valor_adicional=? WHERE id=?",
-        (tipo_servicio.strip(), (grupo_tope or "").strip() or None, int(limite_cantidad), int(dias_ciclo),
+        "UPDATE convenios_eps_servicios SET actividad_id=?, tipo_servicio=?, grupo_tope=?, limite_cantidad=?, dias_ciclo=?, valor_normal=?, valor_adicional=? WHERE id=?",
+        (int(actividad_id), tipo_servicio, (grupo_tope or "").strip() or None, int(limite_cantidad), int(dias_ciclo),
          float(valor_normal or 0), float(valor_adicional or 0), servicio_id),
     )
 
@@ -156,6 +172,98 @@ def historial_convenios_paciente(paciente_id: int):
 # ==========================================
 # GENERACIÓN AUTOMÁTICA DE CUENTAS POR COBRAR
 # ==========================================
+
+def verificar_disponibilidad_convenio(paciente_id: int, nombre_servicio: str, cantidad_nueva: int, fecha_referencia=None):
+    """
+    Se llama ANTES de asignarle sesiones nuevas a un paciente
+    (no cuando se completan, sino cuando el médico las manda) --
+    revisa cuántas sesiones de ese servicio (o de todo su grupo,
+    si comparte tope -- como las 4 terapias) ya tiene asignadas
+    en el ciclo actual, y si la cantidad nueva que se quiere
+    agregar se pasaría del tope autorizado por el convenio.
+
+    No bloquea nada por sí sola -- devuelve la información para
+    que quien esté asignando decida, con una alerta clara si ya
+    no hay cupo.
+    """
+    from datetime import date
+
+    resultado = {
+        "aplica": False, "disponible": True, "ya_asignadas": 0, "limite": 0,
+        "cantidad_nueva": cantidad_nueva, "exceden": 0, "mensaje": "",
+    }
+
+    convenio_actual = convenio_actual_paciente(paciente_id)
+    if not convenio_actual:
+        return resultado  # paciente sin convenio EPS -- no aplica ningún tope
+
+    plan_servicio = _buscar_servicio_convenio(convenio_actual["convenio_id"], nombre_servicio)
+    if not plan_servicio:
+        return resultado  # este servicio no está contemplado en su plan -- no aplica tope
+
+    resultado["aplica"] = True
+    resultado["limite"] = plan_servicio["limite_cantidad"]
+
+    fecha_referencia = fecha_referencia or date.today().isoformat()
+    ciclo = _numero_ciclo(convenio_actual["fecha_ingreso"], fecha_referencia, plan_servicio["dias_ciclo"])
+
+    # Se calcula el rango de fechas exacto de este ciclo, para
+    # poder contar cuántas visitas YA ASIGNADAS (aunque todavía
+    # no se hayan completado) caen dentro de él.
+    from datetime import timedelta
+    inicio_convenio = date.fromisoformat(convenio_actual["fecha_ingreso"][:10])
+    inicio_ciclo = inicio_convenio + timedelta(days=ciclo * plan_servicio["dias_ciclo"])
+    fin_ciclo = inicio_ciclo + timedelta(days=plan_servicio["dias_ciclo"] - 1)
+
+    if plan_servicio.get("grupo_tope"):
+        # Se cuentan TODOS los servicios que compartan el mismo grupo (ej. las 4 terapias juntas)
+        filas_grupo = consultar_todos(
+            "SELECT tipo_servicio FROM convenios_eps_servicios WHERE convenio_id=? AND grupo_tope=? AND activo=1",
+            (convenio_actual["convenio_id"], plan_servicio["grupo_tope"]),
+        )
+        nombres_grupo = [dict(f)["tipo_servicio"] for f in filas_grupo]
+        marcadores = ",".join("?" * len(nombres_grupo))
+        fila_conteo = consultar_uno(
+            f"""
+            SELECT COALESCE(SUM(sp.numero_sesiones), 0) AS total
+            FROM servicios_paciente sp
+            WHERE sp.paciente_id=? AND sp.tipo_servicio IN ({marcadores}) AND sp.estado='Activo'
+              AND date(sp.fecha_inicio) >= date(?) AND date(sp.fecha_inicio) <= date(?)
+            """,
+            (paciente_id, *nombres_grupo, inicio_ciclo.isoformat(), fin_ciclo.isoformat()),
+        )
+        etiqueta_servicio = plan_servicio["grupo_tope"]
+    else:
+        fila_conteo = consultar_uno(
+            """
+            SELECT COALESCE(SUM(numero_sesiones), 0) AS total
+            FROM servicios_paciente
+            WHERE paciente_id=? AND tipo_servicio=? AND estado='Activo'
+              AND date(fecha_inicio) >= date(?) AND date(fecha_inicio) <= date(?)
+            """,
+            (paciente_id, nombre_servicio, inicio_ciclo.isoformat(), fin_ciclo.isoformat()),
+        )
+        etiqueta_servicio = nombre_servicio
+
+    ya_asignadas = dict(fila_conteo)["total"] if fila_conteo else 0
+    resultado["ya_asignadas"] = ya_asignadas
+
+    total_con_nueva = ya_asignadas + cantidad_nueva
+    if total_con_nueva > plan_servicio["limite_cantidad"]:
+        resultado["disponible"] = False
+        resultado["exceden"] = total_con_nueva - plan_servicio["limite_cantidad"]
+        resultado["mensaje"] = (
+            f"El plan de {convenio_actual['eps']} autoriza {plan_servicio['limite_cantidad']} sesión(es) de "
+            f"{etiqueta_servicio} cada {plan_servicio['dias_ciclo']} días, y este paciente ya tiene {ya_asignadas} "
+            f"asignada(s) en el periodo actual. Agregar {cantidad_nueva} más se pasaría del tope autorizado por "
+            f"{resultado['exceden']} sesión(es). Para programar sesiones adicionales, primero debe generarse la "
+            f"orden del servicio y tramitar la autorización correspondiente con la EPS."
+        )
+    else:
+        resultado["mensaje"] = f"Dentro del tope autorizado: {ya_asignadas + cantidad_nueva} de {plan_servicio['limite_cantidad']} en el periodo actual."
+
+    return resultado
+
 
 def _buscar_servicio_convenio(convenio_id: int, tipo_servicio: str):
     """Encuentra la fila del plan que aplica a este tipo de servicio (comparación sin importar mayúsculas/acentos exactos)."""
