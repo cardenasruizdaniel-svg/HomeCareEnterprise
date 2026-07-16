@@ -16,6 +16,18 @@ def _id_usuario(usuario):
     return usuario.get("id") if isinstance(usuario, dict) else None
 
 
+@router.get("/manual-pdf")
+async def descargar_manual(usuario=Depends(requiere_permiso("facturacion"))):
+    from fastapi.responses import FileResponse
+    from core.config import RECURSOS_DIR
+    ruta = RECURSOS_DIR / "docs" / "manuales" / "Manual_Convenios_EPS_Facturacion.docx"
+    return FileResponse(
+        ruta,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        filename="Manual_Convenios_EPS_HomeCare.docx",
+    )
+
+
 @router.get("", response_class=HTMLResponse)
 @router.get("/", response_class=HTMLResponse)
 async def lista_convenios(request: Request, usuario=Depends(requiere_permiso("facturacion"))):

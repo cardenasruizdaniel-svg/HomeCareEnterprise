@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
 
-from core.config import BASE_DIR
+from core.config import RECURSOS_DIR
 from core.dependencies import requiere_permiso
 from core.templates import templates
 from database.database import consultar_todos
@@ -15,7 +15,7 @@ router = APIRouter(prefix="/configuracion-whatsapp", tags=["Configuración Whats
 
 @router.get("/manual-pdf")
 async def descargar_manual_whatsapp(usuario=Depends(requiere_permiso("chatbot_whatsapp"))):
-    ruta = BASE_DIR / "docs" / "manuales" / "MANUAL_CONEXION_WHATSAPP_ILUSTRADO.pdf"
+    ruta = RECURSOS_DIR / "docs" / "manuales" / "MANUAL_CONEXION_WHATSAPP_ILUSTRADO.pdf"
     return FileResponse(ruta, media_type="application/pdf", filename="Manual_Conexion_WhatsApp_HomeCare.pdf")
 
 

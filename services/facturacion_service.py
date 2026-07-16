@@ -277,21 +277,26 @@ def _generar_factura_desde_items(items: list, usuario_id=None) -> dict:
     fecha_emision = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     fecha_vencimiento = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
 
-    if len(pacientes_distintos) == 1:
-        nombre_adquirente = f"{primero.get('primer_nombre','')} {primero.get('primer_apellido','')}".strip()
-        documento_adquirente = primero.get("documento", "")
-        tipo_documento_adquirente = primero.get("tipo_documento", "CC")
-        concepto = f"Servicios de salud domiciliaria — {primero['eps']} ({len(items)} concepto(s))"
-    else:
-        nombre_adquirente = primero["eps"]
-        documento_adquirente = ""  # se completa manualmente si se conoce el NIT exacto de la EPS
-        tipo_documento_adquirente = "NIT"
-        concepto = f"Servicios de salud domiciliaria — {primero['eps']} ({len(pacientes_distintos)} paciente(s), {len(items)} concepto(s))"
-
+    # IMPORTANTE: la factura SIEMPRE queda a nombre de la EPS,
+    # sin importar el modo de agrupación elegido -- el contrato
+    # es entre HomeCare y la EPS, no directamente con cada
+    # paciente, así que ella es quien debe pagar y quien
+    # aparece como "adquirente" en la factura electrónica.
+    # El paciente atendido queda igual de claro, pero como
+    # DETALLE dentro de cada línea de servicio, no como el
+    # titular de la factura.
     from services.convenios_eps_service import obtener_convenio
     convenio = obtener_convenio(primero["convenio_id"])
-    if convenio and convenio.get("nit_eps") and len(pacientes_distintos) > 1:
-        documento_adquirente = convenio["nit_eps"]
+
+    nombre_adquirente = primero["eps"]
+    documento_adquirente = (convenio.get("nit_eps") if convenio else "") or ""
+    tipo_documento_adquirente = "NIT"
+
+    if len(pacientes_distintos) == 1:
+        nombre_paciente = f"{primero.get('primer_nombre','')} {primero.get('primer_apellido','')}".strip()
+        concepto = f"Servicios de salud domiciliaria prestados a {nombre_paciente} — {primero['eps']} ({len(items)} concepto(s))"
+    else:
+        concepto = f"Servicios de salud domiciliaria — {primero['eps']} ({len(pacientes_distintos)} paciente(s), {len(items)} concepto(s))"
 
     datos_ubl = {
         "prefijo": PREFIJO_FACTURACION,
