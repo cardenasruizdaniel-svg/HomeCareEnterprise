@@ -187,8 +187,11 @@
                                 <td class="text-end">${{ "{:,.0f}".format(i.valor_existencia) }}</td>
                                 <td>
                                     <a href="/inventario/movimientos/{{ i.id }}" class="btn btn-outline-primary btn-sm">Historial</a>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm"
-                                            onclick="abrirEdicionInsumo({{ i.id }}, {{ i.codigo|tojson }}, {{ i.nombre|tojson }}, {{ i.categoria|tojson }}, {{ i.unidad_medida|tojson }}, {{ i.stock_minimo }}, {{ i.stock_maximo }}, {{ i.requiere_lote_vencimiento|default(0) }})">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-editar-insumo"
+                                            data-id="{{ i.id }}" data-codigo="{{ i.codigo or '' }}" data-nombre="{{ i.nombre }}"
+                                            data-categoria="{{ i.categoria }}" data-unidad="{{ i.unidad_medida }}"
+                                            data-stock-minimo="{{ i.stock_minimo }}" data-stock-maximo="{{ i.stock_maximo }}"
+                                            data-requiere-lote="{{ 1 if i.requiere_lote_vencimiento else 0 }}">
                                         <i class="fa-solid fa-pen"></i> Editar
                                     </button>
                                     <a href="/inventario/insumos/desactivar/{{ i.id }}" class="btn btn-outline-danger btn-sm"
@@ -314,9 +317,22 @@ function abrirEdicionInsumo(id, codigo, nombre, categoria, unidadMedida, stockMi
     document.getElementById("edicion-unidad").value = unidadMedida || "Unidad";
     document.getElementById("edicion-stock-minimo").value = stockMinimo || 0;
     document.getElementById("edicion-stock-maximo").value = stockMaximo || 0;
-    document.getElementById("edicion-requiere-lote").checked = !!requiereLote;
+    document.getElementById("edicion-requiere-lote").checked = !!(requiereLote * 1);
     new bootstrap.Modal(document.getElementById("modalEditarInsumo")).show();
 }
+
+// Se usan atributos data-* (en vez de pasar los valores directo en el onclick)
+// porque el nombre de un insumo puede traer comillas, tildes o caracteres que
+// rompen el HTML si se insertan tal cual dentro del atributo onclick -- los
+// atributos data-* sí quedan bien escapados por la plantilla.
+document.querySelectorAll(".btn-editar-insumo").forEach((boton) => {
+    boton.addEventListener("click", () => {
+        abrirEdicionInsumo(
+            boton.dataset.id, boton.dataset.codigo, boton.dataset.nombre, boton.dataset.categoria,
+            boton.dataset.unidad, boton.dataset.stockMinimo, boton.dataset.stockMaximo, boton.dataset.requiereLote,
+        );
+    });
+});
 </script>
 
 <div class="modal fade" id="modalEditarInsumo" tabindex="-1">

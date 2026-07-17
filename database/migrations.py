@@ -716,6 +716,27 @@ class MigrationManager:
 
         return cambios
 
+    def migrar_renombrar_zona_rural(self):
+        """
+        La zona antes llamada "Zona Rural" pasa a llamarse
+        "Cordilleranos" -- se actualizan los pacientes que ya
+        la tuvieran asignada, para que sigan agrupados
+        correctamente (y no quedar con una zona que ya no
+        existe en la lista).
+        """
+        cambios = []
+        if self.existe_tabla("pacientes") and self.existe_columna("pacientes", "zona_ciudad"):
+            afectados = self.connection.execute(
+                "SELECT COUNT(*) FROM pacientes WHERE zona_ciudad='Zona Rural'"
+            ).fetchone()[0]
+            if afectados:
+                self.connection.execute(
+                    "UPDATE pacientes SET zona_ciudad='Cordilleranos' WHERE zona_ciudad='Zona Rural'"
+                )
+                self.connection.commit()
+                cambios.append(f"Se renombró 'Zona Rural' a 'Cordilleranos' en {afectados} paciente(s)")
+        return cambios
+
     def migrar_convenios_eps(self):
         """
         Sistema de convenios con EPS: cada convenio define un
@@ -2349,6 +2370,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_consolidacion_nota_visita()
+        )
+
+        cambios.extend(
+            self.migrar_renombrar_zona_rural()
         )
 
         cambios.extend(

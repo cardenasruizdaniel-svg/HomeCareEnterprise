@@ -17,5 +17,12 @@ ZONAS_CIUDAD = [
     "Noroccidente",
     "Suroriente",
     "Suroccidente",
-    "Zona Rural",
+    "Cordilleranos",  # antes "Zona Rural" -- pacientes que se visitan una sola vez al mes
 ]
+
+# Zonas que NO se visitan cada vez que se arma la ruta del día
+# siguiente, sino con una periodicidad propia -- por ahora solo
+# "Cordilleranos", que se visita una vez al mes.
+ZONAS_CON_PERIODICIDAD_PROPIA = {
+    "Cordilleranos": 30,  # días entre una visita y la siguiente
+}

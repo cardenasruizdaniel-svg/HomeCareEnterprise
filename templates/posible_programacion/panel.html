@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block titulo %}Posible Programación{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-route text-primary"></i> Posible Programación de Visitas</h2>
+    <p class="text-muted">
+        Propuesta de a quién visitar el <strong>{{ resultado.fecha_objetivo }}</strong>, agrupada por zona y servicio —
+        revise y elija cuáles sí programar; el resto queda pendiente para otro día.
+        <br><small>Solo se arma ruta de lunes a sábado — si el día siguiente es domingo o festivo, la propuesta salta sola al próximo día hábil.</small>
+    </p>
+
+    <form method="get" class="row align-items-end mb-3">
+        <div class="col-md-3">
+            <label>Cambiar la fecha objetivo (opcional)</label>
+            <input type="date" name="fecha" class="form-control" value="{{ resultado.fecha_objetivo }}">
+        </div>
+        <div class="col-md-2"><button class="btn btn-outline-primary w-100">Recalcular</button></div>
+    </form>
+
+    {% if mensaje %}<div class="alert alert-success">{{ mensaje }}</div>{% endif %}
+    <div id="alerta-resultado"></div>
+
+    <div class="card shadow mb-3">
+        <div class="card-body d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <span class="badge bg-primary fs-6">{{ resultado.total_candidatos }} candidato(s) en total</span>
+            </div>
+            <div class="d-flex gap-2 align-items-center">
+                <label class="mb-0">Profesional para los seleccionados:</label>
+                <select id="select-profesional-masivo" class="form-select" style="width:220px;">
+                    <option value="">-- Elegir individualmente --</option>
+                    {% for p in profesionales %}<option value="{{ p.id }}">{{ p.primer_nombre }} {{ p.primer_apellido }}</option>{% endfor %}
+                </select>
+                <button class="btn btn-success" id="btn-programar-seleccionados"><i class="fa-solid fa-check"></i> Programar seleccionados</button>
+            </div>
+        </div>
+    </div>
+
+    {% for zona in resultado.zonas %}
+    <div class="card shadow mb-3">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="fa-solid fa-map-pin text-danger"></i> {{ zona.zona }}</h5>
+            <span class="badge bg-secondary">{{ zona.total }} paciente(s)</span>
+        </div>
+        <div class="card-body">
+            {% for sv in zona.servicios %}
+            <h6 class="text-muted mt-2">{{ sv.servicio }}</h6>
+            <table class="table table-sm table-hover align-middle">
+                <thead class="table-light"><tr><th style="width:30px;"></th><th>Paciente</th><th>Motivo</th><th>Profesional</th><th style="width:100px;">Hora</th></tr></thead>
+                <tbody>
+                    {% for p in sv.pacientes %}
+                    <tr class="{% if not p.planilla_id %}table-warning{% endif %}">
+                        <td>
+                            {% if p.planilla_id %}
+                            <input type="checkbox" class="form-check-input ck-candidato"
+                                   data-planilla-id="{{ p.planilla_id }}" data-nombre="{{ p.primer_nombre }} {{ p.primer_apellido }}">
+                            {% endif %}
+                        </td>
+                        <td>
+                            <strong>{{ p.primer_nombre }} {{ p.primer_apellido }}</strong><br>
+                            <small class="text-muted">{{ p.documento }} · {{ p.celular or "sin celular" }}</small>
+                        </td>
+                        <td><small>{{ p.motivo }}</small></td>
+                        <td>
+                            {% if p.planilla_id %}
+                            <select class="form-select form-select-sm select-profesional-individual">
+                                <option value="">-- Elegir --</option>
+                                {% for pr in profesionales %}<option value="{{ pr.id }}">{{ pr.primer_nombre }} {{ pr.primer_apellido }}</option>{% endfor %}
+                            </select>
+                            {% else %}
+                            <small class="text-danger">Falta asignarle el servicio "Visita de Medicina General" antes de poder programar.</small>
+                            {% endif %}
+                        </td>
+                        <td><input type="time" class="form-control form-control-sm campo-hora" value="08:00"></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="card shadow"><div class="card-body text-center text-muted py-5">No hay candidatos para el {{ resultado.fecha_objetivo }}.</div></div>
+    {% endfor %}
+</div>
+
+<script>
+document.getElementById("select-profesional-masivo").addEventListener("change", function () {
+    if (!this.value) return;
+    document.querySelectorAll(".ck-candidato:checked").forEach((ck) => {
+        const fila = ck.closest("tr");
+        const select = fila.querySelector(".select-profesional-individual");
+        if (select) select.value = this.value;
+    });
+});
+
+document.getElementById("btn-programar-seleccionados").addEventListener("click", async () => {
+    const seleccionados = [];
+    document.querySelectorAll(".ck-candidato:checked").forEach((ck) => {
+        const fila = ck.closest("tr");
+        const select = fila.querySelector(".select-profesional-individual");
+        const hora = fila.querySelector(".campo-hora");
+        if (!select || !select.value) return;
+        seleccionados.push({
+            planilla_id: ck.dataset.planillaId, nombre: ck.dataset.nombre,
+            profesional_id: select.value, hora_inicio: hora.value,
+        });
+    });
+
+    if (seleccionados.length === 0) {
+        alert("Seleccione al menos un paciente y asígnele un profesional.");
+        return;
+    }
+
+    const respuesta = await fetch("/posible-programacion/programar-seleccionados", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fecha: "{{ resultado.fecha_objetivo }}", seleccionados }),
+    });
+    const datos = await respuesta.json();
+
+    let html = `<div class="alert alert-success">${datos.programados} visita(s) programada(s) correctamente.</div>`;
+    if (datos.errores && datos.errores.length) {
+        html += `<div class="alert alert-warning">${datos.errores.join("<br>")}</div>`;
+    }
+    document.getElementById("alerta-resultado").innerHTML = html;
+
+    setTimeout(() => window.location.reload(), 1800);
+});
+</script>
+{% endblock %}
