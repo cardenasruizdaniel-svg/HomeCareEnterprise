@@ -68,6 +68,10 @@ async def nuevo(
 ):
     from repositories.catalogo_eps_repository import CatalogoEPSRepository
     from core.zonas import ZONAS_CIUDAD
+    from core.datos_sociodemograficos import (
+        TIPOS_DISCAPACIDAD, GRUPOS_ETNICOS, NIVELES_ESCOLARIDAD,
+        IDENTIDADES_GENERO, ESTRATOS_SOCIOECONOMICOS,
+    )
 
     return templates.TemplateResponse(
         request=request,
@@ -76,6 +80,11 @@ async def nuevo(
             "usuario": usuario,
             "lista_eps": [dict(e) for e in CatalogoEPSRepository.listar_activas()],
             "zonas_ciudad": ZONAS_CIUDAD,
+            "tipos_discapacidad": TIPOS_DISCAPACIDAD,
+            "grupos_etnicos": GRUPOS_ETNICOS,
+            "niveles_escolaridad": NIVELES_ESCOLARIDAD,
+            "identidades_genero": IDENTIDADES_GENERO,
+            "estratos": ESTRATOS_SOCIOECONOMICOS,
         },
     )
 
@@ -105,6 +114,12 @@ async def guardar(
     codigo_municipio_divipola: str = Form(""),
     latitud: str = Form(""),
     longitud: str = Form(""),
+    discapacidad: str = Form(""),
+    pertenece_etnia: str = Form(""),
+    victima_conflicto_armado: str = Form(""),
+    estrato: str = Form(""),
+    escolaridad: str = Form(""),
+    identidad_genero: str = Form(""),
     usuario=Depends(requiere_permiso("pacientes")),
 ):
     datos = {
@@ -130,6 +145,12 @@ async def guardar(
         "codigo_municipio_divipola": codigo_municipio_divipola or None,
         "latitud": float(latitud) if latitud else None,
         "longitud": float(longitud) if longitud else None,
+        "discapacidad": discapacidad,
+        "pertenece_etnia": pertenece_etnia,
+        "victima_conflicto_armado": victima_conflicto_armado,
+        "estrato": int(estrato) if estrato else None,
+        "escolaridad": escolaridad,
+        "identidad_genero": identidad_genero,
     }
 
     try:
@@ -167,6 +188,10 @@ async def editar(
 
     from repositories.catalogo_eps_repository import CatalogoEPSRepository
     from core.zonas import ZONAS_CIUDAD
+    from core.datos_sociodemograficos import (
+        TIPOS_DISCAPACIDAD, GRUPOS_ETNICOS, NIVELES_ESCOLARIDAD,
+        IDENTIDADES_GENERO, ESTRATOS_SOCIOECONOMICOS,
+    )
 
     return templates.TemplateResponse(
         request=request,
@@ -175,6 +200,11 @@ async def editar(
             "usuario": usuario, "paciente": paciente,
             "lista_eps": [dict(e) for e in CatalogoEPSRepository.listar_activas()],
             "zonas_ciudad": ZONAS_CIUDAD,
+            "tipos_discapacidad": TIPOS_DISCAPACIDAD,
+            "grupos_etnicos": GRUPOS_ETNICOS,
+            "niveles_escolaridad": NIVELES_ESCOLARIDAD,
+            "identidades_genero": IDENTIDADES_GENERO,
+            "estratos": ESTRATOS_SOCIOECONOMICOS,
         },
     )
 
@@ -208,6 +238,12 @@ async def actualizar(
     estado: str = Form("ACTIVO"),
     estado_vital: str = Form("Vivo"),
     fecha_fallecimiento: str = Form(""),
+    discapacidad: str = Form(""),
+    pertenece_etnia: str = Form(""),
+    victima_conflicto_armado: str = Form(""),
+    estrato: str = Form(""),
+    escolaridad: str = Form(""),
+    identidad_genero: str = Form(""),
     usuario=Depends(requiere_permiso("pacientes")),
 ):
     datos = {
@@ -241,6 +277,12 @@ async def actualizar(
         "estado": estado,
         "estado_vital": estado_vital,
         "fecha_fallecimiento": fecha_fallecimiento if estado_vital == "Fallecido" else None,
+        "discapacidad": discapacidad,
+        "pertenece_etnia": pertenece_etnia,
+        "victima_conflicto_armado": victima_conflicto_armado,
+        "estrato": int(estrato) if estrato else None,
+        "escolaridad": escolaridad,
+        "identidad_genero": identidad_genero,
     }
 
     try:

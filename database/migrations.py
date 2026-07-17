@@ -746,6 +746,71 @@ class MigrationManager:
 
         return cambios
 
+    def migrar_documentos_seguros_whatsapp(self):
+        """
+        Para poder enviarle al paciente (o a su acudiente, desde
+        un número autorizado) su historia clínica en PDF por
+        WhatsApp de forma segura: un token de un solo uso, con
+        vencimiento, que da acceso a UN documento específico de
+        UN paciente específico -- así el enlace que viaja por
+        WhatsApp no sirve para nada más ni para nadie más.
+        """
+        cambios = []
+
+        if not self.existe_tabla("whatsapp_tokens_documentos"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS whatsapp_tokens_documentos(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    token TEXT NOT NULL UNIQUE,
+                    paciente_id INTEGER NOT NULL,
+                    tipo_documento TEXT NOT NULL,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    fecha_expiracion TEXT NOT NULL,
+                    usado INTEGER DEFAULT 0,
+                    fecha_uso TEXT,
+                    FOREIGN KEY(paciente_id) REFERENCES pacientes(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla whatsapp_tokens_documentos")
+
+        if self.existe_tabla("whatsapp_hilos"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "whatsapp_hilos",
+                    {"esperando_documento_verificacion": "esperando_documento_verificacion TEXT"},
+                )
+            )
+
+        return cambios
+
+    def migrar_datos_sociodemograficos_paciente(self):
+        """
+        Datos adicionales del paciente que exige el reporte a
+        entidades de salud en Colombia y las políticas de
+        atención diferencial: discapacidad, pertenencia étnica,
+        si es víctima del conflicto armado, estrato
+        socioeconómico, escolaridad, e identidad de género
+        (según las categorías vigentes en los registros de
+        salud del país).
+        """
+        cambios = []
+        if self.existe_tabla("pacientes"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "pacientes",
+                    {
+                        "discapacidad": "discapacidad TEXT",
+                        "pertenece_etnia": "pertenece_etnia TEXT",
+                        "victima_conflicto_armado": "victima_conflicto_armado TEXT",
+                        "estrato": "estrato INTEGER",
+                        "escolaridad": "escolaridad TEXT",
+                        "identidad_genero": "identidad_genero TEXT",
+                    },
+                )
+            )
+        return cambios
+
     def migrar_renombrar_zona_rural(self):
         """
         La zona antes llamada "Zona Rural" pasa a llamarse
@@ -2424,6 +2489,14 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_consolidacion_nota_visita()
+        )
+
+        cambios.extend(
+            self.migrar_documentos_seguros_whatsapp()
+        )
+
+        cambios.extend(
+            self.migrar_datos_sociodemograficos_paciente()
         )
 
         cambios.extend(

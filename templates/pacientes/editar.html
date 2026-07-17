@@ -115,6 +115,61 @@
                     </div>
                 </div>
 
+                <h5 class="text-muted mb-3 mt-4">Datos sociodemográficos</h5>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label>¿Tiene alguna discapacidad?</label>
+                        <select name="discapacidad" class="form-select">
+                            {% for d in tipos_discapacidad %}
+                            <option value="{{ d }}" {% if paciente.discapacidad == d or (not paciente.discapacidad and d == "Ninguna") %}selected{% endif %}>{{ d }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Pertenencia étnica</label>
+                        <select name="pertenece_etnia" class="form-select">
+                            {% for g in grupos_etnicos %}
+                            <option value="{{ g }}" {% if paciente.pertenece_etnia == g %}selected{% endif %}>{{ g }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>¿Es víctima del conflicto armado?</label>
+                        <select name="victima_conflicto_armado" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            <option value="Sí" {% if paciente.victima_conflicto_armado == "Sí" %}selected{% endif %}>Sí</option>
+                            <option value="No" {% if paciente.victima_conflicto_armado == "No" %}selected{% endif %}>No</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Estrato socioeconómico</label>
+                        <select name="estrato" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            {% for e in estratos %}
+                            <option value="{{ e }}" {% if paciente.estrato == e %}selected{% endif %}>Estrato {{ e }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Escolaridad</label>
+                        <select name="escolaridad" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            {% for n in niveles_escolaridad %}
+                            <option value="{{ n }}" {% if paciente.escolaridad == n %}selected{% endif %}>{{ n }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Identidad de género</label>
+                        <select name="identidad_genero" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            {% for i in identidades_genero %}
+                            <option value="{{ i }}" {% if paciente.identidad_genero == i %}selected{% endif %}>{{ i }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
                 <h5 class="text-muted mb-3">Contacto</h5>
                 <div class="row">
                     <div class="col-md-3 mb-3">

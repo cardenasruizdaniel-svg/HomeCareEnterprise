@@ -33,6 +33,12 @@ class Paciente:
     codigo_municipio_divipola:str=""
     estado:str="ACTIVO"
     fecha_registro:str=field(default_factory=lambda: datetime.now().isoformat())
+    discapacidad:str=""
+    pertenece_etnia:str=""
+    victima_conflicto_armado:str=""
+    estrato:Optional[int]=None
+    escolaridad:str=""
+    identidad_genero:str=""
 
     @property
     def nombre_completo(self)->str:

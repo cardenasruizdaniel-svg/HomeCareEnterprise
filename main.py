@@ -46,6 +46,7 @@ from routers.carpeta_paciente import router as carpeta_paciente_router
 from routers.servicios_criticos import router as servicios_criticos_router
 from routers.convenios_eps import router as convenios_eps_router
 from routers.posible_programacion import router as posible_programacion_router
+from routers.documentos_seguros import router as documentos_seguros_router
 from routers import despacho
 from routers.plantillas import router as plantillas_router
 
@@ -229,6 +230,7 @@ def create_app() -> FastAPI:
     app.include_router(servicios_criticos_router)
     app.include_router(convenios_eps_router)
     app.include_router(posible_programacion_router)
+    app.include_router(documentos_seguros_router)
 
     app.include_router(despacho.router)
 

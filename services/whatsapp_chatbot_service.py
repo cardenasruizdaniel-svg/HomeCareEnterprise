@@ -34,6 +34,13 @@ PALABRAS_REINICIO = ("menu", "menú", "#", "hola", "buenas", "inicio", "hi")
 
 
 def _buscar_paciente_por_celular(numero: str):
+    """
+    Busca a qué paciente corresponde este número -- ya sea
+    porque es el celular/teléfono DEL PACIENTE, o porque es el
+    de alguno de sus ACUDIENTES registrados. Así, un familiar o
+    cuidador que escriba desde su propio número (distinto al
+    del paciente) también puede usar el bot con normalidad.
+    """
     numero_normalizado = normalizar_celular(numero)
     if not numero_normalizado:
         return None
@@ -47,6 +54,19 @@ def _buscar_paciente_por_celular(numero: str):
         candidato = dict(candidato)
         if normalizar_celular(candidato.get("telefono")) == numero_normalizado:
             return candidato
+
+    # No coincidió con ningún paciente directamente -- se revisa
+    # si corresponde al número de algún ACUDIENTE registrado.
+    acudientes = consultar_todos(
+        "SELECT paciente_id, celular, telefono, telefono_principal, telefono_secundario FROM acudientes"
+    )
+    for acudiente in acudientes:
+        acudiente = dict(acudiente)
+        for campo in ("celular", "telefono", "telefono_principal", "telefono_secundario"):
+            if acudiente.get(campo) and normalizar_celular(acudiente[campo]) == numero_normalizado:
+                paciente_del_acudiente = consultar_uno("SELECT * FROM pacientes WHERE id=?", (acudiente["paciente_id"],))
+                if paciente_del_acudiente:
+                    return dict(paciente_del_acudiente)
     return None
 
 
@@ -211,6 +231,79 @@ def procesar_mensaje_entrante(numero_celular: str, texto_mensaje: str) -> dict:
         _enviar_despedida(numero_celular, paciente["id"])
         return {"ok": True, "reconocido": True}
 
+    # ---------- Paso 2.5: esperando el número de documento para verificar y enviar un documento seguro ----------
+    if hilo.get("esperando_documento_verificacion"):
+        tipo_documento_pedido = hilo["esperando_documento_verificacion"]
+        documento_ingresado = "".join(c for c in texto_original if c.isdigit())
+
+        ejecutar(
+            "UPDATE whatsapp_hilos SET esperando_documento_verificacion=NULL, opcion_actual_id=NULL WHERE id=?",
+            (hilo["id"],),
+        )
+
+        paciente_solicitado = None
+        if documento_ingresado:
+            fila_paciente = consultar_uno(
+                "SELECT * FROM pacientes WHERE documento=? AND UPPER(estado)='ACTIVO'", (documento_ingresado,)
+            )
+            paciente_solicitado = dict(fila_paciente) if fila_paciente else None
+
+        from services.whatsapp_documentos_seguros_service import (
+            numero_autorizado_para_paciente, generar_token_documento, generar_pdf_historia_clinica,
+        )
+
+        if not paciente_solicitado:
+            respuesta = (
+                "No encontramos ningún paciente activo con ese número de documento. 🔍\n\n"
+                "Por favor verifique el número, o comuníquese con uno de nuestros asesores para que le ayuden."
+            )
+            enviar_whatsapp(numero_celular, respuesta)
+            _registrar_mensaje(numero_celular, paciente["id"], "saliente", respuesta)
+            return {"ok": True, "reconocido": True, "paciente_id": paciente["id"]}
+
+        if not numero_autorizado_para_paciente(paciente_solicitado["id"], numero_celular):
+            ejecutar(
+                "UPDATE whatsapp_hilos SET atendido_por_humano=1, departamento=? WHERE id=?",
+                ("Asistencial General", hilo["id"]),
+            )
+            respuesta = (
+                "⚠️ Este número no está autorizado para solicitar este tipo de información. "
+                "Por su seguridad, la historia clínica solo se envía a números previamente registrados como los del "
+                "paciente o de su acudiente.\n\n"
+                "No podemos enviarle esta información por este medio. Lo comunicamos con un asesor para que le ayude "
+                "a revisar otras opciones."
+            )
+            enviar_whatsapp(numero_celular, respuesta)
+            _registrar_mensaje(numero_celular, paciente["id"], "saliente", respuesta)
+            return {"ok": True, "reconocido": True, "paciente_id": paciente["id"]}
+
+        # Número autorizado -- se genera el documento y se envía directamente, sin pasar por un asesor.
+        try:
+            token = generar_token_documento(paciente_solicitado["id"], tipo_documento_pedido)
+            from core.config import PUBLIC_BASE_URL
+            adjunto_url = None
+            if PUBLIC_BASE_URL:
+                adjunto_url = f"{PUBLIC_BASE_URL.rstrip('/')}/documentos-seguros/{token}"
+
+            nombre_paciente = f"{paciente_solicitado.get('primer_nombre','')} {paciente_solicitado.get('primer_apellido','')}".strip()
+            respuesta = f"✅ Identidad verificada. Le enviamos la historia clínica de {nombre_paciente} a continuación."
+            enviar_whatsapp(numero_celular, respuesta, adjunto_url=adjunto_url)
+            _registrar_mensaje(numero_celular, paciente["id"], "saliente", respuesta)
+        except Exception:
+            respuesta = (
+                "Tuvimos un inconveniente generando su documento. Lo comunicamos con un asesor para que le ayude."
+            )
+            ejecutar(
+                "UPDATE whatsapp_hilos SET atendido_por_humano=1, departamento=? WHERE id=?",
+                ("Asistencial General", hilo["id"]),
+            )
+            enviar_whatsapp(numero_celular, respuesta)
+            _registrar_mensaje(numero_celular, paciente["id"], "saliente", respuesta)
+            return {"ok": True, "reconocido": True, "paciente_id": paciente["id"]}
+
+        _enviar_despedida(numero_celular, paciente["id"])
+        return {"ok": True, "reconocido": True, "paciente_id": paciente["id"]}
+
     # ---------- Paso 3: "#"/"menu" -> volver al menú principal ----------
     if texto_normalizado in PALABRAS_REINICIO:
         ejecutar("UPDATE whatsapp_hilos SET opcion_actual_id=NULL WHERE id=?", (hilo["id"],))
@@ -261,6 +354,16 @@ def procesar_mensaje_entrante(numero_celular: str, texto_mensaje: str) -> dict:
                 f"{lista_campos}\n\n"
                 "Una vez recibamos la información, nuestro equipo la validará y gestionará su solicitud."
             )
+
+    elif tipo == "envio_historia_clinica":
+        ejecutar(
+            "UPDATE whatsapp_hilos SET esperando_documento_verificacion='historia_clinica', opcion_actual_id=? WHERE id=?",
+            (opcion_elegida["id"], hilo["id"]),
+        )
+        respuesta = (
+            "Para enviarle su historia clínica, primero necesitamos verificar su identidad. 🔒\n\n"
+            "Por favor, envíenos el *número de documento* del paciente (solo los números, sin puntos)."
+        )
 
     elif tipo == "derivar_departamento":
         ejecutar(

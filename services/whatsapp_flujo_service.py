@@ -7,6 +7,7 @@ TIPOS_ACCION = [
     ("submenu", "Abrir un submenú con más opciones"),
     ("recoleccion_datos", "Pedirle datos al paciente (nombre, documento, etc.) y derivar a un departamento"),
     ("derivar_departamento", "Derivar directamente a un agente humano de un departamento"),
+    ("envio_historia_clinica", "Verificar identidad y enviar la historia clínica en PDF automáticamente"),
 ]
 
 MARCADORES_DISPONIBLES = [
@@ -300,17 +301,7 @@ def construir_flujo_personalizado_homecare(usuario_id=None):
     crear_opcion(id_asignacion, "🔍 Consultar estado de una solicitud existente", "recoleccion_datos", texto_consultar_estado, "Asistencial General", 2, campos_consultar_estado)
     crear_opcion(id_historias, "🔍 Consultar el estado de una solicitud realizada", "recoleccion_datos", texto_consultar_estado, "Asistencial General", 1, campos_consultar_estado)
 
-    texto_historia_clinica = (
-        "Gracias por comunicarse con HomeCare del Quindío. 💙\n\n"
-        "Para tramitar la solicitud de la historia clínica, por favor compártanos:\n"
-        "👤 Nombre completo del paciente\n"
-        "🪪 Número de documento de identidad\n"
-        "📱 Número de contacto\n\n"
-        "Una vez recibamos la información, nuestro equipo realizará la validación correspondiente y gestionará "
-        "su solicitud en el menor tiempo posible."
-    )
-    campos_historia_clinica = "Nombre completo del paciente\nNúmero de documento de identidad\nNúmero de contacto"
-    crear_opcion(id_historias, "📥 Solicitar historia clínica", "recoleccion_datos", texto_historia_clinica, "Asistencial General", 2, campos_historia_clinica)
+    crear_opcion(id_historias, "📥 Solicitar historia clínica", "envio_historia_clinica", None, None, 2, None)
 
     texto_orden_medica = (
         "Gracias por comunicarse con HomeCare del Quindío. 💙 Con gusto le ayudaremos a gestionar su solicitud. "
