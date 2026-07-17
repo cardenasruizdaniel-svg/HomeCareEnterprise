@@ -35,15 +35,29 @@ def reiniciar_base_datos_en_blanco(usuario_id=None) -> dict:
     de referencia para que el sistema quede funcional de
     inmediato.
     """
+    from database.db_backend import ES_POSTGRES
 
-    filas_tablas = consultar_todos(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
-    )
+    if ES_POSTGRES:
+        filas_tablas = consultar_todos(
+            "SELECT tablename AS name FROM pg_tables WHERE schemaname='public'"
+        )
+    else:
+        filas_tablas = consultar_todos(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+        )
     tablas = [dict(f)["name"] for f in filas_tablas]
 
     conexion = get_connection()
     cursor = conexion.cursor()
-    cursor.execute("PRAGMA foreign_keys = OFF")
+
+    if ES_POSTGRES:
+        # Equivalente a desactivar temporalmente las llaves
+        # foráneas en SQLite -- desactiva la verificación de
+        # restricciones (y disparadores) SOLO en esta sesión,
+        # para poder vaciar las tablas sin importar el orden.
+        cursor.execute("SET session_replication_role = 'replica';")
+    else:
+        cursor.execute("PRAGMA foreign_keys = OFF")
 
     tablas_vaciadas = []
     for tabla in tablas:
@@ -54,8 +68,19 @@ def reiniciar_base_datos_en_blanco(usuario_id=None) -> dict:
 
     # Reinicia los contadores de autoincremento de las tablas
     # que se vaciaron, para que los IDs vuelvan a empezar desde 1.
-    for tabla in tablas_vaciadas:
-        cursor.execute("DELETE FROM sqlite_sequence WHERE name=?", (tabla,))
+    if ES_POSTGRES:
+        cursor.execute("SET session_replication_role = 'origin';")
+        for tabla in tablas_vaciadas:
+            # Solo si la tabla tiene una secuencia asociada a su columna "id"
+            # (el nombre por defecto que le da PostgreSQL a un SERIAL) --
+            # si no la tiene (tabla sin autoincremento), simplemente se ignora.
+            try:
+                cursor.execute(f"ALTER SEQUENCE {tabla}_id_seq RESTART WITH 1")
+            except Exception:
+                pass
+    else:
+        for tabla in tablas_vaciadas:
+            cursor.execute("DELETE FROM sqlite_sequence WHERE name=?", (tabla,))
 
     conexion.commit()
     conexion.close()

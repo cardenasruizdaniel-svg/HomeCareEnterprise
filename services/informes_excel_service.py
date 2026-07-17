@@ -160,3 +160,82 @@ def generar_excel_equipo_profesional(profesionales: list) -> str:
     ruta = carpeta / f"equipo_profesional_{marca_tiempo}.xlsx"
     libro.save(ruta)
     return str(ruta)
+
+
+def generar_excel_contratos_pendientes(datos: dict) -> str:
+    libro = Workbook()
+
+    hoja1 = libro.active
+    hoja1.title = "Sin contrato"
+    columnas1 = [
+        ("documento", "Documento"), ("nombre_completo", "Nombre completo"),
+        ("especialidad_principal", "Especialidad"), ("estado", "Estado"),
+        ("celular", "Celular"), ("correo", "Correo"), ("fecha_creacion", "Fecha de creación en el sistema"),
+    ]
+    _escribir_encabezado_reporte(hoja1, "Profesionales SIN contrato registrado", [c[1] for c in columnas1])
+    fila = 5
+    for p in datos["sin_contrato"]:
+        for indice, (clave, _) in enumerate(columnas1, start=1):
+            celda = hoja1.cell(row=fila, column=indice, value=p.get(clave) or "")
+            celda.font = FUENTE_NORMAL
+            celda.border = BORDE_FINO
+        fila += 1
+    for indice, (clave, nombre) in enumerate(columnas1, start=1):
+        hoja1.column_dimensions[get_column_letter(indice)].width = max(len(nombre) + 2, 18)
+
+    hoja2 = libro.create_sheet("Sin firmar")
+    columnas2 = [
+        ("documento", "Documento"), ("nombre_completo", "Nombre completo"),
+        ("especialidad_principal", "Especialidad"), ("tipo_contrato", "Tipo de contrato"),
+        ("fecha_contrato", "Fecha del contrato"), ("fecha_creacion", "Fecha de creación en el sistema"),
+    ]
+    _escribir_encabezado_reporte(hoja2, "Contratos SIN firmar", [c[1] for c in columnas2])
+    fila = 5
+    for p in datos["sin_firmar"]:
+        for indice, (clave, _) in enumerate(columnas2, start=1):
+            celda = hoja2.cell(row=fila, column=indice, value=p.get(clave) or "")
+            celda.font = FUENTE_NORMAL
+            celda.border = BORDE_FINO
+        fila += 1
+    for indice, (clave, nombre) in enumerate(columnas2, start=1):
+        hoja2.column_dimensions[get_column_letter(indice)].width = max(len(nombre) + 2, 18)
+
+    carpeta = _preparar_carpeta()
+    marca_tiempo = datetime.now().strftime("%Y%m%d_%H%M%S")
+    ruta = carpeta / f"contratos_pendientes_{marca_tiempo}.xlsx"
+    libro.save(ruta)
+    return str(ruta)
+
+
+def generar_excel_documentos_incompletos(profesionales: list) -> str:
+    columnas = [
+        ("documento", "Documento"), ("nombre_completo", "Nombre completo"),
+        ("especialidad_principal", "Especialidad"), ("fecha_creacion", "Fecha de creación en el sistema"),
+        ("total_faltantes", "Cuántos documentos faltan"), ("documentos_faltantes", "Cuáles documentos faltan"),
+    ]
+
+    libro = Workbook()
+    hoja = libro.active
+    hoja.title = "Documentos incompletos"
+    _escribir_encabezado_reporte(hoja, "Personas con documentos incompletos", [c[1] for c in columnas])
+
+    fila_actual = 5
+    for p in profesionales:
+        for indice, (clave, _) in enumerate(columnas, start=1):
+            valor = p.get(clave) or ""
+            if clave == "documentos_faltantes":
+                valor = ", ".join(valor) if isinstance(valor, list) else valor
+            celda = hoja.cell(row=fila_actual, column=indice, value=valor)
+            celda.font = FUENTE_NORMAL
+            celda.border = BORDE_FINO
+        fila_actual += 1
+
+    for indice, (clave, nombre) in enumerate(columnas, start=1):
+        letra = get_column_letter(indice)
+        hoja.column_dimensions[letra].width = 40 if clave == "documentos_faltantes" else max(len(nombre) + 2, 18)
+
+    carpeta = _preparar_carpeta()
+    marca_tiempo = datetime.now().strftime("%Y%m%d_%H%M%S")
+    ruta = carpeta / f"documentos_incompletos_{marca_tiempo}.xlsx"
+    libro.save(ruta)
+    return str(ruta)

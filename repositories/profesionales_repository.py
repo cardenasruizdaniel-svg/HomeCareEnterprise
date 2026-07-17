@@ -343,6 +343,17 @@ class ProfesionalesRepository:
 
         nuevo_id = cursor.lastrowid
 
+        # Se asegura que estas dos fechas SI queden con un valor -- en algunas
+        # versiones de SQLite, un DEFAULT CURRENT_TIMESTAMP agregado despues con
+        # ALTER TABLE no se aplica de forma confiable a las filas nuevas, y
+        # quedaban en blanco (rompia los informes que ordenan/filtran por fecha).
+        cursor.execute(
+            "UPDATE profesionales SET fecha_creacion=COALESCE(fecha_creacion, CURRENT_TIMESTAMP), "
+            "fecha_registro=COALESCE(fecha_registro, CURRENT_TIMESTAMP) WHERE id=?",
+            (nuevo_id,),
+        )
+        conexion.commit()
+
         conexion.close()
 
         return nuevo_id

@@ -114,3 +114,91 @@ def equipo_profesional() -> list:
         """
     )
     return [dict(f) for f in filas]
+
+
+# ==========================================
+# CONTRATOS: quién no tiene, y quién no ha firmado
+# ==========================================
+
+def contratos_pendientes() -> dict:
+    """
+    Dos listados: profesionales que todavía NO tienen ningún
+    contrato registrado en el sistema, y los que sí tienen uno
+    pero está sin firmar -- con la fecha en que cada uno quedó
+    creado en el sistema, para poder priorizar los más viejos.
+    """
+    sin_contrato = consultar_todos(
+        """
+        SELECT pr.id, pr.documento, pr.nombre_completo, pr.especialidad_principal,
+               pr.estado, pr.celular, pr.correo, pr.fecha_creacion
+        FROM profesionales pr
+        WHERE NOT EXISTS (SELECT 1 FROM contratos c WHERE c.profesional_id = pr.id)
+        ORDER BY pr.fecha_creacion
+        """
+    )
+
+    sin_firmar = consultar_todos(
+        """
+        SELECT pr.id, pr.documento, pr.nombre_completo, pr.especialidad_principal,
+               pr.estado, pr.celular, pr.correo, pr.fecha_creacion,
+               c.id AS contrato_id, c.tipo_contrato, c.fecha_inicio AS fecha_contrato
+        FROM contratos c
+        JOIN profesionales pr ON pr.id = c.profesional_id
+        WHERE c.firmado = 0 AND c.estado != 'Anulado'
+        ORDER BY pr.fecha_creacion
+        """
+    )
+
+    sin_contrato = [dict(f) for f in sin_contrato]
+    sin_firmar = [dict(f) for f in sin_firmar]
+
+    return {
+        "sin_contrato": sin_contrato, "total_sin_contrato": len(sin_contrato),
+        "sin_firmar": sin_firmar, "total_sin_firmar": len(sin_firmar),
+    }
+
+
+# ==========================================
+# DOCUMENTOS: quién no tiene el expediente completo
+# ==========================================
+
+# Documentos que se espera que TODO profesional/cuidador tenga,
+# sin importar su cargo.
+DOCUMENTOS_REQUERIDOS_TODOS = ["Hoja de vida", "Certificado judicial", "Examen médico ocupacional"]
+
+# Estos tres solo aplican a quienes ejercen una profesión de
+# salud con tarjeta profesional (no a Cuidadores, por ejemplo).
+DOCUMENTOS_REQUERIDOS_PROFESION_SALUD = ["Título profesional", "Tarjeta profesional", "RETHUS"]
+
+
+def documentos_incompletos() -> list:
+    """
+    Por cada profesional ACTIVO, revisa cuáles de los
+    documentos esperados le hacen falta subir -- los cuidadores
+    no necesitan título/tarjeta profesional/RETHUS, así que a
+    ellos solo se les exige lo básico (hoja de vida, judicial,
+    examen médico ocupacional).
+    """
+    profesionales = consultar_todos(
+        "SELECT id, documento, nombre_completo, especialidad_principal, fecha_creacion FROM profesionales WHERE estado='ACTIVO'"
+    )
+
+    resultado = []
+    for fila in profesionales:
+        p = dict(fila)
+        es_cuidador = "cuidador" in (p.get("especialidad_principal") or "").lower()
+        requeridos = list(DOCUMENTOS_REQUERIDOS_TODOS)
+        if not es_cuidador:
+            requeridos += DOCUMENTOS_REQUERIDOS_PROFESION_SALUD
+
+        existentes = consultar_todos(
+            "SELECT DISTINCT tipo_documento FROM documentos_profesional WHERE profesional_id=?", (p["id"],)
+        )
+        tipos_existentes = {dict(e)["tipo_documento"] for e in existentes}
+
+        faltantes = [r for r in requeridos if r not in tipos_existentes]
+        if faltantes:
+            resultado.append({**p, "documentos_faltantes": faltantes, "total_faltantes": len(faltantes)})
+
+    resultado.sort(key=lambda r: r["total_faltantes"], reverse=True)
+    return resultado

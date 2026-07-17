@@ -294,18 +294,26 @@ class MigrationManager:
         nombre: str,
     ) -> bool:
 
-        self.cursor.execute(
-            """
-            SELECT name
+        from database.db_backend import ES_POSTGRES
 
-            FROM sqlite_master
+        if ES_POSTGRES:
+            self.cursor.execute(
+                "SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename=?",
+                (nombre,),
+            )
+        else:
+            self.cursor.execute(
+                """
+                SELECT name
 
-            WHERE type='table'
+                FROM sqlite_master
 
-            AND name=?
-            """,
-            (nombre,),
-        )
+                WHERE type='table'
+
+                AND name=?
+                """,
+                (nombre,),
+            )
 
         return self.cursor.fetchone() is not None
 
@@ -318,6 +326,15 @@ class MigrationManager:
         tabla: str,
         columna: str,
     ) -> bool:
+
+        from database.db_backend import ES_POSTGRES
+
+        if ES_POSTGRES:
+            self.cursor.execute(
+                "SELECT column_name AS name FROM information_schema.columns WHERE table_name=? AND column_name=?",
+                (tabla, columna),
+            )
+            return self.cursor.fetchone() is not None
 
         self.cursor.execute(
             f"PRAGMA table_info({tabla})"
@@ -342,6 +359,15 @@ class MigrationManager:
         tabla: str,
     ) -> list[str]:
 
+        from database.db_backend import ES_POSTGRES
+
+        if ES_POSTGRES:
+            self.cursor.execute(
+                "SELECT column_name AS name FROM information_schema.columns WHERE table_name=?",
+                (tabla,),
+            )
+            return [fila["name"] for fila in self.cursor.fetchall()]
+
         self.cursor.execute(
             f"PRAGMA table_info({tabla})"
         )
@@ -361,11 +387,15 @@ class MigrationManager:
         definicion: str,
     ) -> bool:
 
+        from database.db_backend import ES_POSTGRES, traducir_sql_a_postgres
+
         try:
+
+            definicion_final = traducir_sql_a_postgres(definicion) if ES_POSTGRES else definicion
 
             sql = (
                 f"ALTER TABLE {tabla} "
-                f"ADD COLUMN {definicion}"
+                f"ADD COLUMN {definicion_final}"
             )
 
             self.cursor.execute(sql)
@@ -374,7 +404,7 @@ class MigrationManager:
 
             return True
 
-        except sqlite3.Error:
+        except Exception:
 
             self.connection.rollback()
 
@@ -1635,6 +1665,30 @@ class MigrationManager:
             return []
 
         self.conectar()
+
+        from database.db_backend import ES_POSTGRES
+
+        if ES_POSTGRES:
+            # En PostgreSQL, quitar un NOT NULL es una sola sentencia directa
+            # -- no hace falta el truco de "renombrar, recrear y copiar" que
+            # sí hace falta en SQLite (que no soporta ALTER COLUMN).
+            self.cursor.execute(
+                "SELECT is_nullable FROM information_schema.columns "
+                "WHERE table_name='administracion_medicamentos' AND column_name='medicamento_id'"
+            )
+            fila = self.cursor.fetchone()
+            ya_acepta_null = fila is None or fila["is_nullable"] == "YES"
+            if ya_acepta_null:
+                return []
+            try:
+                self.cursor.execute(
+                    "ALTER TABLE administracion_medicamentos ALTER COLUMN medicamento_id DROP NOT NULL"
+                )
+                self.connection.commit()
+                return ["administracion_medicamentos: medicamento_id ahora acepta NULL"]
+            except Exception as ex:
+                self.connection.rollback()
+                return [f"ERROR migrando administracion_medicamentos: {ex}"]
 
         self.cursor.execute("PRAGMA table_info(administracion_medicamentos)")
         columnas = self.cursor.fetchall()

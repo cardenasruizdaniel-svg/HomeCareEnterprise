@@ -96,3 +96,39 @@ async def equipo_profesional_excel(usuario=Depends(requiere_permiso("profesional
         ruta, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         filename=Path(ruta).name,
     )
+
+
+@router.get("/contratos-pendientes", response_class=HTMLResponse)
+async def contratos_pendientes(request: Request, usuario=Depends(requiere_permiso("profesionales"))):
+    return templates.TemplateResponse(
+        request=request, name="informes/contratos_pendientes.html",
+        context={"usuario": usuario, "datos": informes_service.contratos_pendientes()},
+    )
+
+
+@router.get("/contratos-pendientes/excel")
+async def contratos_pendientes_excel(usuario=Depends(requiere_permiso("profesionales"))):
+    from services.informes_excel_service import generar_excel_contratos_pendientes
+    ruta = generar_excel_contratos_pendientes(informes_service.contratos_pendientes())
+    return FileResponse(
+        ruta, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=Path(ruta).name,
+    )
+
+
+@router.get("/documentos-incompletos", response_class=HTMLResponse)
+async def documentos_incompletos(request: Request, usuario=Depends(requiere_permiso("profesionales"))):
+    return templates.TemplateResponse(
+        request=request, name="informes/documentos_incompletos.html",
+        context={"usuario": usuario, "profesionales": informes_service.documentos_incompletos()},
+    )
+
+
+@router.get("/documentos-incompletos/excel")
+async def documentos_incompletos_excel(usuario=Depends(requiere_permiso("profesionales"))):
+    from services.informes_excel_service import generar_excel_documentos_incompletos
+    ruta = generar_excel_documentos_incompletos(informes_service.documentos_incompletos())
+    return FileResponse(
+        ruta, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=Path(ruta).name,
+    )

@@ -16,7 +16,13 @@ class PlantillaRepository:
 
         self.connection = get_connection()
 
-        self.connection.row_factory = sqlite3.Row
+        # En SQLite hay que pedir explícitamente que las filas se
+        # puedan usar como diccionario -- en PostgreSQL esto ya
+        # viene así por defecto (a través de la capa de
+        # compatibilidad), así que no aplica ahí.
+        from database.db_backend import ES_POSTGRES
+        if not ES_POSTGRES:
+            self.connection.row_factory = sqlite3.Row
 
     # =====================================================
     # CONSULTAS

@@ -16,6 +16,12 @@ python-dotenv==1.1.1
 
 reportlab==4.2.5
 
+# Conector de PostgreSQL (para producción, cuando se conecta una
+# base de datos administrada -- en desarrollo local, sin la
+# variable de entorno DATABASE_URL, el sistema sigue usando
+# SQLite y este paquete simplemente no se usa).
+psycopg2-binary==2.9.10
+
 requests==2.32.3
 openpyxl==3.1.5
 
