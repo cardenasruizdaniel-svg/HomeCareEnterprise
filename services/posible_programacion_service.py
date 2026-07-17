@@ -161,6 +161,98 @@ def _candidatos_cordilleranos() -> list:
     return candidatos
 
 
+def generar_informe_confirmacion_pdf(programacion_ids: list) -> str:
+    """
+    Arma el PDF con el detalle de las visitas recién
+    programadas -- pensado para mandárselo a quien se encarga
+    de llamar a los pacientes a confirmar la visita del día
+    siguiente: nombre, documento, dirección, celular, hora
+    propuesta, y con qué profesional.
+    """
+    from pathlib import Path
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import cm
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    from core.config import EXPORTS_DIR
+
+    marcadores = ",".join("?" * len(programacion_ids))
+    filas = consultar_todos(
+        f"""
+        SELECT pr.fecha, pr.hora_inicio, pr.servicio,
+               p.primer_nombre, p.primer_apellido, p.documento, p.celular, p.direccion, p.zona_ciudad,
+               pf.primer_nombre AS prof_nombre, pf.primer_apellido AS prof_apellido
+        FROM programaciones pr
+        JOIN pacientes p ON p.id = pr.paciente_id
+        LEFT JOIN profesionales pf ON pf.id = pr.profesional_id
+        WHERE pr.id IN ({marcadores})
+        ORDER BY p.zona_ciudad, pr.hora_inicio
+        """,
+        tuple(programacion_ids),
+    )
+    visitas = [dict(f) for f in filas]
+
+    carpeta = Path(EXPORTS_DIR) / "informes_confirmacion"
+    carpeta.mkdir(parents=True, exist_ok=True)
+    fecha_reporte = visitas[0]["fecha"][:10] if visitas else date.today().isoformat()
+    ruta = carpeta / f"informe_confirmacion_{fecha_reporte}.pdf"
+
+    base = getSampleStyleSheet()
+    titulo = ParagraphStyle("Titulo", parent=base["Heading1"], fontSize=15, textColor=colors.HexColor("#0a8f86"), spaceAfter=4)
+    subtitulo = ParagraphStyle("Subtitulo", parent=base["Normal"], fontSize=10, textColor=colors.grey, spaceAfter=12)
+
+    doc = SimpleDocTemplate(str(ruta), pagesize=letter, topMargin=1.8 * cm, bottomMargin=1.8 * cm, leftMargin=1.5 * cm, rightMargin=1.5 * cm)
+
+    elementos = [
+        Paragraph("HomeCare del Quindío I.P.S.", titulo),
+        Paragraph(f"Visitas médicas a confirmar — {fecha_reporte}", ParagraphStyle("Sub2", parent=base["Heading2"], fontSize=13, spaceAfter=4)),
+        Paragraph(f"{len(visitas)} visita(s) programada(s). Por favor confirmar con cada paciente antes de la visita.", subtitulo),
+    ]
+
+    zona_actual = None
+    filas_tabla = [["Hora", "Paciente", "Documento", "Celular", "Dirección", "Profesional"]]
+    for v in visitas:
+        zona = v.get("zona_ciudad") or "Sin zona"
+        if zona != zona_actual:
+            if zona_actual is not None:
+                elementos.append(_tabla_informe(filas_tabla))
+                filas_tabla = [["Hora", "Paciente", "Documento", "Celular", "Dirección", "Profesional"]]
+            elementos.append(Paragraph(f"📍 {zona}", ParagraphStyle("Zona", parent=base["Heading3"], fontSize=12, textColor=colors.HexColor("#0a8f86"), spaceBefore=10, spaceAfter=4)))
+            zona_actual = zona
+
+        nombre_paciente = f"{v['primer_nombre']} {v['primer_apellido']}"
+        nombre_prof = f"{v.get('prof_nombre','')} {v.get('prof_apellido','')}".strip() or "Sin asignar"
+        filas_tabla.append([
+            v["hora_inicio"], nombre_paciente, v["documento"] or "", v["celular"] or "sin celular",
+            (v["direccion"] or "")[:35], nombre_prof,
+        ])
+
+    if len(filas_tabla) > 1:
+        elementos.append(_tabla_informe(filas_tabla))
+
+    doc.build(elementos)
+    return str(ruta)
+
+
+def _tabla_informe(filas):
+    from reportlab.lib import colors
+    from reportlab.lib.units import cm
+    from reportlab.platypus import Table, TableStyle
+
+    tabla = Table(filas, colWidths=[1.6 * cm, 3.4 * cm, 2.3 * cm, 2.5 * cm, 4.5 * cm, 3 * cm], repeatRows=1)
+    tabla.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#0a8f86")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+        ("FONTSIZE", (0, 0), (-1, -1), 8),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#dee2e6")),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f8fafc")]),
+        ("TOPPADDING", (0, 0), (-1, -1), 4),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+    ]))
+    return tabla
+
+
 def obtener_posible_programacion(fecha_objetivo=None) -> dict:
     fecha_objetivo = fecha_objetivo or calcular_proximo_dia_habil()
 

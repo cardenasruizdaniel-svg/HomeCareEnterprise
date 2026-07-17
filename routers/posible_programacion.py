@@ -18,7 +18,16 @@ async def ver_posible_programacion(
     from services.profesionales_service import activos
 
     resultado = obtener_posible_programacion(fecha)
-    profesionales = [dict(p) for p in activos()]
+    # Esta ruta es solo de visitas médicas -- así que el selector
+    # de profesional solo debe mostrar médicos, no cualquier
+    # profesional activo (enfermeros, terapeutas, etc. no
+    # aplican para este tipo de visita).
+    todos_activos = [dict(p) for p in activos()]
+    profesionales = [
+        p for p in todos_activos
+        if "médic" in (p.get("especialidad_principal") or "").lower()
+        or "medic" in (p.get("especialidad_principal") or "").lower()
+    ]
 
     return templates.TemplateResponse(
         request=request, name="posible_programacion/panel.html",
@@ -50,12 +59,35 @@ async def programar_seleccionados(datos: dict = Body(...), usuario=Depends(requi
 
     for item in seleccionados:
         try:
-            programar_visita(
+            confirmacion = programar_visita(
                 int(item["planilla_id"]), fecha, item.get("hora_inicio") or "08:00", item.get("hora_fin") or "09:00",
                 int(item["profesional_id"]), usuario_id,
             )
-            programados.append(item["planilla_id"])
+            programados.append(confirmacion["programacion_id"])
         except Exception as error:
             errores.append(f"{item.get('nombre', 'Paciente')}: {error}")
 
-    return {"programados": len(programados), "errores": errores}
+    return {"programados": len(programados), "errores": errores, "programacion_ids": programados}
+
+
+@router.get("/informe-confirmacion")
+async def descargar_informe_confirmacion(ids: str, usuario=Depends(requiere_permiso("programacion"))):
+    """
+    Genera el PDF con el detalle de las visitas que se acaban
+    de programar (paciente, dirección, celular, fecha, hora,
+    profesional) -- listo para mandarle a quien se encarga de
+    llamar a confirmar cada visita con el paciente.
+    """
+    from fastapi.responses import FileResponse
+    from services.posible_programacion_service import generar_informe_confirmacion_pdf
+
+    try:
+        lista_ids = [int(i) for i in ids.split(",") if i.strip()]
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Lista de IDs no válida.")
+
+    if not lista_ids:
+        raise HTTPException(status_code=400, detail="No hay visitas para incluir en el informe.")
+
+    ruta = generar_informe_confirmacion_pdf(lista_ids)
+    return FileResponse(ruta, media_type="application/pdf", filename="informe_visitas_a_confirmar.pdf")
