@@ -820,9 +820,9 @@ body.sidebar-oculta .contenido-principal{
    =========================================================== */
 
 :root{
-    --hc-navy-950:#0a0f1d;
-    --hc-navy-900:#0f172a;
-    --hc-navy-800:#17233f;
+    --hc-navy-950:#141f38;
+    --hc-navy-900:#1b2a4a;
+    --hc-navy-800:#243660;
     --hc-teal:#00c2b8;
     --hc-teal-dark:#0a8f86;
     --hc-teal-soft:#e5fbf9;
@@ -892,7 +892,7 @@ h1,h2,h3,h4,h5,h6{
     letter-spacing:.09em;
     text-transform:uppercase;
     font-weight:700;
-    padding:18px 16px 6px !important;
+    padding:18px 18px 6px !important;
     position:relative;
 }
 .sidebar .menu-title::before{
@@ -905,58 +905,61 @@ h1,h2,h3,h4,h5,h6{
     vertical-align:middle;
 }
 
+/* Cada opción del menú se ve y se siente como un botón propio,
+   independiente -- no una franja que toca los bordes. Por eso
+   lleva su propio margen a los lados y bastante más
+   redondeo que antes; así, al pasar el mouse, parece
+   levantarse como un botón real, no solo cambiar de color. */
+.sidebar .menu{
+    padding:10px 14px !important;
+}
+
 .sidebar .menu a,
 .sidebar ul li a{
     position:relative;
-    border-radius:10px;
+    margin:3px 4px;
+    padding:12px 16px;
+    border-radius:14px;
     color:#cbd5e1;
-    transition:background .2s ease, color .2s ease, transform .15s ease, padding-left .15s ease;
+    font-weight:500;
+    background:transparent;
+    transition:background .22s ease, color .22s ease, box-shadow .22s ease, transform .16s ease;
 }
 
 .sidebar .menu a::before,
 .sidebar ul li a::before{
-    content:"";
-    position:absolute;
-    left:-16px;
-    top:8px;
-    bottom:8px;
-    width:3px;
-    border-radius:0 4px 4px 0;
-    background:var(--hc-teal);
-    opacity:0;
-    transition:opacity .2s ease, left .2s ease;
+    content:none;
 }
 
 .sidebar .menu a:hover,
 .sidebar ul li a:hover{
-    background:rgba(15,185,174,.12) !important;
+    background:linear-gradient(135deg, rgba(0,194,184,.22), rgba(0,194,184,.10)) !important;
     color:#ffffff !important;
-    transform:translateX(3px);
-}
-
-.sidebar .menu a:hover::before,
-.sidebar ul li a:hover::before{
-    opacity:1;
-    left:-14px;
+    box-shadow:0 4px 14px rgba(0,194,184,.18), inset 0 0 0 1px rgba(0,194,184,.28);
+    transform:translateY(-1px);
 }
 
 .sidebar .menu a.active,
 .sidebar ul li a.active{
-    background:rgba(15,185,174,.16) !important;
+    background:linear-gradient(135deg, var(--hc-teal-dark), var(--hc-teal)) !important;
     color:#ffffff !important;
+    font-weight:600;
+    box-shadow:0 6px 16px rgba(0,194,184,.32);
 }
 
 .sidebar .menu a.active::before,
 .sidebar ul li a.active::before{
-    opacity:1;
-    left:-14px;
+    content:none;
 }
 
 .sidebar i{
     color:#7ee8e0;
+    transition:color .2s ease;
 }
 .sidebar .menu a:hover i,
-.sidebar ul li a:hover i{
+.sidebar ul li a:hover i,
+.sidebar .menu a.active i,
+.sidebar ul li a.active i{
     color:#ffffff;
 }
 
