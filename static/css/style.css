@@ -892,8 +892,17 @@ h1,h2,h3,h4,h5,h6{
     letter-spacing:.09em;
     text-transform:uppercase;
     font-weight:700;
-    padding:18px 18px 6px !important;
+    padding:18px 18px 10px !important;
     position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    cursor:pointer;
+    user-select:none;
+    transition:color .2s ease;
+}
+.sidebar .menu-title:hover{
+    color:rgba(226,232,240,.95) !important;
 }
 .sidebar .menu-title::before{
     content:"";
@@ -903,6 +912,23 @@ h1,h2,h3,h4,h5,h6{
     background:var(--hc-rosa);
     margin-right:6px;
     vertical-align:middle;
+}
+.sidebar .menu-title .flecha-grupo{
+    font-size:10px !important;
+    transition:transform .25s ease;
+    color:rgba(148,163,184,.6);
+}
+.sidebar .menu-title.grupo-cerrado .flecha-grupo{
+    transform:rotate(-90deg);
+}
+
+/* La lista de cada grupo -- sin viñetas ni márgenes propios de
+   un <ul> normal, para que se vea como una simple continuación
+   del menú, solo que se puede ocultar/mostrar como bloque. */
+.sidebar ul.submenu{
+    list-style:none;
+    margin:0;
+    padding:0;
 }
 
 /* Cada opción del menú se ve y se siente como un botón propio,

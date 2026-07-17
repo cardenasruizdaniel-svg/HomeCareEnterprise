@@ -244,6 +244,65 @@
 </div>
 
 <!-- ===================================================== -->
+<!-- ÓRDENES MÉDICAS GENERADAS -->
+<!-- ===================================================== -->
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <h5 class="mb-0">💊 Órdenes Médicas Generadas</h5>
+                <form method="get" class="d-flex align-items-center gap-2 flex-wrap">
+                    <label class="mb-0 small text-muted">Desde</label>
+                    <input type="date" name="fecha_desde_ordenes" class="form-control form-control-sm" style="width:150px;" value="{{ ordenes_fecha_desde }}">
+                    <label class="mb-0 small text-muted">Hasta</label>
+                    <input type="date" name="fecha_hasta_ordenes" class="form-control form-control-sm" style="width:150px;" value="{{ ordenes_fecha_hasta }}">
+                    <button type="submit" class="btn btn-outline-primary btn-sm">Filtrar</button>
+                    <a href="/dashboard" class="btn btn-outline-secondary btn-sm">Hoy</a>
+                </form>
+            </div>
+            <div class="card-body">
+                <p class="text-muted small mb-2">
+                    Por defecto se muestran las órdenes generadas hoy — cambie las fechas de arriba para ver otro rango
+                    (por ejemplo, del 1 al 17 del mes).
+                </p>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Profesional</th>
+                                <th>Paciente</th>
+                                <th>Tipo de orden</th>
+                                <th>Descripción</th>
+                                <th>Envíos</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for o in ordenes_medicas_dashboard %}
+                            <tr>
+                                <td>{{ o.fecha_orden[:16] if o.fecha_orden else "" }}</td>
+                                <td>{{ o.profesional_nombre }}</td>
+                                <td><a href="/pacientes/{{ o.paciente_id }}">{{ o.paciente_nombre }}</a></td>
+                                <td><span class="badge bg-info text-dark">{{ o.tipo }}</span></td>
+                                <td>{{ o.descripcion[:60] }}{% if o.descripcion|length > 60 %}...{% endif %}</td>
+                                <td>
+                                    <i class="fa-brands fa-whatsapp {% if o.enviado_whatsapp %}text-success{% else %}text-muted{% endif %}" title="WhatsApp"></i>
+                                    <i class="fa-solid fa-envelope {% if o.enviado_correo %}text-success{% else %}text-muted{% endif %}" title="Correo"></i>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="6" class="text-center text-muted py-4">No hay órdenes médicas generadas en este rango de fechas.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================================================== -->
 <!-- AGENDA Y ALERTAS -->
 <!-- ===================================================== -->
 

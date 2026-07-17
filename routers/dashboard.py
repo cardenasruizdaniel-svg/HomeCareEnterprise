@@ -30,6 +30,8 @@ dashboard_service = DashboardService()
 )
 async def dashboard(
     request: Request,
+    fecha_desde_ordenes: str = None,
+    fecha_hasta_ordenes: str = None,
 ):
 
     # ==========================================
@@ -51,6 +53,15 @@ async def dashboard(
     contexto["produccion_detallada"] = dashboard_service.grafico_produccion_detallado()
     contexto["cumplimiento_historico"] = dashboard_service.grafico_cumplimiento_historico(6)
     contexto["altas_bajas"] = dashboard_service.grafico_altas_bajas(6)
+
+    from datetime import date
+    from services.ordenes_service import OrdenesService
+    hoy = date.today().isoformat()
+    contexto["ordenes_fecha_desde"] = fecha_desde_ordenes or hoy
+    contexto["ordenes_fecha_hasta"] = fecha_hasta_ordenes or hoy
+    contexto["ordenes_medicas_dashboard"] = OrdenesService.listar_por_rango_fechas(
+        contexto["ordenes_fecha_desde"], contexto["ordenes_fecha_hasta"]
+    )
 
     contexto["request"] = request
 

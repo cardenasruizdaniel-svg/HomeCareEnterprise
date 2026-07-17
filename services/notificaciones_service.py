@@ -75,15 +75,25 @@ def enviar_email(
     asunto: str,
     cuerpo_html: str,
     adjunto_path: str | None = None,
+    adjuntos_adicionales: list | None = None,
 ) -> dict:
+    """
+    'adjunto_path' se conserva por compatibilidad (un solo
+    archivo, como ya se usaba en todo el sistema). Si además se
+    necesita mandar más de un archivo en el mismo correo (por
+    ejemplo, la orden médica JUNTO con la historia clínica), se
+    agregan en 'adjuntos_adicionales' -- una lista de rutas.
+    """
 
     if not destinatario:
         return {"enviado": False, "motivo": "El paciente no tiene correo registrado."}
 
+    todos_los_adjuntos = ([adjunto_path] if adjunto_path else []) + (adjuntos_adicionales or [])
+
     if not SMTP_HOST:
         logger.info(
-            "[SIMULADO] Correo a %s | Asunto: %s | Adjunto: %s",
-            destinatario, asunto, adjunto_path,
+            "[SIMULADO] Correo a %s | Asunto: %s | Adjuntos: %s",
+            destinatario, asunto, todos_los_adjuntos,
         )
         return {
             "enviado": False,
@@ -99,8 +109,10 @@ def enviar_email(
 
         mensaje.attach(MIMEText(cuerpo_html, "html", "utf-8"))
 
-        if adjunto_path:
-            ruta = Path(adjunto_path)
+        for ruta_adjunto in todos_los_adjuntos:
+            if not ruta_adjunto:
+                continue
+            ruta = Path(ruta_adjunto)
             if ruta.exists():
                 tipo, _ = mimetypes.guess_type(str(ruta))
                 with open(ruta, "rb") as archivo:

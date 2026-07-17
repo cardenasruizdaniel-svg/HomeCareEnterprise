@@ -26,6 +26,25 @@ class OrdenesRepository:
         )
 
     @staticmethod
+    def listar_por_rango_fechas(fecha_desde: str, fecha_hasta: str):
+        """Todas las órdenes generadas entre dos fechas (inclusive), con el nombre del paciente y del profesional ya resueltos."""
+        return consultar(
+            """
+            SELECT
+                om.id, om.tipo, om.descripcion, om.estado, om.fecha_orden,
+                om.enviado_whatsapp, om.enviado_correo,
+                p.id AS paciente_id, p.primer_nombre AS paciente_primer_nombre, p.primer_apellido AS paciente_primer_apellido, p.documento AS paciente_documento,
+                pr.id AS profesional_id, pr.primer_nombre AS profesional_primer_nombre, pr.primer_apellido AS profesional_primer_apellido, pr.especialidad_principal
+            FROM ordenes_medicas om
+            JOIN pacientes p ON p.id = om.paciente_id
+            LEFT JOIN profesionales pr ON pr.id = om.profesional_id
+            WHERE date(om.fecha_orden) >= date(?) AND date(om.fecha_orden) <= date(?)
+            ORDER BY om.fecha_orden DESC
+            """,
+            (fecha_desde, fecha_hasta),
+        )
+
+    @staticmethod
     def obtener(orden_id: int):
         return consultar_uno(
             "SELECT * FROM ordenes_medicas WHERE id=?",

@@ -25,8 +25,11 @@
         </li>
 
         {% if usuario and (tiene_permiso(usuario.rol, "pacientes") or tiene_permiso(usuario.rol, "programacion")) %}
-        <li class="menu-title">Atención domiciliaria</li>
-        {% endif %}
+        <li class="menu-title" data-grupo="atencion_domiciliaria">
+            <span>Atención domiciliaria</span>
+            <i class="fa-solid fa-chevron-down flecha-grupo"></i>
+        </li>
+        <ul class="submenu" data-grupo-contenido="atencion_domiciliaria">
 
         {% if usuario and tiene_permiso(usuario.rol, "pacientes") %}
         <li>
@@ -90,8 +93,17 @@
         {% endif %}
         {% endif %}
 
-        {% if usuario and (tiene_permiso(usuario.rol, "profesionales") or tiene_permiso(usuario.rol, "usuarios")) %}
-        <li class="menu-title">Personal</li>
+        </ul>
+        {% endif %}
+
+        {% if usuario and (tiene_permiso(usuario.rol, "profesionales") or tiene_permiso(usuario.rol, "usuarios") or tiene_permiso(usuario.rol, "agente_whatsapp") or tiene_permiso(usuario.rol, "chatbot_whatsapp") or tiene_permiso(usuario.rol, "calidad") or tiene_permiso(usuario.rol, "pacientes")) %}
+        <li class="menu-title" data-grupo="personal">
+            <span>Personal</span>
+            <i class="fa-solid fa-chevron-down flecha-grupo"></i>
+        </li>
+        <ul class="submenu" data-grupo-contenido="personal">
+
+        {% if usuario and tiene_permiso(usuario.rol, "profesionales") %}
         <li>
             <a href="/profesionales">
                 <i class="fa-solid fa-user-nurse"></i>
@@ -139,7 +151,6 @@
         </li>
         {% endif %}
 
-
         {% if usuario and tiene_permiso(usuario.rol, "calidad") %}
         <li>
             <a href="/calidad">
@@ -158,8 +169,15 @@
         </li>
         {% endif %}
 
+        </ul>
+        {% endif %}
+
         {% if usuario and tiene_permiso(usuario.rol, "nomina") %}
-        <li class="menu-title">Nómina</li>
+        <li class="menu-title" data-grupo="nomina">
+            <span>Nómina</span>
+            <i class="fa-solid fa-chevron-down flecha-grupo"></i>
+        </li>
+        <ul class="submenu" data-grupo-contenido="nomina">
         <li>
             <a href="/nomina">
                 <i class="fa-solid fa-money-check-dollar"></i>
@@ -178,11 +196,15 @@
                 <span>Contratos</span>
             </a>
         </li>
+        </ul>
         {% endif %}
 
         {% if usuario and (tiene_permiso(usuario.rol, "facturacion") or tiene_permiso(usuario.rol, "rips") or tiene_permiso(usuario.rol, "interoperabilidad") or tiene_permiso(usuario.rol, "catalogos")) %}
-        <li class="menu-title">Facturación y Cumplimiento</li>
-        {% endif %}
+        <li class="menu-title" data-grupo="facturacion">
+            <span>Facturación y Cumplimiento</span>
+            <i class="fa-solid fa-chevron-down flecha-grupo"></i>
+        </li>
+        <ul class="submenu" data-grupo-contenido="facturacion">
 
         {% if usuario and tiene_permiso(usuario.rol, "facturacion") %}
         <li>
@@ -226,7 +248,14 @@
         </li>
         {% endif %}
 
-        <li class="menu-title">Otros</li>
+        </ul>
+        {% endif %}
+
+        <li class="menu-title" data-grupo="otros">
+            <span>Otros</span>
+            <i class="fa-solid fa-chevron-down flecha-grupo"></i>
+        </li>
+        <ul class="submenu" data-grupo-contenido="otros">
         <li>
             <a href="/app/" target="_blank">
                 <i class="fa-solid fa-mobile-screen"></i>
@@ -247,6 +276,7 @@
                 <span>Cerrar sesión</span>
             </a>
         </li>
+        </ul>
 
     </ul>
 
@@ -275,5 +305,66 @@
     });
 
     if (mejorEnlace) mejorEnlace.classList.add("active");
+
+    // ---------------------------------------------------------
+    // Grupos desplegables: cada "Atención domiciliaria",
+    // "Personal", "Nómina", etc. se puede abrir o recoger por
+    // separado, haciendo clic en su título. El estado (abierto
+    // o cerrado) se recuerda entre páginas con localStorage, y
+    // el grupo que contiene la pantalla actual siempre arranca
+    // abierto, para no perder de vista dónde se está.
+    // ---------------------------------------------------------
+    const CLAVE_ALMACENAMIENTO = "hc_grupos_sidebar_cerrados";
+
+    function leerGruposCerrados() {
+        try {
+            return JSON.parse(localStorage.getItem(CLAVE_ALMACENAMIENTO) || "[]");
+        } catch (error) {
+            return [];
+        }
+    }
+
+    function guardarGruposCerrados(lista) {
+        try {
+            localStorage.setItem(CLAVE_ALMACENAMIENTO, JSON.stringify(lista));
+        } catch (error) {
+            // si el almacenamiento no está disponible, simplemente no se recuerda -- no es grave
+        }
+    }
+
+    const gruposCerrados = new Set(leerGruposCerrados());
+
+    // El grupo que contiene la página activa siempre se ve
+    // abierto, sin importar lo que diga el localStorage --
+    // así nunca queda "escondida" la opción en la que se está.
+    if (mejorEnlace) {
+        const contenedorActivo = mejorEnlace.closest(".submenu");
+        if (contenedorActivo) {
+            gruposCerrados.delete(contenedorActivo.dataset.grupoContenido);
+        }
+    }
+
+    document.querySelectorAll(".menu-title[data-grupo]").forEach((titulo) => {
+        const grupo = titulo.dataset.grupo;
+        const contenido = document.querySelector(`.submenu[data-grupo-contenido="${grupo}"]`);
+        if (!contenido) return;
+
+        function aplicarEstado() {
+            const cerrado = gruposCerrados.has(grupo);
+            contenido.style.display = cerrado ? "none" : "block";
+            titulo.classList.toggle("grupo-cerrado", cerrado);
+        }
+        aplicarEstado();
+
+        titulo.addEventListener("click", () => {
+            if (gruposCerrados.has(grupo)) {
+                gruposCerrados.delete(grupo);
+            } else {
+                gruposCerrados.add(grupo);
+            }
+            guardarGruposCerrados(Array.from(gruposCerrados));
+            aplicarEstado();
+        });
+    });
 })();
 </script>
