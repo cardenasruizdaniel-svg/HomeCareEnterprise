@@ -45,7 +45,16 @@
             <div class="modal-body">
                 <div class="mb-2"><label>EPS</label><input type="text" name="eps" class="form-control" required placeholder="Ej: Nueva EPS"></div>
                 <div class="mb-2"><label>NIT de la EPS (opcional, para facturar a nombre de la EPS)</label><input type="text" name="nit_eps" class="form-control"></div>
-                <div class="mb-2"><label>Nombre del plan</label><input type="text" name="nombre_plan" class="form-control" required placeholder="Ej: Plan Domiciliario Estándar"></div>
+                <div class="mb-2">
+                    <label>Nombre del plan</label>
+                    <select name="nombre_plan" class="form-select" required>
+                        <option value="">-- Seleccione un programa de atención --</option>
+                        {% for p in programas_atencion %}
+                        <option value="{{ p.nombre }}">{{ p.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Se toma de los Programas de Atención ya creados en el sistema.</small>
+                </div>
                 <div class="mb-2"><label>N.° de convenio (opcional)</label><input type="text" name="numero_convenio" class="form-control"></div>
                 <div class="row">
                     <div class="col-md-6 mb-2"><label>Fecha de inicio</label><input type="date" name="fecha_inicio" class="form-control"></div>

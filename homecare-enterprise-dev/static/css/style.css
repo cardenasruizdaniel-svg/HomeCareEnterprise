@@ -1,0 +1,1097 @@
+html{
+    overflow-x:hidden;
+}
+body{
+
+    margin:0;
+
+    background:#eef2f7;
+
+    font-family:'Segoe UI',sans-serif;
+
+    overflow-x:hidden;
+
+}
+
+/* ---------- Layout ---------- */
+
+.wrapper{
+
+    display:flex;
+
+}
+
+.main{
+
+    flex:1;
+
+    min-height:100vh;
+
+}
+
+/* ---------- Sidebar ---------- */
+
+.sidebar{
+
+    width:270px;
+
+    background:#0f172a;
+
+    color:white;
+
+    min-height:100vh;
+
+    position:fixed;
+
+    left:0;
+
+    top:0;
+
+    overflow:auto;
+
+    transition:.3s;
+
+    box-shadow:3px 0 12px rgba(0,0,0,.15);
+
+}
+
+.main{
+
+    margin-left:270px;
+
+}
+
+/* ---------- Logo ---------- */
+
+.logo{
+
+    text-align:center;
+
+    padding:25px;
+
+}
+
+.logo img{
+
+    margin-bottom:10px;
+
+}
+
+.logo h4{
+
+    margin:0;
+
+}
+
+.logo small{
+
+    color:#94a3b8;
+
+}
+
+/* ---------- Menú ---------- */
+
+.menu{
+
+    padding:15px;
+
+}
+
+.menu a{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:15px;
+
+    color:#cbd5e1;
+
+    text-decoration:none;
+
+    padding:14px;
+
+    border-radius:10px;
+
+    margin-bottom:8px;
+
+    transition:.3s;
+
+    font-size:15px;
+
+}
+
+.menu a:hover{
+
+    background:#2563eb;
+
+    color:white;
+
+    transform:translateX(5px);
+
+}
+
+.menu i{
+
+    width:22px;
+
+    text-align:center;
+
+    font-size:18px;
+
+}
+
+/* ---------- Navbar ---------- */
+
+.navbar{
+
+    height:70px;
+
+}
+
+/* ---------- Cards ---------- */
+
+.card{
+
+    border:none;
+
+    border-radius:18px;
+
+    box-shadow:0 4px 15px rgba(0,0,0,.08);
+
+}
+
+/* ---------- Footer ---------- */
+
+footer{
+
+    background:white;
+
+}
+/* ===========================
+   NAVBAR PREMIUM
+=========================== */
+
+.navbar{
+
+    height:70px;
+
+    background:white;
+
+    position:sticky;
+
+    top:0;
+
+    z-index:100;
+
+}
+
+.input-group{
+
+    max-width:500px;
+
+}
+
+.dropdown button{
+
+    border:none;
+
+}
+
+.badge{
+
+    font-size:10px;
+
+}
+
+#fechaHora{
+
+    font-size:14px;
+
+    font-weight:500;
+
+}
+/* ===================================
+   SIDEBAR INTELIGENTE
+=================================== */
+
+.sidebar{
+
+    transition:.35s;
+
+}
+
+.sidebar.collapsed{
+
+    width:80px;
+
+}
+
+.sidebar.collapsed h4,
+.sidebar.collapsed small{
+
+    display:none;
+
+}
+
+.sidebar.collapsed a{
+
+    justify-content:center;
+
+}
+
+.sidebar.collapsed a span{
+
+    display:none;
+
+}
+
+.sidebar.collapsed img{
+
+    width:45px;
+
+}
+
+.main{
+
+    transition:.35s;
+
+}
+
+.main.expanded{
+
+    margin-left:80px;
+
+}
+
+/* Menú activo */
+
+.menu a.active{
+
+    background:#2563eb;
+
+    color:white;
+
+    font-weight:600;
+
+}
+
+/* Responsive */
+
+@media(max-width:992px){
+
+    .sidebar{
+
+        left:-270px;
+
+        z-index:1200;
+
+    }
+
+    .sidebar.collapsed{
+
+        left:0;
+
+        width:270px;
+
+    }
+
+    .contenido-principal{
+
+        margin-left:0;
+
+        width:100%;
+
+        max-width:100%;
+
+    }
+
+    .main{
+
+        margin-left:0;
+
+    }
+
+}
+/* =======================================
+   HEADER EJECUTIVO
+======================================= */
+
+.navbar{
+
+    height:78px;
+
+}
+
+.dropdown-menu{
+
+    border:none;
+
+    border-radius:15px;
+
+}
+
+.dropdown-item{
+
+    padding:12px;
+
+}
+
+.dropdown-item:hover{
+
+    background:#eef4ff;
+
+}
+
+.input-group input{
+
+    border-radius:0 12px 12px 0;
+
+}
+
+.input-group-text{
+
+    border-radius:12px 0 0 12px;
+
+}
+
+.badge{
+
+    font-size:10px;
+
+}
+
+#fechaActual{
+
+    font-weight:600;
+
+    text-transform:capitalize;
+
+}
+
+#horaActual{
+
+    font-size:13px;
+
+}
+/* =======================================
+   DASHBOARD EJECUTIVO
+======================================= */
+
+.kpi-card{
+
+    transition:.3s;
+
+}
+
+.kpi-card:hover{
+
+    transform:translateY(-5px);
+
+}
+
+.card-header{
+
+    background:#ffffff;
+
+    font-weight:600;
+
+    border-bottom:1px solid #ececec;
+
+}
+
+#menuPaciente .nav-link{
+
+    color:#4b5563;
+
+    border-radius:12px;
+
+    margin:4px;
+
+    font-weight:600;
+
+    transition:.25s;
+
+    min-height:90px;
+
+}
+
+#menuPaciente .nav-link i{
+
+    font-size:22px;
+
+    margin-bottom:8px;
+
+}
+
+#menuPaciente .nav-link:hover{
+
+    background:#eef4ff;
+
+    color:#0d6efd;
+
+}
+
+#menuPaciente .nav-link.active{
+
+    background:#0d6efd;
+
+    color:white;
+
+}
+
+#menuPaciente .badge{
+
+    font-size:.75rem;
+
+}
+
+.timeline{
+
+    position:relative;
+
+    margin-left:20px;
+
+}
+
+.timeline:before{
+
+    content:"";
+
+    position:absolute;
+
+    left:16px;
+
+    top:0;
+
+    bottom:0;
+
+    width:3px;
+
+    background:#d9d9d9;
+
+}
+
+.timeline-item{
+
+    position:relative;
+
+    padding-left:55px;
+
+}
+
+.timeline-icon{
+
+    position:absolute;
+
+    left:0;
+
+    top:8px;
+
+    width:35px;
+
+    height:35px;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    background:white;
+
+    border-radius:50%;
+
+    font-size:22px;
+
+}
+.sidebar{
+
+    width:270px;
+
+    position:fixed;
+
+    top:0;
+
+    left:0;
+
+    bottom:0;
+
+    background:#1f2937;
+
+    color:white;
+
+    /* "scroll" en vez de "auto": reserva siempre el espacio de
+       la barra de scroll, aunque no haga falta en ese momento
+       -- si no, cada vez que el contenido del menú cruza el
+       límite del alto de la pantalla, la barra aparece y
+       desaparece de golpe, empujando el ancho disponible de
+       las opciones de un lado a otro -- eso es lo que se veía
+       como "temblor" y distorsión justo en las últimas
+       opciones del menú. */
+    overflow-y:scroll;
+
+    /* Refuerzo para navegadores más nuevos que sí entienden
+       esta propiedad -- mismo objetivo que arriba. */
+    scrollbar-gutter:stable;
+
+    z-index:1000;
+
+}
+
+.sidebar-header{
+
+    padding:25px;
+
+    text-align:center;
+
+    border-bottom:1px solid rgba(255,255,255,.1);
+
+}
+
+.logo{
+
+    width:160px;
+
+    margin-bottom:15px;
+
+}
+
+.menu{
+
+    list-style:none;
+
+    padding:0;
+
+    margin:0;
+
+}
+
+.menu li{
+
+    width:100%;
+
+}
+
+.menu a{
+
+    display:block;
+
+    padding:14px 25px;
+
+    color:white;
+
+    text-decoration:none;
+
+    transition:.25s;
+
+}
+
+.menu a:hover{
+
+    background:#2563eb;
+
+}
+
+.menu-title{
+
+    padding:18px 25px 8px;
+
+    font-size:12px;
+
+    color:#9ca3af;
+
+    font-weight:bold;
+
+    letter-spacing:1px;
+
+}
+
+.menu i{
+
+    width:25px;
+
+}
+.topbar{
+
+    position:fixed;
+
+    left:270px;
+
+    right:0;
+
+    top:0;
+
+    height:70px;
+
+    background:white;
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    padding:0 25px;
+
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
+
+    z-index:999;
+
+}
+
+.topbar-left{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:20px;
+
+}
+
+.topbar-right{
+
+    display:flex;
+
+    align-items:center;
+
+}
+
+.search-box{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    width:420px;
+
+}
+
+.search-box input{
+
+    border:none;
+
+    box-shadow:none;
+
+}
+.contenido-principal{
+
+    margin-left:270px;
+
+    width:calc(100% - 270px);
+
+    max-width:calc(100% - 270px);
+
+    box-sizing:border-box;
+
+    margin-top:70px;
+
+    padding:25px;
+
+    min-height:100vh;
+
+    background:#f5f7fb;
+
+    /* NOTA: aquí hubo "contain:layout" como protección contra
+       el desbordamiento -- se quitó porque, sin que fuera obvio,
+       esa propiedad hace que cualquier ventana emergente
+       (modal) que esté dentro de esta caja deje de posicionarse
+       respecto a toda la pantalla, y en su lugar quede atrapada
+       (a veces invisible) dentro de esta misma caja -- rompía
+       TODOS los modales del sistema, no solo uno. El ancho
+       explícito (calc) de abajo y el "overflow-x:hidden" del
+       body ya cubren la protección contra el desbordamiento,
+       sin este efecto secundario. */
+    overflow-x:auto;
+
+}
+
+.contenido-principal .row{
+    margin-left:0;
+    margin-right:0;
+    max-width:100%;
+}
+
+/* Bootstrap arma las filas con "display:flex", y por defecto
+   los elementos flex (las columnas) tienen min-width:auto --
+   eso significa que NO se encogen por debajo del ancho de su
+   contenido, sin importar que la fila tenga max-width:100%.
+   Esta es la causa real de por qué una tabla ancha (o
+   cualquier otro contenido ancho) dentro de una columna podia
+   seguir empujando el layout, aunque la fila que la contiene
+   ya estuviera limitada -- se soluciona dejando que las
+   columnas sí se puedan encoger. */
+.contenido-principal .row > [class*="col-"]{
+    min-width:0;
+}
+
+.contenido-principal .container-fluid{
+    padding-left:0;
+    padding-right:0;
+    max-width:100%;
+}
+
+.contenido-principal .table-responsive{
+    max-width:100%;
+}
+
+
+/* ===========================
+   REFUERZO DE MODALES
+   (proteccion explicita para
+   que los modales de Bootstrap
+   siempre se vean correctos,
+   sin depender de otras reglas)
+=========================== */
+
+.modal-dialog{
+    margin:90px auto 2rem;
+}
+
+.modal-content{
+    background:#ffffff;
+    border-radius:10px;
+    border:none;
+    box-shadow:0 10px 40px rgba(0,0,0,.25);
+}
+
+.modal-header{
+    border-radius:10px 10px 0 0;
+}
+
+.modal-backdrop.show{
+    opacity:.6;
+}
+
+/* ===========================================
+   CORRECCIÓN DE CONTRASTE (tema Cerulean)
+   En este tema "info" y "warning" son colores
+   OSCUROS (azul marino y naranja quemado), a
+   diferencia del Bootstrap estandar donde son
+   claros. Varias pantallas pedian texto oscuro
+   ("text-dark") sobre estos fondos, pensando
+   que eran claros, y quedaba ilegible. Esta
+   regla lo corrige en todo el programa de una
+   sola vez, sin tener que editar cada pantalla.
+   =========================================== */
+.bg-info.text-dark,
+.bg-warning.text-dark{
+    color:#fff !important;
+}
+
+/* ===========================================
+   BARRA LATERAL OCULTABLE
+   Un botón en la barra superior la esconde o
+   la vuelve a mostrar, para tener más espacio
+   en pantalla cuando se necesite.
+   =========================================== */
+body.sidebar-oculta .sidebar{
+    transform: translateX(-270px);
+}
+body.sidebar-oculta .topbar{
+    left: 0;
+}
+body.sidebar-oculta .contenido-principal{
+    margin-left: 0;
+}
+#btn-alternar-sidebar{
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #334155;
+    cursor: pointer;
+    margin-right: 12px;
+}
+#btn-alternar-sidebar:hover{
+    color: #0f172a;
+}
+
+/* ===========================================================
+   REDISEÑO VISUAL — capa de pulido final
+   Se agrega al final a propósito para que tenga prioridad
+   sobre las reglas anteriores (la cascada de CSS favorece lo
+   último declarado). Objetivo: que la app se sienta menos
+   plana, con más profundidad, un acento propio (verde-azulado
+   "HomeCare"), y transiciones suaves — sin perder la
+   seriedad de un software clínico.
+   =========================================================== */
+
+:root{
+    --hc-navy-950:#141f38;
+    --hc-navy-900:#1b2a4a;
+    --hc-navy-800:#243660;
+    --hc-teal:#00c2b8;
+    --hc-teal-dark:#0a8f86;
+    --hc-teal-soft:#e5fbf9;
+    --hc-rosa:#ff3399;
+    --hc-rosa-soft:#ffe3f2;
+    --hc-blue:#2f6fed;
+    --hc-bg:#f2f5fa;
+    --hc-surface:#ffffff;
+    --hc-ink:#16213e;
+    --hc-muted:#64748b;
+    --hc-border:#e7ebf3;
+    --hc-radius-lg:18px;
+    --hc-radius-md:12px;
+    --hc-shadow-soft:0 1px 2px rgba(15,23,42,.04), 0 8px 24px rgba(15,23,42,.06);
+    --hc-shadow-lift:0 2px 6px rgba(15,23,42,.06), 0 16px 32px rgba(15,23,42,.10);
+}
+
+/* ---------- Fondo y tipografía general ---------- */
+body{
+    background:
+        radial-gradient(1200px 600px at 100% -10%, rgba(15,185,174,.05), transparent 60%),
+        var(--hc-bg);
+    color:var(--hc-ink);
+    -webkit-font-smoothing:antialiased;
+}
+
+h1,h2,h3,h4,h5,h6{
+    color:var(--hc-ink);
+    letter-spacing:-.01em;
+}
+
+/* Barra de scroll con un poco más de personalidad, sin ser ruidosa */
+::-webkit-scrollbar{ width:10px; height:10px; }
+::-webkit-scrollbar-track{ background:transparent; }
+::-webkit-scrollbar-thumb{ background:#cbd5e1; border-radius:20px; border:2px solid var(--hc-bg); }
+::-webkit-scrollbar-thumb:hover{ background:var(--hc-teal); }
+
+/* ---------- Barra lateral: de plana a estratificada ---------- */
+.sidebar{
+    background:
+        radial-gradient(600px 300px at 0% 0%, rgba(15,185,174,.14), transparent 55%),
+        linear-gradient(165deg, var(--hc-navy-950) 0%, var(--hc-navy-900) 55%, var(--hc-navy-800) 100%);
+    box-shadow:4px 0 24px rgba(2,6,23,.28);
+    border-right:1px solid rgba(255,255,255,.04);
+}
+
+.sidebar .sidebar-header{
+    border-bottom:1px solid rgba(255,255,255,.08);
+    margin-bottom:6px;
+    position:relative;
+}
+.sidebar .sidebar-header::after{
+    content:"";
+    position:absolute;
+    left:16px; right:16px; bottom:-1px;
+    height:2px;
+    background:linear-gradient(90deg, var(--hc-teal), var(--hc-rosa));
+}
+.sidebar .sidebar-header .logo{
+    border-radius:50%;
+    box-shadow:0 0 0 3px rgba(255,255,255,.9), 0 4px 12px rgba(0,0,0,.25);
+}
+
+.sidebar .menu-title{
+    color:rgba(148,163,184,.75) !important;
+    font-size:11px !important;
+    letter-spacing:.09em;
+    text-transform:uppercase;
+    font-weight:700;
+    padding:18px 18px 10px !important;
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    cursor:pointer;
+    user-select:none;
+    transition:color .2s ease;
+}
+.sidebar .menu-title:hover{
+    color:rgba(226,232,240,.95) !important;
+}
+.sidebar .menu-title::before{
+    content:"";
+    display:inline-block;
+    width:6px; height:6px;
+    border-radius:50%;
+    background:var(--hc-rosa);
+    margin-right:6px;
+    vertical-align:middle;
+}
+.sidebar .menu-title .flecha-grupo{
+    font-size:10px !important;
+    transition:transform .25s ease;
+    color:rgba(148,163,184,.6);
+}
+.sidebar .menu-title.grupo-cerrado .flecha-grupo{
+    transform:rotate(-90deg);
+}
+
+/* La lista de cada grupo -- sin viñetas ni márgenes propios de
+   un <ul> normal, para que se vea como una simple continuación
+   del menú, solo que se puede ocultar/mostrar como bloque. */
+.sidebar ul.submenu{
+    list-style:none;
+    margin:0;
+    padding:0;
+}
+
+/* Cada opción del menú se ve y se siente como un botón propio,
+   independiente -- no una franja que toca los bordes. Por eso
+   lleva su propio margen a los lados y bastante más
+   redondeo que antes; así, al pasar el mouse, parece
+   levantarse como un botón real, no solo cambiar de color. */
+.sidebar .menu{
+    padding:10px 14px !important;
+}
+
+.sidebar .menu a,
+.sidebar ul li a{
+    position:relative;
+    margin:3px 4px;
+    padding:12px 16px;
+    border-radius:14px;
+    color:#cbd5e1;
+    font-weight:500;
+    background:transparent;
+    transition:background .22s ease, color .22s ease, box-shadow .22s ease, transform .16s ease;
+}
+
+.sidebar .menu a::before,
+.sidebar ul li a::before{
+    content:none;
+}
+
+.sidebar .menu a:hover,
+.sidebar ul li a:hover{
+    background:linear-gradient(135deg, rgba(0,194,184,.22), rgba(0,194,184,.10)) !important;
+    color:#ffffff !important;
+    box-shadow:0 4px 14px rgba(0,194,184,.18), inset 0 0 0 1px rgba(0,194,184,.28);
+    transform:translateY(-1px);
+}
+
+.sidebar .menu a.active,
+.sidebar ul li a.active{
+    background:linear-gradient(135deg, var(--hc-teal-dark), var(--hc-teal)) !important;
+    color:#ffffff !important;
+    font-weight:600;
+    box-shadow:0 6px 16px rgba(0,194,184,.32);
+}
+
+.sidebar .menu a.active::before,
+.sidebar ul li a.active::before{
+    content:none;
+}
+
+.sidebar i{
+    color:#7ee8e0;
+    transition:color .2s ease;
+}
+.sidebar .menu a:hover i,
+.sidebar ul li a:hover i,
+.sidebar .menu a.active i,
+.sidebar ul li a.active i{
+    color:#ffffff;
+}
+
+/* ---------- Barra superior: vidrio esmerilado sutil ---------- */
+.topbar{
+    background:rgba(255,255,255,.86);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--hc-border);
+    box-shadow:0 1px 0 rgba(15,23,42,.02), 0 10px 24px -18px rgba(15,23,42,.35);
+}
+
+/* ---------- Tarjetas: más profundidad, esquinas más suaves ---------- */
+.card{
+    border:1px solid var(--hc-border);
+    border-radius:var(--hc-radius-lg);
+    box-shadow:var(--hc-shadow-soft);
+    transition:box-shadow .25s ease, transform .25s ease, border-color .25s ease;
+}
+
+.card.shadow,
+.card.shadow-sm{
+    box-shadow:var(--hc-shadow-soft) !important;
+}
+
+.card:hover{
+    box-shadow:var(--hc-shadow-lift);
+    border-color:rgba(15,185,174,.25);
+}
+
+.card-header{
+    border-radius:var(--hc-radius-lg) var(--hc-radius-lg) 0 0 !important;
+    border-bottom:1px solid var(--hc-border);
+    font-weight:600;
+}
+
+/* Tarjetas de estadística/dashboard con acento superior sutil */
+.card.text-center > .card-body::before,
+.card.shadow-sm.text-center::before{
+    content:"";
+}
+
+/* ---------- Botones: un poco de peso y una transición cuidada ---------- */
+.btn{
+    border-radius:10px;
+    font-weight:500;
+    transition:transform .15s ease, box-shadow .15s ease, filter .15s ease;
+}
+.btn:active{
+    transform:translateY(1px);
+}
+.btn-primary{
+    background:linear-gradient(180deg, var(--hc-blue), #2657c7);
+    border-color:#2657c7;
+    box-shadow:0 6px 16px -8px rgba(47,111,237,.55);
+}
+.btn-primary:hover{
+    filter:brightness(1.06);
+    box-shadow:0 8px 20px -8px rgba(47,111,237,.65);
+}
+.btn-success{
+    background:linear-gradient(180deg, var(--hc-teal), var(--hc-teal-dark));
+    border-color:var(--hc-teal-dark);
+    box-shadow:0 6px 16px -8px rgba(15,185,174,.5);
+}
+.btn-success:hover{
+    filter:brightness(1.06);
+}
+
+/* ---------- Tablas: encabezado con más carácter ---------- */
+.table thead.table-light th,
+.table > thead > tr > th{
+    background:#f8fafc;
+    color:var(--hc-muted);
+    font-size:12px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    font-weight:700;
+    border-bottom:2px solid var(--hc-border);
+}
+.table-hover > tbody > tr:hover > *{
+    background-color:var(--hc-teal-soft);
+}
+
+/* ---------- Badges: esquinas mas suaves ---------- */
+.badge{
+    border-radius:6px;
+    font-weight:600;
+    letter-spacing:.02em;
+}
+
+/* ---------- Foco visible para accesibilidad (se respeta) ---------- */
+a:focus-visible,
+button:focus-visible,
+.form-control:focus,
+.form-select:focus{
+    outline:2px solid var(--hc-teal);
+    outline-offset:1px;
+    box-shadow:0 0 0 4px rgba(15,185,174,.15) !important;
+    border-color:var(--hc-teal) !important;
+}
+
+/* ---------- Movimiento respetuoso ---------- */
+@media (prefers-reduced-motion: reduce){
+    *{
+        animation-duration:0.001ms !important;
+        transition-duration:0.001ms !important;
+    }
+}

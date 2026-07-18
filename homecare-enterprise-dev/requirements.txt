@@ -1,0 +1,34 @@
+fastapi==0.138.0
+starlette==0.47.1
+uvicorn[standard]==0.35.0
+
+jinja2==3.1.6
+itsdangerous==2.2.0
+
+passlib[bcrypt]==1.7.4
+bcrypt==4.2.1
+
+python-multipart==0.0.20
+
+pydantic==2.11.7
+
+python-dotenv==1.1.1
+
+reportlab==4.2.5
+
+# Conector de PostgreSQL (para producción, cuando se conecta una
+# base de datos administrada -- en desarrollo local, sin la
+# variable de entorno DATABASE_URL, el sistema sigue usando
+# SQLite y este paquete simplemente no se usa).
+psycopg2-binary==2.9.10
+
+requests==2.32.3
+openpyxl==3.1.5
+
+# Reconocimiento facial (verificación de ingreso/salida en la app):
+# opencv-contrib-python trae, además de OpenCV normal, el módulo
+# cv2.face (LBPH) que se usa para comparar rostros -- opencv-python
+# (sin "-contrib") NO trae ese módulo, así que debe ser este paquete.
+opencv-contrib-python==4.10.0.84
+numpy==1.26.4
+Pillow==10.4.0

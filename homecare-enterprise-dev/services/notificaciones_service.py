@@ -1,0 +1,229 @@
+"""
+=========================================================
+HomeCare Enterprise
+Servicio de Notificaciones (WhatsApp + Correo)
+
+Envia automaticamente los documentos generados por el
+sistema (ordenes medicas, examenes) al paciente por
+WhatsApp y/o correo electronico.
+
+Modo simulado: si no hay credenciales configuradas
+(SMTP_HOST / WHATSAPP_TOKEN en el archivo .env), las
+funciones no intentan conectarse a ningun servicio externo:
+registran la notificacion en el log y devuelven
+{"enviado": False, "modo": "simulado", ...} para que el
+resto del flujo (crear la orden, guardarla en la BD) nunca
+se vea interrumpido por falta de credenciales.
+=========================================================
+"""
+
+import logging
+import mimetypes
+import smtplib
+from email.mime.application import MIMEApplication
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from pathlib import Path
+
+from core.config import (
+    PAIS_INDICATIVO_DEFECTO,
+    SMTP_FROM,
+    SMTP_FROM_NOMBRE,
+    SMTP_HOST,
+    SMTP_PASSWORD,
+    SMTP_PORT,
+    SMTP_USER,
+    SMTP_USE_TLS,
+    WHATSAPP_API_URL,
+    WHATSAPP_PHONE_ID,
+    WHATSAPP_TOKEN,
+)
+
+logger = logging.getLogger("homecare.notificaciones")
+
+
+# ==========================================================
+# UTILIDADES
+# ==========================================================
+
+def normalizar_celular(numero: str) -> str:
+    """
+    Deja el numero solo con digitos y le antepone el
+    indicativo de pais si hace falta (por defecto, Colombia).
+    """
+
+    if not numero:
+        return ""
+
+    digitos = "".join(c for c in numero if c.isdigit())
+
+    if not digitos:
+        return ""
+
+    if not digitos.startswith(PAIS_INDICATIVO_DEFECTO) and len(digitos) <= 10:
+        digitos = f"{PAIS_INDICATIVO_DEFECTO}{digitos}"
+
+    return digitos
+
+
+# ==========================================================
+# CORREO (SMTP)
+# ==========================================================
+
+def enviar_email(
+    destinatario: str,
+    asunto: str,
+    cuerpo_html: str,
+    adjunto_path: str | None = None,
+    adjuntos_adicionales: list | None = None,
+) -> dict:
+    """
+    'adjunto_path' se conserva por compatibilidad (un solo
+    archivo, como ya se usaba en todo el sistema). Si además se
+    necesita mandar más de un archivo en el mismo correo (por
+    ejemplo, la orden médica JUNTO con la historia clínica), se
+    agregan en 'adjuntos_adicionales' -- una lista de rutas.
+    """
+
+    if not destinatario:
+        return {"enviado": False, "motivo": "El paciente no tiene correo registrado."}
+
+    todos_los_adjuntos = ([adjunto_path] if adjunto_path else []) + (adjuntos_adicionales or [])
+
+    if not SMTP_HOST:
+        logger.info(
+            "[SIMULADO] Correo a %s | Asunto: %s | Adjuntos: %s",
+            destinatario, asunto, todos_los_adjuntos,
+        )
+        return {
+            "enviado": False,
+            "modo": "simulado",
+            "motivo": "SMTP no configurado (ver .env: SMTP_HOST, SMTP_USER, SMTP_PASSWORD).",
+        }
+
+    try:
+        mensaje = MIMEMultipart()
+        mensaje["From"] = f"{SMTP_FROM_NOMBRE} <{SMTP_FROM}>"
+        mensaje["To"] = destinatario
+        mensaje["Subject"] = asunto
+
+        mensaje.attach(MIMEText(cuerpo_html, "html", "utf-8"))
+
+        for ruta_adjunto in todos_los_adjuntos:
+            if not ruta_adjunto:
+                continue
+            ruta = Path(ruta_adjunto)
+            if ruta.exists():
+                tipo, _ = mimetypes.guess_type(str(ruta))
+                with open(ruta, "rb") as archivo:
+                    adjunto = MIMEApplication(
+                        archivo.read(),
+                        _subtype=(tipo.split("/")[-1] if tipo else "octet-stream"),
+                    )
+                    adjunto.add_header(
+                        "Content-Disposition", "attachment", filename=ruta.name,
+                    )
+                    mensaje.attach(adjunto)
+
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=15) as servidor:
+            if SMTP_USE_TLS:
+                servidor.starttls()
+            if SMTP_USER:
+                servidor.login(SMTP_USER, SMTP_PASSWORD)
+            servidor.sendmail(SMTP_FROM, [destinatario], mensaje.as_string())
+
+        return {"enviado": True, "modo": "real"}
+
+    except Exception as error:
+        logger.exception("Error enviando correo a %s", destinatario)
+        return {"enviado": False, "motivo": str(error)}
+
+
+# ==========================================================
+# WHATSAPP (Meta WhatsApp Business Cloud API)
+# ==========================================================
+
+def enviar_whatsapp(
+    numero: str,
+    mensaje: str,
+    adjunto_url: str | None = None,
+) -> dict:
+
+    numero = normalizar_celular(numero)
+
+    if not numero:
+        return {"enviado": False, "motivo": "El paciente no tiene celular registrado."}
+
+    # Primero se busca la configuración guardada en la base de
+    # datos (Configuración de WhatsApp, en la web) -- si no hay
+    # nada ahí, se usan las variables de entorno (.env) como
+    # respaldo, para no romper instalaciones que ya las tenían
+    # configuradas de esa forma.
+    token = WHATSAPP_TOKEN
+    id_telefono = WHATSAPP_PHONE_ID
+    try:
+        from database.database import consultar_uno
+        config_bd = consultar_uno("SELECT * FROM configuracion_whatsapp WHERE id=1")
+        if config_bd:
+            config_bd = dict(config_bd)
+            if config_bd.get("habilitado") and config_bd.get("token_acceso") and config_bd.get("id_numero_telefono"):
+                token = config_bd["token_acceso"]
+                id_telefono = config_bd["id_numero_telefono"]
+    except Exception:
+        pass  # si la tabla todavía no existe (instalación vieja sin migrar), se sigue con las variables de entorno
+
+    if not token or not id_telefono:
+        logger.info(
+            "[SIMULADO] WhatsApp a %s | Mensaje: %s | Adjunto: %s",
+            numero, mensaje, adjunto_url,
+        )
+        return {
+            "enviado": False,
+            "modo": "simulado",
+            "motivo": (
+                "WhatsApp Business API no configurada "
+                "(configúrela en Configuración de WhatsApp, o en el .env: WHATSAPP_TOKEN, WHATSAPP_PHONE_ID)."
+            ),
+        }
+
+    try:
+        import requests
+
+        url = f"{WHATSAPP_API_URL}/{id_telefono}/messages"
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+
+        if adjunto_url:
+            payload = {
+                "messaging_product": "whatsapp",
+                "to": numero,
+                "type": "document",
+                "document": {
+                    "link": adjunto_url,
+                    "caption": mensaje,
+                    "filename": "orden_medica.pdf",
+                },
+            }
+        else:
+            payload = {
+                "messaging_product": "whatsapp",
+                "to": numero,
+                "type": "text",
+                "text": {"body": mensaje},
+            }
+
+        respuesta = requests.post(url, headers=headers, json=payload, timeout=15)
+
+        if respuesta.status_code >= 400:
+            return {
+                "enviado": False,
+                "motivo": f"WhatsApp API respondió {respuesta.status_code}: {respuesta.text[:300]}",
+            }
+
+        return {"enviado": True, "modo": "real", "respuesta": respuesta.json()}
+
+    except Exception as error:
+        logger.exception("Error enviando WhatsApp a %s", numero)
+        return {"enviado": False, "motivo": str(error)}

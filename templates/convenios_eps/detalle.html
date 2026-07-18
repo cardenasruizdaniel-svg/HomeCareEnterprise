@@ -14,7 +14,18 @@
                 <div class="row">
                     <div class="col-md-4 mb-2"><label>EPS</label><input type="text" name="eps" class="form-control" value="{{ convenio.eps }}" required></div>
                     <div class="col-md-4 mb-2"><label>NIT de la EPS</label><input type="text" name="nit_eps" class="form-control" value="{{ convenio.nit_eps or '' }}"></div>
-                    <div class="col-md-4 mb-2"><label>Nombre del plan</label><input type="text" name="nombre_plan" class="form-control" value="{{ convenio.nombre_plan }}" required></div>
+                    <div class="col-md-4 mb-2">
+                        <label>Nombre del plan</label>
+                        <select name="nombre_plan" class="form-select" required>
+                            <option value="">-- Seleccione --</option>
+                            {% for p in programas_atencion %}
+                            <option value="{{ p.nombre }}" {% if convenio.nombre_plan == p.nombre %}selected{% endif %}>{{ p.nombre }}</option>
+                            {% endfor %}
+                            {% if convenio.nombre_plan and convenio.nombre_plan not in programas_atencion|map(attribute='nombre')|list %}
+                            <option value="{{ convenio.nombre_plan }}" selected>{{ convenio.nombre_plan }} (ya no está en el catálogo)</option>
+                            {% endif %}
+                        </select>
+                    </div>
                     <div class="col-md-3 mb-2"><label>N.° de convenio</label><input type="text" name="numero_convenio" class="form-control" value="{{ convenio.numero_convenio or '' }}"></div>
                     <div class="col-md-3 mb-2"><label>Fecha de inicio</label><input type="date" name="fecha_inicio" class="form-control" value="{{ convenio.fecha_inicio or '' }}"></div>
                     <div class="col-md-3 mb-2"><label>Fecha de fin</label><input type="date" name="fecha_fin" class="form-control" value="{{ convenio.fecha_fin or '' }}"></div>
@@ -81,12 +92,34 @@
                     <input type="hidden" name="paciente_id" id="paciente-id-convenio">
                     <div id="resultados-paciente-convenio" class="list-group position-absolute" style="z-index:10; width:calc(50% - 24px);"></div>
                 </div>
-                <div class="col-md-4 mb-2"><label>Fecha de ingreso al plan</label><input type="date" name="fecha_ingreso" class="form-control" required></div>
+                <div class="col-md-3 mb-2">
+                    <label>Fecha de ingreso al plan</label>
+                    <input type="date" name="fecha_ingreso" id="fecha-ingreso-convenio" class="form-control" required>
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label>Autorizado hasta</label>
+                    <input type="date" name="fecha_fin" id="fecha-fin-convenio" class="form-control">
+                    <small class="text-muted">Si lo deja vacío, se calculan 3 meses automáticamente.</small>
+                </div>
                 <div class="col-md-2 mb-2"><button type="submit" class="btn btn-primary w-100">Asignar</button></div>
             </form>
         </div>
     </div>
 </div>
+
+<script>
+// Al elegir la fecha de ingreso, se sugiere automaticamente 3 meses
+// despues como fecha de autorizacion -- si la persona la cambia a mano,
+// se respeta lo que haya escrito.
+document.getElementById("fecha-ingreso-convenio").addEventListener("change", function () {
+    const campoFin = document.getElementById("fecha-fin-convenio");
+    if (campoFin.value) return; // ya la habian llenado a mano, no se sobrescribe
+    const inicio = new Date(this.value + "T00:00:00");
+    if (isNaN(inicio)) return;
+    inicio.setMonth(inicio.getMonth() + 3);
+    campoFin.value = inicio.toISOString().slice(0, 10);
+});
+</script>
 
 <div class="modal fade" id="modalAgregarServicio" tabindex="-1">
     <div class="modal-dialog"><div class="modal-content">
