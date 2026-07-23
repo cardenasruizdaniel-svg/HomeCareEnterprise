@@ -46,8 +46,16 @@ class InsumosRepository:
     def crear(datos: dict) -> int:
         return ejecutar(
             """
-            INSERT INTO insumos(codigo, nombre, categoria, unidad_medida, stock_minimo, stock_maximo, requiere_lote_vencimiento)
-            VALUES (:codigo, :nombre, :categoria, :unidad_medida, :stock_minimo, :stock_maximo, :requiere_lote_vencimiento)
+            INSERT INTO insumos(
+                codigo, codigo_barras, nombre, categoria, unidad_medida, stock_minimo, stock_maximo, requiere_lote_vencimiento,
+                registro_invima, titular_registro_sanitario, principio_activo, concentracion, forma_farmaceutica,
+                condicion_venta, requiere_cadena_frio
+            )
+            VALUES (
+                :codigo, :codigo_barras, :nombre, :categoria, :unidad_medida, :stock_minimo, :stock_maximo, :requiere_lote_vencimiento,
+                :registro_invima, :titular_registro_sanitario, :principio_activo, :concentracion, :forma_farmaceutica,
+                :condicion_venta, :requiere_cadena_frio
+            )
             """,
             datos,
         )
@@ -61,8 +69,11 @@ class InsumosRepository:
         ejecutar(
             """
             UPDATE insumos SET
-                codigo=:codigo, nombre=:nombre, categoria=:categoria, unidad_medida=:unidad_medida,
-                stock_minimo=:stock_minimo, stock_maximo=:stock_maximo, requiere_lote_vencimiento=:requiere_lote_vencimiento
+                codigo=:codigo, codigo_barras=:codigo_barras, nombre=:nombre, categoria=:categoria, unidad_medida=:unidad_medida,
+                stock_minimo=:stock_minimo, stock_maximo=:stock_maximo, requiere_lote_vencimiento=:requiere_lote_vencimiento,
+                registro_invima=:registro_invima, titular_registro_sanitario=:titular_registro_sanitario,
+                principio_activo=:principio_activo, concentracion=:concentracion, forma_farmaceutica=:forma_farmaceutica,
+                condicion_venta=:condicion_venta, requiere_cadena_frio=:requiere_cadena_frio
             WHERE id=:id
             """,
             {**datos, "id": insumo_id},

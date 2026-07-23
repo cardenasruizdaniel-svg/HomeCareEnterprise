@@ -33,6 +33,18 @@ CATEGORIAS_INSUMO = [
 
 TIPOS_CONVENIO = ["Suministro", "Servicio", "Comodato", "Exclusividad", "Otro"]
 
+# Condición de venta -- clasificación oficial que usa el INVIMA en
+# Colombia para los medicamentos. Los de "Control especial" son los
+# que además hay que reportar al Fondo Nacional de Estupefacientes
+# (opioides, benzodiacepinas, y similares) -- estos requieren un
+# control más estricto de trazabilidad.
+CONDICIONES_VENTA = [
+    "Venta libre",
+    "Venta con fórmula médica",
+    "Control especial (Fondo Nacional de Estupefacientes)",
+    "Vigilada",
+]
+
 
 # ==========================================
 # PROVEEDORES
@@ -77,13 +89,22 @@ def listar_insumos_con_stock():
     return filas
 
 
-def crear_insumo(nombre, categoria, unidad_medida, stock_minimo, codigo=None, stock_maximo=0, requiere_lote_vencimiento=False) -> int:
+def crear_insumo(nombre, categoria, unidad_medida, stock_minimo, codigo=None, stock_maximo=0,
+                   requiere_lote_vencimiento=False, codigo_barras=None,
+                   registro_invima=None, titular_registro_sanitario=None, principio_activo=None,
+                   concentracion=None, forma_farmaceutica=None, condicion_venta=None, requiere_cadena_frio=False) -> int:
     if not nombre:
         raise ValueError("El nombre del insumo es obligatorio.")
+    if categoria == "Medicamentos" and condicion_venta and "Control especial" in condicion_venta and not registro_invima:
+        raise ValueError("Los medicamentos de control especial deben tener registrado su número de registro sanitario INVIMA.")
     return InsumosRepository.crear({
-        "codigo": codigo or None, "nombre": nombre, "categoria": categoria or "Otro",
+        "codigo": codigo or None, "codigo_barras": codigo_barras or None, "nombre": nombre, "categoria": categoria or "Otro",
         "unidad_medida": unidad_medida or "Unidad", "stock_minimo": stock_minimo or 0,
         "stock_maximo": stock_maximo or 0, "requiere_lote_vencimiento": 1 if requiere_lote_vencimiento else 0,
+        "registro_invima": registro_invima or None, "titular_registro_sanitario": titular_registro_sanitario or None,
+        "principio_activo": principio_activo or None, "concentracion": concentracion or None,
+        "forma_farmaceutica": forma_farmaceutica or None, "condicion_venta": condicion_venta or None,
+        "requiere_cadena_frio": 1 if requiere_cadena_frio else 0,
     })
 
 
@@ -92,14 +113,34 @@ def desactivar_insumo(insumo_id: int):
 
 
 def actualizar_insumo(insumo_id, nombre, categoria, unidad_medida, stock_minimo, codigo=None,
-                        stock_maximo=0, requiere_lote_vencimiento=False):
+                        stock_maximo=0, requiere_lote_vencimiento=False, codigo_barras=None,
+                        registro_invima=None, titular_registro_sanitario=None, principio_activo=None,
+                        concentracion=None, forma_farmaceutica=None, condicion_venta=None, requiere_cadena_frio=False):
     if not nombre:
         raise ValueError("El nombre del insumo es obligatorio.")
+    if categoria == "Medicamentos" and condicion_venta and "Control especial" in condicion_venta and not registro_invima:
+        raise ValueError("Los medicamentos de control especial deben tener registrado su número de registro sanitario INVIMA.")
     InsumosRepository.actualizar(insumo_id, {
-        "codigo": codigo or None, "nombre": nombre, "categoria": categoria or "Otro",
+        "codigo": codigo or None, "codigo_barras": codigo_barras or None, "nombre": nombre, "categoria": categoria or "Otro",
         "unidad_medida": unidad_medida or "Unidad", "stock_minimo": stock_minimo or 0,
         "stock_maximo": stock_maximo or 0, "requiere_lote_vencimiento": 1 if requiere_lote_vencimiento else 0,
+        "registro_invima": registro_invima or None, "titular_registro_sanitario": titular_registro_sanitario or None,
+        "principio_activo": principio_activo or None, "concentracion": concentracion or None,
+        "forma_farmaceutica": forma_farmaceutica or None, "condicion_venta": condicion_venta or None,
+        "requiere_cadena_frio": 1 if requiere_cadena_frio else 0,
     })
+
+
+def buscar_insumo_por_codigo(texto: str):
+    """Busca un insumo por su código interno O por su código de barras -- para cuando se escanea o se digita cualquiera de los dos."""
+    from database.database import consultar_uno
+    if not texto:
+        return None
+    fila = consultar_uno(
+        "SELECT * FROM insumos WHERE activo=1 AND (codigo=? OR codigo_barras=?) LIMIT 1",
+        (texto.strip(), texto.strip()),
+    )
+    return dict(fila) if fila else None
 
 
 CATEGORIAS_INSUMOS = CATEGORIAS_INSUMO  # alias -- se usa la misma lista de categorías que ya existía, para no tener dos listas distintas que se puedan desincronizar
@@ -306,6 +347,218 @@ def listar_movimientos_por_insumo(insumo_id: int):
     return [dict(m) for m in InventarioMovimientosRepository.listar_por_insumo(insumo_id)]
 
 
+# ==========================================
+# CONTEO FÍSICO DE INVENTARIO
+# ==========================================
+
+def iniciar_conteo_fisico(usuario_id, observaciones="") -> int:
+    """
+    Abre un nuevo conteo físico: toma una "foto" de las
+    existencias que el sistema cree tener en este momento, para
+    cada insumo activo -- esa es la base contra la que se va a
+    comparar lo que se cuente de verdad en bodega.
+    """
+    from database.database import ejecutar, consultar_uno
+
+    conteo_id = ejecutar(
+        "INSERT INTO conteos_fisicos_inventario(observaciones, usuario_inicio) VALUES (?, ?)",
+        (observaciones or "", usuario_id),
+    )
+
+    insumos = listar_insumos_con_stock()
+    for insumo in insumos:
+        ejecutar(
+            "INSERT INTO conteos_fisicos_detalle(conteo_id, insumo_id, cantidad_sistema) VALUES (?, ?, ?)",
+            (conteo_id, insumo["id"], insumo["stock_actual"]),
+        )
+
+    return conteo_id
+
+
+def listar_conteos_fisicos():
+    from database.database import consultar_todos
+    filas = consultar_todos("SELECT * FROM conteos_fisicos_inventario ORDER BY fecha_inicio DESC")
+    return [dict(f) for f in filas]
+
+
+def obtener_conteo_fisico(conteo_id: int):
+    from database.database import consultar_uno
+    fila = consultar_uno("SELECT * FROM conteos_fisicos_inventario WHERE id=?", (conteo_id,))
+    return dict(fila) if fila else None
+
+
+def listar_detalle_conteo(conteo_id: int):
+    from database.database import consultar_todos
+    filas = consultar_todos(
+        """
+        SELECT d.*, i.nombre, i.codigo, i.codigo_barras, i.unidad_medida, i.categoria
+        FROM conteos_fisicos_detalle d
+        JOIN insumos i ON i.id = d.insumo_id
+        WHERE d.conteo_id=?
+        ORDER BY i.nombre
+        """,
+        (conteo_id,),
+    )
+    return [dict(f) for f in filas]
+
+
+def generar_plantilla_conteo(conteo_id: int) -> str:
+    """Excel para imprimir o llenar en bodega: cada insumo con su existencia actual del sistema, y una columna vacía para anotar el conteo físico."""
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill
+    from pathlib import Path
+    from core.config import EXPORTS_DIR
+
+    detalle = listar_detalle_conteo(conteo_id)
+
+    libro = openpyxl.Workbook()
+    hoja = libro.active
+    hoja.title = "Conteo"
+
+    encabezados = ["detalle_id", "codigo", "codigo_barras", "nombre", "categoria", "unidad_medida", "cantidad_sistema", "cantidad_fisica"]
+    hoja.append(encabezados)
+    for celda in hoja[1]:
+        celda.font = Font(bold=True, color="FFFFFF")
+        celda.fill = PatternFill(start_color="0A8F86", end_color="0A8F86", fill_type="solid")
+
+    for item in detalle:
+        hoja.append([
+            item["id"], item.get("codigo") or "", item.get("codigo_barras") or "", item["nombre"],
+            item.get("categoria") or "", item.get("unidad_medida") or "", item["cantidad_sistema"], None,
+        ])
+
+    hoja.column_dimensions["A"].width = 12
+    hoja.column_dimensions["B"].width = 14
+    hoja.column_dimensions["C"].width = 16
+    hoja.column_dimensions["D"].width = 36
+    hoja.column_dimensions["E"].width = 22
+    hoja.column_dimensions["F"].width = 14
+    hoja.column_dimensions["G"].width = 16
+    hoja.column_dimensions["H"].width = 16
+
+    hoja_ayuda = libro.create_sheet("Instrucciones")
+    hoja_ayuda.append(["Cómo usar esta plantilla"])
+    hoja_ayuda.append([""])
+    hoja_ayuda.append(["- NO modifique ni borre la columna 'detalle_id' -- es la que enlaza cada fila con este conteo."])
+    hoja_ayuda.append(["- Cuente físicamente cada insumo en bodega y escriba la cantidad real en la columna 'cantidad_fisica'."])
+    hoja_ayuda.append(["- Deje en blanco 'cantidad_fisica' en los insumos que no alcance a contar -- se pueden completar después."])
+    hoja_ayuda.append(["- Al terminar, suba este mismo archivo en la pantalla del conteo para registrar los resultados."])
+    hoja_ayuda["A1"].font = Font(bold=True, size=13)
+    hoja_ayuda.column_dimensions["A"].width = 100
+
+    carpeta = Path(EXPORTS_DIR) / "conteos_fisicos"
+    carpeta.mkdir(parents=True, exist_ok=True)
+    ruta = carpeta / f"plantilla_conteo_{conteo_id}.xlsx"
+    libro.save(ruta)
+    return str(ruta)
+
+
+def cargar_conteo_desde_excel(conteo_id: int, ruta_archivo: str) -> dict:
+    """Lee la plantilla ya diligenciada y registra la cantidad física contada de cada insumo."""
+    import openpyxl
+    from database.database import ejecutar
+
+    libro = openpyxl.load_workbook(ruta_archivo, data_only=True)
+    hoja = libro["Conteo"] if "Conteo" in libro.sheetnames else libro.worksheets[0]
+
+    filas = list(hoja.iter_rows(values_only=True))
+    if not filas:
+        raise ValueError("El archivo está vacío.")
+    encabezados = [str(c).strip().lower() if c else "" for c in filas[0]]
+    if "detalle_id" not in encabezados or "cantidad_fisica" not in encabezados:
+        raise ValueError("El archivo no tiene el formato esperado -- descargue la plantilla de nuevo y no cambie los nombres de las columnas.")
+
+    indice_id = encabezados.index("detalle_id")
+    indice_cantidad = encabezados.index("cantidad_fisica")
+
+    actualizados, errores = 0, []
+    for numero_fila, fila in enumerate(filas[1:], start=2):
+        if not fila or fila[indice_id] is None:
+            continue
+        detalle_id = fila[indice_id]
+        cantidad_fisica = fila[indice_cantidad]
+        if cantidad_fisica is None or cantidad_fisica == "":
+            continue
+        try:
+            cantidad_fisica = int(cantidad_fisica)
+        except (TypeError, ValueError):
+            errores.append(f"Fila {numero_fila}: cantidad física no es un número válido.")
+            continue
+
+        registrar_conteo_item(int(detalle_id), cantidad_fisica, solo_del_conteo=conteo_id)
+        actualizados += 1
+
+    return {"actualizados": actualizados, "errores": errores}
+
+
+def registrar_conteo_item(detalle_id: int, cantidad_fisica: int, solo_del_conteo=None):
+    """Registra (o corrige) la cantidad física contada de UN insumo dentro de un conteo -- para diligenciarlo directamente desde la pantalla, sin Excel."""
+    from database.database import ejecutar, consultar_uno
+
+    fila = consultar_uno("SELECT * FROM conteos_fisicos_detalle WHERE id=?", (detalle_id,))
+    if not fila:
+        raise ValueError("El detalle de conteo indicado no existe.")
+    fila = dict(fila)
+    if solo_del_conteo and fila["conteo_id"] != solo_del_conteo:
+        raise ValueError("Ese detalle no pertenece a este conteo.")
+
+    diferencia = int(cantidad_fisica) - fila["cantidad_sistema"]
+    ejecutar(
+        "UPDATE conteos_fisicos_detalle SET cantidad_fisica=?, diferencia=? WHERE id=?",
+        (int(cantidad_fisica), diferencia, detalle_id),
+    )
+
+
+def aplicar_ajustes_conteo(conteo_id: int, usuario_id) -> dict:
+    """
+    Cierra el conteo: para cada insumo donde el conteo físico
+    fue distinto al del sistema, genera el movimiento de ajuste
+    correspondiente (entrada si sobró, salida si faltó), y deja
+    el conteo marcado como Cerrado. Los insumos que no se
+    alcanzaron a contar (cantidad_fisica vacía) simplemente no
+    se tocan.
+    """
+    from database.database import ejecutar
+
+    detalle = listar_detalle_conteo(conteo_id)
+    ajustes_aplicados = []
+
+    for item in detalle:
+        if item["cantidad_fisica"] is None or item["ajustado"]:
+            continue
+        diferencia = item["diferencia"]
+        if diferencia == 0:
+            ejecutar("UPDATE conteos_fisicos_detalle SET ajustado=1 WHERE id=?", (item["id"],))
+            continue
+
+        if diferencia > 0:
+            InventarioMovimientosRepository.crear({
+                "insumo_id": item["insumo_id"], "tipo": "Entrada", "cantidad": diferencia,
+                "proveedor_id": None, "numero_factura": "", "costo_unitario": None,
+                "paciente_id": None, "profesional_id": None,
+                "motivo": f"Ajuste por conteo físico #{conteo_id} (sobrante)", "lote": None, "fecha_vencimiento": None,
+                "saldo_despues": item["cantidad_fisica"], "usuario_creacion": usuario_id,
+            })
+        else:
+            InventarioMovimientosRepository.crear({
+                "insumo_id": item["insumo_id"], "tipo": "Salida", "cantidad": abs(diferencia),
+                "proveedor_id": None, "numero_factura": "", "costo_unitario": None,
+                "paciente_id": None, "profesional_id": None,
+                "motivo": f"Ajuste por conteo físico #{conteo_id} (faltante)", "lote": None, "fecha_vencimiento": None,
+                "saldo_despues": item["cantidad_fisica"], "usuario_creacion": usuario_id,
+            })
+
+        ejecutar("UPDATE conteos_fisicos_detalle SET ajustado=1 WHERE id=?", (item["id"],))
+        ajustes_aplicados.append({"insumo": item["nombre"], "diferencia": diferencia})
+
+    ejecutar(
+        "UPDATE conteos_fisicos_inventario SET estado='Cerrado', fecha_cierre=CURRENT_TIMESTAMP, usuario_cierre=? WHERE id=?",
+        (usuario_id, conteo_id),
+    )
+
+    return {"ajustes_aplicados": ajustes_aplicados, "total_ajustes": len(ajustes_aplicados)}
+
+
 def listar_movimientos_por_paciente(paciente_id: int):
     return [dict(m) for m in InventarioMovimientosRepository.listar_por_paciente(paciente_id)]
 
@@ -359,6 +612,54 @@ def informe_movimientos(fecha_desde: str, fecha_hasta: str, insumo_id=None, tipo
         "movimientos": filas, "total_entradas": total_entradas, "total_salidas": total_salidas,
         "total_movimientos": len(filas),
     }
+
+
+def informe_control_especial(fecha_desde: str = None, fecha_hasta: str = None):
+    """
+    Libro de control de medicamentos de control especial (los
+    que se reportan al Fondo Nacional de Estupefacientes en
+    Colombia) -- muestra cada movimiento de entrada y salida de
+    estos medicamentos, con su lote, a qué paciente se le
+    aplicó, qué profesional lo hizo, y el saldo que quedó, para
+    tener la trazabilidad completa que exige la ley.
+    """
+    from database.database import consultar_todos
+
+    sql = """
+        SELECT m.*, i.nombre AS insumo_nombre, i.registro_invima, i.condicion_venta, i.unidad_medida,
+               pr.nombre AS proveedor, pa.primer_nombre, pa.primer_apellido, pa.documento AS paciente_documento,
+               pf.primer_nombre AS prof_nombre, pf.primer_apellido AS prof_apellido
+        FROM inventario_movimientos m
+        JOIN insumos i ON i.id = m.insumo_id
+        LEFT JOIN proveedores pr ON pr.id = m.proveedor_id
+        LEFT JOIN pacientes pa ON pa.id = m.paciente_id
+        LEFT JOIN profesionales pf ON pf.id = m.profesional_id
+        WHERE i.condicion_venta LIKE 'Control especial%'
+    """
+    parametros = []
+    if fecha_desde:
+        sql += " AND date(m.fecha) >= date(?)"
+        parametros.append(fecha_desde)
+    if fecha_hasta:
+        sql += " AND date(m.fecha) <= date(?)"
+        parametros.append(fecha_hasta)
+    sql += " ORDER BY i.nombre, m.fecha"
+
+    filas = [dict(f) for f in consultar_todos(sql, tuple(parametros))]
+    for f in filas:
+        f["paciente_nombre"] = f"{f.get('primer_nombre') or ''} {f.get('primer_apellido') or ''}".strip() or None
+        f["profesional_nombre"] = f"{f.get('prof_nombre') or ''} {f.get('prof_apellido') or ''}".strip() or None
+
+    return filas
+
+
+def listar_insumos_control_especial():
+    """Todos los medicamentos activos clasificados como de control especial -- para saber cuáles requieren este libro."""
+    from database.database import consultar_todos
+    filas = consultar_todos(
+        "SELECT * FROM insumos WHERE activo=1 AND condicion_venta LIKE 'Control especial%' ORDER BY nombre"
+    )
+    return [dict(f) for f in filas]
 
 
 def alertas_vencimiento(dias=90):

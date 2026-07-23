@@ -68,9 +68,12 @@
         </div>
     </div>
 
-    {% if gerencial.insumos_stock_bajo > 0 or gerencial.lotes_vencidos > 0 or gerencial.lotes_por_vencer > 0 or gerencial.cartera_pendiente > 0 %}
+    {% if gerencial.insumos_stock_bajo > 0 or gerencial.lotes_vencidos > 0 or gerencial.lotes_por_vencer > 0 or gerencial.cartera_pendiente > 0 or gerencial.autorizaciones_pendientes > 0 %}
     <div class="row g-2 mb-4">
         <div class="col-12"><h6 class="text-muted mb-1"><i class="fa-solid fa-triangle-exclamation"></i> Alertas gerenciales</h6></div>
+        {% if gerencial.autorizaciones_pendientes > 0 %}
+        <div class="col-auto"><a href="/autorizaciones-eps" class="btn btn-sm btn-outline-warning"><i class="fa-solid fa-file-signature"></i> {{ gerencial.autorizaciones_pendientes }} solicitud(es) de autorización EPS pendiente(s)</a></div>
+        {% endif %}
         {% if gerencial.insumos_stock_bajo > 0 %}
         <div class="col-auto"><a href="/inventario" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-box"></i> {{ gerencial.insumos_stock_bajo }} insumo(s) con stock bajo</a></div>
         {% endif %}

@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+{% block titulo %}Programas Generales{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/convenios-eps" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver a Convenios EPS</a>
+
+    <h2 class="mb-1"><i class="fa-solid fa-layer-group text-primary"></i> Programas Generales (sin convenio de EPS)</h2>
+    <p class="text-muted">
+        Estos programas se pueden asignar a cualquier paciente, tenga o no un convenio vigente con su EPS — se usan
+        para seguir controlando cantidades y servicios mientras no exista (o no aplique) un convenio formal. Cuando el
+        paciente sí tiene un convenio disponible para su EPS, ese siempre tiene prioridad sobre estos.
+    </p>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalNuevoProgramaGeneral">
+        <i class="fa-solid fa-plus"></i> Nuevo programa general
+    </button>
+
+    {% for prog in programas %}
+    <div class="card shadow mb-3">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div>
+                <strong>{{ prog.nombre }}</strong>
+                <span class="badge bg-light text-dark border ms-2">Valor mensual: ${{ "{:,.0f}".format(prog.valor_mensual) }}</span>
+            </div>
+            <div>
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditarPrograma"
+                        data-id="{{ prog.id }}" data-nombre="{{ prog.nombre }}" data-valor="{{ prog.valor_mensual }}" data-observaciones="{{ prog.observaciones or '' }}">
+                    <i class="fa-solid fa-pen"></i> Editar
+                </button>
+                <button type="button" class="btn btn-success btn-sm btn-agregar-servicio" data-programa-id="{{ prog.id }}" data-bs-toggle="modal" data-bs-target="#modalAgregarServicio">
+                    <i class="fa-solid fa-plus"></i> Agregar servicio
+                </button>
+                <form method="post" action="/convenios-eps/programas/{{ prog.id }}/desactivar" class="d-inline" onsubmit="return confirm('¿Desactivar este programa? Los pacientes ya asignados no se ven afectados.');">
+                    <button class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-ban"></i></button>
+                </form>
+            </div>
+        </div>
+        <div class="card-body">
+            {% if prog.observaciones %}<p class="text-muted small">{{ prog.observaciones }}</p>{% endif %}
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light"><tr><th>Servicio</th><th>Grupo (tope compartido)</th><th class="text-center">Incluidos</th><th class="text-center">Cada (días)</th><th class="text-end">Valor normal</th><th class="text-end">Valor adicional</th><th></th></tr></thead>
+                <tbody>
+                    {% for s in prog.servicios %}
+                    <tr>
+                        <td>{{ s.tipo_servicio }}</td>
+                        <td>{{ s.grupo_tope or "-" }}</td>
+                        <td class="text-center">{{ s.limite_cantidad }}</td>
+                        <td class="text-center">{{ s.dias_ciclo }}</td>
+                        <td class="text-end">${{ "{:,.0f}".format(s.valor_normal) }}</td>
+                        <td class="text-end">${{ "{:,.0f}".format(s.valor_adicional) }}</td>
+                        <td>
+                            <form method="post" action="/convenios-eps/servicios/{{ s.id }}/quitar" onsubmit="return confirm('¿Quitar este servicio del programa?');">
+                                <button class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="text-center text-muted py-3">
+                        Este programa todavía no tiene servicios configurados — sin servicios, se le puede seguir asignando cualquier
+                        servicio al paciente con normalidad, simplemente sin ningún tope automático.
+                    </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="card shadow"><div class="card-body text-center text-muted py-5">
+        Todavía no hay ningún programa general creado.
+    </div></div>
+    {% endfor %}
+</div>
+
+<!-- ===================== NUEVO PROGRAMA GENERAL ===================== -->
+<div class="modal fade" id="modalNuevoProgramaGeneral" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/convenios-eps/programas-generales/crear">
+            <div class="modal-header"><h5 class="modal-title">Nuevo programa general</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <label>Nombre del programa</label>
+                    <select name="nombre" class="form-select" required>
+                        <option value="">-- Seleccione un programa de atención --</option>
+                        {% for p in programas_atencion %}
+                        <option value="{{ p.nombre }}">{{ p.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2"><label>Valor mensual (opcional, no aplica a ninguna EPS)</label><input type="number" step="0.01" name="valor_mensual" class="form-control" value="0"></div>
+                <div class="mb-2"><label>Observaciones</label><textarea name="observaciones" class="form-control" rows="2"></textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success">Crear programa</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+
+<!-- ===================== EDITAR PROGRAMA ===================== -->
+<div class="modal fade" id="modalEditarPrograma" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" id="form-editar-programa" action="">
+            <div class="modal-header"><h5 class="modal-title">Editar programa</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Nombre del programa</label><input type="text" name="nombre" id="editar-programa-nombre" class="form-control" required></div>
+                <div class="mb-2"><label>Valor mensual</label><input type="number" step="0.01" name="valor_mensual" id="editar-programa-valor" class="form-control" required></div>
+                <div class="mb-2"><label>Observaciones</label><textarea name="observaciones" id="editar-programa-observaciones" class="form-control" rows="2"></textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+
+<!-- ===================== AGREGAR SERVICIO ===================== -->
+<div class="modal fade" id="modalAgregarServicio" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" id="form-agregar-servicio" action="">
+            <div class="modal-header"><h5 class="modal-title">Agregar servicio al programa</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <label>Servicio (de la lista de actividades del sistema)</label>
+                    <select name="actividad_id" class="form-select" required>
+                        <option value="">-- Seleccione --</option>
+                        {% for a in actividades_catalogo %}
+                        <option value="{{ a.id }}">{{ a.nombre }}{% if a.categoria %} ({{ a.categoria }}){% endif %}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2"><label>Grupo de tope compartido (opcional)</label><input type="text" name="grupo_tope" class="form-control" placeholder="Ej: Terapias"></div>
+                <div class="row">
+                    <div class="col-md-6 mb-2"><label>Cantidad incluida</label><input type="number" name="limite_cantidad" class="form-control" required min="1"></div>
+                    <div class="col-md-6 mb-2"><label>Se reinicia cada (días)</label><input type="number" name="dias_ciclo" class="form-control" value="30" required min="1"></div>
+                    <div class="col-md-6 mb-2"><label>Valor normal</label><input type="number" step="0.01" name="valor_normal" class="form-control" value="0" required></div>
+                    <div class="col-md-6 mb-2"><label>Valor adicional</label><input type="number" step="0.01" name="valor_adicional" class="form-control" value="0" required></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success">Agregar</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+
+<script>
+document.querySelectorAll(".btn-agregar-servicio").forEach((boton) => {
+    boton.addEventListener("click", () => {
+        document.getElementById("form-agregar-servicio").action = `/convenios-eps/programas/${boton.dataset.programaId}/servicios/agregar`;
+    });
+});
+
+document.getElementById("modalEditarPrograma").addEventListener("show.bs.modal", (evento) => {
+    const boton = evento.relatedTarget;
+    document.getElementById("form-editar-programa").action = `/convenios-eps/programas/${boton.dataset.id}/actualizar`;
+    document.getElementById("editar-programa-nombre").value = boton.dataset.nombre || "";
+    document.getElementById("editar-programa-valor").value = boton.dataset.valor || 0;
+    document.getElementById("editar-programa-observaciones").value = boton.dataset.observaciones || "";
+});
+</script>
+{% endblock %}

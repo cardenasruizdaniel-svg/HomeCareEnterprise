@@ -143,19 +143,62 @@ def asignar_servicio(paciente_id, tipo_servicio, subtipo, profesional_id, frecue
 
     # Si el paciente tiene un convenio de EPS asignado y este
     # servicio tiene un tope pactado, se revisa ANTES de crear
-    # nada si la cantidad de sesiones que se está por asignar
-    # se pasaría de lo autorizado -- no se bloquea (puede haber
-    # razones válidas para pasarse, con autorización aparte),
-    # pero queda la alerta clara en la respuesta para que quien
-    # esté asignando lo sepa y gestione la orden de servicio
-    # correspondiente si hace falta.
+    # nada si la cantidad de sesiones que se está por asignar se
+    # pasaría de lo autorizado (sumando lo ya autorizado como
+    # adicional, si lo hay). Lo que SÍ cabe dentro de lo
+    # autorizado se programa con normalidad; lo que se pasa NO
+    # se programa -- queda registrado como una solicitud
+    # pendiente de autorización de la EPS, y solo se libera para
+    # programarse cuando alguien la autorice.
     advertencia_convenio = None
+    solicitud_autorizacion_generada = None
+    cantidad_bloqueada = 0
+
     if numero_sesiones:
         try:
-            from services.convenios_eps_service import verificar_disponibilidad_convenio
+            from services.convenios_eps_service import verificar_disponibilidad_convenio, convenio_actual_paciente
             chequeo = verificar_disponibilidad_convenio(paciente_id, tipo_servicio, int(numero_sesiones), fecha_inicio)
             if chequeo["aplica"] and not chequeo["disponible"]:
                 advertencia_convenio = chequeo
+                cantidad_bloqueada = chequeo["exceden"]
+                numero_sesiones_permitidas = chequeo.get("cantidad_permitida", 0)
+
+                # Se genera automáticamente la solicitud de
+                # autorización por el excedente que no cupo.
+                try:
+                    from services.autorizaciones_eps_service import crear_solicitud_autorizacion
+                    convenio_actual = convenio_actual_paciente(paciente_id)
+                    if convenio_actual and convenio_actual.get("programa_convenio_id"):
+                        from services.convenios_eps_service import _buscar_servicio_programa
+                        plan_servicio = _buscar_servicio_programa(convenio_actual["programa_convenio_id"], tipo_servicio)
+                        solicitud_autorizacion_generada = crear_solicitud_autorizacion(
+                            paciente_id, convenio_actual["programa_convenio_id"], tipo_servicio,
+                            plan_servicio.get("grupo_tope") if plan_servicio else None,
+                            cantidad_bloqueada, usuario,
+                        )
+                except Exception:
+                    pass
+
+                if numero_sesiones_permitidas <= 0:
+                    # Nada de lo pedido cabe dentro de lo autorizado --
+                    # no se programa NINGUNA sesión, queda todo como
+                    # solicitud pendiente.
+                    return {
+                        "servicio_id": None, "total_fechas": 0, "es_cuidador": False,
+                        "advertencia_convenio": advertencia_convenio,
+                        "bloqueado_por_autorizacion": True,
+                        "cantidad_bloqueada": cantidad_bloqueada,
+                        "solicitud_autorizacion_id": solicitud_autorizacion_generada,
+                        "mensaje": (
+                            f"No se programó ninguna sesión: las {cantidad_bloqueada} solicitadas superan lo autorizado "
+                            f"por el programa. Se generó la solicitud de autorización #{solicitud_autorizacion_generada} "
+                            f"pendiente de que la EPS la apruebe."
+                        ),
+                    }
+
+                # Se reduce a solo la cantidad que sí está autorizada --
+                # el resto queda pendiente (ya con su solicitud creada).
+                numero_sesiones = numero_sesiones_permitidas
         except Exception:
             pass
 
@@ -254,6 +297,8 @@ def asignar_servicio(paciente_id, tipo_servicio, subtipo, profesional_id, frecue
         "visitas_creadas": 0,  # ya no se crean automaticamente; se programan una a una
         "es_cuidador": es_cuidador,
         "advertencia_convenio": advertencia_convenio,
+        "cantidad_bloqueada": cantidad_bloqueada,
+        "solicitud_autorizacion_id": solicitud_autorizacion_generada,
         "mensaje": (
             f"Se asignó la actividad de Cuidador con una meta de {numero_sesiones or 0} sesión(es)/día(s). "
             "Las fechas, horarios y el cuidador específico se programan desde la oficina en Programación Mensual."

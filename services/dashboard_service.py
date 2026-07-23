@@ -401,6 +401,11 @@ class DashboardService:
         visitas_completadas_mes = (dict(fila_visitas_mes)["completadas"] or 0) if fila_visitas_mes else 0
         porcentaje_cumplimiento = round((visitas_completadas_mes / visitas_mes) * 100, 1) if visitas_mes else 0
 
+        fila_autorizaciones = consultar_uno(
+            "SELECT COUNT(*) AS total FROM autorizaciones_eps_servicios_adicionales WHERE estado='Pendiente autorización EPS'"
+        )
+        autorizaciones_pendientes = dict(fila_autorizaciones)["total"] if fila_autorizaciones else 0
+
         return {
             "facturado_mes": facturado_mes, "facturado_mes_texto": self.formato_moneda(facturado_mes),
             "facturas_mes": facturas_mes, "tendencia_facturacion": tendencia_facturacion,
@@ -414,6 +419,7 @@ class DashboardService:
             "profesionales_activos": indicadores.get("profesionales", 0),
             "visitas_mes": visitas_mes, "visitas_completadas_mes": visitas_completadas_mes,
             "porcentaje_cumplimiento": porcentaje_cumplimiento,
+            "autorizaciones_pendientes": autorizaciones_pendientes,
         }
 
     def grafico_produccion_detallado(self):

@@ -6,10 +6,21 @@
         <h2 class="mb-0"><i class="fa-solid fa-file-contract text-primary"></i> Convenios EPS — Parametrización de Tarifas y Planes</h2>
         <div>
             <a href="/convenios-eps/manual-pdf" class="btn btn-outline-dark"><i class="fa-solid fa-book"></i> Manual (Word)</a>
+            <a href="/convenios-eps/programas-generales" class="btn btn-outline-primary"><i class="fa-solid fa-layer-group"></i> Programas Generales (sin convenio)</a>
             <a href="/convenios-eps/facturacion/panel" class="btn btn-success"><i class="fa-solid fa-file-invoice-dollar"></i> Facturación por Plan</a>
         </div>
     </div>
-    <p class="text-muted">Aquí se configuran y actualizan los convenios con cada EPS: qué servicios cubre, cuántas sesiones, y el valor de cada una — modifícalo cuando cambien las tarifas o las condiciones pactadas.</p>
+    <p class="text-muted">
+        Cada convenio es el contrato marco con una EPS — dentro de él se crean uno o varios <strong>programas</strong>
+        (Crónicos, Paliativos, Materno, etc.), y dentro de cada programa se configuran los servicios cubiertos, sus
+        cantidades máximas y sus valores.
+        <br><small>
+            No es obligatorio tener un convenio creado para poder atender pacientes — mientras tanto, puede usar los
+            <a href="/convenios-eps/programas-generales">Programas Generales</a>, que funcionan igual pero sin depender de ninguna EPS.
+        </small>
+    </p>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
 
     <button type="button" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#modalNuevoConvenio">
         <i class="fa-solid fa-plus"></i> Nuevo convenio
@@ -18,16 +29,16 @@
     <div class="card shadow">
         <div class="card-body">
             <table class="table table-hover align-middle">
-                <thead class="table-light"><tr><th>EPS</th><th>Plan</th><th>N.° Convenio</th><th>Vigencia</th><th>Estado</th><th></th></tr></thead>
+                <thead class="table-light"><tr><th>EPS</th><th>N.° Convenio</th><th>Vigencia</th><th>Programas</th><th>Estado</th><th></th></tr></thead>
                 <tbody>
                     {% for c in convenios %}
                     <tr>
                         <td><strong>{{ c.eps }}</strong></td>
-                        <td>{{ c.nombre_plan }}</td>
                         <td>{{ c.numero_convenio or "-" }}</td>
                         <td>{{ c.fecha_inicio or "-" }} {% if c.fecha_fin %}a {{ c.fecha_fin }}{% endif %}</td>
+                        <td><span class="badge bg-info text-dark">{{ c.total_programas }} programa(s)</span></td>
                         <td><span class="badge {% if c.estado == 'Vigente' %}bg-success{% else %}bg-secondary{% endif %}">{{ c.estado }}</span></td>
-                        <td><a href="/convenios-eps/{{ c.id }}" class="btn btn-outline-primary btn-sm">Ver / Configurar plan</a></td>
+                        <td><a href="/convenios-eps/{{ c.id }}" class="btn btn-outline-primary btn-sm">Ver / Configurar programas</a></td>
                     </tr>
                     {% else %}
                     <tr><td colspan="6" class="text-center text-muted py-4">Sin convenios registrados.</td></tr>
@@ -45,26 +56,17 @@
             <div class="modal-body">
                 <div class="mb-2"><label>EPS</label><input type="text" name="eps" class="form-control" required placeholder="Ej: Nueva EPS"></div>
                 <div class="mb-2"><label>NIT de la EPS (opcional, para facturar a nombre de la EPS)</label><input type="text" name="nit_eps" class="form-control"></div>
-                <div class="mb-2">
-                    <label>Nombre del plan</label>
-                    <select name="nombre_plan" class="form-select" required>
-                        <option value="">-- Seleccione un programa de atención --</option>
-                        {% for p in programas_atencion %}
-                        <option value="{{ p.nombre }}">{{ p.nombre }}</option>
-                        {% endfor %}
-                    </select>
-                    <small class="text-muted">Se toma de los Programas de Atención ya creados en el sistema.</small>
-                </div>
                 <div class="mb-2"><label>N.° de convenio (opcional)</label><input type="text" name="numero_convenio" class="form-control"></div>
                 <div class="row">
                     <div class="col-md-6 mb-2"><label>Fecha de inicio</label><input type="date" name="fecha_inicio" class="form-control"></div>
                     <div class="col-md-6 mb-2"><label>Fecha de fin (opcional)</label><input type="date" name="fecha_fin" class="form-control"></div>
                 </div>
                 <div class="mb-2"><label>Observaciones</label><textarea name="observaciones" class="form-control" rows="2"></textarea></div>
+                <p class="text-muted small mb-0"><i class="fa-solid fa-circle-info"></i> Después de crear el convenio, se agregan los programas (Crónicos, Paliativos, etc.) desde su pantalla de detalle.</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="submit" class="btn btn-primary">Crear y configurar el plan</button>
+                <button type="submit" class="btn btn-primary">Crear convenio</button>
             </div>
         </form>
     </div></div>

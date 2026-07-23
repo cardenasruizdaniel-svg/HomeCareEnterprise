@@ -305,6 +305,31 @@ async def actualizar(
 # paciente esta tomando)
 # ==========================================
 
+@router.post("/{paciente_id}/asignar-programa-eps")
+async def asignar_programa_eps_desde_ficha(
+    paciente_id: int,
+    programa_convenio_id: str = Form(...),
+    usuario=Depends(requiere_permiso("pacientes")),
+):
+    """
+    Asigna el programa de EPS del paciente directamente desde
+    su ficha -- pensado para el momento de la primera visita,
+    cuando el médico ya sabe a qué programa corresponde el
+    paciente (según la EPS que ya tiene registrada), sin tener
+    que ir hasta Convenios EPS a buscarlo.
+    """
+    from services import convenios_eps_service as convenios
+    from datetime import date
+    try:
+        convenios.asignar_convenio_paciente(
+            paciente_id, int(programa_convenio_id), date.today().isoformat(),
+            usuario.get("id") if isinstance(usuario, dict) else None,
+        )
+    except ValueError as error:
+        return RedirectResponse(url=f"/pacientes/{paciente_id}?error={error}", status_code=303)
+    return RedirectResponse(url=f"/pacientes/{paciente_id}", status_code=303)
+
+
 @router.get("/{paciente_id}")
 async def ficha(
     request: Request,
@@ -325,6 +350,10 @@ async def ficha(
     from services.resumen_clinico_service import resumen_completo
     resumen_clinico = resumen_completo(paciente_id)
 
+    from services import convenios_eps_service as convenios
+    convenio_eps_actual = convenios.convenio_actual_paciente(paciente_id)
+    opciones_programa = {"con_convenio": [], "generales": []} if convenio_eps_actual else convenios.opciones_de_programa_para_paciente(paciente.get("eps"))
+
     return templates.TemplateResponse(
         request=request,
         name="pacientes/ficha.html",
@@ -336,6 +365,8 @@ async def ficha(
             "alertas": alertas,
             "programa_paciente": programa_paciente,
             "resumen_clinico": resumen_clinico,
+            "convenio_eps_actual": convenio_eps_actual,
+            "opciones_programa": opciones_programa,
         },
     )
 

@@ -10,6 +10,9 @@
             <a href="/inventario/informes/movimientos" class="btn btn-outline-info"><i class="fa-solid fa-right-left"></i> Ingresos/Egresos</a>
             <a href="/inventario/convenios" class="btn btn-outline-dark"><i class="fa-solid fa-file-signature"></i> Convenios</a>
             <a href="/inventario/proveedores" class="btn btn-outline-dark"><i class="fa-solid fa-truck"></i> Proveedores</a>
+            <a href="/inventario/informes/existencias" class="btn btn-outline-success"><i class="fa-solid fa-chart-column"></i> Informe de Existencias</a>
+            <a href="/inventario/conteos" class="btn btn-outline-primary"><i class="fa-solid fa-clipboard-list"></i> Conteo Físico</a>
+            <a href="/inventario/informes/control-especial" class="btn btn-outline-danger"><i class="fa-solid fa-shield-halved"></i> Control Especial</a>
         </div>
     </div>
 
@@ -74,11 +77,12 @@
                 <div class="card-header bg-white"><h5 class="mb-0">Nuevo insumo</h5></div>
                 <div class="card-body">
                     <form method="post" action="/inventario/insumos/crear">
-                        <div class="mb-2"><label>Código (opcional)</label><input type="text" name="codigo" class="form-control" placeholder="Ej: INS-001"></div>
+                        <div class="mb-2"><label>Código interno (opcional)</label><input type="text" name="codigo" class="form-control" placeholder="Ej: INS-001"></div>
+                        <div class="mb-2"><label>Código de barras (opcional)</label><input type="text" name="codigo_barras" class="form-control" placeholder="Escanee o digite el código de barras"></div>
                         <div class="mb-2"><label>Nombre</label><input type="text" name="nombre" class="form-control" required></div>
                         <div class="mb-2">
                             <label>Categoría</label>
-                            <select name="categoria" class="form-select">
+                            <select name="categoria" id="crear-categoria" class="form-select" onchange="alternarCamposMedicamento('crear')">
                                 {% for c in categorias %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
                             </select>
                         </div>
@@ -91,6 +95,31 @@
                             <input type="checkbox" name="requiere_lote_vencimiento" value="1" class="form-check-input" id="ck-requiere-vencimiento">
                             <label class="form-check-label" for="ck-requiere-vencimiento">Requiere control de lote y fecha de vencimiento</label>
                         </div>
+
+                        <div id="crear-campos-medicamento" style="display:none;">
+                            <hr>
+                            <p class="text-muted small mb-2"><i class="fa-solid fa-file-shield"></i> Datos regulatorios (medicamentos)</p>
+                            <div class="mb-2"><label>Registro sanitario INVIMA</label><input type="text" name="registro_invima" class="form-control" placeholder="Ej: INVIMA 2020M-0012345"></div>
+                            <div class="mb-2"><label>Laboratorio titular del registro</label><input type="text" name="titular_registro_sanitario" class="form-control"></div>
+                            <div class="row">
+                                <div class="col-6 mb-2"><label>Principio activo</label><input type="text" name="principio_activo" class="form-control"></div>
+                                <div class="col-6 mb-2"><label>Concentración</label><input type="text" name="concentracion" class="form-control" placeholder="Ej: 500mg"></div>
+                            </div>
+                            <div class="mb-2"><label>Forma farmacéutica</label><input type="text" name="forma_farmaceutica" class="form-control" placeholder="Ej: Tableta, Jarabe, Ampolla"></div>
+                            <div class="mb-2">
+                                <label>Condición de venta</label>
+                                <select name="condicion_venta" class="form-select">
+                                    <option value="">-- Seleccione --</option>
+                                    {% for c in condiciones_venta %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                                </select>
+                                <small class="text-muted">Los de "Control especial" exigen registro INVIMA obligatorio.</small>
+                            </div>
+                            <div class="mb-2 form-check">
+                                <input type="checkbox" name="requiere_cadena_frio" value="1" class="form-check-input" id="ck-cadena-frio">
+                                <label class="form-check-label" for="ck-cadena-frio">Requiere cadena de frío</label>
+                            </div>
+                        </div>
+
                         <button class="btn btn-success w-100">Crear insumo</button>
                     </form>
                 </div>
@@ -188,10 +217,14 @@
                                 <td>
                                     <a href="/inventario/movimientos/{{ i.id }}" class="btn btn-outline-primary btn-sm">Historial</a>
                                     <button type="button" class="btn btn-outline-secondary btn-sm btn-editar-insumo"
-                                            data-id="{{ i.id }}" data-codigo="{{ i.codigo or '' }}" data-nombre="{{ i.nombre }}"
+                                            data-id="{{ i.id }}" data-codigo="{{ i.codigo or '' }}" data-codigo-barras="{{ i.codigo_barras or '' }}" data-nombre="{{ i.nombre }}"
                                             data-categoria="{{ i.categoria }}" data-unidad="{{ i.unidad_medida }}"
                                             data-stock-minimo="{{ i.stock_minimo }}" data-stock-maximo="{{ i.stock_maximo }}"
-                                            data-requiere-lote="{{ 1 if i.requiere_lote_vencimiento else 0 }}">
+                                            data-requiere-lote="{{ 1 if i.requiere_lote_vencimiento else 0 }}"
+                                            data-invima="{{ i.registro_invima or '' }}" data-titular="{{ i.titular_registro_sanitario or '' }}"
+                                            data-principio-activo="{{ i.principio_activo or '' }}" data-concentracion="{{ i.concentracion or '' }}"
+                                            data-forma-farmaceutica="{{ i.forma_farmaceutica or '' }}" data-condicion-venta="{{ i.condicion_venta or '' }}"
+                                            data-cadena-frio="{{ 1 if i.requiere_cadena_frio else 0 }}">
                                         <i class="fa-solid fa-pen"></i> Editar
                                     </button>
                                     <a href="/inventario/insumos/desactivar/{{ i.id }}" class="btn btn-outline-danger btn-sm"
@@ -309,16 +342,36 @@ resultadosPaciente.addEventListener("click", (e) => {
     }
 });
 
-function abrirEdicionInsumo(id, codigo, nombre, categoria, unidadMedida, stockMinimo, stockMaximo, requiereLote) {
+function abrirEdicionInsumo(id, codigo, codigoBarras, nombre, categoria, unidadMedida, stockMinimo, stockMaximo, requiereLote, datosRegulatorios) {
+    datosRegulatorios = datosRegulatorios || {};
     document.getElementById("edicion-form-insumo").action = `/inventario/insumos/${id}/actualizar`;
     document.getElementById("edicion-codigo").value = codigo || "";
+    document.getElementById("edicion-codigo-barras").value = codigoBarras || "";
     document.getElementById("edicion-nombre").value = nombre || "";
     document.getElementById("edicion-categoria").value = categoria || "Otro";
     document.getElementById("edicion-unidad").value = unidadMedida || "Unidad";
     document.getElementById("edicion-stock-minimo").value = stockMinimo || 0;
     document.getElementById("edicion-stock-maximo").value = stockMaximo || 0;
     document.getElementById("edicion-requiere-lote").checked = !!(requiereLote * 1);
+    document.getElementById("edicion-invima").value = datosRegulatorios.invima || "";
+    document.getElementById("edicion-titular").value = datosRegulatorios.titular || "";
+    document.getElementById("edicion-principio-activo").value = datosRegulatorios.principioActivo || "";
+    document.getElementById("edicion-concentracion").value = datosRegulatorios.concentracion || "";
+    document.getElementById("edicion-forma-farmaceutica").value = datosRegulatorios.formaFarmaceutica || "";
+    document.getElementById("edicion-condicion-venta").value = datosRegulatorios.condicionVenta || "";
+    document.getElementById("edicion-cadena-frio").checked = !!(datosRegulatorios.cadenaFrio * 1);
+    alternarCamposMedicamento("edicion");
     new bootstrap.Modal(document.getElementById("modalEditarInsumo")).show();
+}
+
+// Muestra/oculta el bloque de datos regulatorios (INVIMA, principio
+// activo, etc.) según si la categoría elegida es "Medicamentos" --
+// para no llenar de campos irrelevantes el formulario de un insumo
+// que no lo es (guantes, gasas, etc.).
+function alternarCamposMedicamento(prefijo) {
+    const categoria = document.getElementById(`${prefijo}-categoria`).value;
+    const bloque = document.getElementById(`${prefijo}-campos-medicamento`);
+    if (bloque) bloque.style.display = categoria === "Medicamentos" ? "block" : "none";
 }
 
 // Se usan atributos data-* (en vez de pasar los valores directo en el onclick)
@@ -328,8 +381,13 @@ function abrirEdicionInsumo(id, codigo, nombre, categoria, unidadMedida, stockMi
 document.querySelectorAll(".btn-editar-insumo").forEach((boton) => {
     boton.addEventListener("click", () => {
         abrirEdicionInsumo(
-            boton.dataset.id, boton.dataset.codigo, boton.dataset.nombre, boton.dataset.categoria,
+            boton.dataset.id, boton.dataset.codigo, boton.dataset.codigoBarras, boton.dataset.nombre, boton.dataset.categoria,
             boton.dataset.unidad, boton.dataset.stockMinimo, boton.dataset.stockMaximo, boton.dataset.requiereLote,
+            {
+                invima: boton.dataset.invima, titular: boton.dataset.titular, principioActivo: boton.dataset.principioActivo,
+                concentracion: boton.dataset.concentracion, formaFarmaceutica: boton.dataset.formaFarmaceutica,
+                condicionVenta: boton.dataset.condicionVenta, cadenaFrio: boton.dataset.cadenaFrio,
+            },
         );
     });
 });
@@ -340,11 +398,12 @@ document.querySelectorAll(".btn-editar-insumo").forEach((boton) => {
         <form method="post" id="edicion-form-insumo" action="">
             <div class="modal-header"><h5 class="modal-title"><i class="fa-solid fa-pen"></i> Editar insumo</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
             <div class="modal-body">
-                <div class="mb-2"><label>Código (opcional)</label><input type="text" name="codigo" id="edicion-codigo" class="form-control"></div>
+                <div class="mb-2"><label>Código interno (opcional)</label><input type="text" name="codigo" id="edicion-codigo" class="form-control"></div>
+                <div class="mb-2"><label>Código de barras (opcional)</label><input type="text" name="codigo_barras" id="edicion-codigo-barras" class="form-control"></div>
                 <div class="mb-2"><label>Nombre</label><input type="text" name="nombre" id="edicion-nombre" class="form-control" required></div>
                 <div class="mb-2">
                     <label>Categoría</label>
-                    <select name="categoria" id="edicion-categoria" class="form-select">
+                    <select name="categoria" id="edicion-categoria" class="form-select" onchange="alternarCamposMedicamento('edicion')">
                         {% for c in categorias %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
                     </select>
                 </div>
@@ -357,6 +416,30 @@ document.querySelectorAll(".btn-editar-insumo").forEach((boton) => {
                     <input type="checkbox" name="requiere_lote_vencimiento" value="1" class="form-check-input" id="edicion-requiere-lote">
                     <label class="form-check-label" for="edicion-requiere-lote">Requiere control de lote y fecha de vencimiento</label>
                 </div>
+
+                <div id="edicion-campos-medicamento" style="display:none;">
+                    <hr>
+                    <p class="text-muted small mb-2"><i class="fa-solid fa-file-shield"></i> Datos regulatorios (medicamentos)</p>
+                    <div class="mb-2"><label>Registro sanitario INVIMA</label><input type="text" name="registro_invima" id="edicion-invima" class="form-control"></div>
+                    <div class="mb-2"><label>Laboratorio titular del registro</label><input type="text" name="titular_registro_sanitario" id="edicion-titular" class="form-control"></div>
+                    <div class="row">
+                        <div class="col-6 mb-2"><label>Principio activo</label><input type="text" name="principio_activo" id="edicion-principio-activo" class="form-control"></div>
+                        <div class="col-6 mb-2"><label>Concentración</label><input type="text" name="concentracion" id="edicion-concentracion" class="form-control"></div>
+                    </div>
+                    <div class="mb-2"><label>Forma farmacéutica</label><input type="text" name="forma_farmaceutica" id="edicion-forma-farmaceutica" class="form-control"></div>
+                    <div class="mb-2">
+                        <label>Condición de venta</label>
+                        <select name="condicion_venta" id="edicion-condicion-venta" class="form-select">
+                            <option value="">-- Seleccione --</option>
+                            {% for c in condiciones_venta %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-2 form-check">
+                        <input type="checkbox" name="requiere_cadena_frio" value="1" class="form-check-input" id="edicion-cadena-frio">
+                        <label class="form-check-label" for="edicion-cadena-frio">Requiere cadena de frío</label>
+                    </div>
+                </div>
+
                 <p class="text-muted small mb-0"><i class="fa-solid fa-circle-info"></i> El costo promedio no se edita aquí — se recalcula solo con cada entrada de compra registrada.</p>
             </div>
             <div class="modal-footer">

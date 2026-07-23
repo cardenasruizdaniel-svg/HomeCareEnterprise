@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block titulo %}Conteo Físico #{{ conteo.id }}{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/inventario/conteos" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver a Conteos</a>
+
+    {% if mensaje %}<div class="alert alert-success">{{ mensaje }}</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <div>
+            <h2 class="mb-0">Conteo físico #{{ conteo.id }}</h2>
+            <small class="text-muted">Iniciado {{ (conteo.fecha_inicio or "")[:16] }} — {{ conteo.observaciones or "sin observaciones" }}</small>
+        </div>
+        <span class="badge {% if conteo.estado == 'Cerrado' %}bg-secondary{% else %}bg-warning text-dark{% endif %} fs-6">{{ conteo.estado }}</span>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-4 mb-2"><div class="card shadow-sm text-center"><div class="card-body"><div class="display-6">{{ detalle|length }}</div><div class="text-muted">Insumos totales</div></div></div></div>
+        <div class="col-md-4 mb-2"><div class="card shadow-sm text-center"><div class="card-body"><div class="display-6 text-primary">{{ total_contados }}</div><div class="text-muted">Ya contados</div></div></div></div>
+        <div class="col-md-4 mb-2"><div class="card shadow-sm text-center"><div class="card-body"><div class="display-6 text-warning">{{ total_con_diferencia }}</div><div class="text-muted">Con diferencia</div></div></div></div>
+    </div>
+
+    {% if conteo.estado != "Cerrado" %}
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6 mb-2">
+                    <a href="/inventario/conteos/{{ conteo.id }}/plantilla" class="btn btn-outline-success w-100">
+                        <i class="fa-solid fa-download"></i> Descargar plantilla para contar
+                    </a>
+                </div>
+                <div class="col-md-6 mb-2">
+                    <form method="post" action="/inventario/conteos/{{ conteo.id }}/subir" enctype="multipart/form-data" class="d-flex gap-2">
+                        <input type="file" name="archivo" class="form-control" accept=".xlsx,.xls" required>
+                        <button type="submit" class="btn btn-success"><i class="fa-solid fa-upload"></i> Subir</button>
+                    </form>
+                </div>
+            </div>
+            <p class="text-muted small mb-0">
+                Imprima o abra la plantilla, cuente en bodega, escriba las cantidades en la columna "cantidad_fisica", y suba el
+                mismo archivo aquí — o registre cada insumo manualmente en la tabla de abajo.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <table class="table table-sm table-hover align-middle">
+                <thead class="table-light">
+                    <tr><th>Código</th><th>Insumo</th><th class="text-center">Sistema</th><th class="text-center">Físico</th><th class="text-center">Diferencia</th>{% if conteo.estado != "Cerrado" %}<th></th>{% endif %}</tr>
+                </thead>
+                <tbody>
+                    {% for d in detalle %}
+                    <tr class="{% if d.diferencia %}table-warning{% endif %}">
+                        <td>{{ d.codigo or d.codigo_barras or "-" }}</td>
+                        <td>{{ d.nombre }}</td>
+                        <td class="text-center">{{ d.cantidad_sistema }}</td>
+                        <td class="text-center">{{ d.cantidad_fisica if d.cantidad_fisica is not none else "—" }}</td>
+                        <td class="text-center">
+                            {% if d.diferencia %}
+                            <span class="badge {% if d.diferencia > 0 %}bg-success{% else %}bg-danger{% endif %}">{{ "+" if d.diferencia > 0 }}{{ d.diferencia }}</span>
+                            {% elif d.cantidad_fisica is not none %}<span class="badge bg-light text-dark border">0</span>{% endif %}
+                        </td>
+                        {% if conteo.estado != "Cerrado" %}
+                        <td>
+                            <form method="post" action="/inventario/conteos/detalle/{{ d.id }}/registrar" class="d-flex gap-1">
+                                <input type="hidden" name="conteo_id" value="{{ conteo.id }}">
+                                <input type="number" name="cantidad_fisica" class="form-control form-control-sm" style="width:80px;" value="{{ d.cantidad_fisica if d.cantidad_fisica is not none else '' }}" required>
+                                <button class="btn btn-outline-primary btn-sm">OK</button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if conteo.estado != "Cerrado" %}
+    <form method="post" action="/inventario/conteos/{{ conteo.id }}/cerrar" onsubmit="return confirm('¿Cerrar este conteo? Se ajustará el inventario según las diferencias encontradas en los insumos ya contados. Los que no se hayan contado quedan sin tocar.');">
+        <button type="submit" class="btn btn-danger"><i class="fa-solid fa-lock"></i> Cerrar conteo y aplicar ajustes al inventario</button>
+    </form>
+    {% endif %}
+</div>
+{% endblock %}

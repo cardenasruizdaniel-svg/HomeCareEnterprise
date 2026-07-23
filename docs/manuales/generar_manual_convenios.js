@@ -99,16 +99,16 @@ const doc = new Document({
         spacing: { after: 100 },
       }),
       new Paragraph({
-        children: [new TextRun({ text: "Manual de Convenios EPS y Facturación por Plan", bold: true, size: 44 })],
+        children: [new TextRun({ text: "Manual de Convenios EPS, Autorizaciones y Facturación", bold: true, size: 44 })],
         spacing: { after: 200 },
       }),
       new Paragraph({
-        children: [new TextRun({ text: "Parametrización de tarifas, topes de servicios, y generación automática de facturación electrónica a las EPS", italics: true, color: COLOR_GRIS, size: 22 })],
+        children: [new TextRun({ text: "Convenio → Programa → Servicios, control automático de topes, autorizaciones de excedentes, y generación de facturación electrónica a las EPS", italics: true, color: COLOR_GRIS, size: 22 })],
         spacing: { after: 400 },
       }),
       cajaNota(
         "⚠ Documento delicado — de uso interno",
-        "Este módulo gestiona directamente los valores que se cobran a cada EPS y la generación de facturación electrónica. Cualquier cambio en las tarifas o en los topes de servicios debe hacerse con conocimiento del área administrativa/financiera, ya que afecta directamente lo que se le factura a cada entidad.",
+        "Este módulo gestiona directamente los valores que se cobran a cada EPS, las autorizaciones de servicios adicionales, y la generación de facturación electrónica. Cualquier cambio debe hacerse con conocimiento del área administrativa/financiera.",
         "FFE3E3",
       ),
       new Paragraph({ children: [new PageBreak()] }),
@@ -116,153 +116,166 @@ const doc = new Document({
       // ===================== 1. INTRODUCCIÓN =====================
       titulo("1. ¿Para qué sirve este módulo?"),
       parrafo(
-        "Cada EPS le paga a HomeCare del Quindío I.P.S. según un convenio pactado, que normalmente incluye un número de sesiones o visitas de cada servicio (terapias, enfermería, medicina general, psicología, etc.) por cada paciente, dentro de un periodo determinado. Cuando un paciente supera esa cantidad, los servicios adicionales se cobran a un valor distinto."
+        "Cada EPS le paga a HomeCare del Quindío I.P.S. según uno o varios convenios pactados. Dentro de cada convenio, se contratan uno o varios PROGRAMAS (Crónicos, Paliativos, Materno, Respiratorio, Adulto Mayor, etc.), y cada programa incluye una cantidad determinada de cada tipo de servicio (terapias, enfermería, medicina general, etc.) dentro de un periodo."
       ),
-      parrafo(
-        "El módulo de Convenios EPS le permite configurar esas reglas UNA sola vez por cada EPS, y a partir de ahí el sistema:"
-      ),
-      vineta("Cuenta automáticamente cuántas veces se le ha prestado cada servicio a un paciente, dentro del periodo vigente."),
-      vineta("Decide solo si ese servicio se cobra al valor normal (incluido en el plan) o al valor adicional (una vez se pasó el tope)."),
-      vineta("Genera la cuenta por cobrar a la EPS cada vez que un profesional completa una visita — sin que nadie tenga que hacerlo a mano."),
-      vineta("Le permite, al final del periodo de corte, generar las facturas electrónicas ya agrupadas como usted prefiera."),
+      parrafo("El sistema controla todo esto automáticamente:"),
+      vineta("Cuenta cuántas veces se ha usado cada servicio dentro del ciclo vigente del paciente."),
+      vineta("Decide solo si un servicio se cobra al valor normal (incluido) o al valor adicional (excedente autorizado)."),
+      vineta("BLOQUEA de verdad la programación de sesiones que superen lo autorizado, hasta que exista una autorización de la EPS para el excedente."),
+      vineta("Genera la cuenta por cobrar automáticamente cada vez que se completa una visita."),
+      vineta("Genera las facturas electrónicas agrupadas como usted prefiera al final del periodo."),
       espacio(),
 
       // ===================== 2. CONCEPTOS =====================
       titulo("2. Conceptos clave, antes de empezar"),
 
-      subtitulo("2.1 Convenio"),
-      parrafo("Es el contrato/plan pactado con una EPS específica. Una misma EPS puede tener varios convenios si maneja distintos planes (por ejemplo, un plan estándar y uno ampliado)."),
+      subtitulo("2.1 Jerarquía del módulo"),
+      parrafoRico([
+        { texto: "EPS", bold: true }, { texto: " → " },
+        { texto: "Convenio", bold: true, color: COLOR_MARCA }, { texto: " (el contrato marco: número, vigencia, NIT) → " },
+        { texto: "Programa", bold: true, color: COLOR_MARCA }, { texto: " (Crónicos, Paliativos...) → " },
+        { texto: "Servicios parametrizados", bold: true, color: COLOR_MARCA }, { texto: " (cuántas sesiones de cada uno incluye)." },
+      ]),
+      parrafo("Un convenio puede tener VARIOS programas. Un paciente se asigna a UN programa específico, no al convenio en general."),
 
-      subtitulo("2.2 Plan de servicios"),
-      parrafo("Dentro de cada convenio, se configura QUÉ servicios cubre, y para cada uno:"),
+      subtitulo("2.2 Servicios parametrizados de un programa"),
       tabla(
         ["Campo", "Qué significa"],
         [
           ["Cantidad incluida", "Cuántas veces se cubre ese servicio dentro de un periodo, sin cobrar el valor adicional."],
-          ["Se reinicia cada (días)", "Cada cuántos días se vuelve a contar desde cero — 30 para algo mensual, 90 para algo trimestral."],
+          ["Se reinicia cada (días)", "Cada cuántos días se vuelve a contar desde cero."],
           ["Valor normal", "Lo que se cobra por cada uso MIENTRAS esté dentro del tope."],
-          ["Valor adicional", "Lo que se cobra por cada uso EXCEDENTE, una vez se pasó el tope."],
-          ["Grupo (tope compartido)", "Opcional — cuando varios servicios distintos deben compartir un mismo tope (ver ejemplo abajo)."],
+          ["Valor adicional", "Lo que se cobra por cada uso EXCEDENTE, ya autorizado por la EPS."],
+          ["Grupo (tope compartido)", "Cuando varios servicios distintos deben compartir un mismo tope."],
         ],
         [3200, 6300]
       ),
       espacio(),
-
       cajaNota(
         "📌 Ejemplo real: las 4 terapias",
-        "El paciente tiene derecho a 12 sesiones de terapia al mes, repartidas como sea entre Terapia Física, Terapia Ocupacional, Terapia Respiratoria y Fonoaudiología. Para lograr esto, se configuran las 4 como servicios distintos (cada una con su propio valor), pero a las 4 se les pone el MISMO texto en \"Grupo\", por ejemplo \"Terapias\". El sistema entonces las cuenta juntas: la sesión número 13 de cualquiera de las 4 (sin importar cuál) sale como adicional.",
+        "El paciente tiene derecho a 12 sesiones de terapia al mes en total, sin importar la mezcla. Se configuran las 4 terapias (Física, Ocupacional, Respiratoria, Fonoaudiología) como servicios distintos del mismo programa, cada una con su propio valor, pero con el MISMO texto en \"Grupo\" (ej. \"Terapias\"). El sistema las cuenta juntas: la sesión número 13 de cualquiera de las 4 excede el tope. La MEZCLA exacta (cuántas de cada tipo) la decide el médico al ordenarlas — la oficina solo parametriza el máximo total.",
         COLOR_FONDO_TABLA
       ),
       espacio(),
 
       subtitulo("2.3 Ciclo (el periodo que se reinicia)"),
       parrafo(
-        "El conteo NO se reinicia el día 1 de cada mes calendario — se reinicia cada N días DESDE LA FECHA en que el paciente ingresó a ese plan. Por ejemplo, si un paciente ingresó el 5 de julio, y el servicio se reinicia cada 30 días, el primer periodo va del 5 de julio al 3 de agosto, el segundo del 4 de agosto al 2 de septiembre, y así sucesivamente."
+        "El conteo se reinicia cada N días DESDE LA FECHA de ingreso del paciente al programa — no el día 1 del mes calendario."
       ),
       espacio(),
 
-      // ===================== 3. CREAR UN CONVENIO =====================
-      titulo("3. Crear un convenio nuevo"),
-      numerada("Ir al menú \u201cConvenios EPS (Parametrización)\u201d.", 1),
-      numerada("Presionar \u201cNuevo convenio\u201d.", 2),
-      numerada("Llenar: nombre de la EPS, NIT de la EPS (importante — ver nota más abajo), nombre del plan, número de convenio si aplica, y fechas de vigencia.", 3),
-      numerada("Guardar — lo lleva directo a la pantalla para configurar el plan de servicios.", 4),
+      // ===================== 3. CREAR UN CONVENIO Y SUS PROGRAMAS =====================
+      titulo("3. Crear un convenio y sus programas"),
+      numerada("Ir a \u201cConvenios EPS (Parametrización)\u201d → \u201cNuevo convenio\u201d.", 1),
+      numerada("Llenar: EPS, NIT de la EPS (importante para facturar correctamente), número de convenio, fechas de vigencia.", 2),
+      numerada("Dentro del convenio ya creado, presionar \u201cNuevo programa\u201d por cada programa contratado (Crónicos, Paliativos, etc.) — el nombre se elige de los Programas de Atención ya creados en el sistema.", 3),
+      numerada("Indicar el valor mensual contratado de ese programa.", 4),
       espacio(),
       cajaNota(
         "⚠ El NIT de la EPS es obligatorio para facturar correctamente",
-        "La factura electrónica SIEMPRE se emite a nombre de la EPS (no del paciente) — es ella quien tiene el contrato y quien paga. Si no se registra su NIT aquí, la factura quedará incompleta en ese dato y habrá que corregirla manualmente.",
+        "La factura electrónica SIEMPRE se emite a nombre de la EPS (no del paciente). Si no se registra su NIT, la factura quedará incompleta.",
         "FFE3E3"
       ),
       espacio(),
 
-      // ===================== 4. CONFIGURAR EL PLAN =====================
-      titulo("4. Configurar el plan de servicios"),
-      parrafo("Dentro del convenio ya creado, en \u201cPlan de servicios\u201d, se presiona \u201cAgregar servicio al plan\u201d por cada concepto que cubra ese convenio."),
+      // ===================== 4. CONFIGURAR SERVICIOS DE UN PROGRAMA =====================
+      titulo("4. Configurar los servicios de un programa"),
+      parrafo("Dentro de cada programa, se presiona \u201cAgregar servicio\u201d por cada concepto que cubra ese programa específicamente."),
       cajaNota(
         "⚠ El nombre debe coincidir exactamente",
-        "El campo \u201cNombre del servicio\u201d debe escribirse EXACTAMENTE igual a como se llama el servicio cuando se programa la visita del paciente (por ejemplo: \u201cTerapia Física\u201d, \u201cVisita de enfermería profesional\u201d). Si no coincide exactamente, el sistema no va a reconocer que ese servicio pertenece al plan, y no generará ninguna cuenta por cobrar para él.",
+        "El servicio se elige de una LISTA (no se escribe a mano) — se toma automáticamente del catálogo de actividades del sistema, así siempre coincide con lo que se usa al programar visitas de los pacientes.",
         "FFE3E3"
       ),
       espacio(),
-      parrafo("Ejemplo de un plan típico configurado:"),
-      tabla(
-        ["Servicio", "Grupo", "Incluidos", "Cada (días)", "Normal", "Adicional"],
-        [
-          ["Terapia Física", "Terapias", "12", "30", "$45.000", "$38.000"],
-          ["Terapia Ocupacional", "Terapias", "12", "30", "$45.000", "$38.000"],
-          ["Terapia Respiratoria", "Terapias", "12", "30", "$48.000", "$40.000"],
-          ["Fonoaudiología", "Terapias", "12", "30", "$45.000", "$38.000"],
-          ["Visita de enfermería profesional", "—", "1", "30", "$60.000", "$55.000"],
-          ["Visita de valoración médica inicial", "—", "1", "30", "$90.000", "$80.000"],
-          ["Psicología", "—", "1", "90", "$70.000", "$65.000"],
-          ["Trabajo social", "—", "1", "90", "$65.000", "$60.000"],
-        ],
-        [2600, 1300, 1200, 1300, 1300, 1300]
+
+      // ===================== 5. ASIGNAR UN PROGRAMA AL PACIENTE =====================
+      titulo("5. Asignar un programa a un paciente"),
+      numerada("Desde el convenio, en \u201cAsignar un programa a un paciente\u201d, buscar al paciente por nombre o documento.", 1),
+      numerada("Elegir el PROGRAMA específico (no solo el convenio) al que queda asignado.", 2),
+      numerada("Indicar la fecha de ingreso — punto de partida para contar los ciclos.", 3),
+      numerada("Opcionalmente: número de autorización de la EPS, médico tratante, y profesional tratante.", 4),
+      numerada("La fecha \u201cautorizado hasta\u201d se sugiere sola a 3 meses si se deja vacía — se puede cambiar.", 5),
+      espacio(),
+
+      // ===================== 6. AUTORIZACIONES DE SERVICIOS ADICIONALES (NUEVO) =====================
+      titulo("6. Cuando el médico pide más de lo autorizado — Autorizaciones de Servicios Adicionales"),
+      parrafo(
+        "Esta es la protección más importante del módulo: si el médico ordena más sesiones de un servicio de las que el programa tiene incluidas, el sistema BLOQUEA DE VERDAD esa parte excedente — no se puede programar, agendar ni asignar hasta que exista una autorización de la EPS."
       ),
       espacio(),
-
-      // ===================== 5. ASIGNAR AL PACIENTE =====================
-      titulo("5. Asignar el convenio a un paciente"),
-      numerada("Desde la misma pantalla del convenio, en \u201cAsignar este plan a un paciente\u201d, buscar al paciente por nombre o documento.", 1),
-      numerada("Indicar la \u201cFecha de ingreso al plan\u201d — esta es la fecha que se usa como punto de partida para contar los ciclos, así que debe ser exacta.", 2),
-      numerada("Presionar \u201cAsignar\u201d.", 3),
-      parrafo("Si el paciente ya tenía otro convenio asignado, ese anterior queda archivado en su historial (no se pierde), y el nuevo pasa a ser el activo."),
+      subtitulo("6.1 Qué pasa exactamente"),
+      cajaNota(
+        "📌 Ejemplo real",
+        "Un programa tiene 12 terapias incluidas. El médico ya usó las 12, y ordena 8 terapias más. El sistema NO programa ninguna de esas 8 — en su lugar, crea automáticamente una \u201csolicitud de autorización\u201d con estado \u201cPendiente autorización EPS\u201d, y avisa claramente que esas 8 sesiones quedan pendientes.",
+        COLOR_FONDO_TABLA
+      ),
+      espacio(),
+      parrafo("Si de lo que se pide, una PARTE sí cabe dentro de lo autorizado y otra parte no, el sistema programa automáticamente la parte que sí cabe, y deja como solicitud pendiente solo el excedente real."),
       espacio(),
 
-      // ===================== 6. FACTURACIÓN AUTOMÁTICA =====================
-      titulo("6. Cómo se genera la cuenta por cobrar (automático)"),
-      parrafo("No hay que hacer nada manual para esto. Cada vez que un profesional marca una visita como completada (desde la app, al finalizar la atención), el sistema:"),
-      numerada("Revisa si el paciente tiene un convenio EPS asignado.", 1),
-      numerada("Revisa si el servicio de esa visita está contemplado en el plan del convenio.", 2),
-      numerada("Calcula en qué ciclo va (según la fecha de ingreso del paciente al plan).", 3),
-      numerada("Cuenta cuántas veces se ha usado ese servicio (o su grupo compartido) en ese mismo ciclo.", 4),
-      numerada("Si todavía está dentro del tope, genera la cuenta al valor normal; si ya se pasó, la genera al valor adicional.", 5),
-      parrafo("Si el paciente NO tiene convenio asignado, o el servicio prestado no está en su plan, simplemente no se genera ninguna cuenta — no es un error, solo significa que ese servicio no se está facturando a ninguna EPS por este medio."),
+      subtitulo("6.2 Cómo autorizar una solicitud pendiente"),
+      numerada("Ir a \u201cAutorizaciones EPS\u201d en el menú (o desde la alerta del Dashboard).", 1),
+      numerada("Buscar la solicitud en la pestaña \u201cPendientes\u201d.", 2),
+      numerada("Presionar \u201cAutorizar\u201d, y registrar: número de autorización de la EPS, fecha, cantidad autorizada (puede ser menor a la solicitada, si la EPS aprobó menos), y el valor autorizado.", 3),
+      numerada("Desde ese momento, esa cantidad autorizada queda disponible para programarse — se suma automáticamente al tope normal del programa.", 4),
+      espacio(),
+      cajaNota(
+        "✅ Autorización parcial",
+        "Si la EPS autoriza menos de lo solicitado (ej: 5 de las 8 pedidas), el sistema permite programar hasta esas 5 — al intentar programar la sexta, se vuelve a bloquear automáticamente, sin necesidad de configurar nada extra.",
+        COLOR_FONDO_TABLA
+      ),
+      espacio(),
+      subtitulo("6.3 Rechazar una solicitud"),
+      parrafo("Si la EPS no autoriza el excedente, se marca como \u201cRechazada\u201d con el motivo — esas sesiones quedan definitivamente sin poder programarse por esta vía."),
       espacio(),
 
-      // ===================== 7. FACTURACIÓN =====================
-      titulo("7. Generar las facturas (al momento del corte)"),
-      parrafo("En \u201cFacturación por Plan\u201d se ve, agrupado por EPS, todo lo que está pendiente de facturar en el rango de fechas que se elija. Desde ahí se generan las facturas, escogiendo cómo agruparlas:"),
+      // ===================== 7. FACTURACIÓN AUTOMÁTICA =====================
+      titulo("7. Cómo se genera la cuenta por cobrar (automático)"),
+      parrafo("Cada vez que se completa una visita, el sistema revisa si el paciente tiene un programa de EPS asignado, calcula el ciclo correspondiente, y genera la cuenta por cobrar al valor normal o adicional según corresponda — sin intervención manual."),
+      espacio(),
+
+      // ===================== 8. FACTURACIÓN =====================
+      titulo("8. Generar las facturas (al momento del corte)"),
+      parrafo("En \u201cFacturación por Plan\u201d se ve, agrupado por EPS, todo lo pendiente de facturar. Los modos de agrupación disponibles:"),
       tabla(
-        ["Modo", "Qué hace", "Cuándo usarlo"],
+        ["Modo", "Qué hace"],
         [
-          ["Por EPS", "Una sola factura que junta TODOS los pacientes y servicios de esa EPS en el periodo.", "Cuando la EPS pide un solo documento consolidado por periodo."],
-          ["Por paciente", "Una factura por cada paciente, con todos los servicios que se le prestaron juntos.", "Cuando se necesita ver claramente cuánto se generó por cada paciente."],
-          ["Por paciente y servicio", "Una factura separada por cada combinación de paciente + tipo de servicio.", "Cuando la EPS exige el detalle más desglosado posible."],
+          ["Por EPS", "Una sola factura que junta TODOS los pacientes y programas de esa EPS."],
+          ["Por programa", "Una factura por cada programa, con todos sus pacientes juntos."],
+          ["Por paciente", "Una factura por cada paciente, con todos sus servicios juntos."],
+          ["Por paciente y servicio", "Una factura separada por cada combinación paciente + servicio."],
         ],
-        [2200, 3800, 3300]
+        [2600, 6900]
       ),
       espacio(),
       cajaNota(
         "✅ Importante: la factura SIEMPRE queda a nombre de la EPS",
-        "Sin importar el modo que se elija, el \u201ccomprador\u201d legal de la factura electrónica es siempre la EPS (con su NIT) — nunca un paciente individual, porque el contrato es con la EPS. Aun así, dentro del detalle de la factura (y en el PDF) se ve claramente qué paciente recibió cada servicio.",
+        "Sin importar el modo elegido, el comprador legal de la factura es siempre la EPS (con su NIT) — el paciente aparece como detalle de cada línea.",
         COLOR_FONDO_TABLA
       ),
       espacio(),
-      parrafo("Una vez generadas, esas cuentas quedan marcadas como \u201cFacturado\u201d y ya no vuelven a aparecer como pendientes — así no hay riesgo de cobrar dos veces lo mismo."),
-      espacio(),
 
-      // ===================== 8. PREGUNTAS FRECUENTES =====================
-      titulo("8. Preguntas frecuentes"),
+      // ===================== 9. PREGUNTAS FRECUENTES =====================
+      titulo("9. Preguntas frecuentes"),
 
-      subtitulo("¿Qué pasa si cambian las tarifas de una EPS?"),
-      parrafo("Se entra al convenio correspondiente y se edita el servicio afectado (valor normal y/o adicional) — el cambio aplica desde ese momento en adelante; lo ya facturado no se modifica."),
+      subtitulo("¿Un convenio puede tener varios programas al tiempo?"),
+      parrafo("Sí — esa es justamente la idea. Un convenio con una EPS puede incluir el Programa Crónicos, el Programa Paliativos, etc., cada uno con su propio valor y sus propios servicios."),
 
-      subtitulo("¿Qué pasa si la EPS aumenta el número de sesiones cubiertas (por ejemplo, de 12 a 16 terapias)?"),
-      parrafo("Se edita el mismo servicio y se cambia \u201cCantidad incluida\u201d — aplica para los ciclos que se calculen de ahí en adelante."),
+      subtitulo("¿Qué pasa si cambian las tarifas de un programa?"),
+      parrafo("Se entra al programa correspondiente y se edita el servicio afectado — el cambio aplica desde ese momento; lo ya facturado no se modifica."),
 
-      subtitulo("¿Se puede tener más de un convenio vigente para la misma EPS?"),
-      parrafo("Sí — por ejemplo, si maneja un plan estándar y uno ampliado. Cada paciente solo puede tener UN convenio activo a la vez, así que se elige cuál le corresponde al asignarlo."),
+      subtitulo("¿El médico puede seguir mandando cualquier mezcla de terapias?"),
+      parrafo("Sí. La oficina solo define el máximo TOTAL del grupo (ej. 12 terapias). El médico decide libremente cuántas de cada tipo específico, siempre que la suma no pase el máximo autorizado (más lo que se haya autorizado como adicional)."),
 
-      subtitulo("¿Qué pasa si un paciente cambia de EPS?"),
-      parrafo("Se le asigna el nuevo convenio desde la pantalla correspondiente — el anterior queda en su historial, y los ciclos del nuevo convenio empiezan a contar desde la nueva fecha de ingreso que se indique."),
+      subtitulo("¿Qué pasa con una solicitud de autorización que nunca se responde?"),
+      parrafo("Queda visible indefinidamente en \u201cPendientes\u201d hasta que alguien la autorice o la rechace — no se pierde ni se vence sola."),
 
-      subtitulo("¿Qué pasa si se completa una visita de un servicio que no está en el plan del paciente?"),
-      parrafo("No pasa nada malo — simplemente no se genera ninguna cuenta por cobrar para ese servicio específico, porque el sistema entiende que no está cubierto por el convenio."),
+      subtitulo("¿Se puede tener más de un programa vigente para el mismo paciente?"),
+      parrafo("No al mismo tiempo — cada paciente tiene un único programa activo. Si cambia de programa o de EPS, el anterior queda en su historial."),
 
       espacio(),
       new Paragraph({
-        children: [new TextRun({ text: "HomeCare Enterprise — Manual interno de Convenios EPS", italics: true, color: COLOR_GRIS, size: 18 })],
+        children: [new TextRun({ text: "HomeCare Enterprise — Manual interno de Convenios EPS, Autorizaciones y Facturación", italics: true, color: COLOR_GRIS, size: 18 })],
       }),
     ],
   }],

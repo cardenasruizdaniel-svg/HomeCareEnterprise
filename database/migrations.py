@@ -868,7 +868,7 @@ class MigrationManager:
             self.connection.executescript("""
                 CREATE TABLE IF NOT EXISTS convenios_eps_servicios(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    convenio_id INTEGER NOT NULL,
+                    convenio_id INTEGER,
                     actividad_id INTEGER,
                     tipo_servicio TEXT NOT NULL,
                     grupo_tope TEXT,
@@ -897,7 +897,7 @@ class MigrationManager:
                 CREATE TABLE IF NOT EXISTS paciente_convenio(
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     paciente_id INTEGER NOT NULL,
-                    convenio_id INTEGER NOT NULL,
+                    convenio_id INTEGER,
                     fecha_ingreso TEXT NOT NULL,
                     fecha_fin TEXT,
                     es_actual INTEGER DEFAULT 1,
@@ -935,6 +935,330 @@ class MigrationManager:
             """)
             self.connection.commit()
             cambios.append("Se creó la tabla cuentas_por_cobrar_eps")
+
+        return cambios
+
+    def migrar_programas_sin_convenio(self):
+        """
+        Permite que un Programa (y la asignación de un paciente a
+        un programa) exista SIN estar atado a ningún Convenio EPS
+        -- así, mientras no haya un convenio formal creado con
+        una EPS, la oficina puede seguir asignando programas y
+        servicios a los pacientes con total normalidad. Si más
+        adelante se crea el convenio correspondiente, ese pasa a
+        tener prioridad para los pacientes de esa EPS -- pero
+        nunca es obligatorio para poder operar.
+        """
+        cambios = []
+        from database.db_backend import ES_POSTGRES
+
+        for tabla, columna_id in (("programas_convenio", "id"), ("paciente_convenio", "id"), ("convenios_eps_servicios", "id")):
+            if not self.existe_tabla(tabla):
+                continue
+
+            if ES_POSTGRES:
+                try:
+                    self.cursor.execute(f"ALTER TABLE {tabla} ALTER COLUMN convenio_id DROP NOT NULL")
+                    self.connection.commit()
+                    cambios.append(f"{tabla}: convenio_id ahora acepta NULL")
+                except Exception:
+                    self.connection.rollback()
+                continue
+
+            # SQLite no permite quitar un NOT NULL directamente --
+            # se revisa si hace falta (con PRAGMA table_info) y, si
+            # es así, se reconstruye la tabla completa preservando
+            # todos los datos que ya tuviera.
+            self.cursor.execute(f"PRAGMA table_info({tabla})")
+            columnas_info = self.cursor.fetchall()
+            columna_convenio = next((c for c in columnas_info if c[1] == "convenio_id"), None)
+            if columna_convenio is None or columna_convenio[3] == 0:
+                continue  # ya acepta NULL, o la columna no existe todavía (la crea otra migración)
+
+            nombres_columnas = [c[1] for c in columnas_info]
+            lista_columnas = ", ".join(nombres_columnas)
+
+            if tabla == "programas_convenio":
+                definicion_nueva = """
+                    CREATE TABLE programas_convenio_nueva(
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        convenio_id INTEGER,
+                        nombre TEXT NOT NULL,
+                        valor_mensual REAL DEFAULT 0,
+                        estado TEXT DEFAULT 'Activo',
+                        observaciones TEXT,
+                        fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                        usuario_creacion INTEGER,
+                        FOREIGN KEY(convenio_id) REFERENCES convenios_eps(id)
+                    );
+                """
+            elif tabla == "paciente_convenio":
+                definicion_nueva = """
+                    CREATE TABLE paciente_convenio_nueva(
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        paciente_id INTEGER NOT NULL,
+                        convenio_id INTEGER,
+                        programa_convenio_id INTEGER,
+                        fecha_ingreso TEXT NOT NULL,
+                        fecha_fin TEXT,
+                        es_actual INTEGER DEFAULT 1,
+                        usuario_creacion INTEGER,
+                        fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                        autorizacion TEXT,
+                        profesional_tratante_id INTEGER,
+                        medico_tratante_id INTEGER,
+                        FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
+                        FOREIGN KEY(convenio_id) REFERENCES convenios_eps(id)
+                    );
+                """
+            else:  # convenios_eps_servicios
+                definicion_nueva = """
+                    CREATE TABLE convenios_eps_servicios_nueva(
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        convenio_id INTEGER,
+                        programa_convenio_id INTEGER,
+                        actividad_id INTEGER,
+                        tipo_servicio TEXT NOT NULL,
+                        grupo_tope TEXT,
+                        limite_cantidad INTEGER NOT NULL,
+                        dias_ciclo INTEGER NOT NULL DEFAULT 30,
+                        valor_normal REAL NOT NULL DEFAULT 0,
+                        valor_adicional REAL NOT NULL DEFAULT 0,
+                        activo INTEGER DEFAULT 1,
+                        FOREIGN KEY(convenio_id) REFERENCES convenios_eps(id),
+                        FOREIGN KEY(actividad_id) REFERENCES catalogo_actividades(id)
+                    );
+                """
+
+            try:
+                self.cursor.executescript(f"""
+                    {definicion_nueva}
+                    INSERT INTO {tabla}_nueva ({lista_columnas})
+                    SELECT {lista_columnas} FROM {tabla};
+                    DROP TABLE {tabla};
+                    ALTER TABLE {tabla}_nueva RENAME TO {tabla};
+                """)
+                self.connection.commit()
+                cambios.append(f"{tabla}: convenio_id ahora acepta NULL (se reconstruyó la tabla conservando los datos)")
+            except Exception as ex:
+                self.connection.rollback()
+                cambios.append(f"ERROR haciendo nullable convenio_id en {tabla}: {ex}")
+
+        return cambios
+
+    def migrar_inventario_enterprise(self):
+        """
+        Amplía el módulo de inventario:
+          - Código de barras en los insumos (además del código
+            interno que ya existía), para poder registrarlos
+            escaneando o a mano.
+          - Conteo físico: al iniciar un conteo se toma una
+            "foto" de las existencias que el sistema cree tener
+            en ese momento, se compara contra lo que se cuenta
+            de verdad en bodega, y las diferencias quedan
+            registradas para poder ajustarlas.
+          - Datos regulatorios exigidos en Colombia para el
+            manejo de medicamentos: registro sanitario INVIMA,
+            laboratorio titular, principio activo, concentración,
+            forma farmacéutica, condición de venta (incluyendo
+            si es de control especial -- Fondo Nacional de
+            Estupefacientes), y si requiere cadena de frío.
+        """
+        cambios = []
+
+        if self.existe_tabla("insumos"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "insumos",
+                    {
+                        "codigo_barras": "codigo_barras TEXT",
+                        "registro_invima": "registro_invima TEXT",
+                        "titular_registro_sanitario": "titular_registro_sanitario TEXT",
+                        "principio_activo": "principio_activo TEXT",
+                        "concentracion": "concentracion TEXT",
+                        "forma_farmaceutica": "forma_farmaceutica TEXT",
+                        "condicion_venta": "condicion_venta TEXT",
+                        "requiere_cadena_frio": "requiere_cadena_frio INTEGER DEFAULT 0",
+                    },
+                )
+            )
+
+        if not self.existe_tabla("conteos_fisicos_inventario"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS conteos_fisicos_inventario(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    fecha_inicio TEXT DEFAULT CURRENT_TIMESTAMP,
+                    fecha_cierre TEXT,
+                    estado TEXT DEFAULT 'En proceso',
+                    observaciones TEXT,
+                    usuario_inicio INTEGER,
+                    usuario_cierre INTEGER
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla conteos_fisicos_inventario")
+
+        if not self.existe_tabla("conteos_fisicos_detalle"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS conteos_fisicos_detalle(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    conteo_id INTEGER NOT NULL,
+                    insumo_id INTEGER NOT NULL,
+                    cantidad_sistema INTEGER NOT NULL DEFAULT 0,
+                    cantidad_fisica INTEGER,
+                    diferencia INTEGER,
+                    ajustado INTEGER DEFAULT 0,
+                    FOREIGN KEY(conteo_id) REFERENCES conteos_fisicos_inventario(id),
+                    FOREIGN KEY(insumo_id) REFERENCES insumos(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla conteos_fisicos_detalle")
+
+        return cambios
+
+    def migrar_autorizaciones_servicios_adicionales(self):
+        """
+        Cuando el médico ordena más sesiones de las que el
+        programa tiene autorizadas (ej: 12 terapias incluidas,
+        pero pide 8 más), esas sesiones de más NO se pueden
+        programar, agendar ni asignar de una vez -- quedan
+        registradas como una SOLICITUD pendiente de autorización
+        de la EPS. Solo cuando alguien autorizado marca esa
+        solicitud como autorizada (con número, fecha, cantidad y
+        valor autorizado), esas sesiones quedan liberadas para
+        programarse.
+        """
+        cambios = []
+        if not self.existe_tabla("autorizaciones_eps_servicios_adicionales"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS autorizaciones_eps_servicios_adicionales(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    paciente_id INTEGER NOT NULL,
+                    programa_convenio_id INTEGER NOT NULL,
+                    tipo_servicio TEXT NOT NULL,
+                    grupo_tope TEXT,
+                    cantidad_solicitada INTEGER NOT NULL,
+                    cantidad_consumida INTEGER DEFAULT 0,
+                    estado TEXT DEFAULT 'Pendiente autorización EPS',
+                    numero_autorizacion TEXT,
+                    fecha_autorizacion TEXT,
+                    cantidad_autorizada INTEGER,
+                    valor_autorizado REAL,
+                    documento_soporte TEXT,
+                    observaciones TEXT,
+                    fecha_solicitud TEXT DEFAULT CURRENT_TIMESTAMP,
+                    usuario_solicitud INTEGER,
+                    usuario_autorizacion INTEGER,
+                    FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
+                    FOREIGN KEY(programa_convenio_id) REFERENCES programas_convenio(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla autorizaciones_eps_servicios_adicionales")
+        return cambios
+
+    def migrar_programas_convenio(self):
+        """
+        Reestructuración del módulo de Convenios EPS: antes, un
+        convenio tenía UN solo plan (nombre_plan) con sus
+        servicios colgando directamente de él. Ahora un
+        convenio puede tener VARIOS programas (Crónicos,
+        Paliativos, Materno, etc.), cada uno con su propio valor
+        mensual y su propia lista de servicios parametrizados.
+
+        Los datos que ya existían NO se pierden: cada convenio
+        que ya tenía un nombre_plan se convierte automáticamente
+        en su primer programa, y todo lo que ya estaba
+        configurado (servicios, pacientes asignados) queda
+        enlazado a ese programa nuevo.
+        """
+        cambios = []
+
+        if not self.existe_tabla("programas_convenio"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS programas_convenio(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    convenio_id INTEGER,
+                    nombre TEXT NOT NULL,
+                    valor_mensual REAL DEFAULT 0,
+                    estado TEXT DEFAULT 'Activo',
+                    observaciones TEXT,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    usuario_creacion INTEGER,
+                    FOREIGN KEY(convenio_id) REFERENCES convenios_eps(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla programas_convenio")
+
+        if self.existe_tabla("convenios_eps_servicios"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "convenios_eps_servicios",
+                    {"programa_convenio_id": "programa_convenio_id INTEGER"},
+                )
+            )
+
+        if self.existe_tabla("paciente_convenio"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "paciente_convenio",
+                    {
+                        "programa_convenio_id": "programa_convenio_id INTEGER",
+                        "autorizacion": "autorizacion TEXT",
+                        "profesional_tratante_id": "profesional_tratante_id INTEGER",
+                        "medico_tratante_id": "medico_tratante_id INTEGER",
+                    },
+                )
+            )
+
+        # --------------------------------------------------
+        # MIGRACIÓN DE DATOS: convertir cada convenio existente
+        # en su primer programa, y reencauzar todo lo que ya
+        # estaba colgado directamente del convenio.
+        # --------------------------------------------------
+        if self.existe_tabla("programas_convenio") and self.existe_tabla("convenios_eps"):
+            convenios_sin_programa = self.connection.execute(
+                """
+                SELECT ce.id, ce.nombre_plan FROM convenios_eps ce
+                WHERE NOT EXISTS (SELECT 1 FROM programas_convenio pc WHERE pc.convenio_id = ce.id)
+                """
+            ).fetchall()
+
+            for convenio in convenios_sin_programa:
+                convenio_id = convenio["id"]
+                nombre_plan = convenio["nombre_plan"] or "Programa General"
+
+                cursor_insert = self.connection.execute(
+                    "INSERT INTO programas_convenio(convenio_id, nombre, estado) VALUES (?, ?, 'Activo')",
+                    (convenio_id, nombre_plan),
+                )
+                programa_id = cursor_insert.lastrowid
+
+                self.connection.execute(
+                    "UPDATE convenios_eps_servicios SET programa_convenio_id=? WHERE convenio_id=? AND programa_convenio_id IS NULL",
+                    (programa_id, convenio_id),
+                )
+
+                # paciente_convenio se relaciona hoy por convenio_id -- se
+                # apunta también al programa recién creado (que es el
+                # único que existía hasta ahora para ese convenio).
+                self.connection.execute(
+                    "UPDATE paciente_convenio SET programa_convenio_id=? WHERE convenio_id=? AND programa_convenio_id IS NULL",
+                    (programa_id, convenio_id),
+                )
+
+                self.connection.commit()
+                cambios.append(f"Convenio #{convenio_id}: se creó el programa '{nombre_plan}' con los datos ya existentes")
+
+        if self.existe_tabla("cuentas_por_cobrar_eps"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "cuentas_por_cobrar_eps",
+                    {"programa_convenio_id": "programa_convenio_id INTEGER"},
+                )
+            )
 
         return cambios
 
@@ -2505,6 +2829,22 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_convenios_eps()
+        )
+
+        cambios.extend(
+            self.migrar_programas_convenio()
+        )
+
+        cambios.extend(
+            self.migrar_programas_sin_convenio()
+        )
+
+        cambios.extend(
+            self.migrar_autorizaciones_servicios_adicionales()
+        )
+
+        cambios.extend(
+            self.migrar_inventario_enterprise()
         )
 
         cambios.extend(

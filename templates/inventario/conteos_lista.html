@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block titulo %}Conteos Físicos de Inventario{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="fa-solid fa-clipboard-list text-primary"></i> Conteos Físicos de Inventario</h2>
+        <a href="/inventario" class="btn btn-outline-secondary"><i class="fa-solid fa-arrow-left"></i> Volver a Inventario</a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <form method="post" action="/inventario/conteos/iniciar" class="row align-items-end">
+                <div class="col-md-9 mb-2">
+                    <label>Observaciones (opcional)</label>
+                    <input type="text" name="observaciones" class="form-control" placeholder="Ej: Conteo mensual de bodega principal">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <button type="submit" class="btn btn-primary w-100"><i class="fa-solid fa-plus"></i> Iniciar nuevo conteo</button>
+                </div>
+            </form>
+            <p class="text-muted small mb-0">
+                Al iniciar, el sistema toma una foto de las existencias actuales de todos los insumos activos —
+                esa es la base contra la que se compara lo que se cuente físicamente en bodega.
+            </p>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light"><tr><th>Fecha inicio</th><th>Observaciones</th><th>Estado</th><th>Fecha cierre</th><th></th></tr></thead>
+                <tbody>
+                    {% for c in conteos %}
+                    <tr>
+                        <td>{{ (c.fecha_inicio or "")[:16] }}</td>
+                        <td>{{ c.observaciones or "-" }}</td>
+                        <td><span class="badge {% if c.estado == 'Cerrado' %}bg-secondary{% else %}bg-warning text-dark{% endif %}">{{ c.estado }}</span></td>
+                        <td>{{ (c.fecha_cierre or "")[:16] if c.fecha_cierre else "-" }}</td>
+                        <td><a href="/inventario/conteos/{{ c.id }}" class="btn btn-outline-primary btn-sm">Ver / Continuar</a></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">Todavía no se ha hecho ningún conteo físico.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

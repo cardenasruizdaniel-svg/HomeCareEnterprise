@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block titulo %}Autorizaciones EPS{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-file-signature text-warning"></i> Autorizaciones de Servicios Adicionales</h2>
+    <p class="text-muted">
+        Cuando un médico ordena más sesiones de las que un programa tiene autorizadas, esas sesiones de más quedan
+        aquí, pendientes de que la EPS las apruebe — <strong>no se pueden programar hasta que se autoricen</strong>.
+    </p>
+
+    {% if mensaje %}<div class="alert alert-success">{{ mensaje }}</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="row mb-4">
+        <div class="col-md-3 mb-2">
+            <div class="card shadow-sm text-center border-warning">
+                <div class="card-body">
+                    <div class="display-6 text-warning">{{ resumen.get("Pendiente autorización EPS", 0) }}</div>
+                    <div class="text-muted">Pendientes</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="card shadow-sm text-center border-success">
+                <div class="card-body">
+                    <div class="display-6 text-success">{{ resumen.get("Autorizada", 0) }}</div>
+                    <div class="text-muted">Autorizadas</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-2">
+            <div class="card shadow-sm text-center border-danger">
+                <div class="card-body">
+                    <div class="display-6 text-danger">{{ resumen.get("Rechazada", 0) }}</div>
+                    <div class="text-muted">Rechazadas</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="btn-group mb-3">
+        <a href="/autorizaciones-eps" class="btn btn-outline-secondary {% if not estado_filtro %}active{% endif %}">Todas</a>
+        <a href="/autorizaciones-eps?estado=Pendiente autorización EPS" class="btn btn-outline-warning {% if estado_filtro == 'Pendiente autorización EPS' %}active{% endif %}">Pendientes</a>
+        <a href="/autorizaciones-eps?estado=Autorizada" class="btn btn-outline-success {% if estado_filtro == 'Autorizada' %}active{% endif %}">Autorizadas</a>
+        <a href="/autorizaciones-eps?estado=Rechazada" class="btn btn-outline-danger {% if estado_filtro == 'Rechazada' %}active{% endif %}">Rechazadas</a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr><th>Fecha solicitud</th><th>Paciente</th><th>EPS / Programa</th><th>Servicio</th><th class="text-center">Solicitadas</th><th>Estado</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for s in solicitudes %}
+                    <tr>
+                        <td>{{ (s.fecha_solicitud or "")[:16] }}</td>
+                        <td>{{ s.primer_nombre }} {{ s.primer_apellido }}<br><small class="text-muted">{{ s.documento }}</small></td>
+                        <td>{{ s.eps }}<br><small class="text-muted">{{ s.nombre_programa }}</small></td>
+                        <td>{{ s.tipo_servicio }}{% if s.grupo_tope %} <span class="badge bg-light text-dark border">{{ s.grupo_tope }}</span>{% endif %}</td>
+                        <td class="text-center"><span class="badge bg-secondary">{{ s.cantidad_solicitada }}</span></td>
+                        <td>
+                            {% if s.estado == "Pendiente autorización EPS" %}<span class="badge bg-warning text-dark">Pendiente</span>
+                            {% elif s.estado == "Autorizada" %}<span class="badge bg-success">Autorizada ({{ s.cantidad_autorizada }})</span>
+                            {% else %}<span class="badge bg-danger">Rechazada</span>{% endif %}
+                        </td>
+                        <td>
+                            {% if s.estado == "Pendiente autorización EPS" %}
+                            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalAutorizar"
+                                    data-id="{{ s.id }}" data-cantidad="{{ s.cantidad_solicitada }}" data-paciente="{{ s.primer_nombre }} {{ s.primer_apellido }}" data-servicio="{{ s.tipo_servicio }}">
+                                <i class="fa-solid fa-check"></i> Autorizar
+                            </button>
+                            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalRechazar" data-id="{{ s.id }}">
+                                <i class="fa-solid fa-xmark"></i> Rechazar
+                            </button>
+                            {% else %}
+                            <small class="text-muted">{{ s.numero_autorizacion or "" }}</small>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">No hay solicitudes en este filtro.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== AUTORIZAR ===================== -->
+<div class="modal fade" id="modalAutorizar" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" id="form-autorizar" action="">
+            <div class="modal-header"><h5 class="modal-title">Autorizar solicitud</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <p id="texto-autorizar-info" class="text-muted"></p>
+                <div class="mb-2"><label>N.° de autorización de la EPS</label><input type="text" name="numero_autorizacion" class="form-control" required></div>
+                <div class="mb-2"><label>Fecha de autorización</label><input type="date" name="fecha_autorizacion" class="form-control"></div>
+                <div class="row">
+                    <div class="col-md-6 mb-2"><label>Cantidad autorizada</label><input type="number" name="cantidad_autorizada" id="autorizar-cantidad" class="form-control" required min="1"></div>
+                    <div class="col-md-6 mb-2"><label>Valor autorizado (total)</label><input type="number" step="0.01" name="valor_autorizado" class="form-control"></div>
+                </div>
+                <div class="mb-2"><label>Observaciones</label><textarea name="observaciones" class="form-control" rows="2"></textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success">Autorizar</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+
+<!-- ===================== RECHAZAR ===================== -->
+<div class="modal fade" id="modalRechazar" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" id="form-rechazar" action="">
+            <div class="modal-header"><h5 class="modal-title">Rechazar solicitud</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Motivo del rechazo</label><textarea name="observaciones" class="form-control" rows="2" required></textarea></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-danger">Rechazar</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+
+<script>
+document.getElementById("modalAutorizar").addEventListener("show.bs.modal", (evento) => {
+    const boton = evento.relatedTarget;
+    document.getElementById("form-autorizar").action = `/autorizaciones-eps/${boton.dataset.id}/autorizar`;
+    document.getElementById("autorizar-cantidad").value = boton.dataset.cantidad || "";
+    document.getElementById("autorizar-cantidad").max = boton.dataset.cantidad || "";
+    document.getElementById("texto-autorizar-info").textContent =
+        `${boton.dataset.paciente} — ${boton.dataset.servicio} — se solicitaron ${boton.dataset.cantidad} sesión(es).`;
+});
+document.getElementById("modalRechazar").addEventListener("show.bs.modal", (evento) => {
+    const boton = evento.relatedTarget;
+    document.getElementById("form-rechazar").action = `/autorizaciones-eps/${boton.dataset.id}/rechazar`;
+});
+</script>
+{% endblock %}

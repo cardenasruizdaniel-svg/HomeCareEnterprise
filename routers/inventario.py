@@ -31,6 +31,7 @@ async def dashboard(request: Request, usuario=Depends(requiere_permiso("inventar
             "insumos": inventario_service.listar_insumos_con_stock(),
             "movimientos_recientes": inventario_service.listar_movimientos_recientes(30),
             "categorias": inventario_service.CATEGORIAS_INSUMO,
+            "condiciones_venta": inventario_service.CONDICIONES_VENTA,
             "resumen": inventario_service.resumen_dashboard(),
             "alertas_vencimiento": inventario_service.alertas_vencimiento(90),
             "guardado": request.query_params.get("guardado"),
@@ -47,13 +48,27 @@ async def crear_insumo(
     stock_minimo: int = Form(0),
     stock_maximo: int = Form(0),
     codigo: str = Form(""),
+    codigo_barras: str = Form(""),
     requiere_lote_vencimiento: str = Form(""),
+    registro_invima: str = Form(""),
+    titular_registro_sanitario: str = Form(""),
+    principio_activo: str = Form(""),
+    concentracion: str = Form(""),
+    forma_farmaceutica: str = Form(""),
+    condicion_venta: str = Form(""),
+    requiere_cadena_frio: str = Form(""),
     usuario=Depends(requiere_permiso("inventario")),
 ):
-    inventario_service.crear_insumo(
-        nombre, categoria, unidad_medida, stock_minimo,
-        codigo=codigo, stock_maximo=stock_maximo, requiere_lote_vencimiento=bool(requiere_lote_vencimiento),
-    )
+    try:
+        inventario_service.crear_insumo(
+            nombre, categoria, unidad_medida, stock_minimo,
+            codigo=codigo, stock_maximo=stock_maximo, requiere_lote_vencimiento=bool(requiere_lote_vencimiento),
+            codigo_barras=codigo_barras, registro_invima=registro_invima, titular_registro_sanitario=titular_registro_sanitario,
+            principio_activo=principio_activo, concentracion=concentracion, forma_farmaceutica=forma_farmaceutica,
+            condicion_venta=condicion_venta, requiere_cadena_frio=bool(requiere_cadena_frio),
+        )
+    except ValueError as error:
+        return RedirectResponse(url=f"/inventario?error={error}", status_code=303)
     return RedirectResponse(url="/inventario", status_code=303)
 
 
@@ -80,13 +95,24 @@ async def actualizar_insumo(
     stock_minimo: int = Form(0),
     stock_maximo: int = Form(0),
     codigo: str = Form(""),
+    codigo_barras: str = Form(""),
     requiere_lote_vencimiento: str = Form(""),
+    registro_invima: str = Form(""),
+    titular_registro_sanitario: str = Form(""),
+    principio_activo: str = Form(""),
+    concentracion: str = Form(""),
+    forma_farmaceutica: str = Form(""),
+    condicion_venta: str = Form(""),
+    requiere_cadena_frio: str = Form(""),
     usuario=Depends(requiere_permiso("inventario")),
 ):
     try:
         inventario_service.actualizar_insumo(
             insumo_id, nombre, categoria, unidad_medida, stock_minimo,
             codigo=codigo, stock_maximo=stock_maximo, requiere_lote_vencimiento=bool(requiere_lote_vencimiento),
+            codigo_barras=codigo_barras, registro_invima=registro_invima, titular_registro_sanitario=titular_registro_sanitario,
+            principio_activo=principio_activo, concentracion=concentracion, forma_farmaceutica=forma_farmaceutica,
+            condicion_venta=condicion_venta, requiere_cadena_frio=bool(requiere_cadena_frio),
         )
     except ValueError as error:
         return RedirectResponse(url=f"/inventario?error={error}", status_code=303)
@@ -349,6 +375,25 @@ async def informe_existencias_pdf(usuario=Depends(requiere_permiso("inventario")
     return FileResponse(ruta, media_type="application/pdf", filename="informe_existencias.pdf")
 
 
+@router.get("/informes/control-especial", response_class=HTMLResponse)
+async def informe_control_especial(
+    request: Request, fecha_desde: str = "", fecha_hasta: str = "",
+    usuario=Depends(requiere_permiso("inventario")),
+):
+    from datetime import date, timedelta
+    fecha_desde = fecha_desde or (date.today() - timedelta(days=90)).isoformat()
+    fecha_hasta = fecha_hasta or date.today().isoformat()
+    return templates.TemplateResponse(
+        request=request, name="inventario/control_especial.html",
+        context={
+            "usuario": usuario,
+            "movimientos": inventario_service.informe_control_especial(fecha_desde, fecha_hasta),
+            "insumos_control": inventario_service.listar_insumos_control_especial(),
+            "fecha_desde": fecha_desde, "fecha_hasta": fecha_hasta,
+        },
+    )
+
+
 @router.get("/informes/compras", response_class=HTMLResponse)
 async def informe_compras(
     request: Request,
@@ -489,3 +534,93 @@ async def convenio_pdf(convenio_id: int, usuario=Depends(requiere_permiso("inven
     config = obtener_config_empresa()
     ruta = inventario_service_pdf().generar_pdf_convenio(convenio, config.get("razon_social", ""), config.get("nit", ""))
     return FileResponse(ruta, media_type="application/pdf", filename=f"convenio_{convenio_id}.pdf")
+
+
+# ==========================================
+# CONTEO FÍSICO DE INVENTARIO
+# ==========================================
+
+@router.get("/conteos", response_class=HTMLResponse)
+async def lista_conteos(request: Request, usuario=Depends(requiere_permiso("inventario"))):
+    return templates.TemplateResponse(
+        request=request, name="inventario/conteos_lista.html",
+        context={"usuario": usuario, "conteos": inventario_service.listar_conteos_fisicos()},
+    )
+
+
+@router.post("/conteos/iniciar")
+async def iniciar_conteo(observaciones: str = Form(""), usuario=Depends(requiere_permiso("inventario"))):
+    conteo_id = inventario_service.iniciar_conteo_fisico(
+        usuario.get("id") if isinstance(usuario, dict) else None, observaciones,
+    )
+    return RedirectResponse(url=f"/inventario/conteos/{conteo_id}", status_code=303)
+
+
+@router.get("/conteos/{conteo_id}", response_class=HTMLResponse)
+async def ver_conteo(request: Request, conteo_id: int, usuario=Depends(requiere_permiso("inventario"))):
+    conteo = inventario_service.obtener_conteo_fisico(conteo_id)
+    if not conteo:
+        raise HTTPException(status_code=404, detail="El conteo no existe.")
+    detalle = inventario_service.listar_detalle_conteo(conteo_id)
+    return templates.TemplateResponse(
+        request=request, name="inventario/conteo_detalle.html",
+        context={
+            "usuario": usuario, "conteo": conteo, "detalle": detalle,
+            "total_contados": len([d for d in detalle if d["cantidad_fisica"] is not None]),
+            "total_con_diferencia": len([d for d in detalle if d["diferencia"]]),
+            "mensaje": request.query_params.get("mensaje"), "error": request.query_params.get("error"),
+        },
+    )
+
+
+@router.get("/conteos/{conteo_id}/plantilla")
+async def descargar_plantilla_conteo(conteo_id: int, usuario=Depends(requiere_permiso("inventario"))):
+    from fastapi.responses import FileResponse
+    ruta = inventario_service.generar_plantilla_conteo(conteo_id)
+    return FileResponse(
+        ruta, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        filename=f"plantilla_conteo_{conteo_id}.xlsx",
+    )
+
+
+@router.post("/conteos/{conteo_id}/subir")
+async def subir_conteo(request: Request, conteo_id: int, usuario=Depends(requiere_permiso("inventario"))):
+    formulario = await request.form()
+    archivo = formulario.get("archivo")
+    if not archivo or not archivo.filename:
+        return RedirectResponse(url=f"/inventario/conteos/{conteo_id}?error=Debe seleccionar un archivo.", status_code=303)
+
+    import tempfile, os
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temporal:
+        temporal.write(await archivo.read())
+        ruta_temporal = temporal.name
+
+    try:
+        resultado = inventario_service.cargar_conteo_desde_excel(conteo_id, ruta_temporal)
+    except ValueError as error:
+        return RedirectResponse(url=f"/inventario/conteos/{conteo_id}?error={error}", status_code=303)
+    finally:
+        os.unlink(ruta_temporal)
+
+    mensaje = f"Se registraron {resultado['actualizados']} conteo(s)."
+    if resultado["errores"]:
+        mensaje += f" {len(resultado['errores'])} fila(s) con error."
+    from urllib.parse import quote
+    return RedirectResponse(url=f"/inventario/conteos/{conteo_id}?mensaje={quote(mensaje)}", status_code=303)
+
+
+@router.post("/conteos/detalle/{detalle_id}/registrar")
+async def registrar_item_conteo(detalle_id: int, conteo_id: int = Form(...), cantidad_fisica: str = Form(...), usuario=Depends(requiere_permiso("inventario"))):
+    try:
+        inventario_service.registrar_conteo_item(detalle_id, int(cantidad_fisica), solo_del_conteo=conteo_id)
+    except ValueError as error:
+        return RedirectResponse(url=f"/inventario/conteos/{conteo_id}?error={error}", status_code=303)
+    return RedirectResponse(url=f"/inventario/conteos/{conteo_id}", status_code=303)
+
+
+@router.post("/conteos/{conteo_id}/cerrar")
+async def cerrar_conteo(conteo_id: int, usuario=Depends(requiere_permiso("inventario"))):
+    resultado = inventario_service.aplicar_ajustes_conteo(conteo_id, usuario.get("id") if isinstance(usuario, dict) else None)
+    from urllib.parse import quote
+    mensaje = f"Conteo cerrado. Se aplicaron {resultado['total_ajustes']} ajuste(s) al inventario."
+    return RedirectResponse(url=f"/inventario/conteos/{conteo_id}?mensaje={quote(mensaje)}", status_code=303)

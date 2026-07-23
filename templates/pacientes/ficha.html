@@ -25,6 +25,55 @@
         </div>
     </div>
 
+    {% if request.query_params.get("error") %}<div class="alert alert-danger">{{ request.query_params.get("error") }}</div>{% endif %}
+
+    {# =====================================================
+       CONVENIO EPS DEL PACIENTE
+       ===================================================== #}
+    {% if convenio_eps_actual %}
+    <div class="alert alert-success d-flex align-items-center gap-2 mb-3">
+        <i class="fa-solid fa-file-contract fa-lg"></i>
+        <div>
+            <strong>Programa asignado:</strong> {{ convenio_eps_actual.nombre_programa }}
+            {% if convenio_eps_actual.eps %}({{ convenio_eps_actual.eps }}){% else %}(programa general, sin convenio EPS){% endif %}
+            — desde {{ convenio_eps_actual.fecha_ingreso }}
+            {% if convenio_eps_actual.fecha_fin %}hasta {{ convenio_eps_actual.fecha_fin }}{% endif %}
+        </div>
+    </div>
+    {% elif opciones_programa.con_convenio or opciones_programa.generales %}
+    <div class="alert alert-warning">
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <i class="fa-solid fa-triangle-exclamation fa-lg"></i>
+            <strong>Este paciente todavía no tiene ningún programa asignado.</strong>
+        </div>
+        <p class="mb-2 small">
+            Cuando el médico atienda la primera visita y determine a qué programa corresponde el paciente, selecciónelo aquí.
+            Esto no es obligatorio para poder atenderlo — mientras no se asigne, los servicios se pueden seguir programando
+            con total normalidad, solo que sin el control automático de topes de un plan.
+        </p>
+        <form method="post" action="/pacientes/{{ paciente.id }}/asignar-programa-eps" class="d-flex gap-2">
+            <select name="programa_convenio_id" class="form-select" required style="max-width:450px;">
+                <option value="">-- Seleccione el programa --</option>
+                {% if opciones_programa.con_convenio %}
+                <optgroup label="Con convenio de {{ paciente.eps }} (recomendado)">
+                    {% for prog in opciones_programa.con_convenio %}
+                    <option value="{{ prog.id }}">{{ prog.nombre }}{% if prog.numero_convenio %} — Convenio {{ prog.numero_convenio }}{% endif %}</option>
+                    {% endfor %}
+                </optgroup>
+                {% endif %}
+                {% if opciones_programa.generales %}
+                <optgroup label="Programas generales (sin convenio EPS)">
+                    {% for prog in opciones_programa.generales %}
+                    <option value="{{ prog.id }}">{{ prog.nombre }}</option>
+                    {% endfor %}
+                </optgroup>
+                {% endif %}
+            </select>
+            <button type="submit" class="btn btn-success"><i class="fa-solid fa-check"></i> Asignar programa</button>
+        </form>
+    </div>
+    {% endif %}
+
     {# =====================================================
        BANNER DE SEGURIDAD - se ve de inmediato al entrar
        ===================================================== #}
