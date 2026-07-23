@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block titulo %}Escanear Conteo #{{ conteo.id }}{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/inventario/conteos/{{ conteo.id }}" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Ver detalle completo del conteo</a>
+
+    <h2 class="mb-1"><i class="fa-solid fa-barcode text-primary"></i> Conteo en vivo — #{{ conteo.id }}</h2>
+    <p class="text-muted">
+        Escanee el código de barras del producto (o escríbalo, o escriba el nombre), confirme la cantidad que cuenta
+        físicamente, y guarde — puede hacerlo desde el computador o desde el navegador del celular.
+    </p>
+
+    <div class="card shadow mb-3 border-primary">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-primary fs-6" id="badge-contados">{{ total_contados }} de {{ total_productos }} contados</span>
+            </div>
+            <label class="fw-bold">Escanee o escriba el código / nombre del producto</label>
+            <input type="text" id="campo-busqueda" class="form-control form-control-lg" placeholder="Código de barras, código interno, o nombre..." autocomplete="off" autofocus>
+            <div id="resultados-busqueda" class="list-group mt-2"></div>
+        </div>
+    </div>
+
+    <!-- Tarjeta de producto seleccionado, para confirmar cantidad -->
+    <div class="card shadow mb-3 d-none" id="tarjeta-producto">
+        <div class="card-body">
+            <h4 id="producto-nombre"></h4>
+            <p class="text-muted mb-2">
+                Código: <span id="producto-codigo"></span> ·
+                Existencia en el sistema: <strong id="producto-stock-sistema"></strong>
+            </p>
+            <div class="d-flex gap-2 align-items-end">
+                <div class="flex-grow-1">
+                    <label class="fw-bold">Cantidad contada físicamente</label>
+                    <input type="number" id="campo-cantidad" class="form-control form-control-lg" min="0" autofocus>
+                </div>
+                <button class="btn btn-success btn-lg" id="btn-guardar-conteo"><i class="fa-solid fa-check"></i> Guardar</button>
+                <button class="btn btn-outline-secondary btn-lg" id="btn-cancelar-seleccion"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="alerta-resultado"></div>
+
+    <div class="card shadow">
+        <div class="card-header bg-white"><h6 class="mb-0">Contados en esta sesión</h6></div>
+        <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+                <thead class="table-light"><tr><th>Producto</th><th class="text-center">Sistema</th><th class="text-center">Contado</th><th class="text-center">Diferencia</th></tr></thead>
+                <tbody id="tabla-sesion"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+const conteoId = {{ conteo.id }};
+let productoSeleccionado = null;
+let temporizadorBusqueda;
+
+const campoBusqueda = document.getElementById("campo-busqueda");
+const resultadosBusqueda = document.getElementById("resultados-busqueda");
+const tarjetaProducto = document.getElementById("tarjeta-producto");
+const campoCantidad = document.getElementById("campo-cantidad");
+const badgeContados = document.getElementById("badge-contados");
+const tablaSesion = document.getElementById("tabla-sesion");
+
+let totalContados = {{ total_contados }};
+const totalProductos = {{ total_productos }};
+
+campoBusqueda.addEventListener("input", () => {
+    clearTimeout(temporizadorBusqueda);
+    const texto = campoBusqueda.value.trim();
+    if (texto.length < 2) { resultadosBusqueda.innerHTML = ""; return; }
+    temporizadorBusqueda = setTimeout(async () => {
+        const respuesta = await fetch(`/inventario/buscar-producto?q=${encodeURIComponent(texto)}`);
+        const productos = await respuesta.json();
+
+        // Si hay una coincidencia EXACTA de codigo/codigo de barras, se selecciona sola --
+        // esto es lo que hace que escanear con una pistola de codigo de barras (que escribe
+        // el codigo y le da Enter) funcione de corrido, sin tener que hacer clic en nada.
+        const coincidenciaExacta = productos.find(p => p.codigo === texto || p.codigo_barras === texto);
+        if (coincidenciaExacta) {
+            seleccionarProducto(coincidenciaExacta);
+            return;
+        }
+
+        resultadosBusqueda.innerHTML = productos.map(p => `
+            <button type="button" class="list-group-item list-group-item-action" data-id="${p.id}"
+                    data-nombre="${p.nombre}" data-codigo="${p.codigo || p.codigo_barras || 'sin código'}" data-stock="${p.stock_actual}">
+                <strong>${p.nombre}</strong> — ${p.codigo || p.codigo_barras || 'sin código'} (existencia: ${p.stock_actual})
+            </button>
+        `).join("");
+        resultadosBusqueda.querySelectorAll("button").forEach((boton) => {
+            boton.addEventListener("click", () => {
+                seleccionarProducto({
+                    id: boton.dataset.id, nombre: boton.dataset.nombre,
+                    codigo: boton.dataset.codigo, stock_actual: boton.dataset.stock,
+                });
+            });
+        });
+    }, 250);
+});
+
+// Al darle Enter en el campo de busqueda (tipico de una pistola de codigo de barras),
+// si solo hay UN resultado visible, lo selecciona de una vez.
+campoBusqueda.addEventListener("keydown", (evento) => {
+    if (evento.key === "Enter") {
+        evento.preventDefault();
+        const primerBoton = resultadosBusqueda.querySelector("button");
+        if (primerBoton) primerBoton.click();
+    }
+});
+
+function seleccionarProducto(producto) {
+    productoSeleccionado = producto;
+    document.getElementById("producto-nombre").textContent = producto.nombre;
+    document.getElementById("producto-codigo").textContent = producto.codigo || "sin código";
+    document.getElementById("producto-stock-sistema").textContent = producto.stock_actual;
+    tarjetaProducto.classList.remove("d-none");
+    resultadosBusqueda.innerHTML = "";
+    campoBusqueda.value = "";
+    campoCantidad.value = "";
+    campoCantidad.focus();
+}
+
+document.getElementById("btn-cancelar-seleccion").addEventListener("click", () => {
+    productoSeleccionado = null;
+    tarjetaProducto.classList.add("d-none");
+    campoBusqueda.focus();
+});
+
+async function guardarConteo() {
+    if (!productoSeleccionado || campoCantidad.value === "") return;
+
+    const respuesta = await fetch(`/inventario/conteos/${conteoId}/registrar-por-busqueda`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ insumo_id: productoSeleccionado.id, cantidad_fisica: campoCantidad.value }),
+    });
+    const resultado = await respuesta.json();
+    const alerta = document.getElementById("alerta-resultado");
+
+    if (!resultado.ok) {
+        alerta.innerHTML = `<div class="alert alert-danger">${resultado.error}</div>`;
+        return;
+    }
+
+    const filaExistente = tablaSesion.querySelector(`tr[data-insumo-id="${productoSeleccionado.id}"]`);
+    const diferenciaTexto = resultado.diferencia > 0 ? `+${resultado.diferencia}` : resultado.diferencia;
+    const filaHtml = `
+        <td>${productoSeleccionado.nombre}</td>
+        <td class="text-center">${resultado.cantidad_sistema}</td>
+        <td class="text-center">${resultado.cantidad_fisica}</td>
+        <td class="text-center">${resultado.diferencia !== 0 ? `<span class="badge ${resultado.diferencia > 0 ? 'bg-success' : 'bg-danger'}">${diferenciaTexto}</span>` : '<span class="badge bg-light text-dark border">0</span>'}</td>
+    `;
+    if (filaExistente) {
+        filaExistente.innerHTML = filaHtml;
+    } else {
+        const nuevaFila = document.createElement("tr");
+        nuevaFila.dataset.insumoId = productoSeleccionado.id;
+        nuevaFila.innerHTML = filaHtml;
+        tablaSesion.prepend(nuevaFila);
+        totalContados++;
+        badgeContados.textContent = `${totalContados} de ${totalProductos} contados`;
+    }
+
+    alerta.innerHTML = `<div class="alert alert-success py-2">"${productoSeleccionado.nombre}" guardado (${resultado.cantidad_fisica} unidades).</div>`;
+    setTimeout(() => { alerta.innerHTML = ""; }, 2500);
+
+    productoSeleccionado = null;
+    tarjetaProducto.classList.add("d-none");
+    campoBusqueda.focus();
+}
+
+document.getElementById("btn-guardar-conteo").addEventListener("click", guardarConteo);
+campoCantidad.addEventListener("keydown", (evento) => {
+    if (evento.key === "Enter") { evento.preventDefault(); guardarConteo(); }
+});
+</script>
+{% endblock %}

@@ -146,11 +146,11 @@
                 <div class="card-header bg-success text-white"><h5 class="mb-0">Registrar Entrada (compra)</h5></div>
                 <div class="card-body">
                     <form method="post" action="/inventario/entrada">
-                        <div class="mb-2">
-                            <label>Insumo</label>
-                            <select name="insumo_id" class="form-select" id="select-insumo-entrada" required>
-                                {% for i in insumos %}<option value="{{ i.id }}" data-costo-promedio="{{ i.costo_promedio or 0 }}">{{ i.nombre }} (stock: {{ i.stock_actual }})</option>{% endfor %}
-                            </select>
+                        <div class="mb-2 position-relative">
+                            <label>Insumo (código de barras, código, o nombre)</label>
+                            <input type="text" id="buscar-insumo-entrada" class="form-control" autocomplete="off" placeholder="Escanee o escriba..." required>
+                            <input type="hidden" name="insumo_id" id="campo-insumo-id-entrada" required>
+                            <div id="resultados-insumo-entrada" class="list-group position-absolute w-100" style="z-index:1000;"></div>
                             <small class="text-muted d-block mt-1" id="texto-costo-promedio-actual"></small>
                         </div>
                         <div class="mb-2"><label>Cantidad</label><input type="number" name="cantidad" min="1" class="form-control" required></div>
@@ -179,11 +179,11 @@
                 <div class="card-header bg-warning"><h5 class="mb-0">Registrar Salida (entrega a paciente)</h5></div>
                 <div class="card-body">
                     <form method="post" action="/inventario/salida">
-                        <div class="mb-2">
-                            <label>Insumo</label>
-                            <select name="insumo_id" class="form-select" required>
-                                {% for i in insumos %}<option value="{{ i.id }}">{{ i.nombre }} (stock: {{ i.stock_actual }})</option>{% endfor %}
-                            </select>
+                        <div class="mb-2 position-relative">
+                            <label>Insumo (código de barras, código, o nombre)</label>
+                            <input type="text" id="buscar-insumo-salida" class="form-control" autocomplete="off" placeholder="Escanee o escriba..." required>
+                            <input type="hidden" name="insumo_id" id="campo-insumo-id-salida" required>
+                            <div id="resultados-insumo-salida" class="list-group position-absolute w-100" style="z-index:1000;"></div>
                         </div>
                         <div class="mb-2"><label>Cantidad</label><input type="number" name="cantidad" min="1" class="form-control" required></div>
                         <div class="mb-2 position-relative">
@@ -280,30 +280,23 @@ cargarProveedores();
 // compara el costo de esta compra contra ese promedio -- para
 // detectar de un vistazo si el proveedor subió o bajó el
 // precio, y llevar mejor control de costos.
-const selectInsumoEntrada = document.getElementById("select-insumo-entrada");
 const textoCostoPromedio = document.getElementById("texto-costo-promedio-actual");
 const campoCostoUnitario = document.getElementById("campo-costo-unitario-entrada");
 const textoComparacionCosto = document.getElementById("texto-comparacion-costo");
-
-function costoPromedioActual() {
-    const opcion = selectInsumoEntrada.selectedOptions[0];
-    return opcion ? parseFloat(opcion.dataset.costoPromedio) || 0 : 0;
-}
+let costoPromedioInsumoEntrada = 0;
 
 function actualizarTextoCostoPromedio() {
-    const costo = costoPromedioActual();
-    textoCostoPromedio.textContent = costo > 0
-        ? `Costo promedio actual de este insumo: $${costo.toLocaleString("es-CO", {minimumFractionDigits: 2})}`
+    textoCostoPromedio.textContent = costoPromedioInsumoEntrada > 0
+        ? `Costo promedio actual de este insumo: $${costoPromedioInsumoEntrada.toLocaleString("es-CO", {minimumFractionDigits: 2})}`
         : "Este insumo todavía no tiene compras registradas.";
     actualizarComparacionCosto();
 }
 
 function actualizarComparacionCosto() {
-    const costoPromedio = costoPromedioActual();
     const costoNuevo = parseFloat(campoCostoUnitario.value);
-    if (!costoPromedio || !costoNuevo) { textoComparacionCosto.innerHTML = ""; return; }
+    if (!costoPromedioInsumoEntrada || !costoNuevo) { textoComparacionCosto.innerHTML = ""; return; }
 
-    const diferenciaPorcentaje = ((costoNuevo - costoPromedio) / costoPromedio) * 100;
+    const diferenciaPorcentaje = ((costoNuevo - costoPromedioInsumoEntrada) / costoPromedioInsumoEntrada) * 100;
     if (Math.abs(diferenciaPorcentaje) < 1) {
         textoComparacionCosto.innerHTML = `<span class="text-muted">Precio similar al promedio actual.</span>`;
     } else if (diferenciaPorcentaje > 0) {
@@ -313,9 +306,57 @@ function actualizarComparacionCosto() {
     }
 }
 
-selectInsumoEntrada.addEventListener("change", actualizarTextoCostoPromedio);
 campoCostoUnitario.addEventListener("input", actualizarComparacionCosto);
-actualizarTextoCostoPromedio();
+
+// Buscador de insumo por código de barras/código/nombre -- se usa el
+// mismo patrón (y el mismo endpoint) tanto en Entrada como en Salida,
+// y también lo usa la pantalla de conteo físico en vivo.
+function activarBuscadorInsumo(idBuscador, idResultados, idCampoOculto, alSeleccionar) {
+    const buscador = document.getElementById(idBuscador);
+    const resultados = document.getElementById(idResultados);
+    const campoOculto = document.getElementById(idCampoOculto);
+    let temporizador;
+
+    buscador.addEventListener("input", () => {
+        clearTimeout(temporizador);
+        const texto = buscador.value.trim();
+        if (texto.length < 2) { resultados.innerHTML = ""; return; }
+        temporizador = setTimeout(async () => {
+            const respuesta = await fetch(`/inventario/buscar-producto?q=${encodeURIComponent(texto)}`);
+            const productos = await respuesta.json();
+            resultados.innerHTML = productos.map(p => `
+                <button type="button" class="list-group-item list-group-item-action" data-id="${p.id}"
+                        data-nombre="${p.nombre}" data-costo-promedio="${p.costo_promedio || 0}">
+                    ${p.nombre} — ${p.codigo || p.codigo_barras || "sin código"} (stock: ${p.stock_actual})
+                </button>
+            `).join("");
+            resultados.querySelectorAll("button").forEach((boton) => {
+                boton.addEventListener("click", () => {
+                    campoOculto.value = boton.dataset.id;
+                    buscador.value = boton.dataset.nombre;
+                    resultados.innerHTML = "";
+                    if (alSeleccionar) alSeleccionar(boton);
+                });
+            });
+        }, 250);
+    });
+
+    // Si se escanea con una pistola de código de barras (escribe el
+    // código y da Enter), y solo hay un resultado, lo toma directo.
+    buscador.addEventListener("keydown", (evento) => {
+        if (evento.key === "Enter") {
+            evento.preventDefault();
+            const primerBoton = resultados.querySelector("button");
+            if (primerBoton) primerBoton.click();
+        }
+    });
+}
+
+activarBuscadorInsumo("buscar-insumo-entrada", "resultados-insumo-entrada", "campo-insumo-id-entrada", (boton) => {
+    costoPromedioInsumoEntrada = parseFloat(boton.dataset.costoPromedio) || 0;
+    actualizarTextoCostoPromedio();
+});
+activarBuscadorInsumo("buscar-insumo-salida", "resultados-insumo-salida", "campo-insumo-id-salida");
 
 const buscadorPaciente = document.getElementById("buscar-paciente-salida");
 const resultadosPaciente = document.getElementById("resultados-paciente-salida");

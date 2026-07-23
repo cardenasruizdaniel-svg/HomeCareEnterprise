@@ -24,6 +24,10 @@
     {% if conteo.estado != "Cerrado" %}
     <div class="card shadow mb-4">
         <div class="card-body">
+            <a href="/inventario/conteos/{{ conteo.id }}/escanear" class="btn btn-primary btn-lg w-100 mb-3">
+                <i class="fa-solid fa-barcode"></i> Contar en vivo (escanear o buscar producto)
+            </a>
+            <p class="text-muted small text-center">O, si lo prefiere, use la plantilla de Excel:</p>
             <div class="row">
                 <div class="col-md-6 mb-2">
                     <a href="/inventario/conteos/{{ conteo.id }}/plantilla" class="btn btn-outline-success w-100">
@@ -80,8 +84,34 @@
     </div>
 
     {% if conteo.estado != "Cerrado" %}
-    <form method="post" action="/inventario/conteos/{{ conteo.id }}/cerrar" onsubmit="return confirm('¿Cerrar este conteo? Se ajustará el inventario según las diferencias encontradas en los insumos ya contados. Los que no se hayan contado quedan sin tocar.');">
-        <button type="submit" class="btn btn-danger"><i class="fa-solid fa-lock"></i> Cerrar conteo y aplicar ajustes al inventario</button>
+    {% set con_diferencia = detalle|selectattr("diferencia")|list %}
+    {% if con_diferencia %}
+    <div class="card shadow mb-3 border-warning">
+        <div class="card-header bg-warning bg-opacity-25"><h6 class="mb-0"><i class="fa-solid fa-triangle-exclamation"></i> Informe de diferencias encontradas</h6></div>
+        <div class="card-body">
+            <table class="table table-sm mb-0">
+                <thead><tr><th>Insumo</th><th class="text-center">Sistema</th><th class="text-center">Físico</th><th class="text-center">Diferencia</th><th class="text-end">Impacto estimado</th></tr></thead>
+                <tbody>
+                    {% for d in con_diferencia %}
+                    <tr>
+                        <td>{{ d.nombre }}</td>
+                        <td class="text-center">{{ d.cantidad_sistema }}</td>
+                        <td class="text-center">{{ d.cantidad_fisica }}</td>
+                        <td class="text-center"><span class="badge {% if d.diferencia > 0 %}bg-success{% else %}bg-danger{% endif %}">{{ "+" if d.diferencia > 0 }}{{ d.diferencia }}</span></td>
+                        <td class="text-end">{{ "Sobrante" if d.diferencia > 0 else "Faltante" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    <div class="alert alert-secondary small">
+        <i class="fa-solid fa-user-shield"></i> Aplicar los ajustes al inventario solo lo puede autorizar un usuario de
+        <strong>Gerencia o Administración</strong> — si su usuario no tiene ese perfil, el botón de abajo será rechazado.
+    </div>
+    <form method="post" action="/inventario/conteos/{{ conteo.id }}/cerrar" onsubmit="return confirm('Se revisó el informe de diferencias de arriba. ¿Confirma que quiere APLICAR estos ajustes al inventario? Esta acción no se puede deshacer.');">
+        <button type="submit" class="btn btn-danger"><i class="fa-solid fa-lock"></i> Aceptar informe y aplicar ajustes al inventario</button>
     </form>
     {% endif %}
 </div>

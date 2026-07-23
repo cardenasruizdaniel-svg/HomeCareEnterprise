@@ -68,6 +68,40 @@ def requiere_permiso(modulo: str):
 
 
 # ==========================================================
+# REQUIERE GERENCIA O ADMINISTRACIÓN
+# ==========================================================
+
+def requiere_gerencia_o_admin():
+    """
+    Para acciones especialmente delicadas (como aplicar los
+    ajustes de un conteo físico de inventario, que mueven
+    existencias y su valor en libros) -- solo se permite a
+    Administrador, o a cualquier rol cuyo nombre incluya
+    "Gerencia" (por si se crea un rol personalizado como
+    "Gerente" o "Gerencia Administrativa" desde Roles y
+    Permisos). No basta con tener el permiso general del
+    módulo de inventario.
+    """
+
+    async def dependency(request: Request):
+
+        usuario = usuario_actual(request)
+
+        rol = (usuario.get("rol") or "").lower()
+
+        if "administrador" not in rol and "geren" not in rol:
+
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Esta acción solo la puede autorizar un usuario de Gerencia o Administración.",
+            )
+
+        return usuario
+
+    return dependency
+
+
+# ==========================================================
 # REQUIERE ROL
 # ==========================================================
 

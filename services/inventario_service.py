@@ -143,6 +143,39 @@ def buscar_insumo_por_codigo(texto: str):
     return dict(fila) if fila else None
 
 
+def buscar_productos(texto: str, limite: int = 15):
+    """
+    Búsqueda general de productos -- por código interno, código
+    de barras, o nombre (parcial) -- para usar en cualquier
+    pantalla donde haga falta encontrar un insumo rápido: el
+    conteo físico (escaneando o escribiendo), y también al
+    registrar una entrada o una salida. Si el texto coincide
+    EXACTO con un código o código de barras, ese resultado va
+    de primero.
+    """
+    from database.database import consultar_todos
+    if not texto or len(texto.strip()) < 2:
+        return []
+    texto = texto.strip()
+    filas = consultar_todos(
+        """
+        SELECT *,
+            CASE WHEN codigo = ? OR codigo_barras = ? THEN 0 ELSE 1 END AS orden_coincidencia
+        FROM insumos
+        WHERE activo=1 AND (
+            codigo LIKE ? OR codigo_barras LIKE ? OR nombre LIKE ?
+        )
+        ORDER BY orden_coincidencia, nombre
+        LIMIT ?
+        """,
+        (texto, texto, f"%{texto}%", f"%{texto}%", f"%{texto}%", limite),
+    )
+    resultado = [dict(f) for f in filas]
+    for r in resultado:
+        r["stock_actual"] = stock_actual(r["id"])
+    return resultado
+
+
 CATEGORIAS_INSUMOS = CATEGORIAS_INSUMO  # alias -- se usa la misma lista de categorías que ya existía, para no tener dos listas distintas que se puedan desincronizar
 
 
@@ -507,6 +540,28 @@ def registrar_conteo_item(detalle_id: int, cantidad_fisica: int, solo_del_conteo
         "UPDATE conteos_fisicos_detalle SET cantidad_fisica=?, diferencia=? WHERE id=?",
         (int(cantidad_fisica), diferencia, detalle_id),
     )
+    return {"detalle_id": detalle_id, "cantidad_sistema": fila["cantidad_sistema"], "cantidad_fisica": int(cantidad_fisica), "diferencia": diferencia}
+
+
+def registrar_conteo_por_insumo(conteo_id: int, insumo_id: int, cantidad_fisica: int):
+    """
+    Igual que 'registrar_conteo_item', pero identificando el
+    insumo directamente (no la fila de detalle) -- es lo que usa
+    la pantalla de escaneo: se busca el producto por su código
+    de barras/código/nombre, y con su id se registra el conteo
+    de una vez, sin que la persona tenga que saber a qué fila de
+    detalle corresponde.
+    """
+    from database.database import consultar_uno
+
+    fila = consultar_uno(
+        "SELECT id FROM conteos_fisicos_detalle WHERE conteo_id=? AND insumo_id=?",
+        (conteo_id, insumo_id),
+    )
+    if not fila:
+        raise ValueError("Este producto no hace parte de este conteo (puede que se haya creado después de iniciarlo).")
+
+    return registrar_conteo_item(dict(fila)["id"], cantidad_fisica, solo_del_conteo=conteo_id)
 
 
 def aplicar_ajustes_conteo(conteo_id: int, usuario_id) -> dict:

@@ -1,9 +1,9 @@
 """HomeCare Enterprise - Router: Inventario de Insumos Médicos"""
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi import APIRouter, Body, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
-from core.dependencies import requiere_permiso
+from core.dependencies import requiere_permiso, requiere_gerencia_o_admin
 from core.templates import templates
 from database.database import consultar_todos
 
@@ -15,6 +15,12 @@ router = APIRouter(prefix="/inventario", tags=["Inventario"])
 @router.get("/api/proveedores-activos", response_class=JSONResponse)
 async def api_proveedores_activos(_actor=Depends(requiere_permiso("inventario"))):
     return inventario_service.listar_proveedores_activos()
+
+
+@router.get("/buscar-producto", response_class=JSONResponse)
+async def buscar_producto(q: str = "", usuario=Depends(requiere_permiso("inventario"))):
+    """Búsqueda por código interno, código de barras, o nombre -- la usan el conteo físico, y las pantallas de entrada/salida."""
+    return inventario_service.buscar_productos(q)
 
 
 # ==========================================
@@ -573,6 +579,33 @@ async def ver_conteo(request: Request, conteo_id: int, usuario=Depends(requiere_
     )
 
 
+@router.get("/conteos/{conteo_id}/escanear", response_class=HTMLResponse)
+async def escanear_conteo(request: Request, conteo_id: int, usuario=Depends(requiere_permiso("inventario"))):
+    """Pantalla para contar en vivo: se escanea o se escribe el código de barras/código/nombre, se busca el producto, y se guarda la cantidad al momento -- funciona igual desde un computador o desde el celular."""
+    conteo = inventario_service.obtener_conteo_fisico(conteo_id)
+    if not conteo:
+        raise HTTPException(status_code=404, detail="El conteo no existe.")
+    detalle = inventario_service.listar_detalle_conteo(conteo_id)
+    return templates.TemplateResponse(
+        request=request, name="inventario/conteo_escanear.html",
+        context={
+            "usuario": usuario, "conteo": conteo,
+            "total_productos": len(detalle),
+            "total_contados": len([d for d in detalle if d["cantidad_fisica"] is not None]),
+        },
+    )
+
+
+@router.post("/conteos/{conteo_id}/registrar-por-busqueda", response_class=JSONResponse)
+async def registrar_conteo_por_busqueda(conteo_id: int, datos: dict = Body(...), usuario=Depends(requiere_permiso("inventario"))):
+    """Recibe el insumo_id (ya encontrado con el buscador) y la cantidad contada -- usado por la pantalla de escaneo en vivo."""
+    try:
+        resultado = inventario_service.registrar_conteo_por_insumo(conteo_id, int(datos["insumo_id"]), int(datos["cantidad_fisica"]))
+        return {"ok": True, **resultado}
+    except ValueError as error:
+        return {"ok": False, "error": str(error)}
+
+
 @router.get("/conteos/{conteo_id}/plantilla")
 async def descargar_plantilla_conteo(conteo_id: int, usuario=Depends(requiere_permiso("inventario"))):
     from fastapi.responses import FileResponse
@@ -619,7 +652,7 @@ async def registrar_item_conteo(detalle_id: int, conteo_id: int = Form(...), can
 
 
 @router.post("/conteos/{conteo_id}/cerrar")
-async def cerrar_conteo(conteo_id: int, usuario=Depends(requiere_permiso("inventario"))):
+async def cerrar_conteo(conteo_id: int, usuario=Depends(requiere_gerencia_o_admin())):
     resultado = inventario_service.aplicar_ajustes_conteo(conteo_id, usuario.get("id") if isinstance(usuario, dict) else None)
     from urllib.parse import quote
     mensaje = f"Conteo cerrado. Se aplicaron {resultado['total_ajustes']} ajuste(s) al inventario."
