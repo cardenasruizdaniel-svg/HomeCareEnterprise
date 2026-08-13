@@ -51,6 +51,17 @@ def crear_usuario_admin():
 
     from services.auth_service import AuthService
 
+    # --------------------------------------------------
+    # DIAGNÓSTICO TEMPORAL -- para encontrar por qué el
+    # login de admin/admin123 no está funcionando en Render
+    # aunque localmente sí funciona. Se puede quitar este
+    # bloque una vez se resuelva.
+    # --------------------------------------------------
+    from database.db_backend import ES_POSTGRES
+    from database.database import DB_PATH
+    print(f"[DIAGNOSTICO] ¿Usando PostgreSQL?: {ES_POSTGRES}")
+    print(f"[DIAGNOSTICO] Ruta del archivo SQLite (si aplica): {DB_PATH}")
+
     conexion = get_connection()
 
     cursor = conexion.cursor()
@@ -66,6 +77,7 @@ def crear_usuario_admin():
     """)
 
     existe = cursor.fetchone()[0]
+    print(f"[DIAGNOSTICO] ¿Ya existe una fila con usuario='admin'?: {existe}")
 
     if existe == 0:
 
@@ -123,6 +135,39 @@ def crear_usuario_admin():
             conexion.commit()
 
             print("[OK] Se reparo la contraseña del administrador (quedo en texto plano por una version anterior). Sigue siendo 'admin123'.")
+
+    # El administrador nunca debe quedar bloqueado por intentos
+    # fallidos ni inactivo -- cada vez que arranca el sistema se
+    # asegura de que la cuenta admin esté totalmente disponible,
+    # sin importar lo que haya pasado en arranques anteriores
+    # (pruebas de conexión, intentos fallidos durante soporte
+    # técnico, etc.).
+    cursor.execute(
+        "UPDATE usuarios SET intentos_fallidos=0, bloqueado_hasta=NULL, estado='Activo', activo=1 WHERE usuario='admin'"
+    )
+    conexion.commit()
+
+    # --------------------------------------------------
+    # DIAGNÓSTICO TEMPORAL -- muestra el estado final real
+    # de la fila del admin, tal como queda guardada, y si
+    # bcrypt confirma que "admin123" coincide con lo guardado.
+    # --------------------------------------------------
+    cursor.execute("SELECT id, usuario, estado, activo, rol, password FROM usuarios WHERE usuario='admin'")
+    fila_final = cursor.fetchone()
+    if fila_final:
+        print(f"[DIAGNOSTICO] Fila final del admin -> id={fila_final[0]}, usuario={fila_final[1]!r}, estado={fila_final[2]!r}, activo={fila_final[3]!r}, rol={fila_final[4]!r}")
+        print(f"[DIAGNOSTICO] Hash guardado empieza con: {str(fila_final[5])[:10]}...")
+        try:
+            import bcrypt as _bcrypt_diagnostico
+            hash_guardado = fila_final[5]
+            if isinstance(hash_guardado, str):
+                hash_guardado = hash_guardado.encode("utf-8")
+            coincide = _bcrypt_diagnostico.checkpw("admin123".encode("utf-8"), hash_guardado)
+            print(f"[DIAGNOSTICO] ¿bcrypt confirma que 'admin123' coincide con el hash guardado?: {coincide}")
+        except Exception as error_verificacion:
+            print(f"[DIAGNOSTICO] ERROR al verificar la contraseña: {error_verificacion}")
+    else:
+        print("[DIAGNOSTICO] ¡No se encontró NINGUNA fila con usuario='admin' después de crear_usuario_admin()!")
 
     conexion.close()
 
