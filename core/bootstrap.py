@@ -114,8 +114,12 @@ def crear_usuario_admin():
         # Reparacion automatica: si el admin ya existe pero su
         # contraseña quedo guardada en texto plano (bug de una
         # version anterior de este instalador, antes de que se
-        # cifrara con bcrypt), se corrige sola sin perder el
-        # resto de la informacion ya cargada en el sistema.
+        # cifrara con bcrypt), O si quedó guardada cifrada pero
+        # correspondiendo a una contraseña distinta de la
+        # esperada (por ejemplo, de una prueba o un instalador
+        # viejo), se corrige sola en cualquiera de los dos
+        # casos -- sin perder el resto de la información ya
+        # cargada en el sistema.
 
         cursor.execute("SELECT password FROM usuarios WHERE usuario='admin'")
 
@@ -123,7 +127,18 @@ def crear_usuario_admin():
 
         es_hash_valido = isinstance(password_actual, str) and password_actual.startswith(("$2a$", "$2b$", "$2y$"))
 
-        if not es_hash_valido:
+        necesita_reparacion = not es_hash_valido
+
+        if es_hash_valido:
+            try:
+                import bcrypt as _bcrypt_verificacion
+                hash_bytes = password_actual.encode("utf-8")
+                if not _bcrypt_verificacion.checkpw("admin123".encode("utf-8"), hash_bytes):
+                    necesita_reparacion = True
+            except Exception:
+                necesita_reparacion = True
+
+        if necesita_reparacion:
 
             password_cifrada = AuthService.generar_hash("admin123")
 
@@ -134,7 +149,7 @@ def crear_usuario_admin():
 
             conexion.commit()
 
-            print("[OK] Se reparo la contraseña del administrador (quedo en texto plano por una version anterior). Sigue siendo 'admin123'.")
+            print("[OK] Se reparo la contraseña del administrador (no coincidía con 'admin123'). Ahora sí es 'admin123'.")
 
     # El administrador nunca debe quedar bloqueado por intentos
     # fallidos ni inactivo -- cada vez que arranca el sistema se
