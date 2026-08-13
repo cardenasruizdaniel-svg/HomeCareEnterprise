@@ -352,7 +352,8 @@ async def ficha(
 
     from services import convenios_eps_service as convenios
     convenio_eps_actual = convenios.convenio_actual_paciente(paciente_id)
-    opciones_programa = {"con_convenio": [], "generales": []} if convenio_eps_actual else convenios.opciones_de_programa_para_paciente(paciente.get("eps"))
+    eps_paciente = paciente["eps"] if "eps" in paciente.keys() else None
+    opciones_programa = {"con_convenio": [], "generales": []} if convenio_eps_actual else convenios.opciones_de_programa_para_paciente(eps_paciente)
 
     return templates.TemplateResponse(
         request=request,
