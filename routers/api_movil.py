@@ -31,34 +31,10 @@ from services.ordenes_service import OrdenesService
 router = APIRouter(prefix="/api/movil", tags=["App Móvil"])
 
 
-def _tipo_nota_segun_rol(rol: str):
-    """
-    Determina el ÚNICO tipo de nota clínica que le corresponde
-    a cada perfil -- para que un enfermero no pueda quedar con
-    una nota registrada como "Médico", un terapeuta como
-    "Enfermero", etc. Debe reflejar EXACTAMENTE la misma lógica
-    que "tipoNotaSegunPerfil()" en la app móvil (static/pwa/app.js).
-    Devuelve None para roles administrativos u otros sin un
-    tipo de nota clínica propio -- en ese caso se respeta lo
-    que se haya enviado.
-    """
-    rol = (rol or "").lower()
-    if "cuidador" in rol:
-        return "Cuidador"
-    if "médico" in rol or "medico" in rol:
-        return "Médico"
-    if "enfermer" in rol:
-        return "Enfermero"
-    if any(p in rol for p in (
-        "fisioterapeuta", "terapeuta respiratorio", "salud ocupacional", "terapeuta",
-        "fonoaudi", "psicólogo", "psicologo", "nutricionista", "trabajo social",
-    )):
-        return "Terapeuta"
-    if "aplicador" in rol:
-        return "Aplicador"
-    if "curaciones" in rol:
-        return "Curaciones"
-    return None
+from services.evoluciones_service import tipo_nota_segun_rol as _tipo_nota_segun_rol
+# ^ se conserva el nombre _tipo_nota_segun_rol (con guion bajo) por
+# compatibilidad con el resto de este archivo, que ya la llama así --
+# pero ahora es la misma función que usa la web, no una copia local.
 
 # ==========================================
 # VERSIONADO DE LA API

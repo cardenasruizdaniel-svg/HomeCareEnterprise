@@ -26,6 +26,7 @@
     </div>
 
     {% if request.query_params.get("error") %}<div class="alert alert-danger">{{ request.query_params.get("error") }}</div>{% endif %}
+    {% if request.query_params.get("guardado") %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
 
     {# =====================================================
        CONVENIO EPS DEL PACIENTE
@@ -71,6 +72,31 @@
             </select>
             <button type="submit" class="btn btn-success"><i class="fa-solid fa-check"></i> Asignar programa</button>
         </form>
+    </div>
+    {% endif %}
+
+    {# =====================================================
+       REGISTRAR NOTA DE VISITA (informe médico / de enfermería / etc.)
+       -- solo se muestra si el usuario que inició sesión es un
+       profesional de la salud, igual que en la app móvil.
+       ===================================================== #}
+    {% if tipo_nota_del_usuario %}
+    <div class="card shadow mb-3 border-primary">
+        <div class="card-header bg-primary bg-opacity-10 d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="fa-solid fa-notes-medical"></i> Registrar nota de visita ({{ tipo_nota_del_usuario }})</h6>
+        </div>
+        <div class="card-body">
+            <form method="post" action="/pacientes/{{ paciente.id }}/registrar-nota-visita">
+                <textarea name="nota" class="form-control mb-2" rows="4" required
+                          placeholder="Escriba aquí la nota de la visita (hallazgos, procedimiento realizado, recomendaciones, etc.)"></textarea>
+                <div class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        Si hay una visita programada para hoy con este paciente, la nota queda enlazada a ella automáticamente.
+                    </small>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar nota</button>
+                </div>
+            </form>
+        </div>
     </div>
     {% endif %}
 

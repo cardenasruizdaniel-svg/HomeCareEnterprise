@@ -330,6 +330,60 @@ async def asignar_programa_eps_desde_ficha(
     return RedirectResponse(url=f"/pacientes/{paciente_id}", status_code=303)
 
 
+@router.post("/{paciente_id}/registrar-nota-visita")
+async def registrar_nota_visita_desde_ficha(
+    paciente_id: int,
+    nota: str = Form(...),
+    usuario=Depends(requiere_permiso("pacientes")),
+):
+    """
+    Registra la nota de la visita (informe médico, de
+    enfermería, etc.) directamente desde la ficha del paciente
+    -- para cuando el profesional está frente al computador en
+    vez de usar la app móvil. El tipo de nota se determina SOLO
+    por el rol de quien inició sesión (igual que en la app
+    móvil) -- no se deja elegir libremente, para que un
+    enfermero no pueda quedar registrado con una nota de
+    "Médico", por ejemplo.
+    """
+    from database.database import consultar_uno
+    from services.evoluciones_service import registrar_evolucion, tipo_nota_segun_rol
+
+    tipo_profesional = tipo_nota_segun_rol(usuario.get("rol", ""))
+    if not tipo_profesional:
+        return RedirectResponse(
+            url=f"/pacientes/{paciente_id}?error=Su perfil no tiene un tipo de nota clínica propio para registrar visitas.",
+            status_code=303,
+        )
+
+    profesional = consultar_uno("SELECT id FROM profesionales WHERE usuario_id=?", (usuario.get("id"),))
+    profesional_id = dict(profesional)["id"] if profesional else None
+
+    # Si el profesional tiene una visita programada para HOY con
+    # este paciente, la nota queda enlazada a esa visita (para
+    # que cuente en su agenda como atendida) -- si no encuentra
+    # ninguna, igual se registra la nota, sin visita asociada.
+    from datetime import date
+    programacion_id = None
+    if profesional_id:
+        visita_hoy = consultar_uno(
+            "SELECT id FROM programaciones WHERE paciente_id=? AND profesional_id=? AND date(fecha)=date(?) "
+            "AND estado NOT IN ('Cancelada', 'No realizada') ORDER BY id DESC LIMIT 1",
+            (paciente_id, profesional_id, date.today().isoformat()),
+        )
+        programacion_id = dict(visita_hoy)["id"] if visita_hoy else None
+
+    try:
+        registrar_evolucion(
+            paciente_id=paciente_id, programacion_id=programacion_id, profesional_id=profesional_id,
+            tipo_profesional=tipo_profesional, nota=nota, origen="WEB", usuario_id=usuario.get("id"),
+        )
+    except ValueError as error:
+        return RedirectResponse(url=f"/pacientes/{paciente_id}?error={error}", status_code=303)
+
+    return RedirectResponse(url=f"/pacientes/{paciente_id}?guardado=1", status_code=303)
+
+
 @router.get("/{paciente_id}")
 async def ficha(
     request: Request,
@@ -355,6 +409,9 @@ async def ficha(
     eps_paciente = paciente["eps"] if "eps" in paciente.keys() else None
     opciones_programa = {"con_convenio": [], "generales": []} if convenio_eps_actual else convenios.opciones_de_programa_para_paciente(eps_paciente)
 
+    from services.evoluciones_service import tipo_nota_segun_rol
+    tipo_nota_del_usuario = tipo_nota_segun_rol(usuario.get("rol", ""))
+
     return templates.TemplateResponse(
         request=request,
         name="pacientes/ficha.html",
@@ -368,6 +425,7 @@ async def ficha(
             "resumen_clinico": resumen_clinico,
             "convenio_eps_actual": convenio_eps_actual,
             "opciones_programa": opciones_programa,
+            "tipo_nota_del_usuario": tipo_nota_del_usuario,
         },
     )
 

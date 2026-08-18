@@ -111,6 +111,37 @@ def _construir_resumen_registros_visita(paciente_id: int, programacion_id) -> st
     return "\n\n— Registros de esta visita —\n" + "\n".join(secciones)
 
 
+def tipo_nota_segun_rol(rol: str):
+    """
+    Determina el ÚNICO tipo de nota clínica que le corresponde
+    a cada perfil -- para que un enfermero no pueda quedar con
+    una nota registrada como "Médico", un terapeuta como
+    "Enfermero", etc. Es la MISMA función que usan tanto la web
+    como la app móvil (antes estaba duplicada en cada lado, lo
+    que corría el riesgo de que quedaran desincronizadas).
+    Devuelve None para roles administrativos u otros sin un
+    tipo de nota clínica propio -- en ese caso se respeta lo
+    que se haya enviado.
+    """
+    rol = (rol or "").lower()
+    if "cuidador" in rol:
+        return "Cuidador"
+    if "médico" in rol or "medico" in rol:
+        return "Médico"
+    if "enfermer" in rol:
+        return "Enfermero"
+    if any(p in rol for p in (
+        "fisioterapeuta", "terapeuta respiratorio", "salud ocupacional", "terapeuta",
+        "fonoaudi", "psicólogo", "psicologo", "nutricionista", "trabajo social",
+    )):
+        return "Terapeuta"
+    if "aplicador" in rol:
+        return "Aplicador"
+    if "curaciones" in rol:
+        return "Curaciones"
+    return None
+
+
 def registrar_evolucion(paciente_id, programacion_id, profesional_id, tipo_profesional, nota,
                           origen="WEB", latitud=None, longitud=None, usuario_id=None,
                           tipo_registro="INFORME", nota_aclaratoria_de=None) -> dict:
