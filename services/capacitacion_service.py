@@ -66,15 +66,18 @@ def crear(titulo, descripcion, tipo, categoria, plataforma, roles_permitidos,
     if not archivo_path and not url_externa:
         raise ValueError("Debe adjuntar un archivo o indicar un enlace (por ejemplo, de un video).")
 
+    import secrets
+    token_visor = secrets.token_urlsafe(24) if archivo_path else None
+
     return ejecutar(
         """
         INSERT INTO capacitaciones(
             titulo, descripcion, tipo, categoria, plataforma, archivo_path, url_externa,
-            roles_permitidos, orden, usuario_publico_id, usuario_publico_nombre
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            roles_permitidos, orden, usuario_publico_id, usuario_publico_nombre, token_visor
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (titulo.strip(), descripcion or "", tipo, categoria or "Otro", plataforma or "Web",
-         archivo_path, url_externa, roles_permitidos or "Todos", orden or 0, usuario_id, usuario_nombre),
+         archivo_path, url_externa, roles_permitidos or "Todos", orden or 0, usuario_id, usuario_nombre, token_visor),
     )
 
 
@@ -87,16 +90,39 @@ def actualizar(capacitacion_id, titulo, descripcion, tipo, categoria, plataforma
     if not actual:
         raise ValueError("La capacitación indicada no existe.")
 
+    token_visor = actual.get("token_visor")
+    if archivo_path and not token_visor:
+        import secrets
+        token_visor = secrets.token_urlsafe(24)
+
     ejecutar(
         """
         UPDATE capacitaciones SET
             titulo=?, descripcion=?, tipo=?, categoria=?, plataforma=?, roles_permitidos=?, orden=?,
-            archivo_path=COALESCE(?, archivo_path), url_externa=COALESCE(?, url_externa)
+            archivo_path=COALESCE(?, archivo_path), url_externa=COALESCE(?, url_externa), token_visor=COALESCE(?, token_visor)
         WHERE id=?
         """,
         (titulo.strip(), descripcion or "", tipo, categoria or "Otro", plataforma or "Web",
-         roles_permitidos or "Todos", orden or 0, archivo_path, url_externa, capacitacion_id),
+         roles_permitidos or "Todos", orden or 0, archivo_path, url_externa, token_visor, capacitacion_id),
     )
+
+
+def asegurar_tokens_visor():
+    """
+    Por si el sistema ya tenía manuales registrados desde antes
+    de que existiera el visor en línea -- les genera el token
+    que les falte, sin tocar nada más de su información.
+    """
+    import secrets
+    filas = consultar_todos("SELECT id FROM capacitaciones WHERE archivo_path IS NOT NULL AND (token_visor IS NULL OR token_visor='')")
+    for fila in filas:
+        ejecutar("UPDATE capacitaciones SET token_visor=? WHERE id=?", (secrets.token_urlsafe(24), dict(fila)["id"]))
+    return len(filas)
+
+
+def obtener_por_token(token: str):
+    fila = consultar_uno("SELECT * FROM capacitaciones WHERE token_visor=? AND activo=1", (token,))
+    return dict(fila) if fila else None
 
 
 def desactivar(capacitacion_id: int):

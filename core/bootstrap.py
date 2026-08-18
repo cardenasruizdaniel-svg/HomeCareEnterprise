@@ -259,10 +259,11 @@ def iniciar_sistema():
     sembrar_examenes_lab()
 
     try:
-        from services.capacitacion_service import sembrar_manuales_existentes
+        from services.capacitacion_service import sembrar_manuales_existentes, asegurar_tokens_visor
         manuales_sembrados = sembrar_manuales_existentes()
         if manuales_sembrados:
             print(f"[OK] Módulo de Capacitación: se registraron {len(manuales_sembrados)} manual(es) inicial(es).")
+        asegurar_tokens_visor()
     except Exception as error:
         print(f"[AVISO] No se pudo sembrar el módulo de Capacitación: {error}")
 

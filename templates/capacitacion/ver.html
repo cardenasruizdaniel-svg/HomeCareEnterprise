@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block titulo %}{{ item.titulo }}{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/capacitacion" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver a Capacitación</a>
+
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <div>
+            <h2 class="mb-1">{{ item.titulo }}</h2>
+            {% if item.descripcion %}<p class="text-muted mb-0">{{ item.descripcion }}</p>{% endif %}
+        </div>
+        {% if item.archivo_path %}
+        <a href="/capacitacion/{{ item.id }}/archivo" class="btn btn-outline-primary"><i class="fa-solid fa-download"></i> Descargar</a>
+        {% endif %}
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body p-0" style="min-height:75vh;">
+            {% if es_pdf %}
+            <iframe src="/capacitacion/{{ item.id }}/archivo" style="width:100%; height:80vh; border:none; border-radius:6px;"></iframe>
+
+            {% elif es_office and url_visor_publico %}
+            <iframe src="https://view.officeapps.live.com/op/embed.aspx?src={{ url_visor_publico | urlencode }}"
+                    style="width:100%; height:80vh; border:none; border-radius:6px;"></iframe>
+            <p class="text-muted small text-center p-2 mb-0">
+                Si el visor no carga (por ejemplo, en una red interna sin salida a internet), use el botón "Descargar" de arriba.
+            </p>
+
+            {% elif item.url_externa %}
+            <div class="text-center py-5">
+                <p class="mb-3">Este contenido se abre en una pestaña nueva.</p>
+                <a href="{{ item.url_externa }}" target="_blank" class="btn btn-primary btn-lg">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir {{ "video" if item.tipo == "Video" else "enlace" }}
+                </a>
+            </div>
+
+            {% elif item.archivo_path %}
+            <div class="text-center py-5">
+                <p class="mb-3">Este tipo de archivo no se puede previsualizar aquí — descárguelo para verlo.</p>
+                <a href="/capacitacion/{{ item.id }}/archivo" class="btn btn-primary btn-lg"><i class="fa-solid fa-download"></i> Descargar</a>
+            </div>
+
+            {% else %}
+            <div class="text-center py-5 text-muted">Este contenido no tiene ningún archivo ni enlace asociado.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -42,6 +42,69 @@ async def descargar_archivo(capacitacion_id: int, usuario=Depends(usuario_actual
     return FileResponse(ruta, filename=ruta.name)
 
 
+EXTENSIONES_OFFICE = (".pptx", ".ppt", ".docx", ".doc", ".xlsx", ".xls")
+
+
+@router.get("/{capacitacion_id}/ver", response_class=HTMLResponse)
+async def ver_contenido(request: Request, capacitacion_id: int, usuario=Depends(usuario_actual)):
+    """
+    Pantalla de visualización: abre el PDF directo en el
+    navegador, o -- si es una presentación de PowerPoint/Word/
+    Excel -- la muestra con el visor de Office en línea, para
+    que se pueda repasar sin tener que descargar nada, ideal
+    para volver a consultarla cuando surja una duda.
+    """
+    item = capacitacion.obtener(capacitacion_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="El contenido no existe.")
+
+    roles = [r.strip() for r in (item.get("roles_permitidos") or "Todos").split(",")]
+    if "Todos" not in roles and usuario.get("rol") not in roles:
+        raise HTTPException(status_code=403, detail="Este contenido no está disponible para su perfil.")
+
+    from core.config import PUBLIC_BASE_URL
+    extension = ("." + item["archivo_path"].rsplit(".", 1)[-1].lower()) if item.get("archivo_path") and "." in item["archivo_path"] else ""
+
+    # Se usa PUBLIC_BASE_URL si está configurada -- si no, se
+    # calcula sola a partir de la misma petición que está
+    # entrando, para que el visor de Office funcione sin tener
+    # que configurar nada aparte.
+    base_url = PUBLIC_BASE_URL.rstrip("/") if PUBLIC_BASE_URL else str(request.base_url).rstrip("/")
+
+    url_visor_publico = None
+    if item.get("token_visor"):
+        url_visor_publico = f"{base_url}/capacitacion/visor-publico/{item['token_visor']}"
+
+    return templates.TemplateResponse(
+        request=request, name="capacitacion/ver.html",
+        context={
+            "usuario": usuario, "item": item, "es_pdf": extension == ".pdf",
+            "es_office": extension in EXTENSIONES_OFFICE, "url_visor_publico": url_visor_publico,
+        },
+    )
+
+
+@router.get("/visor-publico/{token}")
+async def visor_publico(token: str):
+    """
+    Sirve el archivo sin pedir sesión -- SOLO accesible con un
+    token largo e imposible de adivinar, que nunca se muestra en
+    ningún listado. Existe porque el visor de Office en línea de
+    Microsoft necesita poder buscar el archivo desde sus propios
+    servidores para poder mostrarlo, y no tiene forma de mandar
+    la sesión de quien lo está viendo.
+    """
+    item = capacitacion.obtener_por_token(token)
+    if not item or not item.get("archivo_path"):
+        raise HTTPException(status_code=404, detail="Este enlace ya no es válido.")
+
+    from core.config import RECURSOS_DIR
+    ruta = RECURSOS_DIR / item["archivo_path"]
+    if not ruta.exists():
+        raise HTTPException(status_code=404, detail="El archivo ya no se encuentra en el servidor.")
+    return FileResponse(ruta)
+
+
 # ==========================================================
 # ADMINISTRACIÓN DEL MÓDULO (solo Gerencia / Administración)
 # ==========================================================

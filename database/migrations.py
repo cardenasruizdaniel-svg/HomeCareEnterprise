@@ -1079,6 +1079,15 @@ class MigrationManager:
             """)
             self.connection.commit()
             cambios.append("Se creó la tabla capacitaciones")
+
+        if self.existe_tabla("capacitaciones"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "capacitaciones",
+                    {"token_visor": "token_visor TEXT"},
+                )
+            )
+
         return cambios
 
     def migrar_auditoria_completa(self):

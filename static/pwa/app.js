@@ -2947,7 +2947,7 @@ async function renderCapacitacion() {
       if (elemento.dataset.tipoAbrir === "externo") {
         window.open(elemento.dataset.url, "_blank");
       } else {
-        window.open(`/api/movil/capacitaciones/${elemento.dataset.id}/archivo`, "_blank");
+        window.open(`/capacitacion/${elemento.dataset.id}/ver`, "_blank");
       }
     });
   });
