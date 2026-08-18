@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block titulo %}Auditoría del Sistema{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-magnifying-glass text-primary"></i> Auditoría del Sistema</h2>
+    <p class="text-muted">Seguimiento de todo lo que hace cada usuario en el sistema — qué acciones realiza, si le salieron bien, y el detalle de cualquier error o advertencia que haya tenido.</p>
+
+    <div class="row mb-4">
+        <div class="col-md-4 mb-2">
+            <div class="card shadow-sm text-center">
+                <div class="card-body">
+                    <div class="display-6">{{ resumen.total }}</div>
+                    <div class="text-muted">Acciones en las últimas 24 horas</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-2">
+            <div class="card shadow-sm text-center border-warning">
+                <div class="card-body">
+                    <div class="display-6 text-warning">{{ resumen.advertencias }}</div>
+                    <div class="text-muted">Advertencias (últimas 24h)</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-2">
+            <div class="card shadow-sm text-center border-danger">
+                <div class="card-body">
+                    <div class="display-6 text-danger">{{ resumen.errores }}</div>
+                    <div class="text-muted">Errores del sistema (últimas 24h)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header bg-white"><h6 class="mb-0"><i class="fa-solid fa-users"></i> Actividad por usuario, en el rango de fechas filtrado</h6></div>
+        <div class="card-body p-0">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light"><tr><th>Usuario</th><th>Rol</th><th class="text-center">Acciones</th><th class="text-center">Advertencias</th><th class="text-center">Errores</th><th>Última actividad</th><th></th></tr></thead>
+                <tbody>
+                    {% for u in resumen_usuarios %}
+                    <tr class="{% if u.errores > 0 %}table-danger{% elif u.advertencias > 3 %}table-warning{% endif %}">
+                        <td>{{ u.usuario }}</td>
+                        <td>{{ u.rol }}</td>
+                        <td class="text-center">{{ u.total_acciones }}</td>
+                        <td class="text-center">{{ u.advertencias }}</td>
+                        <td class="text-center">{{ u.errores }}</td>
+                        <td><small>{{ (u.ultima_actividad or "")[:16] }}</small></td>
+                        <td>{% if u.usuario_id %}<a href="/auditoria/usuario/{{ u.usuario_id }}" class="btn btn-outline-secondary btn-sm">Ver historial</a>{% endif %}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="text-center text-muted py-3">Sin actividad registrada en este rango.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <form method="get" class="row align-items-end mb-3">
+        <div class="col-md-2 mb-2"><label class="small">Desde</label><input type="date" name="fecha_desde" class="form-control form-control-sm" value="{{ fecha_desde }}"></div>
+        <div class="col-md-2 mb-2"><label class="small">Hasta</label><input type="date" name="fecha_hasta" class="form-control form-control-sm" value="{{ fecha_hasta }}"></div>
+        <div class="col-md-2 mb-2">
+            <label class="small">Módulo</label>
+            <select name="modulo" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                {% for m in modulos_disponibles %}<option value="{{ m }}" {% if filtro_modulo == m %}selected{% endif %}>{{ m }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 mb-2">
+            <label class="small">Resultado</label>
+            <select name="resultado" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                <option value="Éxito" {% if filtro_resultado == "Éxito" %}selected{% endif %}>Éxito</option>
+                <option value="Advertencia" {% if filtro_resultado == "Advertencia" %}selected{% endif %}>Advertencia</option>
+                <option value="Error" {% if filtro_resultado == "Error" %}selected{% endif %}>Error</option>
+            </select>
+        </div>
+        <div class="col-md-2 mb-2"><button type="submit" class="btn btn-outline-primary btn-sm w-100">Filtrar</button></div>
+    </form>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light"><tr><th>Fecha</th><th>Usuario</th><th>Módulo</th><th>Acción</th><th>Resultado</th><th>Descripción</th></tr></thead>
+                <tbody>
+                    {% for r in registros %}
+                    <tr class="{% if r.resultado == 'Error' %}table-danger{% elif r.resultado == 'Advertencia' %}table-warning{% endif %}">
+                        <td><small>{{ (r.fecha or "")[:19] }}</small></td>
+                        <td>{{ r.usuario or "—" }}</td>
+                        <td>{{ r.modulo }}</td>
+                        <td><small>{{ r.accion }}</small></td>
+                        <td>
+                            {% if r.resultado == "Error" %}<span class="badge bg-danger">Error</span>
+                            {% elif r.resultado == "Advertencia" %}<span class="badge bg-warning text-dark">Advertencia</span>
+                            {% else %}<span class="badge bg-success">Éxito</span>{% endif %}
+                        </td>
+                        <td>
+                            <small>{{ r.descripcion }}</small>
+                            {% if r.detalle_error %}
+                            <br><a class="small text-danger" data-bs-toggle="collapse" href="#detalle-{{ r.id }}">Ver detalle técnico</a>
+                            <div class="collapse" id="detalle-{{ r.id }}"><pre class="small bg-light p-2 mt-1 mb-0" style="white-space:pre-wrap;">{{ r.detalle_error }}</pre></div>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">No hay registros con estos filtros.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

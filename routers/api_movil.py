@@ -236,6 +236,33 @@ async def logout(request: Request):
 # PERFIL DEL PROFESIONAL AUTENTICADO
 # ==========================================
 
+@router.get("/capacitaciones")
+async def capacitaciones_movil(usuario=Depends(usuario_actual)):
+    """Contenido de capacitación visible para este usuario desde la app móvil -- manuales, videos, o cualquier tema publicado."""
+    from services.capacitacion_service import listar_categorias_con_contenido
+    return listar_categorias_con_contenido(usuario.get("rol"), "Móvil")
+
+
+@router.get("/capacitaciones/{capacitacion_id}/archivo")
+async def descargar_capacitacion_movil(capacitacion_id: int, usuario=Depends(usuario_actual)):
+    from services.capacitacion_service import obtener as obtener_capacitacion
+    from fastapi.responses import FileResponse
+
+    item = obtener_capacitacion(capacitacion_id)
+    if not item or not item.get("archivo_path"):
+        raise HTTPException(status_code=404, detail="El archivo no existe.")
+
+    roles = [r.strip() for r in (item.get("roles_permitidos") or "Todos").split(",")]
+    if "Todos" not in roles and usuario.get("rol") not in roles:
+        raise HTTPException(status_code=403, detail="Este contenido no está disponible para su perfil.")
+
+    from core.config import RECURSOS_DIR
+    ruta = RECURSOS_DIR / item["archivo_path"]
+    if not ruta.exists():
+        raise HTTPException(status_code=404, detail="El archivo ya no se encuentra en el servidor.")
+    return FileResponse(ruta, filename=ruta.name)
+
+
 @router.get("/perfil")
 async def perfil(usuario=Depends(usuario_actual)):
     profesional = consultar_uno(

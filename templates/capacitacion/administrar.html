@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+{% block titulo %}Administrar Capacitación{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/capacitacion" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver al Módulo de Capacitación</a>
+
+    <h2 class="mb-1"><i class="fa-solid fa-gear text-primary"></i> Administrar Capacitación</h2>
+    <p class="text-muted">Publique manuales, videos, o cualquier tema de formación — eligiendo la plataforma (web, móvil, o ambas) y los perfiles que lo pueden ver.</p>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <button type="button" class="btn btn-success mb-3" id="btn-nuevo-contenido">
+        <i class="fa-solid fa-plus"></i> Publicar nuevo contenido
+    </button>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr><th>Título</th><th>Tipo</th><th>Categoría</th><th>Plataforma</th><th>Perfiles</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr class="{% if not item.activo %}table-secondary{% endif %}">
+                        <td>{{ item.titulo }}<br><small class="text-muted">{{ item.descripcion }}</small></td>
+                        <td>{{ item.tipo }}</td>
+                        <td>{{ item.categoria }}</td>
+                        <td>{{ item.plataforma }}</td>
+                        <td><small>{{ item.roles_permitidos }}</small></td>
+                        <td>{% if item.activo %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}</td>
+                        <td class="text-nowrap">
+                            <button type="button" class="btn btn-outline-secondary btn-sm btn-editar-item"
+                                    data-id="{{ item.id }}" data-titulo="{{ item.titulo }}" data-descripcion="{{ item.descripcion or '' }}"
+                                    data-tipo="{{ item.tipo }}" data-categoria="{{ item.categoria }}" data-plataforma="{{ item.plataforma }}"
+                                    data-roles="{{ item.roles_permitidos }}" data-url="{{ item.url_externa or '' }}" data-orden="{{ item.orden }}">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            {% if item.activo %}
+                            <form method="post" action="/capacitacion/administrar/{{ item.id }}/desactivar" class="d-inline">
+                                <button class="btn btn-outline-warning btn-sm" title="Ocultar"><i class="fa-solid fa-eye-slash"></i></button>
+                            </form>
+                            {% else %}
+                            <form method="post" action="/capacitacion/administrar/{{ item.id }}/reactivar" class="d-inline">
+                                <button class="btn btn-outline-success btn-sm" title="Reactivar"><i class="fa-solid fa-eye"></i></button>
+                            </form>
+                            {% endif %}
+                            <form method="post" action="/capacitacion/administrar/{{ item.id }}/eliminar" class="d-inline" onsubmit="return confirm('¿Eliminar definitivamente este contenido?');">
+                                <button class="btn btn-outline-danger btn-sm"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">Todavía no hay contenido publicado.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MODAL COMPARTIDO: NUEVO / EDITAR ===================== -->
+<div class="modal fade" id="modalContenido" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" id="form-contenido" action="/capacitacion/administrar/crear" enctype="multipart/form-data">
+            <div class="modal-header"><h5 class="modal-title" id="titulo-modal-contenido">Publicar nuevo contenido</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Título</label><input type="text" name="titulo" id="campo-titulo" class="form-control" required></div>
+                <div class="mb-2"><label>Descripción</label><textarea name="descripcion" id="campo-descripcion" class="form-control" rows="2"></textarea></div>
+                <div class="row">
+                    <div class="col-md-6 mb-2">
+                        <label>Tipo de contenido</label>
+                        <select name="tipo" id="campo-tipo" class="form-select">
+                            {% for t in tipos %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label>Categoría</label>
+                        <select name="categoria" id="campo-categoria" class="form-select">
+                            {% for c in categorias_disponibles %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-2">
+                        <label>Plataforma</label>
+                        <select name="plataforma" id="campo-plataforma" class="form-select">
+                            {% for p in plataformas %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-2"><label>Orden (menor primero)</label><input type="number" name="orden" id="campo-orden" class="form-control" value="0"></div>
+                </div>
+
+                <div class="mb-2">
+                    <label>Perfiles que lo pueden ver</label>
+                    <div class="border rounded p-2">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input check-rol" value="Todos" id="rol-todos" checked>
+                            <label class="form-check-label" for="rol-todos"><strong>Todos los perfiles</strong></label>
+                        </div>
+                        <hr class="my-1">
+                        {% for r in roles %}
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input check-rol" value="{{ r.nombre }}" id="rol-{{ r.id }}">
+                            <label class="form-check-label" for="rol-{{ r.id }}">{{ r.nombre }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <input type="hidden" name="roles_permitidos" id="campo-roles-permitidos" value="Todos">
+                </div>
+
+                <hr>
+                <div class="mb-2"><label>Enlace externo (video de YouTube/Vimeo, o cualquier página)</label><input type="url" name="url_externa" id="campo-url" class="form-control" placeholder="https://..."></div>
+                <div class="mb-2">
+                    <label>O adjuntar un archivo (PDF, Word, PowerPoint...)</label>
+                    <input type="file" name="archivo" class="form-control">
+                    <small class="text-muted" id="texto-archivo-actual"></small>
+                </div>
+                <p class="text-muted small mb-0">Use el enlace externo O el archivo — con uno de los dos basta.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success" id="btn-guardar-contenido">Publicar</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+
+<script>
+const modalContenido = new bootstrap.Modal(document.getElementById("modalContenido"));
+
+function limpiarFormularioContenido() {
+    document.getElementById("form-contenido").reset();
+    document.getElementById("form-contenido").action = "/capacitacion/administrar/crear";
+    document.getElementById("titulo-modal-contenido").textContent = "Publicar nuevo contenido";
+    document.getElementById("btn-guardar-contenido").textContent = "Publicar";
+    document.getElementById("texto-archivo-actual").textContent = "";
+    document.querySelectorAll(".check-rol").forEach((c) => c.checked = (c.value === "Todos"));
+}
+
+document.getElementById("btn-nuevo-contenido").addEventListener("click", () => {
+    limpiarFormularioContenido();
+    modalContenido.show();
+});
+
+document.querySelectorAll(".btn-editar-item").forEach((boton) => {
+    boton.addEventListener("click", () => {
+        limpiarFormularioContenido();
+        document.getElementById("form-contenido").action = `/capacitacion/administrar/${boton.dataset.id}/actualizar`;
+        document.getElementById("titulo-modal-contenido").textContent = "Editar contenido";
+        document.getElementById("btn-guardar-contenido").textContent = "Guardar cambios";
+        document.getElementById("campo-titulo").value = boton.dataset.titulo || "";
+        document.getElementById("campo-descripcion").value = boton.dataset.descripcion || "";
+        document.getElementById("campo-tipo").value = boton.dataset.tipo || "Manual";
+        document.getElementById("campo-categoria").value = boton.dataset.categoria || "Otro";
+        document.getElementById("campo-plataforma").value = boton.dataset.plataforma || "Web";
+        document.getElementById("campo-url").value = boton.dataset.url || "";
+        document.getElementById("campo-orden").value = boton.dataset.orden || 0;
+        document.getElementById("texto-archivo-actual").textContent = "Deje el archivo vacío para conservar el que ya tiene guardado.";
+
+        const rolesSeleccionados = (boton.dataset.roles || "Todos").split(",").map(r => r.trim());
+        document.querySelectorAll(".check-rol").forEach((casilla) => {
+            casilla.checked = rolesSeleccionados.includes(casilla.value);
+        });
+
+        modalContenido.show();
+    });
+});
+
+// Al marcar "Todos", se descartan los perfiles individuales (y viceversa) --
+// para que quede claro que son excluyentes.
+document.getElementById("rol-todos").addEventListener("change", function () {
+    if (this.checked) {
+        document.querySelectorAll(".check-rol:not(#rol-todos)").forEach((c) => c.checked = false);
+    }
+});
+document.querySelectorAll(".check-rol:not(#rol-todos)").forEach((casilla) => {
+    casilla.addEventListener("change", function () {
+        if (this.checked) document.getElementById("rol-todos").checked = false;
+    });
+});
+
+document.getElementById("form-contenido").addEventListener("submit", () => {
+    const seleccionados = Array.from(document.querySelectorAll(".check-rol:checked")).map(c => c.value);
+    document.getElementById("campo-roles-permitidos").value = seleccionados.length ? seleccionados.join(",") : "Todos";
+});
+</script>
+{% endblock %}

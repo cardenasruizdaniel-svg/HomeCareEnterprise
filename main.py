@@ -46,6 +46,8 @@ from routers.carpeta_paciente import router as carpeta_paciente_router
 from routers.servicios_criticos import router as servicios_criticos_router
 from routers.convenios_eps import router as convenios_eps_router
 from routers.autorizaciones_eps import router as autorizaciones_eps_router
+from routers.auditoria import router as auditoria_router
+from routers.capacitacion import router as capacitacion_router
 from routers.posible_programacion import router as posible_programacion_router
 from routers.documentos_seguros import router as documentos_seguros_router
 from routers import despacho
@@ -126,6 +128,9 @@ def create_app() -> FastAPI:
     app.add_middleware(
         SessionTimeoutMiddleware
     )
+
+    from middleware.auditoria import AuditoriaMiddleware
+    app.add_middleware(AuditoriaMiddleware)
 
     app.add_middleware(
 
@@ -231,6 +236,8 @@ def create_app() -> FastAPI:
     app.include_router(servicios_criticos_router)
     app.include_router(convenios_eps_router)
     app.include_router(autorizaciones_eps_router)
+    app.include_router(auditoria_router)
+    app.include_router(capacitacion_router)
     app.include_router(posible_programacion_router)
     app.include_router(documentos_seguros_router)
 

@@ -582,6 +582,7 @@ async function irA(vista, parametro) {
   if (vista === "agenda") return renderAgenda();
   if (vista === "pacientes") return renderBusquedaPacientes();
   if (vista === "pendientes") return renderPendientes();
+  if (vista === "capacitacion") return renderCapacitacion();
   if (vista === "perfil") return renderPerfil();
   if (vista === "detalle_visita") return renderDetalleVisita(parametro);
   if (vista === "ficha_paciente") return renderFichaPaciente(parametro);
@@ -2885,6 +2886,71 @@ async function renderPendientes() {
       }
     )
     .join("");
+}
+
+// ---------------- PERFIL ----------------
+
+// ---------------- CAPACITACIÓN ----------------
+
+async function renderCapacitacion() {
+  titulo("Capacitación");
+  contenedor().innerHTML = `<div class="card"><p style="text-align:center;color:#6c757d;">Cargando...</p></div>`;
+
+  let categorias = {};
+  try {
+    const respuesta = await fetch("/api/movil/capacitaciones", { credentials: "same-origin" });
+    categorias = await respuesta.json();
+  } catch (error) {
+    contenedor().innerHTML = `
+      <div class="card">
+        <p style="text-align:center;color:#6c757d;">
+          No se pudo cargar el material de capacitación (sin conexión). Intente de nuevo cuando tenga internet.
+        </p>
+      </div>`;
+    return;
+  }
+
+  const nombresCategorias = Object.keys(categorias);
+
+  if (nombresCategorias.length === 0) {
+    contenedor().innerHTML = `
+      <div class="card">
+        <p style="text-align:center;color:#6c757d;">
+          Todavía no hay material de capacitación disponible para su perfil.
+        </p>
+      </div>`;
+    return;
+  }
+
+  const iconoPorTipo = (tipo) => (tipo === "Video" ? "🎬" : tipo === "Enlace" ? "🔗" : "📄");
+
+  contenedor().innerHTML = nombresCategorias.map((nombreCategoria) => `
+    <div class="card">
+      <h3 style="margin-top:0;">${nombreCategoria}</h3>
+      ${categorias[nombreCategoria].map((item) => `
+        <div class="item-lista" data-id="${item.id}" data-tipo-abrir="${item.url_externa ? "externo" : "archivo"}" data-url="${item.url_externa || ""}">
+          <div style="display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid #eee;">
+            <span style="font-size:22px;">${iconoPorTipo(item.tipo)}</span>
+            <div style="flex:1;">
+              <strong>${item.titulo}</strong>
+              ${item.descripcion ? `<div style="font-size:13px;color:#6c757d;">${item.descripcion}</div>` : ""}
+            </div>
+            <span style="font-size:18px;color:#00c2b8;">›</span>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `).join("");
+
+  document.querySelectorAll(".item-lista").forEach((elemento) => {
+    elemento.addEventListener("click", () => {
+      if (elemento.dataset.tipoAbrir === "externo") {
+        window.open(elemento.dataset.url, "_blank");
+      } else {
+        window.open(`/api/movil/capacitaciones/${elemento.dataset.id}/archivo`, "_blank");
+      }
+    });
+  });
 }
 
 // ---------------- PERFIL ----------------

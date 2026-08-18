@@ -258,6 +258,14 @@ def iniciar_sistema():
     from repositories.catalogo_examenes_laboratorio_repository import sembrar_si_vacio as sembrar_examenes_lab
     sembrar_examenes_lab()
 
+    try:
+        from services.capacitacion_service import sembrar_manuales_existentes
+        manuales_sembrados = sembrar_manuales_existentes()
+        if manuales_sembrados:
+            print(f"[OK] Módulo de Capacitación: se registraron {len(manuales_sembrados)} manual(es) inicial(es).")
+    except Exception as error:
+        print(f"[AVISO] No se pudo sembrar el módulo de Capacitación: {error}")
+
     print()
 
     print("[OK] Sistema listo.")

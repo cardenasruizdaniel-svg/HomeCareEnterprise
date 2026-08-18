@@ -35,6 +35,13 @@ async def login_post(
 
     if datos is None:
 
+        registrar_auditoria(
+            usuario=usuario, modulo="Autenticación", accion="Login fallido",
+            descripcion=f"Intento de inicio de sesión con credenciales incorrectas para el usuario '{usuario}'.",
+            ip=request.client.host if request.client else "", navegador=request.headers.get("user-agent", ""),
+            resultado="Advertencia",
+        )
+
         return templates.TemplateResponse(
             request=request,
             name="login.html",

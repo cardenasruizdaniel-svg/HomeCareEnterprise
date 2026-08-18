@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block titulo %}Historial de {{ nombre_usuario or "Usuario" }}{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/auditoria" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver a Auditoría</a>
+    <h2 class="mb-3"><i class="fa-solid fa-user-clock text-primary"></i> Historial de {{ nombre_usuario or "este usuario" }}</h2>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light"><tr><th>Fecha</th><th>Módulo</th><th>Acción</th><th>Resultado</th><th>Descripción</th></tr></thead>
+                <tbody>
+                    {% for r in registros %}
+                    <tr class="{% if r.resultado == 'Error' %}table-danger{% elif r.resultado == 'Advertencia' %}table-warning{% endif %}">
+                        <td><small>{{ (r.fecha or "")[:19] }}</small></td>
+                        <td>{{ r.modulo }}</td>
+                        <td><small>{{ r.accion }}</small></td>
+                        <td>
+                            {% if r.resultado == "Error" %}<span class="badge bg-danger">Error</span>
+                            {% elif r.resultado == "Advertencia" %}<span class="badge bg-warning text-dark">Advertencia</span>
+                            {% else %}<span class="badge bg-success">Éxito</span>{% endif %}
+                        </td>
+                        <td><small>{{ r.descripcion }}</small></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">Sin actividad registrada para este usuario.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

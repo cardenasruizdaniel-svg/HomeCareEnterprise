@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block titulo %}Capacitación{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 class="mb-1"><i class="fa-solid fa-graduation-cap text-primary"></i> Módulo de Capacitación</h2>
+            <p class="text-muted mb-0">Manuales, videos y material de formación — organizados según lo que le corresponde a su perfil.</p>
+        </div>
+        {% if usuario and ('administrador' in usuario.rol.lower() or 'geren' in usuario.rol.lower()) %}
+        <a href="/capacitacion/administrar/todo" class="btn btn-outline-primary"><i class="fa-solid fa-gear"></i> Administrar contenido</a>
+        {% endif %}
+    </div>
+
+    {% if not categorias %}
+    <div class="card shadow"><div class="card-body text-center text-muted py-5">
+        Todavía no hay contenido de capacitación disponible para su perfil.
+    </div></div>
+    {% endif %}
+
+    {% for nombre_categoria, items in categorias.items() %}
+    <div class="card shadow mb-4">
+        <div class="card-header bg-white"><h5 class="mb-0">{{ nombre_categoria }}</h5></div>
+        <div class="card-body">
+            <div class="row">
+                {% for item in items %}
+                <div class="col-md-4 mb-3">
+                    <div class="card h-100 border">
+                        <div class="card-body">
+                            <div class="mb-2">
+                                {% if item.tipo == "Video" %}<span class="badge bg-danger"><i class="fa-solid fa-video"></i> Video</span>
+                                {% elif item.tipo == "Manual" %}<span class="badge bg-primary"><i class="fa-solid fa-book"></i> Manual</span>
+                                {% elif item.tipo == "Enlace" %}<span class="badge bg-info text-dark"><i class="fa-solid fa-link"></i> Enlace</span>
+                                {% else %}<span class="badge bg-secondary"><i class="fa-solid fa-file"></i> Documento</span>{% endif %}
+                                {% if item.plataforma == "Móvil" %}<span class="badge bg-light text-dark border"><i class="fa-solid fa-mobile-screen"></i> Móvil</span>{% endif %}
+                            </div>
+                            <h6 class="card-title">{{ item.titulo }}</h6>
+                            <p class="card-text small text-muted">{{ item.descripcion }}</p>
+                            {% if item.url_externa %}
+                            <a href="{{ item.url_externa }}" target="_blank" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir
+                            </a>
+                            {% elif item.archivo_path %}
+                            <a href="/capacitacion/{{ item.id }}/archivo" target="_blank" class="btn btn-outline-success btn-sm w-100">
+                                <i class="fa-solid fa-download"></i> Ver / Descargar
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

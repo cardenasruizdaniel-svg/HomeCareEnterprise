@@ -406,6 +406,9 @@ class DashboardService:
         )
         autorizaciones_pendientes = dict(fila_autorizaciones)["total"] if fila_autorizaciones else 0
 
+        from services.auditoria_service import resumen_dashboard as _resumen_auditoria
+        auditoria_24h = _resumen_auditoria(24)
+
         return {
             "facturado_mes": facturado_mes, "facturado_mes_texto": self.formato_moneda(facturado_mes),
             "facturas_mes": facturas_mes, "tendencia_facturacion": tendencia_facturacion,
@@ -420,6 +423,8 @@ class DashboardService:
             "visitas_mes": visitas_mes, "visitas_completadas_mes": visitas_completadas_mes,
             "porcentaje_cumplimiento": porcentaje_cumplimiento,
             "autorizaciones_pendientes": autorizaciones_pendientes,
+            "auditoria_errores_24h": auditoria_24h["errores"],
+            "auditoria_advertencias_24h": auditoria_24h["advertencias"],
         }
 
     def grafico_produccion_detallado(self):

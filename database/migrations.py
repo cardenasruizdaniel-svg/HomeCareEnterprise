@@ -1046,6 +1046,70 @@ class MigrationManager:
 
         return cambios
 
+    def migrar_capacitacion(self):
+        """
+        Módulo de Capacitación: un solo lugar (accesible desde
+        la web Y desde la app móvil) donde queda todo el material
+        de formación del personal -- los manuales que ya existían
+        (configuración, parametrización, funcionamiento,
+        operación web y móvil), y donde se pueden seguir
+        publicando nuevos manuales, videos, o cualquier tema
+        importante, cada uno visible solo para los perfiles que
+        correspondan.
+        """
+        cambios = []
+        if not self.existe_tabla("capacitaciones"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS capacitaciones(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    titulo TEXT NOT NULL,
+                    descripcion TEXT,
+                    tipo TEXT NOT NULL DEFAULT 'Manual',
+                    categoria TEXT DEFAULT 'Otro',
+                    plataforma TEXT DEFAULT 'Web',
+                    archivo_path TEXT,
+                    url_externa TEXT,
+                    roles_permitidos TEXT DEFAULT 'Todos',
+                    orden INTEGER DEFAULT 0,
+                    activo INTEGER DEFAULT 1,
+                    fecha_publicacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    usuario_publico_id INTEGER,
+                    usuario_publico_nombre TEXT
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla capacitaciones")
+        return cambios
+
+    def migrar_auditoria_completa(self):
+        """
+        Amplía la tabla de auditoría (que ya existía en el
+        esquema, pero nunca se usaba) para que quede un registro
+        real de todo lo que hace cada usuario en el sistema:
+        no solo qué acción intentó, sino si le salió bien, si
+        tuvo una advertencia (algo no permitido, un dato
+        incompleto), o si el sistema tuvo un error real -- con
+        el detalle exacto de qué pasó, para poder ver de un
+        vistazo cómo está operando cada usuario y ayudarle a
+        corregir lo que esté haciendo mal.
+        """
+        cambios = []
+        if self.existe_tabla("auditoria"):
+            cambios.extend(
+                self.sincronizar_columnas(
+                    "auditoria",
+                    {
+                        "resultado": "resultado TEXT DEFAULT 'Éxito'",
+                        "detalle_error": "detalle_error TEXT",
+                        "metodo_http": "metodo_http TEXT",
+                        "ruta": "ruta TEXT",
+                        "codigo_estado": "codigo_estado INTEGER",
+                        "duracion_ms": "duracion_ms INTEGER",
+                    },
+                )
+            )
+        return cambios
+
     def migrar_inventario_enterprise(self):
         """
         Amplía el módulo de inventario:
@@ -2845,6 +2909,14 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_inventario_enterprise()
+        )
+
+        cambios.extend(
+            self.migrar_auditoria_completa()
+        )
+
+        cambios.extend(
+            self.migrar_capacitacion()
         )
 
         cambios.extend(

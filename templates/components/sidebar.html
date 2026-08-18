@@ -24,6 +24,13 @@
             </a>
         </li>
 
+        <li>
+            <a href="/capacitacion">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>Capacitación</span>
+            </a>
+        </li>
+
         {% if usuario and (tiene_permiso(usuario.rol, "pacientes") or tiene_permiso(usuario.rol, "programacion")) %}
         <li class="menu-title" data-grupo="atencion_domiciliaria">
             <span>Atención domiciliaria</span>
@@ -129,6 +136,15 @@
             <a href="/roles-permisos">
                 <i class="fa-solid fa-user-shield"></i>
                 <span>Roles y Permisos</span>
+            </a>
+        </li>
+        {% endif %}
+
+        {% if usuario and ('administrador' in usuario.rol.lower() or 'geren' in usuario.rol.lower()) %}
+        <li>
+            <a href="/auditoria">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span>Auditoría del Sistema</span>
             </a>
         </li>
         {% endif %}
