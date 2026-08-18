@@ -334,6 +334,7 @@ async def asignar_programa_eps_desde_ficha(
 async def registrar_nota_visita_desde_ficha(
     paciente_id: int,
     nota: str = Form(...),
+    tipo_profesional_admin: str = Form(""),
     usuario=Depends(requiere_permiso("pacientes")),
 ):
     """
@@ -345,11 +346,23 @@ async def registrar_nota_visita_desde_ficha(
     móvil) -- no se deja elegir libremente, para que un
     enfermero no pueda quedar registrado con una nota de
     "Médico", por ejemplo.
+
+    Única excepción: el Administrador (el "super admin") sí
+    puede elegir el tipo, para poder verificar que el sistema
+    esté funcionando bien en cualquiera de los tipos de nota --
+    el resto del personal, sin excepción, queda con el tipo que
+    le corresponde a su propio perfil, sin poder cambiarlo.
     """
     from database.database import consultar_uno
     from services.evoluciones_service import registrar_evolucion, tipo_nota_segun_rol
 
-    tipo_profesional = tipo_nota_segun_rol(usuario.get("rol", ""))
+    es_super_admin = (usuario.get("rol", "") or "").strip().lower() == "administrador"
+
+    if es_super_admin and tipo_profesional_admin:
+        tipo_profesional = tipo_profesional_admin
+    else:
+        tipo_profesional = tipo_nota_segun_rol(usuario.get("rol", ""))
+
     if not tipo_profesional:
         return RedirectResponse(
             url=f"/pacientes/{paciente_id}?error=Su perfil no tiene un tipo de nota clínica propio para registrar visitas.",
@@ -412,6 +425,16 @@ async def ficha(
     from services.evoluciones_service import tipo_nota_segun_rol
     tipo_nota_del_usuario = tipo_nota_segun_rol(usuario.get("rol", ""))
 
+    # El Administrador (el "super admin", una persona de
+    # confianza que conoce el sistema) es la única excepción --
+    # puede registrar una nota de cualquier tipo, para poder
+    # verificar que todo esté funcionando bien. El resto del
+    # personal administrativo NO tiene esta excepción: solo
+    # quien realmente hizo la visita puede registrar su nota,
+    # con el tipo que le corresponde a su propio perfil.
+    es_super_admin = (usuario.get("rol", "") or "").strip().lower() == "administrador"
+    tipos_nota_disponibles = ["Médico", "Enfermero", "Terapeuta", "Cuidador", "Aplicador", "Curaciones"] if es_super_admin else []
+
     return templates.TemplateResponse(
         request=request,
         name="pacientes/ficha.html",
@@ -426,6 +449,8 @@ async def ficha(
             "convenio_eps_actual": convenio_eps_actual,
             "opciones_programa": opciones_programa,
             "tipo_nota_del_usuario": tipo_nota_del_usuario,
+            "es_super_admin": es_super_admin,
+            "tipos_nota_disponibles": tipos_nota_disponibles,
         },
     )
 
