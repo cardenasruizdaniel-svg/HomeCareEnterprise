@@ -103,16 +103,44 @@ async def descargar_archivo(recomendacion_id: int, usuario=Depends(usuario_actua
     return FileResponse(ruta, filename=ruta.name)
 
 
+@router.get("/{recomendacion_id}/pdf")
+async def descargar_pdf(recomendacion_id: int, usuario=Depends(usuario_actual)):
+    """Descarga (o genera al vuelo) el PDF de la recomendación -- para verla, imprimirla, o entregarla físicamente al paciente."""
+    try:
+        ruta = recomendaciones.generar_pdf(recomendacion_id)
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail=str(error))
+    from pathlib import Path
+    nombre_descarga = f"{Path(ruta).stem}.pdf" if not str(ruta).endswith(".pdf") else Path(ruta).name
+    return FileResponse(ruta, media_type="application/pdf", filename=Path(ruta).name)
+
+
 @router.get("/buscar")
 async def buscar(q: str = "", usuario=Depends(requiere_permiso("pacientes"))):
     """Búsqueda por tipo de examen -- la usa la pantalla de Toma de Muestras, para sugerir la recomendación adecuada."""
     return recomendaciones.buscar_por_tipo_examen(q)
 
 
+@router.get("/buscar-pacientes")
+async def buscar_pacientes(q: str = "", usuario=Depends(requiere_permiso("pacientes"))):
+    """Búsqueda de pacientes por nombre o documento -- para elegir a quién enviarle la recomendación desde el panel."""
+    from database.database import consultar_todos
+    if not q or len(q) < 2:
+        return []
+    filas = consultar_todos(
+        "SELECT id, documento, primer_nombre, primer_apellido, celular, correo FROM pacientes "
+        "WHERE (primer_nombre LIKE ? OR primer_apellido LIKE ? OR documento LIKE ?) AND UPPER(estado)='ACTIVO' LIMIT 10",
+        (f"%{q}%", f"%{q}%", f"%{q}%"),
+    )
+    return [dict(f) for f in filas]
+
+
 @router.post("/{recomendacion_id}/enviar/{paciente_id}", response_class=JSONResponse)
-async def enviar(recomendacion_id: int, paciente_id: int, usuario=Depends(requiere_permiso("pacientes"))):
+async def enviar(request: Request, recomendacion_id: int, paciente_id: int, usuario=Depends(requiere_permiso("pacientes"))):
+    from core.config import PUBLIC_BASE_URL
+    base_url = PUBLIC_BASE_URL if PUBLIC_BASE_URL else str(request.base_url)
     try:
-        resultado = recomendaciones.enviar_a_paciente(recomendacion_id, paciente_id)
+        resultado = recomendaciones.enviar_a_paciente(recomendacion_id, paciente_id, base_url=base_url)
         return {"ok": True, **resultado}
     except ValueError as error:
         return {"ok": False, "error": str(error)}

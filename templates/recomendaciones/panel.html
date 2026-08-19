@@ -31,6 +31,13 @@
                         <td>{{ item.tipo_examen }}</td>
                         <td>{% if item.activo %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}</td>
                         <td class="text-nowrap">
+                            <a href="/recomendaciones/{{ item.id }}/pdf" target="_blank" class="btn btn-outline-primary btn-sm" title="Descargar / ver PDF">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </a>
+                            <button type="button" class="btn btn-outline-info btn-sm btn-enviar-recomendacion"
+                                    data-id="{{ item.id }}" data-titulo="{{ item.titulo }}" title="Enviar a un paciente">
+                                <i class="fa-solid fa-paper-plane"></i>
+                            </button>
                             <button type="button" class="btn btn-outline-secondary btn-sm btn-editar-recomendacion"
                                     data-id="{{ item.id }}" data-titulo="{{ item.titulo }}" data-tipo-examen="{{ item.tipo_examen }}"
                                     data-categoria="{{ item.categoria }}" data-descripcion="{{ item.descripcion or '' }}"
@@ -56,6 +63,19 @@
     {% else %}
     <div class="card shadow"><div class="card-body text-center text-muted py-5">Todavía no hay recomendaciones registradas.</div></div>
     {% endfor %}
+</div>
+
+<!-- ===================== MODAL: ENVIAR A PACIENTE ===================== -->
+<div class="modal fade" id="modalEnviarRecomendacion" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Enviar: <span id="titulo-envio-recomendacion"></span></h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+            <label>Buscar paciente por nombre o documento</label>
+            <input type="text" id="buscar-paciente-envio" class="form-control" autocomplete="off" placeholder="Escriba el nombre o documento...">
+            <div id="resultados-paciente-envio" class="list-group mt-2"></div>
+            <div id="aviso-envio-recomendacion-modal" class="mt-2"></div>
+        </div>
+    </div></div>
 </div>
 
 <!-- ===================== MODAL COMPARTIDO: NUEVO / EDITAR ===================== -->
@@ -107,6 +127,55 @@ function limpiarFormularioRecomendacion() {
 document.getElementById("btn-nueva-recomendacion").addEventListener("click", () => {
     limpiarFormularioRecomendacion();
     modalRecomendacion.show();
+});
+
+const modalEnviarRecomendacion = new bootstrap.Modal(document.getElementById("modalEnviarRecomendacion"));
+let recomendacionIdParaEnviar = null;
+
+document.querySelectorAll(".btn-enviar-recomendacion").forEach((boton) => {
+    boton.addEventListener("click", () => {
+        recomendacionIdParaEnviar = boton.dataset.id;
+        document.getElementById("titulo-envio-recomendacion").textContent = boton.dataset.titulo;
+        document.getElementById("buscar-paciente-envio").value = "";
+        document.getElementById("resultados-paciente-envio").innerHTML = "";
+        document.getElementById("aviso-envio-recomendacion-modal").innerHTML = "";
+        modalEnviarRecomendacion.show();
+    });
+});
+
+let temporizadorBusquedaPacienteEnvio;
+document.getElementById("buscar-paciente-envio").addEventListener("input", function () {
+    clearTimeout(temporizadorBusquedaPacienteEnvio);
+    const texto = this.value.trim();
+    const contenedor = document.getElementById("resultados-paciente-envio");
+    if (texto.length < 2) { contenedor.innerHTML = ""; return; }
+    temporizadorBusquedaPacienteEnvio = setTimeout(async () => {
+        const respuesta = await fetch(`/recomendaciones/buscar-pacientes?q=${encodeURIComponent(texto)}`);
+        const pacientes = await respuesta.json();
+        contenedor.innerHTML = pacientes.map((p) => `
+            <button type="button" class="list-group-item list-group-item-action btn-confirmar-envio-paciente" data-id="${p.id}">
+                ${p.primer_nombre} ${p.primer_apellido} — ${p.documento}
+                ${!p.celular && !p.correo ? '<span class="badge bg-warning text-dark float-end">Sin celular ni correo</span>' : ''}
+            </button>
+        `).join("") || `<div class="text-muted small mt-1">No se encontraron pacientes.</div>`;
+
+        contenedor.querySelectorAll(".btn-confirmar-envio-paciente").forEach((boton) => {
+            boton.addEventListener("click", async () => {
+                const aviso = document.getElementById("aviso-envio-recomendacion-modal");
+                aviso.innerHTML = `<div class="alert alert-secondary py-2">Enviando...</div>`;
+                const resp = await fetch(`/recomendaciones/${recomendacionIdParaEnviar}/enviar/${boton.dataset.id}`, { method: "POST" });
+                const resultado = await resp.json();
+                if (resultado.ok) {
+                    aviso.innerHTML = `<div class="alert alert-success py-2">
+                        Procesado — WhatsApp: ${resultado.whatsapp.enviado ? "enviado" : (resultado.whatsapp.motivo || "no enviado")},
+                        Correo: ${resultado.correo.enviado ? "enviado" : (resultado.correo.motivo || "no enviado")}.
+                    </div>`;
+                } else {
+                    aviso.innerHTML = `<div class="alert alert-danger py-2">${resultado.error}</div>`;
+                }
+            });
+        });
+    }, 300);
 });
 
 document.querySelectorAll(".btn-editar-recomendacion").forEach((boton) => {

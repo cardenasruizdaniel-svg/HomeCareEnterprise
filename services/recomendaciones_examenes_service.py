@@ -90,12 +90,76 @@ def reactivar(recomendacion_id: int):
     ejecutar("UPDATE recomendaciones_examenes SET activo=1 WHERE id=?", (recomendacion_id,))
 
 
-def enviar_a_paciente(recomendacion_id: int, paciente_id: int) -> dict:
+def generar_pdf(recomendacion_id: int) -> str:
+    """
+    Genera un PDF con el título y el contenido de la
+    recomendación -- para poder descargarla, imprimirla, o
+    adjuntarla al enviarla por WhatsApp/correo. Si la
+    recomendación tiene un archivo propio adjunto (subido por
+    el usuario), ese archivo se usa directamente en vez de
+    generar uno nuevo.
+    """
+    from pathlib import Path
+    from datetime import datetime
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.units import cm
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
+    from core.config import EXPORTS_DIR, RECURSOS_DIR
+
+    recomendacion = obtener(recomendacion_id)
+    if not recomendacion:
+        raise ValueError("La recomendación indicada no existe.")
+
+    # Si ya tiene un archivo propio adjunto, se usa ese directamente -- no hace falta generar nada nuevo.
+    if recomendacion.get("archivo_path"):
+        ruta_archivo = Path(RECURSOS_DIR) / recomendacion["archivo_path"]
+        if ruta_archivo.exists():
+            return str(ruta_archivo)
+
+    carpeta = Path(EXPORTS_DIR) / "recomendaciones"
+    carpeta.mkdir(parents=True, exist_ok=True)
+    ruta = carpeta / f"recomendacion_{recomendacion_id}_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
+
+    base = getSampleStyleSheet()
+    titulo_estilo = ParagraphStyle("Titulo", parent=base["Heading1"], fontSize=15, textColor=colors.HexColor("#0a8f86"), spaceAfter=4)
+    subtitulo_estilo = ParagraphStyle("Subtitulo", parent=base["Normal"], fontSize=11, textColor=colors.grey, spaceAfter=14)
+    normal = ParagraphStyle("NormalDoc", parent=base["Normal"], fontSize=11, spaceAfter=8, leading=16)
+
+    doc = SimpleDocTemplate(str(ruta), pagesize=letter, topMargin=2.5 * cm, bottomMargin=2 * cm, leftMargin=2 * cm, rightMargin=2 * cm)
+
+    elementos = [
+        Paragraph("HomeCare del Quindío I.P.S.", titulo_estilo),
+        Paragraph(f"Indicaciones para: {recomendacion['tipo_examen']}", ParagraphStyle("Sec", parent=base["Heading2"], fontSize=13, spaceAfter=6)),
+        Paragraph(recomendacion["titulo"], subtitulo_estilo),
+    ]
+
+    for parrafo_texto in (recomendacion.get("contenido_texto") or "").split("\n"):
+        if parrafo_texto.strip():
+            elementos.append(Paragraph(parrafo_texto.replace("•", "&#8226;"), normal))
+
+    elementos.append(Spacer(1, 20))
+    elementos.append(Paragraph(
+        "Ante cualquier duda sobre estas indicaciones, comuníquese con su equipo de atención antes de la toma de la muestra.",
+        ParagraphStyle("Nota", parent=base["Normal"], fontSize=9, textColor=colors.grey),
+    ))
+
+    doc.build(elementos)
+    return str(ruta)
+
+
+def enviar_a_paciente(recomendacion_id: int, paciente_id: int, base_url: str = None) -> dict:
     """
     Envía la recomendación al paciente por WhatsApp y correo,
     reutilizando el mismo mecanismo ya usado para enviar órdenes
     médicas y la historia clínica -- para que el paciente sepa
     con anticipación cómo prepararse para el examen.
+
+    'base_url' es la URL pública del sistema (se calcula sola a
+    partir de la petición que llega, no depende de tener
+    configurada ninguna variable de entorno aparte) -- se usa
+    para que WhatsApp pueda descargar el PDF adjunto.
     """
     from services.notificaciones_service import enviar_whatsapp, enviar_email
 
@@ -108,31 +172,31 @@ def enviar_a_paciente(recomendacion_id: int, paciente_id: int) -> dict:
         raise ValueError("El paciente indicado no existe.")
     paciente = dict(paciente)
 
+    # El PDF se genera siempre (o se usa el archivo propio si ya
+    # tiene uno adjunto) -- así el paciente recibe un documento
+    # que puede guardar e imprimir, no solo un mensaje de texto.
+    ruta_pdf = generar_pdf(recomendacion_id)
+
     nombre_paciente = f"{paciente.get('primer_nombre','')} {paciente.get('primer_apellido','')}".strip()
     resultado = {"whatsapp": {"enviado": False}, "correo": {"enviado": False}}
 
     mensaje_texto = (
         f"Hola {nombre_paciente}, HomeCare IPS le comparte las indicaciones para su examen "
         f"de *{recomendacion['tipo_examen']}*:\n\n{recomendacion['contenido_texto']}\n\n"
-        f"Por favor téngalas en cuenta antes de la toma de la muestra."
+        f"Por favor téngalas en cuenta antes de la toma de la muestra. Le adjuntamos también el documento."
     )
 
     celular_paciente = paciente.get("celular") or paciente.get("telefono")
     if celular_paciente:
         adjunto_url = None
-        if recomendacion.get("archivo_path"):
-            from core.config import PUBLIC_BASE_URL
-            if PUBLIC_BASE_URL:
-                adjunto_url = f"{PUBLIC_BASE_URL.rstrip('/')}/recomendaciones/{recomendacion_id}/archivo"
+        if base_url:
+            adjunto_url = f"{base_url.rstrip('/')}/recomendaciones/{recomendacion_id}/pdf"
         resultado["whatsapp"] = enviar_whatsapp(numero=celular_paciente, mensaje=mensaje_texto, adjunto_url=adjunto_url)
     else:
         resultado["whatsapp"] = {"enviado": False, "motivo": "Paciente sin celular registrado."}
 
     correo_paciente = paciente.get("correo")
     if correo_paciente:
-        from pathlib import Path
-        from core.config import RECURSOS_DIR
-        adjunto_path = str(Path(RECURSOS_DIR) / recomendacion["archivo_path"]) if recomendacion.get("archivo_path") else None
         resultado["correo"] = enviar_email(
             destinatario=correo_paciente, asunto=f"HomeCare IPS - Indicaciones para su examen ({recomendacion['tipo_examen']})",
             cuerpo_html=(
@@ -141,7 +205,7 @@ def enviar_a_paciente(recomendacion_id: int, paciente_id: int) -> dict:
                 f"<p>{recomendacion['contenido_texto'].replace(chr(10), '<br>')}</p>"
                 f"<p style='color:#888;font-size:12px'>HomeCare IPS - Mensaje generado automáticamente.</p>"
             ),
-            adjunto_path=adjunto_path,
+            adjunto_path=ruta_pdf,
         )
     else:
         resultado["correo"] = {"enviado": False, "motivo": "Paciente sin correo registrado."}
