@@ -70,6 +70,7 @@ async def enviar_firma(token: str, datos: dict = Body(...)):
             nombre_firmante=datos.get("nombre_firmante", ""),
             documento_firmante=datos.get("documento_firmante", ""),
             parentesco_firmante=datos.get("parentesco_firmante", ""),
+            foto_firmante_base64=datos.get("foto_firmante_base64"),
         )
         return resultado
     except ValueError as error:

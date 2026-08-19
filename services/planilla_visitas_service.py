@@ -38,6 +38,9 @@ def firmar_visita(planilla_id: int, firmante: str, nombre_acompanante: str,
     if not firma_base64:
         raise ValueError("Se requiere la firma digital para confirmar la visita.")
 
+    if not foto_base64:
+        raise ValueError("Se requiere una foto de quien firma, para verificar que la firma sea auténtica.")
+
     if firmante not in ("Paciente", "Acompañante"):
         raise ValueError("Debe indicar quién firma: el paciente o su acompañante.")
 

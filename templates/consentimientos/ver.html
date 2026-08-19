@@ -49,7 +49,18 @@
                {% if consentimiento.nombre_firmante %} — {{ consentimiento.nombre_firmante }} ({{ consentimiento.documento_firmante }}){% endif %}
                {% if consentimiento.parentesco_firmante %} — {{ consentimiento.parentesco_firmante }}{% endif %}
             </p>
-            <img src="{{ consentimiento.firma_base64 }}" style="max-height:100px; border:1px solid #dee2e6; background:white;">
+            <div class="d-flex gap-3 flex-wrap">
+                <div>
+                    <small class="text-muted d-block">Firma</small>
+                    <img src="{{ consentimiento.firma_base64 }}" style="max-height:100px; border:1px solid #dee2e6; background:white;">
+                </div>
+                {% if consentimiento.foto_firmante_base64 %}
+                <div>
+                    <small class="text-muted d-block">Foto de quien firmó</small>
+                    <img src="{{ consentimiento.foto_firmante_base64 }}" style="max-height:100px; border:1px solid #dee2e6;" class="rounded">
+                </div>
+                {% endif %}
+            </div>
             {% else %}
             <div class="no-imprimir">
                 <h5>Firmar este consentimiento</h5>
@@ -76,7 +87,25 @@
                 <div class="border rounded mb-2" style="max-width:600px; touch-action:none;">
                     <canvas id="lienzo-firma" width="600" height="180" style="width:100%; height:180px; background:#f8f9fa;"></canvas>
                 </div>
-                <button type="button" class="btn btn-outline-secondary btn-sm mb-2" id="btn-limpiar-firma">Borrar</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm mb-3" id="btn-limpiar-firma">Borrar firma</button>
+
+                <div class="mb-3" style="max-width:400px;">
+                    <label class="d-block"><strong>Foto de quien firma</strong> (para verificar la firma)</label>
+                    <img id="vista-previa-foto-firmante" style="display:none; max-height:180px; border:1px solid #dee2e6;" class="rounded mb-2">
+                    <div id="camara-firmante-contenedor" style="display:none;">
+                        <video id="video-camara-firmante" autoplay playsinline style="width:100%; max-height:220px; background:#000; border-radius:6px;"></video>
+                        <canvas id="canvas-captura-firmante" style="display:none;"></canvas>
+                        <div class="mt-2">
+                            <button type="button" class="btn btn-primary btn-sm" id="btn-capturar-foto-firmante">Tomar foto</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-cancelar-camara-firmante">Cancelar</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-outline-dark btn-sm" id="btn-abrir-camara-firmante">
+                        <i class="fa-solid fa-camera"></i> Abrir cámara
+                    </button>
+                    <input type="hidden" id="campo-foto-firmante-oculto">
+                </div>
+
                 <button type="button" class="btn btn-primary" id="btn-guardar-firma">Confirmar firma</button>
                 <div id="aviso-firma"></div>
             </div>
@@ -115,13 +144,58 @@ document.getElementById("btn-limpiar-firma").addEventListener("click", () => {
     contexto.clearRect(0, 0, lienzo.width, lienzo.height);
 });
 
+// --------- Captura de foto de quien firma (misma cámara que se usa en Profesionales) ---------
+let flujoCamaraFirmante = null;
+
+document.getElementById("btn-abrir-camara-firmante").addEventListener("click", async () => {
+    try {
+        flujoCamaraFirmante = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        const video = document.getElementById("video-camara-firmante");
+        video.srcObject = flujoCamaraFirmante;
+        document.getElementById("camara-firmante-contenedor").style.display = "block";
+    } catch (error) {
+        alert("No se pudo acceder a la cámara. Verifique los permisos del navegador.");
+    }
+});
+
+function cerrarCamaraFirmante() {
+    if (flujoCamaraFirmante) {
+        flujoCamaraFirmante.getTracks().forEach((pista) => pista.stop());
+        flujoCamaraFirmante = null;
+    }
+    document.getElementById("camara-firmante-contenedor").style.display = "none";
+}
+document.getElementById("btn-cancelar-camara-firmante").addEventListener("click", cerrarCamaraFirmante);
+
+document.getElementById("btn-capturar-foto-firmante").addEventListener("click", () => {
+    const video = document.getElementById("video-camara-firmante");
+    const lienzoFoto = document.getElementById("canvas-captura-firmante");
+    lienzoFoto.width = video.videoWidth;
+    lienzoFoto.height = video.videoHeight;
+    lienzoFoto.getContext("2d").drawImage(video, 0, 0);
+    const fotoBase64 = lienzoFoto.toDataURL("image/jpeg", 0.9);
+
+    document.getElementById("campo-foto-firmante-oculto").value = fotoBase64;
+    const vista = document.getElementById("vista-previa-foto-firmante");
+    vista.src = fotoBase64;
+    vista.style.display = "block";
+    cerrarCamaraFirmante();
+});
+
 document.getElementById("btn-guardar-firma").addEventListener("click", async () => {
+    const fotoFirmante = document.getElementById("campo-foto-firmante-oculto").value;
+    if (!fotoFirmante) {
+        document.getElementById("aviso-firma").innerHTML = `<div class="alert alert-danger mt-2">Debe tomarle una foto a quien firma antes de confirmar.</div>`;
+        return;
+    }
+
     const cuerpo = {
         firmante: document.getElementById("campo-firmante").value,
         nombre_firmante: document.getElementById("campo-nombre-firmante").value,
         documento_firmante: document.getElementById("campo-documento-firmante").value,
         parentesco_firmante: document.getElementById("campo-parentesco-firmante").value,
         firma_base64: lienzo.toDataURL("image/png"),
+        foto_firmante_base64: fotoFirmante,
     };
 
     const respuesta = await fetch("/consentimientos/firmar/{{ consentimiento.id }}", {

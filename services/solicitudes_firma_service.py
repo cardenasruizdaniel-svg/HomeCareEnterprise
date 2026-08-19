@@ -39,7 +39,7 @@ def obtener_por_token(token: str):
 
 def completar_firma(token: str, firma_base64: str, firmante: str = "",
                       nombre_firmante: str = "", documento_firmante: str = "",
-                      parentesco_firmante: str = "") -> dict:
+                      parentesco_firmante: str = "", foto_firmante_base64: str = None) -> dict:
 
     solicitud = obtener_por_token(token)
 
@@ -52,14 +52,17 @@ def completar_firma(token: str, firma_base64: str, firmante: str = "",
     if not firma_base64:
         raise ValueError("Debe capturar la firma antes de enviarla.")
 
+    if not foto_firmante_base64:
+        raise ValueError("Debe tomarse una foto antes de enviar la firma, para verificar que es usted quien firma.")
+
     ejecutar(
         """
         UPDATE solicitudes_firma
         SET estado='Completada', firma_base64=?, firmante=?, nombre_firmante=?,
-            documento_firmante=?, parentesco_firmante=?, fecha_completado=CURRENT_TIMESTAMP
+            documento_firmante=?, parentesco_firmante=?, foto_firmante_base64=?, fecha_completado=CURRENT_TIMESTAMP
         WHERE token=?
         """,
-        (firma_base64, firmante, nombre_firmante, documento_firmante, parentesco_firmante, token),
+        (firma_base64, firmante, nombre_firmante, documento_firmante, parentesco_firmante, foto_firmante_base64, token),
     )
 
     # Aplicar la firma en el documento real correspondiente
@@ -74,6 +77,7 @@ def completar_firma(token: str, firma_base64: str, firmante: str = "",
         firmar_consentimiento(
             solicitud["referencia_id"], firmante or "Paciente", nombre_firmante,
             documento_firmante, parentesco_firmante, firma_base64,
+            foto_firmante_base64=foto_firmante_base64,
         )
     elif solicitud["tipo"] == "contrato":
         from services.contratos_service import firmar_contrato

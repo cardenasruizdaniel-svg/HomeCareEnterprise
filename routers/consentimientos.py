@@ -96,6 +96,7 @@ async def firmar(consentimiento_id: int, datos: dict, usuario=Depends(requiere_p
             documento_firmante=datos.get("documento_firmante", ""),
             parentesco_firmante=datos.get("parentesco_firmante", ""),
             firma_base64=datos.get("firma_base64"),
+            foto_firmante_base64=datos.get("foto_firmante_base64"),
         )
         return {"ok": True}
     except ValueError as error:

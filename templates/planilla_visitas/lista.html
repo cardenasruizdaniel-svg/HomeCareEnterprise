@@ -86,8 +86,20 @@
                 <button type="button" class="btn btn-outline-secondary btn-sm mb-3" id="btn-limpiar-firma">Borrar firma</button>
 
                 <div class="mb-3">
-                    <label>Foto de la visita (opcional pero recomendada)</label>
-                    <input type="file" accept="image/*" capture="environment" id="campo-foto" class="form-control">
+                    <label class="d-block"><strong>Foto de quien firma</strong> (obligatoria, para verificar la firma)</label>
+                    <img id="vista-previa-foto-planilla" style="display:none; max-height:180px; width:100%; object-fit:cover; border:1px solid #dee2e6;" class="rounded mb-2">
+                    <div id="camara-planilla-contenedor" style="display:none;">
+                        <video id="video-camara-planilla" autoplay playsinline style="width:100%; max-height:220px; background:#000; border-radius:6px;"></video>
+                        <canvas id="canvas-captura-planilla" style="display:none;"></canvas>
+                        <div class="mt-2 d-flex gap-2">
+                            <button type="button" class="btn btn-primary btn-sm flex-grow-1" id="btn-capturar-foto-planilla">Tomar foto</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-cancelar-camara-planilla">Cancelar</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-outline-dark btn-sm w-100" id="btn-abrir-camara-planilla">
+                        <i class="fa-solid fa-camera"></i> Abrir cámara
+                    </button>
+                    <input type="hidden" id="campo-foto-oculto-planilla">
                 </div>
 
                 <div id="estado-ubicacion" class="small text-muted"></div>
@@ -183,19 +195,52 @@ document.querySelectorAll(".btn-ver-firma").forEach((boton) => {
     });
 });
 
-function leerArchivoComoBase64(archivo) {
-    return new Promise((resolve) => {
-        if (!archivo) { resolve(null); return; }
-        const lector = new FileReader();
-        lector.onload = () => resolve(lector.result);
-        lector.readAsDataURL(archivo);
-    });
+// --------- Captura de foto de quien firma (obligatoria) ---------
+let flujoCamaraPlanilla = null;
+
+document.getElementById("btn-abrir-camara-planilla").addEventListener("click", async () => {
+    try {
+        flujoCamaraPlanilla = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        const video = document.getElementById("video-camara-planilla");
+        video.srcObject = flujoCamaraPlanilla;
+        document.getElementById("camara-planilla-contenedor").style.display = "block";
+    } catch (error) {
+        alert("No se pudo acceder a la cámara. Revise los permisos del navegador.");
+    }
+});
+
+function cerrarCamaraPlanilla() {
+    if (flujoCamaraPlanilla) {
+        flujoCamaraPlanilla.getTracks().forEach((pista) => pista.stop());
+        flujoCamaraPlanilla = null;
+    }
+    document.getElementById("camara-planilla-contenedor").style.display = "none";
 }
+document.getElementById("btn-cancelar-camara-planilla").addEventListener("click", cerrarCamaraPlanilla);
+
+document.getElementById("btn-capturar-foto-planilla").addEventListener("click", () => {
+    const video = document.getElementById("video-camara-planilla");
+    const lienzoFoto = document.getElementById("canvas-captura-planilla");
+    lienzoFoto.width = video.videoWidth;
+    lienzoFoto.height = video.videoHeight;
+    lienzoFoto.getContext("2d").drawImage(video, 0, 0);
+    const fotoBase64 = lienzoFoto.toDataURL("image/jpeg", 0.9);
+
+    document.getElementById("campo-foto-oculto-planilla").value = fotoBase64;
+    const vista = document.getElementById("vista-previa-foto-planilla");
+    vista.src = fotoBase64;
+    vista.style.display = "block";
+    cerrarCamaraPlanilla();
+});
 
 document.getElementById("btn-guardar-firma").addEventListener("click", async () => {
     const firmaBase64 = lienzo.toDataURL("image/png");
-    const archivoFoto = document.getElementById("campo-foto").files[0];
-    const fotoBase64 = await leerArchivoComoBase64(archivoFoto);
+    const fotoBase64 = document.getElementById("campo-foto-oculto-planilla").value;
+
+    if (!fotoBase64) {
+        alert("Debe tomarle una foto a quien firma antes de confirmar.");
+        return;
+    }
 
     const cuerpo = {
         firmante: document.getElementById("campo-firmante").value,

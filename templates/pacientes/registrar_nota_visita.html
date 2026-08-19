@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block titulo %}Registrar Nota de Visita{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/pacientes/{{ paciente.id }}" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver a la ficha del paciente</a>
+
+    <h2 class="mb-1"><i class="fa-solid fa-notes-medical text-primary"></i> Registrar Nota de Visita</h2>
+    <p class="text-muted">{{ paciente.primer_nombre }} {{ paciente.primer_apellido }} — {{ paciente.tipo_documento }} {{ paciente.documento }}</p>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="card shadow">
+        <div class="card-header bg-primary bg-opacity-10">
+            <h6 class="mb-0">
+                Tipo de nota
+                {% if not es_super_admin %}: <strong>{{ tipo_nota_del_usuario }}</strong>{% endif %}
+            </h6>
+        </div>
+        <div class="card-body">
+            <form method="post" action="/pacientes/{{ paciente.id }}/registrar-nota-visita">
+                {% if es_super_admin %}
+                <div class="mb-3">
+                    <label class="small text-muted">Tipo de nota (solo el Administrador puede elegirlo, para verificar el sistema)</label>
+                    <select name="tipo_profesional_admin" class="form-select" style="max-width:300px;">
+                        {% for t in tipos_nota_disponibles %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="mb-3">
+                    <label>Nota de la visita</label>
+                    <textarea name="nota" class="form-control" rows="8" required
+                              placeholder="Escriba aquí la nota de la visita (hallazgos, procedimiento realizado, recomendaciones, etc.)"></textarea>
+                </div>
+                <p class="text-muted small">
+                    Si hay una visita programada para hoy con este paciente, la nota queda enlazada a ella automáticamente.
+                </p>
+                <button type="submit" class="btn btn-primary btn-lg"><i class="fa-solid fa-floppy-disk"></i> Guardar nota</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

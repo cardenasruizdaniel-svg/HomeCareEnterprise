@@ -330,6 +330,35 @@ async def asignar_programa_eps_desde_ficha(
     return RedirectResponse(url=f"/pacientes/{paciente_id}", status_code=303)
 
 
+@router.get("/{paciente_id}/registrar-nota-visita")
+async def ver_registrar_nota_visita(request: Request, paciente_id: int, usuario=Depends(requiere_permiso("pacientes"))):
+    """Pantalla dedicada para registrar la nota de la visita -- llegar aquí desde el botón de la ficha del paciente."""
+    from services.evoluciones_service import tipo_nota_segun_rol
+
+    paciente = PacientesService.obtener(paciente_id)
+    if not paciente:
+        raise HTTPException(status_code=404, detail="El paciente no existe.")
+
+    tipo_nota_del_usuario = tipo_nota_segun_rol(usuario.get("rol", ""))
+    es_super_admin = (usuario.get("rol", "") or "").strip().lower() == "administrador"
+    tipos_nota_disponibles = ["Médico", "Enfermero", "Terapeuta", "Cuidador", "Aplicador", "Curaciones"] if es_super_admin else []
+
+    if not tipo_nota_del_usuario and not es_super_admin:
+        return RedirectResponse(
+            url=f"/pacientes/{paciente_id}?error=Su perfil no tiene un tipo de nota clínica propio para registrar visitas.",
+            status_code=303,
+        )
+
+    return templates.TemplateResponse(
+        request=request, name="pacientes/registrar_nota_visita.html",
+        context={
+            "usuario": usuario, "paciente": paciente, "tipo_nota_del_usuario": tipo_nota_del_usuario,
+            "es_super_admin": es_super_admin, "tipos_nota_disponibles": tipos_nota_disponibles,
+            "error": request.query_params.get("error"),
+        },
+    )
+
+
 @router.post("/{paciente_id}/registrar-nota-visita")
 async def registrar_nota_visita_desde_ficha(
     paciente_id: int,
@@ -392,7 +421,7 @@ async def registrar_nota_visita_desde_ficha(
             tipo_profesional=tipo_profesional, nota=nota, origen="WEB", usuario_id=usuario.get("id"),
         )
     except ValueError as error:
-        return RedirectResponse(url=f"/pacientes/{paciente_id}?error={error}", status_code=303)
+        return RedirectResponse(url=f"/pacientes/{paciente_id}/registrar-nota-visita?error={error}", status_code=303)
 
     return RedirectResponse(url=f"/pacientes/{paciente_id}?guardado=1", status_code=303)
 

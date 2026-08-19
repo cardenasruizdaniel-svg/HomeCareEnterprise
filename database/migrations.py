@@ -1046,6 +1046,26 @@ class MigrationManager:
 
         return cambios
 
+    def migrar_foto_firmante(self):
+        """
+        Para que la firma de un consentimiento (o de cualquier
+        documento firmado remotamente) quede más segura y
+        verificable, se le pide a quien firma -- además de la
+        firma digital de siempre -- una foto tomada en el
+        momento, para confirmar que quien firmó es realmente
+        quien dice ser.
+        """
+        cambios = []
+        for tabla in ("consentimientos_informados", "solicitudes_firma"):
+            if self.existe_tabla(tabla):
+                cambios.extend(
+                    self.sincronizar_columnas(
+                        tabla,
+                        {"foto_firmante_base64": "foto_firmante_base64 TEXT"},
+                    )
+                )
+        return cambios
+
     def migrar_capacitacion(self):
         """
         Módulo de Capacitación: un solo lugar (accesible desde
@@ -2926,6 +2946,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_capacitacion()
+        )
+
+        cambios.extend(
+            self.migrar_foto_firmante()
         )
 
         cambios.extend(

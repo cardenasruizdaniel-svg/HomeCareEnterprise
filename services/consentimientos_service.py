@@ -110,10 +110,14 @@ def crear_consentimiento(paciente_id: int, tipo: str, contenido_texto: str, usua
 
 
 def firmar_consentimiento(consentimiento_id: int, firmante: str, nombre_firmante: str,
-                            documento_firmante: str, parentesco_firmante: str, firma_base64: str):
+                            documento_firmante: str, parentesco_firmante: str, firma_base64: str,
+                            foto_firmante_base64: str = None):
 
     if not firma_base64:
         raise ValueError("Se requiere la firma digital para completar el consentimiento.")
+
+    if not foto_firmante_base64:
+        raise ValueError("Se requiere una foto de quien firma, para verificar que la firma sea auténtica.")
 
     if firmante not in ("Paciente", "Acudiente/Responsable"):
         raise ValueError("Debe indicar quién firma.")
@@ -121,8 +125,8 @@ def firmar_consentimiento(consentimiento_id: int, firmante: str, nombre_firmante
     ejecutar(
         """
         UPDATE consentimientos_informados
-        SET firmante=?, nombre_firmante=?, documento_firmante=?, parentesco_firmante=?, firma_base64=?
+        SET firmante=?, nombre_firmante=?, documento_firmante=?, parentesco_firmante=?, firma_base64=?, foto_firmante_base64=?
         WHERE id=?
         """,
-        (firmante, nombre_firmante, documento_firmante, parentesco_firmante, firma_base64, consentimiento_id),
+        (firmante, nombre_firmante, documento_firmante, parentesco_firmante, firma_base64, foto_firmante_base64, consentimiento_id),
     )

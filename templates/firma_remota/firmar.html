@@ -56,6 +56,24 @@ canvas { touch-action:none; }
         <canvas id="lienzo-firma" width="500" height="200" style="width:100%; height:200px; background:#f8f9fa;"></canvas>
     </div>
     <button type="button" class="btn btn-outline-secondary btn-sm mb-3" id="btn-limpiar">Borrar y firmar de nuevo</button>
+
+    <div class="mb-3">
+        <label class="d-block"><strong>Foto de quien firma</strong> (para verificar que es usted)</label>
+        <img id="vista-previa-foto" style="display:none; max-height:200px; width:100%; object-fit:cover; border:1px solid #dee2e6;" class="rounded mb-2">
+        <div id="camara-contenedor" style="display:none;">
+            <video id="video-camara" autoplay playsinline style="width:100%; max-height:260px; background:#000; border-radius:6px;"></video>
+            <canvas id="canvas-captura" style="display:none;"></canvas>
+            <div class="mt-2 d-flex gap-2">
+                <button type="button" class="btn btn-primary flex-grow-1" id="btn-capturar-foto">Tomar foto</button>
+                <button type="button" class="btn btn-outline-secondary" id="btn-cancelar-camara">Cancelar</button>
+            </div>
+        </div>
+        <button type="button" class="btn btn-outline-dark w-100" id="btn-abrir-camara">
+            <i class="fa-solid fa-camera"></i> Abrir cámara y tomar foto
+        </button>
+        <input type="hidden" id="campo-foto-oculto">
+    </div>
+
     <button type="button" class="btn btn-success w-100" id="btn-enviar">Confirmar firma</button>
     {% endif %}
 
@@ -90,13 +108,58 @@ document.getElementById("btn-limpiar").addEventListener("click", () => {
     contexto.clearRect(0, 0, lienzo.width, lienzo.height);
 });
 
+// --------- Captura de foto (misma cámara del celular que usa quien firma) ---------
+let flujoCamara = null;
+
+document.getElementById("btn-abrir-camara").addEventListener("click", async () => {
+    try {
+        flujoCamara = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+        const video = document.getElementById("video-camara");
+        video.srcObject = flujoCamara;
+        document.getElementById("camara-contenedor").style.display = "block";
+    } catch (error) {
+        alert("No se pudo acceder a la cámara. Revise los permisos del navegador para este sitio.");
+    }
+});
+
+function cerrarCamara() {
+    if (flujoCamara) {
+        flujoCamara.getTracks().forEach((pista) => pista.stop());
+        flujoCamara = null;
+    }
+    document.getElementById("camara-contenedor").style.display = "none";
+}
+document.getElementById("btn-cancelar-camara").addEventListener("click", cerrarCamara);
+
+document.getElementById("btn-capturar-foto").addEventListener("click", () => {
+    const video = document.getElementById("video-camara");
+    const lienzoFoto = document.getElementById("canvas-captura");
+    lienzoFoto.width = video.videoWidth;
+    lienzoFoto.height = video.videoHeight;
+    lienzoFoto.getContext("2d").drawImage(video, 0, 0);
+    const fotoBase64 = lienzoFoto.toDataURL("image/jpeg", 0.9);
+
+    document.getElementById("campo-foto-oculto").value = fotoBase64;
+    const vista = document.getElementById("vista-previa-foto");
+    vista.src = fotoBase64;
+    vista.style.display = "block";
+    cerrarCamara();
+});
+
 document.getElementById("btn-enviar").addEventListener("click", async () => {
+    const foto = document.getElementById("campo-foto-oculto").value;
+    if (!foto) {
+        document.getElementById("alerta-firma-remota").innerHTML = `<div class="alert alert-danger">Debe tomarse una foto antes de confirmar la firma.</div>`;
+        return;
+    }
+
     const cuerpo = {
         firmante: document.getElementById("campo-firmante").value,
         nombre_firmante: document.getElementById("campo-nombre").value,
         documento_firmante: document.getElementById("campo-documento").value,
         parentesco_firmante: document.getElementById("campo-parentesco").value,
         firma_base64: lienzo.toDataURL("image/png"),
+        foto_firmante_base64: foto,
     };
 
     const respuesta = await fetch("/firma-remota/{{ token }}/enviar", {
