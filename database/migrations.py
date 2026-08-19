@@ -1046,6 +1046,34 @@ class MigrationManager:
 
         return cambios
 
+    def migrar_recomendaciones_examenes(self):
+        """
+        Documentos con las indicaciones que debe seguir el
+        paciente antes de un examen (ayuno, tipo de muestra que
+        debe traer, cuidados especiales, etc.) -- para poder
+        enviárselos por WhatsApp o correo antes de la toma de
+        muestra, y que la muestra salga bien a la primera.
+        """
+        cambios = []
+        if not self.existe_tabla("recomendaciones_examenes"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS recomendaciones_examenes(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    titulo TEXT NOT NULL,
+                    tipo_examen TEXT NOT NULL,
+                    categoria TEXT DEFAULT 'Otro',
+                    descripcion TEXT,
+                    contenido_texto TEXT,
+                    archivo_path TEXT,
+                    activo INTEGER DEFAULT 1,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    usuario_creacion INTEGER
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla recomendaciones_examenes")
+        return cambios
+
     def migrar_trazabilidad_muestras(self):
         """
         Cadena de custodia para la toma de muestras de
@@ -3015,6 +3043,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_trazabilidad_muestras()
+        )
+
+        cambios.extend(
+            self.migrar_recomendaciones_examenes()
         )
 
         cambios.extend(

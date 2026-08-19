@@ -9,6 +9,18 @@
 
     {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
 
+    <div class="card shadow mb-3 border-info">
+        <div class="card-header bg-info bg-opacity-10"><h6 class="mb-0"><i class="fa-solid fa-paper-plane"></i> Enviar indicaciones al paciente</h6></div>
+        <div class="card-body">
+            <p class="small text-muted">Si el examen que se va a tomar tiene una recomendación cargada (ayuno, tipo de recolección, etc.), puede enviársela al paciente por WhatsApp/correo antes de la toma.</p>
+            <div class="d-flex gap-2">
+                <input type="text" id="buscar-recomendacion" class="form-control" placeholder="Buscar por tipo de examen (ej: Glicemia, Uroanálisis)...">
+            </div>
+            <div id="resultados-recomendacion" class="list-group mt-2"></div>
+            <div id="aviso-envio-recomendacion" class="mt-2"></div>
+        </div>
+    </div>
+
     <div class="card shadow">
         <div class="card-body">
             <form method="post" action="/muestras/paciente/{{ paciente.id }}/registrar" id="form-muestra">
@@ -117,6 +129,39 @@ document.getElementById("btn-capturar-foto-muestra").addEventListener("click", (
     vista.src = fotoBase64;
     vista.style.display = "block";
     cerrarCamaraMuestra();
+});
+
+// --------- Buscar y enviar la recomendacion del examen al paciente ---------
+let temporizadorBusquedaRecomendacion;
+document.getElementById("buscar-recomendacion").addEventListener("input", function () {
+    clearTimeout(temporizadorBusquedaRecomendacion);
+    const texto = this.value.trim();
+    const contenedor = document.getElementById("resultados-recomendacion");
+    if (texto.length < 2) { contenedor.innerHTML = ""; return; }
+    temporizadorBusquedaRecomendacion = setTimeout(async () => {
+        const respuesta = await fetch(`/recomendaciones/buscar?q=${encodeURIComponent(texto)}`);
+        const items = await respuesta.json();
+        contenedor.innerHTML = items.map((item) => `
+            <button type="button" class="list-group-item list-group-item-action btn-enviar-recomendacion" data-id="${item.id}">
+                <strong>${item.titulo}</strong> — ${item.tipo_examen}
+                <span class="badge bg-info text-dark float-end">Enviar</span>
+            </button>
+        `).join("") || `<div class="text-muted small mt-1">No se encontró ninguna recomendación para ese examen.</div>`;
+
+        contenedor.querySelectorAll(".btn-enviar-recomendacion").forEach((boton) => {
+            boton.addEventListener("click", async () => {
+                const aviso = document.getElementById("aviso-envio-recomendacion");
+                aviso.innerHTML = `<div class="alert alert-secondary py-2">Enviando...</div>`;
+                const resp = await fetch(`/recomendaciones/${boton.dataset.id}/enviar/{{ paciente.id }}`, { method: "POST" });
+                const resultado = await resp.json();
+                if (resultado.ok) {
+                    aviso.innerHTML = `<div class="alert alert-success py-2">Indicaciones enviadas — WhatsApp: ${resultado.whatsapp.enviado ? "sí" : "no"}, Correo: ${resultado.correo.enviado ? "sí" : "no"}.</div>`;
+                } else {
+                    aviso.innerHTML = `<div class="alert alert-danger py-2">${resultado.error}</div>`;
+                }
+            });
+        });
+    }, 300);
 });
 </script>
 {% endblock %}

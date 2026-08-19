@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+{% block titulo %}Recomendaciones e Instrucciones{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-clipboard-list text-primary"></i> Recomendaciones e Instrucciones para Exámenes</h2>
+    <p class="text-muted">Documentos con las indicaciones que debe seguir el paciente antes de un examen (ayuno, tipo de recolección, cuidados especiales) — para enviárselos por WhatsApp o correo antes de la toma de muestra.</p>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <button type="button" class="btn btn-success mb-3" id="btn-nueva-recomendacion">
+        <i class="fa-solid fa-plus"></i> Nueva recomendación
+    </button>
+
+    {% set agrupado = {} %}
+    {% for item in items %}
+        {% if item.categoria not in agrupado %}{% set _ = agrupado.update({item.categoria: []}) %}{% endif %}
+        {% set _ = agrupado[item.categoria].append(item) %}
+    {% endfor %}
+
+    {% for categoria, lista in agrupado.items() %}
+    <div class="card shadow mb-3">
+        <div class="card-header bg-white"><h6 class="mb-0">{{ categoria }}</h6></div>
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr><th>Título</th><th>Examen</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                    {% for item in lista %}
+                    <tr class="{% if not item.activo %}table-secondary{% endif %}">
+                        <td>{{ item.titulo }}<br><small class="text-muted">{{ item.descripcion }}</small></td>
+                        <td>{{ item.tipo_examen }}</td>
+                        <td>{% if item.activo %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}</td>
+                        <td class="text-nowrap">
+                            <button type="button" class="btn btn-outline-secondary btn-sm btn-editar-recomendacion"
+                                    data-id="{{ item.id }}" data-titulo="{{ item.titulo }}" data-tipo-examen="{{ item.tipo_examen }}"
+                                    data-categoria="{{ item.categoria }}" data-descripcion="{{ item.descripcion or '' }}"
+                                    data-contenido="{{ item.contenido_texto or '' }}">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            {% if item.activo %}
+                            <form method="post" action="/recomendaciones/{{ item.id }}/desactivar" class="d-inline">
+                                <button class="btn btn-outline-warning btn-sm" title="Ocultar"><i class="fa-solid fa-eye-slash"></i></button>
+                            </form>
+                            {% else %}
+                            <form method="post" action="/recomendaciones/{{ item.id }}/reactivar" class="d-inline">
+                                <button class="btn btn-outline-success btn-sm" title="Reactivar"><i class="fa-solid fa-eye"></i></button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="card shadow"><div class="card-body text-center text-muted py-5">Todavía no hay recomendaciones registradas.</div></div>
+    {% endfor %}
+</div>
+
+<!-- ===================== MODAL COMPARTIDO: NUEVO / EDITAR ===================== -->
+<div class="modal fade" id="modalRecomendacion" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <form method="post" id="form-recomendacion" action="/recomendaciones/crear" enctype="multipart/form-data">
+            <div class="modal-header"><h5 class="modal-title" id="titulo-modal-recomendacion">Nueva recomendación</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6 mb-2"><label>Título</label><input type="text" name="titulo" id="campo-titulo" class="form-control" required></div>
+                    <div class="col-md-6 mb-2"><label>Tipo de examen (ej: Glicemia, Uroanálisis)</label><input type="text" name="tipo_examen" id="campo-tipo-examen" class="form-control" required></div>
+                    <div class="col-md-6 mb-2">
+                        <label>Categoría</label>
+                        <select name="categoria" id="campo-categoria" class="form-select">
+                            {% for c in categorias %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-2"><label>Descripción corta</label><input type="text" name="descripcion" id="campo-descripcion" class="form-control"></div>
+                </div>
+                <div class="mb-2">
+                    <label>Indicaciones (el texto que se le envía al paciente)</label>
+                    <textarea name="contenido_texto" id="campo-contenido" class="form-control" rows="8"></textarea>
+                </div>
+                <div class="mb-2">
+                    <label>O adjuntar un documento (PDF, imagen)</label>
+                    <input type="file" name="archivo" class="form-control">
+                    <small class="text-muted" id="texto-archivo-actual"></small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success" id="btn-guardar-recomendacion">Guardar</button>
+            </div>
+        </form>
+    </div></div>
+</div>
+
+<script>
+const modalRecomendacion = new bootstrap.Modal(document.getElementById("modalRecomendacion"));
+
+function limpiarFormularioRecomendacion() {
+    document.getElementById("form-recomendacion").reset();
+    document.getElementById("form-recomendacion").action = "/recomendaciones/crear";
+    document.getElementById("titulo-modal-recomendacion").textContent = "Nueva recomendación";
+    document.getElementById("btn-guardar-recomendacion").textContent = "Guardar";
+    document.getElementById("texto-archivo-actual").textContent = "";
+}
+
+document.getElementById("btn-nueva-recomendacion").addEventListener("click", () => {
+    limpiarFormularioRecomendacion();
+    modalRecomendacion.show();
+});
+
+document.querySelectorAll(".btn-editar-recomendacion").forEach((boton) => {
+    boton.addEventListener("click", () => {
+        limpiarFormularioRecomendacion();
+        document.getElementById("form-recomendacion").action = `/recomendaciones/${boton.dataset.id}/actualizar`;
+        document.getElementById("titulo-modal-recomendacion").textContent = "Editar recomendación";
+        document.getElementById("btn-guardar-recomendacion").textContent = "Guardar cambios";
+        document.getElementById("campo-titulo").value = boton.dataset.titulo || "";
+        document.getElementById("campo-tipo-examen").value = boton.dataset.tipoExamen || "";
+        document.getElementById("campo-categoria").value = boton.dataset.categoria || "General";
+        document.getElementById("campo-descripcion").value = boton.dataset.descripcion || "";
+        document.getElementById("campo-contenido").value = boton.dataset.contenido || "";
+        document.getElementById("texto-archivo-actual").textContent = "Deje el archivo vacío para conservar el que ya tiene guardado.";
+        modalRecomendacion.show();
+    });
+});
+</script>
+{% endblock %}

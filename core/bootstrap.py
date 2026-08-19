@@ -267,6 +267,14 @@ def iniciar_sistema():
     except Exception as error:
         print(f"[AVISO] No se pudo sembrar el módulo de Capacitación: {error}")
 
+    try:
+        from services.recomendaciones_examenes_service import sembrar_recomendaciones_estandar
+        recomendaciones_sembradas = sembrar_recomendaciones_estandar()
+        if recomendaciones_sembradas:
+            print(f"[OK] Recomendaciones e Instrucciones: se registraron {len(recomendaciones_sembradas)} recomendación(es) estándar.")
+    except Exception as error:
+        print(f"[AVISO] No se pudo sembrar las Recomendaciones e Instrucciones: {error}")
+
     print()
 
     print("[OK] Sistema listo.")

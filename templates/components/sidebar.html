@@ -96,6 +96,12 @@
                 <span>Plantillas de Visita</span>
             </a>
         </li>
+        <li>
+            <a href="/recomendaciones">
+                <i class="fa-solid fa-clipboard-list"></i>
+                <span>Recomendaciones e Instrucciones</span>
+            </a>
+        </li>
         {% if usuario and tiene_permiso(usuario.rol, "inventario") %}
         <li>
             <a href="/inventario">

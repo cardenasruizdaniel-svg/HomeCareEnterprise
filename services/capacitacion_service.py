@@ -148,16 +148,17 @@ def listar_categorias_con_contenido(rol: str, plataforma: str = "Web"):
 
 def sembrar_manuales_existentes(usuario_id=None, usuario_nombre="Sistema"):
     """
-    La primera vez que se activa el módulo, registra
-    automáticamente los manuales que ya venían incluidos con el
-    sistema (los que están en docs/manuales) -- así el módulo
-    arranca completo desde el primer día, sin tener que volver a
-    subir nada a mano.
-    """
-    ya_existe = consultar_uno("SELECT COUNT(*) AS total FROM capacitaciones")
-    if ya_existe and dict(ya_existe)["total"] > 0:
-        return []
+    Registra automáticamente los manuales que ya venían
+    incluidos con el sistema (los que están en docs/manuales) --
+    así el módulo arranca completo desde el primer día, sin
+    tener que volver a subir nada a mano.
 
+    Es incremental: si el sistema ya tenía otros manuales
+    sembrados de antes, y luego se agrega uno nuevo a esta
+    lista (por ejemplo, al lanzar un módulo nuevo), esa nueva
+    entrada se agrega sola en el próximo arranque -- sin
+    duplicar los que ya estaban.
+    """
     from core.config import RECURSOS_DIR
     carpeta_manuales = Path(RECURSOS_DIR) / "docs" / "manuales"
 
@@ -171,6 +172,7 @@ def sembrar_manuales_existentes(usuario_id=None, usuario_nombre="Sistema"):
         ("Manual_App_Movil_Android_iOS_HomeCare.pdf", "Manual de la App Móvil", "Cómo usar la aplicación móvil de campo -- para todo el personal asistencial.", "App Móvil", "Ambas", "Todos"),
         ("Manual_Convenios_EPS_Facturacion.docx", "Manual de Convenios EPS, Autorizaciones y Facturación", "Cómo parametrizar convenios, programas, autorizaciones, y generar la facturación.", "Facturación y Convenios", "Web", "Administrador,Coordinador,Administrativo"),
         ("Manual_Tramites_Entes_Reguladores_HomeCare.pdf", "Manual de Trámites ante Entes Reguladores", "Guía de los trámites y reportes obligatorios ante las entidades de vigilancia.", "Calidad y Normatividad", "Web", "Administrador,Coordinador"),
+        ("Manual_Trazabilidad_Toma_Muestras.docx", "Manual de Trazabilidad — Toma de Muestras de Laboratorio", "Cadena de custodia, tipos de recipientes, y envío de indicaciones al paciente antes de la toma.", "Operación", "Ambas", "Todos"),
     ]
 
     creados = []
@@ -178,6 +180,15 @@ def sembrar_manuales_existentes(usuario_id=None, usuario_nombre="Sistema"):
         ruta_completa = carpeta_manuales / nombre_archivo
         if not ruta_completa.exists():
             continue
+
+        # No se duplica: si ya existe un registro con este mismo
+        # archivo (sin importar si está activo o no), se salta.
+        ya_registrado = consultar_uno(
+            "SELECT id FROM capacitaciones WHERE archivo_path=?", (f"docs/manuales/{nombre_archivo}",)
+        )
+        if ya_registrado:
+            continue
+
         capacitacion_id = crear(
             titulo=titulo, descripcion=descripcion, tipo="Manual", categoria=categoria, plataforma=plataforma,
             roles_permitidos=roles, archivo_path=f"docs/manuales/{nombre_archivo}",

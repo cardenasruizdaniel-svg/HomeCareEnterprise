@@ -49,6 +49,7 @@ from routers.autorizaciones_eps import router as autorizaciones_eps_router
 from routers.auditoria import router as auditoria_router
 from routers.capacitacion import router as capacitacion_router
 from routers.muestras import router as muestras_router
+from routers.recomendaciones_examenes import router as recomendaciones_examenes_router
 from routers.posible_programacion import router as posible_programacion_router
 from routers.documentos_seguros import router as documentos_seguros_router
 from routers import despacho
@@ -240,6 +241,7 @@ def create_app() -> FastAPI:
     app.include_router(auditoria_router)
     app.include_router(capacitacion_router)
     app.include_router(muestras_router)
+    app.include_router(recomendaciones_examenes_router)
     app.include_router(posible_programacion_router)
     app.include_router(documentos_seguros_router)
 
