@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block titulo %}Registrar Toma de Muestra{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/pacientes/{{ paciente.id }}" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver a la ficha del paciente</a>
+
+    <h2 class="mb-1"><i class="fa-solid fa-vial text-danger"></i> Registrar Toma de Muestra</h2>
+    <p class="text-muted">{{ paciente.primer_nombre }} {{ paciente.primer_apellido }} — {{ paciente.tipo_documento }} {{ paciente.documento }}</p>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="card shadow">
+        <div class="card-body">
+            <form method="post" action="/muestras/paciente/{{ paciente.id }}/registrar" id="form-muestra">
+                <input type="hidden" name="profesional_id" value="{{ profesional_id or '' }}">
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label>Tipo de muestra</label>
+                        <select name="tipo_muestra" class="form-select" required>
+                            <option value="">-- Seleccione --</option>
+                            {% for t in tipos_muestra %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Tipo de recipiente / frasco</label>
+                        <select name="tipo_recipiente" class="form-select" required>
+                            <option value="">-- Seleccione --</option>
+                            {% for t in tipos_recipiente %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+                        </select>
+                        <small class="text-muted">El color de la tapa indica el aditivo — elegir el correcto es clave para que la muestra no se dañe.</small>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Cantidad de recipientes</label>
+                        <input type="number" name="cantidad_recipientes" class="form-control" value="1" min="1" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Fecha y hora exacta de recolección</label>
+                        <input type="datetime-local" name="fecha_hora_recoleccion" class="form-control" value="{{ fecha_hora_actual }}" required>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label>Condiciones de transporte</label>
+                        <select name="condiciones_transporte" class="form-select">
+                            {% for c in condiciones_transporte %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Exámenes solicitados con esta muestra</label>
+                        <input type="text" name="examenes_solicitados" class="form-control" placeholder="Ej: Cuadro hemático, glicemia">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Laboratorio destino</label>
+                        <input type="text" name="laboratorio_destino" class="form-control">
+                    </div>
+                    <div class="col-md-12 mb-3">
+                        <label>Observaciones</label>
+                        <textarea name="observaciones" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="d-block"><strong>Foto de la muestra ya etiquetada</strong> (recomendada, para verificación)</label>
+                    <img id="vista-previa-foto-muestra" style="display:none; max-height:180px; border:1px solid #dee2e6;" class="rounded mb-2">
+                    <div id="camara-muestra-contenedor" style="display:none;">
+                        <video id="video-camara-muestra" autoplay playsinline style="width:100%; max-height:220px; background:#000; border-radius:6px;"></video>
+                        <canvas id="canvas-captura-muestra" style="display:none;"></canvas>
+                        <div class="mt-2 d-flex gap-2">
+                            <button type="button" class="btn btn-primary btn-sm flex-grow-1" id="btn-capturar-foto-muestra">Tomar foto</button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btn-cancelar-camara-muestra">Cancelar</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-outline-dark btn-sm" id="btn-abrir-camara-muestra">
+                        <i class="fa-solid fa-camera"></i> Tomar foto de la muestra
+                    </button>
+                    <input type="hidden" name="foto_muestra_base64" id="campo-foto-muestra-oculto">
+                </div>
+
+                <button type="submit" class="btn btn-danger btn-lg"><i class="fa-solid fa-vial-circle-check"></i> Registrar recolección</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+let flujoCamaraMuestra = null;
+
+document.getElementById("btn-abrir-camara-muestra").addEventListener("click", async () => {
+    try {
+        flujoCamaraMuestra = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+        const video = document.getElementById("video-camara-muestra");
+        video.srcObject = flujoCamaraMuestra;
+        document.getElementById("camara-muestra-contenedor").style.display = "block";
+    } catch (error) {
+        alert("No se pudo acceder a la cámara. Revise los permisos del navegador.");
+    }
+});
+
+function cerrarCamaraMuestra() {
+    if (flujoCamaraMuestra) {
+        flujoCamaraMuestra.getTracks().forEach((pista) => pista.stop());
+        flujoCamaraMuestra = null;
+    }
+    document.getElementById("camara-muestra-contenedor").style.display = "none";
+}
+document.getElementById("btn-cancelar-camara-muestra").addEventListener("click", cerrarCamaraMuestra);
+
+document.getElementById("btn-capturar-foto-muestra").addEventListener("click", () => {
+    const video = document.getElementById("video-camara-muestra");
+    const lienzo = document.getElementById("canvas-captura-muestra");
+    lienzo.width = video.videoWidth;
+    lienzo.height = video.videoHeight;
+    lienzo.getContext("2d").drawImage(video, 0, 0);
+    const fotoBase64 = lienzo.toDataURL("image/jpeg", 0.9);
+
+    document.getElementById("campo-foto-muestra-oculto").value = fotoBase64;
+    const vista = document.getElementById("vista-previa-foto-muestra");
+    vista.src = fotoBase64;
+    vista.style.display = "block";
+    cerrarCamaraMuestra();
+});
+</script>
+{% endblock %}

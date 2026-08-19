@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block titulo %}Muestra #{{ muestra.id }}{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/pacientes/{{ muestra.paciente_id }}" class="btn btn-outline-secondary mb-3"><i class="fa-solid fa-arrow-left"></i> Volver a la ficha del paciente</a>
+
+    {% if guardado %}<div class="alert alert-success">Actualizado correctamente.</div>{% endif %}
+    {% if request.query_params.get("error") %}<div class="alert alert-danger">{{ request.query_params.get("error") }}</div>{% endif %}
+
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+        <div>
+            <h2 class="mb-1"><i class="fa-solid fa-vial text-danger"></i> Muestra #{{ muestra.id }} — {{ muestra.tipo_muestra }}</h2>
+            <p class="text-muted mb-0">{{ muestra.primer_nombre }} {{ muestra.primer_apellido }} — {{ muestra.tipo_documento }} {{ muestra.documento }}</p>
+        </div>
+        <span class="badge fs-6 {% if muestra.estado == 'Procesada' %}bg-success{% elif muestra.estado == 'Rechazada' %}bg-danger{% else %}bg-warning text-dark{% endif %}">{{ muestra.estado }}</span>
+    </div>
+
+    <div class="row">
+        <div class="col-md-7">
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h6 class="mb-0">Datos de la recolección</h6></div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tr><th style="width:220px;">Tipo de muestra</th><td>{{ muestra.tipo_muestra }}</td></tr>
+                        <tr><th>Tipo de recipiente</th><td>{{ muestra.tipo_recipiente }}</td></tr>
+                        <tr><th>Cantidad</th><td>{{ muestra.cantidad_recipientes }}</td></tr>
+                        <tr><th>Fecha y hora de recolección</th><td>{{ muestra.fecha_hora_recoleccion }}</td></tr>
+                        <tr><th>Exámenes solicitados</th><td>{{ muestra.examenes_solicitados or "-" }}</td></tr>
+                        <tr><th>Condiciones de transporte</th><td>{{ muestra.condiciones_transporte or "-" }}</td></tr>
+                        <tr><th>Laboratorio destino</th><td>{{ muestra.laboratorio_destino or "-" }}</td></tr>
+                        <tr><th>Recolectada por</th><td>{{ muestra.prof_nombre }} {{ muestra.prof_apellido }}</td></tr>
+                        {% if muestra.responsable_entrega %}<tr><th>Responsable de entrega</th><td>{{ muestra.responsable_entrega }}</td></tr>{% endif %}
+                        {% if muestra.responsable_recibe %}<tr><th>Responsable que recibe</th><td>{{ muestra.responsable_recibe }}</td></tr>{% endif %}
+                        {% if muestra.incidencia %}<tr><th class="text-danger">Incidencia</th><td class="text-danger">{{ muestra.incidencia }}</td></tr>{% endif %}
+                        {% if muestra.observaciones %}<tr><th>Observaciones</th><td>{{ muestra.observaciones }}</td></tr>{% endif %}
+                    </table>
+                </div>
+            </div>
+
+            {% if muestra.foto_muestra_base64 %}
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h6 class="mb-0">Foto de la muestra al momento de recolectarla</h6></div>
+                <div class="card-body text-center">
+                    <img src="{{ muestra.foto_muestra_base64 }}" style="max-height:300px;" class="rounded border">
+                </div>
+            </div>
+            {% endif %}
+
+            {% if muestra.estado not in ("Procesada", "Rechazada") %}
+            <div class="card shadow border-primary">
+                <div class="card-header bg-primary bg-opacity-10"><h6 class="mb-0">Avanzar la cadena de custodia</h6></div>
+                <div class="card-body">
+                    <form method="post" action="/muestras/{{ muestra.id }}/cambiar-estado">
+                        <div class="mb-2">
+                            <label>Nuevo estado</label>
+                            <select name="nuevo_estado" class="form-select" id="select-nuevo-estado" required>
+                                {% for e in estados %}
+                                {% if e != muestra.estado %}<option value="{{ e }}">{{ e }}</option>{% endif %}
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-2"><label>Responsable de entrega</label><input type="text" name="responsable_entrega" class="form-control"></div>
+                            <div class="col-md-6 mb-2"><label>Responsable que recibe</label><input type="text" name="responsable_recibe" class="form-control"></div>
+                        </div>
+                        <div class="mb-2" id="campo-incidencia" style="display:none;">
+                            <label>Motivo del rechazo / incidencia</label>
+                            <textarea name="incidencia" class="form-control" rows="2"></textarea>
+                        </div>
+                        <div class="mb-2"><label>Observaciones</label><textarea name="observaciones" class="form-control" rows="2"></textarea></div>
+                        <button type="submit" class="btn btn-primary">Actualizar estado</button>
+                    </form>
+                </div>
+            </div>
+            <script>
+            document.getElementById("select-nuevo-estado").addEventListener("change", function () {
+                document.getElementById("campo-incidencia").style.display = this.value === "Rechazada" ? "block" : "none";
+            });
+            </script>
+            {% endif %}
+        </div>
+
+        <div class="col-md-5">
+            <div class="card shadow">
+                <div class="card-header bg-white"><h6 class="mb-0"><i class="fa-solid fa-timeline"></i> Cadena de custodia</h6></div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        {% for evento in muestra.eventos %}
+                        <li class="mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                            <strong>{{ evento.estado }}</strong><br>
+                            <small class="text-muted">{{ evento.fecha_hora }} — {{ evento.usuario_nombre }}</small>
+                            {% if evento.observaciones %}<div class="small mt-1">{{ evento.observaciones }}</div>{% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

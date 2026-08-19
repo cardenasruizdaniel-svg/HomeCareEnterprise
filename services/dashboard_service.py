@@ -409,6 +409,9 @@ class DashboardService:
         from services.auditoria_service import resumen_dashboard as _resumen_auditoria
         auditoria_24h = _resumen_auditoria(24)
 
+        from services.trazabilidad_muestras_service import resumen_dashboard as _resumen_muestras
+        muestras_pendientes = _resumen_muestras()["pendientes_entrega"]
+
         return {
             "facturado_mes": facturado_mes, "facturado_mes_texto": self.formato_moneda(facturado_mes),
             "facturas_mes": facturas_mes, "tendencia_facturacion": tendencia_facturacion,
@@ -425,6 +428,7 @@ class DashboardService:
             "autorizaciones_pendientes": autorizaciones_pendientes,
             "auditoria_errores_24h": auditoria_24h["errores"],
             "auditoria_advertencias_24h": auditoria_24h["advertencias"],
+            "muestras_pendientes_entrega": muestras_pendientes,
         }
 
     def grafico_produccion_detallado(self):

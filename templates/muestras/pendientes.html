@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block titulo %}Muestras Pendientes de Entrega{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-truck-medical text-warning"></i> Muestras Pendientes de Entrega al Laboratorio</h2>
+    <p class="text-muted">Muestras ya recolectadas (o en tránsito) que todavía no se han entregado al laboratorio — para asegurar que ninguna se quede olvidada ni se dañe por demora.</p>
+
+    <div class="row mb-4">
+        <div class="col-md-4 mb-2">
+            <div class="card shadow-sm text-center border-warning">
+                <div class="card-body">
+                    <div class="display-6 text-warning">{{ resumen.pendientes_entrega }}</div>
+                    <div class="text-muted">Pendientes de entrega</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-2">
+            <div class="card shadow-sm text-center border-danger">
+                <div class="card-body">
+                    <div class="display-6 text-danger">{{ resumen.rechazadas }}</div>
+                    <div class="text-muted">Rechazadas (últimos 30 días)</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-2">
+            <div class="card shadow-sm text-center">
+                <div class="card-body">
+                    <div class="display-6">{{ resumen.total }}</div>
+                    <div class="text-muted">Total (últimos 30 días)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr><th>Fecha recolección</th><th>Paciente</th><th>Tipo de muestra</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                    {% for m in pendientes %}
+                    <tr>
+                        <td>{{ m.fecha_hora_recoleccion }}</td>
+                        <td>{{ m.primer_nombre }} {{ m.primer_apellido }} ({{ m.documento }})</td>
+                        <td>{{ m.tipo_muestra }}</td>
+                        <td><span class="badge bg-warning text-dark">{{ m.estado }}</span></td>
+                        <td><a href="/muestras/{{ m.id }}" class="btn btn-outline-primary btn-sm">Ver / Actualizar</a></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">No hay muestras pendientes de entrega — todo al día.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

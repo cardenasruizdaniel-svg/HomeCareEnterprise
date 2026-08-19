@@ -1046,6 +1046,67 @@ class MigrationManager:
 
         return cambios
 
+    def migrar_trazabilidad_muestras(self):
+        """
+        Cadena de custodia para la toma de muestras de
+        laboratorio: desde que se recolecta en el domicilio del
+        paciente, hasta que se entrega y se procesa en el
+        laboratorio -- con fecha y hora exactas de cada paso, el
+        tipo de recipiente usado, y quién es responsable en cada
+        momento, para que ninguna muestra se pierda o se dañe
+        sin que quede claro en qué punto pasó.
+        """
+        cambios = []
+        if not self.existe_tabla("trazabilidad_muestras"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS trazabilidad_muestras(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    servicio_paciente_id INTEGER,
+                    programacion_id INTEGER,
+                    paciente_id INTEGER NOT NULL,
+                    profesional_id INTEGER,
+                    tipo_muestra TEXT NOT NULL,
+                    tipo_recipiente TEXT NOT NULL,
+                    cantidad_recipientes INTEGER DEFAULT 1,
+                    examenes_solicitados TEXT,
+                    fecha_hora_recoleccion TEXT NOT NULL,
+                    condiciones_transporte TEXT,
+                    estado TEXT DEFAULT 'Recolectada',
+                    laboratorio_destino TEXT,
+                    fecha_entrega_laboratorio TEXT,
+                    responsable_entrega TEXT,
+                    responsable_recibe TEXT,
+                    observaciones TEXT,
+                    incidencia TEXT,
+                    foto_muestra_base64 TEXT,
+                    firma_recoleccion_base64 TEXT,
+                    usuario_creacion INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
+                    FOREIGN KEY(profesional_id) REFERENCES profesionales(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla trazabilidad_muestras")
+
+        if not self.existe_tabla("trazabilidad_muestras_eventos"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS trazabilidad_muestras_eventos(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    muestra_id INTEGER NOT NULL,
+                    estado TEXT NOT NULL,
+                    fecha_hora TEXT DEFAULT CURRENT_TIMESTAMP,
+                    usuario_id INTEGER,
+                    usuario_nombre TEXT,
+                    observaciones TEXT,
+                    FOREIGN KEY(muestra_id) REFERENCES trazabilidad_muestras(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla trazabilidad_muestras_eventos")
+
+        return cambios
+
     def migrar_foto_firmante(self):
         """
         Para que la firma de un consentimiento (o de cualquier
@@ -2950,6 +3011,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_foto_firmante()
+        )
+
+        cambios.extend(
+            self.migrar_trazabilidad_muestras()
         )
 
         cambios.extend(

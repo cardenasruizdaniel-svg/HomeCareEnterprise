@@ -68,9 +68,12 @@
         </div>
     </div>
 
-    {% if gerencial.insumos_stock_bajo > 0 or gerencial.lotes_vencidos > 0 or gerencial.lotes_por_vencer > 0 or gerencial.cartera_pendiente > 0 or gerencial.autorizaciones_pendientes > 0 or gerencial.auditoria_errores_24h > 0 %}
+    {% if gerencial.insumos_stock_bajo > 0 or gerencial.lotes_vencidos > 0 or gerencial.lotes_por_vencer > 0 or gerencial.cartera_pendiente > 0 or gerencial.autorizaciones_pendientes > 0 or gerencial.auditoria_errores_24h > 0 or gerencial.muestras_pendientes_entrega > 0 %}
     <div class="row g-2 mb-4">
         <div class="col-12"><h6 class="text-muted mb-1"><i class="fa-solid fa-triangle-exclamation"></i> Alertas gerenciales</h6></div>
+        {% if gerencial.muestras_pendientes_entrega > 0 %}
+        <div class="col-auto"><a href="/muestras/pendientes" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-vial"></i> {{ gerencial.muestras_pendientes_entrega }} muestra(s) pendiente(s) de entrega al laboratorio</a></div>
+        {% endif %}
         {% if gerencial.auditoria_errores_24h > 0 %}
         <div class="col-auto"><a href="/auditoria?resultado=Error" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-bug"></i> {{ gerencial.auditoria_errores_24h }} error(es) del sistema en las últimas 24h</a></div>
         {% endif %}
