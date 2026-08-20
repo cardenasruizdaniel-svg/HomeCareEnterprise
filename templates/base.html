@@ -98,5 +98,34 @@
 
     {% block javascript %}{% endblock %}
 
+    {% if usuario and (usuario.rol or "").strip().lower() != "administrador" %}
+    <script>
+    // Cierra la sesión sola después de 20 minutos sin ninguna
+    // actividad (mouse, teclado, clic, o scroll) -- para que si
+    // alguien deja el sistema abierto sin usarlo, no quede una
+    // sesión expuesta. El Administrador (super admin) no tiene
+    // este cierre automático.
+    (function () {
+        const MINUTOS_INACTIVIDAD = 20;
+        let temporizadorInactividad;
+
+        function cerrarPorInactividad() {
+            window.location.href = "/logout?motivo=inactividad";
+        }
+
+        function reiniciarTemporizador() {
+            clearTimeout(temporizadorInactividad);
+            temporizadorInactividad = setTimeout(cerrarPorInactividad, MINUTOS_INACTIVIDAD * 60 * 1000);
+        }
+
+        ["mousemove", "mousedown", "keydown", "scroll", "touchstart"].forEach((evento) => {
+            document.addEventListener(evento, reiniciarTemporizador, { passive: true });
+        });
+
+        reiniciarTemporizador();
+    })();
+    </script>
+    {% endif %}
+
 </body>
 </html>

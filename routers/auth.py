@@ -11,12 +11,18 @@ router = APIRouter(tags=["Autenticación"])
 @router.get("/login")
 async def login(request: Request):
 
+    mensaje_inactividad = (
+        "Su sesión se cerró automáticamente por 20 minutos de inactividad. Ingrese de nuevo para continuar."
+        if request.query_params.get("motivo") == "inactividad" else None
+    )
+
     return templates.TemplateResponse(
         request=request,
         name="login.html",
         context={
             "request": request,
             "error": None,
+            "aviso": mensaje_inactividad,
         },
     )
 
@@ -97,7 +103,9 @@ async def login_post(
 
 
 @router.get("/logout")
-async def logout(request: Request):
+async def logout(request: Request, motivo: str = None):
+
+    es_por_inactividad = motivo == "inactividad"
 
     registrar_auditoria(
 
@@ -109,9 +117,9 @@ async def logout(request: Request):
 
     modulo="Autenticación",
 
-    accion="Logout",
+    accion="Logout por inactividad" if es_por_inactividad else "Logout",
 
-    descripcion="Cierre de sesión",
+    descripcion="Cierre de sesión automático por 20 minutos de inactividad" if es_por_inactividad else "Cierre de sesión",
 
     ip=request.client.host if request.client else "",
 
@@ -122,6 +130,6 @@ async def logout(request: Request):
     request.session.clear()
 
     return RedirectResponse(
-        url="/login",
+        url="/login?motivo=inactividad" if es_por_inactividad else "/login",
         status_code=302,
     )

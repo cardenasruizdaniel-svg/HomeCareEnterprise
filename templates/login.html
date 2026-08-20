@@ -96,6 +96,16 @@
 
         </div>
 
+        {% if aviso %}
+
+        <div class="alert alert-warning">
+
+            <i class="fa-solid fa-clock"></i> {{ aviso }}
+
+        </div>
+
+        {% endif %}
+
         {% if error %}
 
         <div class="alert alert-danger">
