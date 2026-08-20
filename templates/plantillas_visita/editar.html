@@ -11,7 +11,7 @@
         <div class="col-md-6">
             <div class="card shadow">
                 <div class="card-body">
-                    <form method="post" action="/plantillas-visita/editar/{{ plantilla.id }}">
+                    <form method="post" action="/plantillas-visita/editar/{{ plantilla.id }}" id="form-editar-plantilla">
                         <div class="mb-3">
                             <label>Nombre de la plantilla</label>
                             <input type="text" name="nombre" class="form-control" value="{{ plantilla.nombre }}" required>
@@ -25,12 +25,18 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label>¿Para qué perfil/rol es esta plantilla?</label>
-                            <select name="rol_destinatario" class="form-select" required>
+                            <label>¿Para qué perfil(es)/rol(es) es esta plantilla?</label>
+                            <div class="border rounded p-2">
+                                {% set roles_actuales = (plantilla.rol_destinatario or "Todos").split(",") | map("trim") | list %}
                                 {% for r in roles %}
-                                <option value="{{ r }}" {% if plantilla.rol_destinatario == r %}selected{% endif %}>{{ r }}</option>
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input check-rol-plantilla" value="{{ r }}" id="rol-editar-{{ loop.index }}" {% if r in roles_actuales %}checked{% endif %}>
+                                    <label class="form-check-label" for="rol-editar-{{ loop.index }}">{{ r }}</label>
+                                </div>
                                 {% endfor %}
-                            </select>
+                            </div>
+                            <small class="text-muted">Puede marcar varios perfiles a la vez, para que la misma plantilla la puedan usar todos ellos.</small>
+                            <input type="hidden" name="rol_destinatario" id="campo-rol-destinatario-editar" value="{{ plantilla.rol_destinatario or 'Todos' }}">
                         </div>
                         <div class="mb-3">
                             <label>Subtipo (opcional)</label>
@@ -47,4 +53,21 @@
         </div>
     </div>
 </div>
+
+<script>
+document.querySelectorAll(".check-rol-plantilla").forEach((casilla) => {
+    casilla.addEventListener("change", function () {
+        if (this.value === "Todos" && this.checked) {
+            document.querySelectorAll(".check-rol-plantilla").forEach((c) => { if (c.value !== "Todos") c.checked = false; });
+        } else if (this.value !== "Todos" && this.checked) {
+            document.querySelectorAll(".check-rol-plantilla").forEach((c) => { if (c.value === "Todos") c.checked = false; });
+        }
+    });
+});
+
+document.getElementById("form-editar-plantilla").addEventListener("submit", () => {
+    const seleccionados = Array.from(document.querySelectorAll(".check-rol-plantilla:checked")).map((c) => c.value);
+    document.getElementById("campo-rol-destinatario-editar").value = seleccionados.length ? seleccionados.join(",") : "Todos";
+});
+</script>
 {% endblock %}

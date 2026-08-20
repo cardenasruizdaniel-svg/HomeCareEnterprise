@@ -26,9 +26,22 @@
                     </select>
                 </div>
                 {% endif %}
+
+                {% if plantillas_disponibles %}
+                <div class="mb-3">
+                    <label>Plantilla de visita (opcional — precarga el texto, usted lo puede ajustar después)</label>
+                    <select id="selector-plantilla-visita" class="form-select">
+                        <option value="">-- Escribir libremente, sin plantilla --</option>
+                        {% for p in plantillas_disponibles %}
+                        <option value="{{ p.contenido | e }}">{{ p.nombre }}{% if not p.creado_por_administracion %} (personal){% endif %}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
                 <div class="mb-3">
                     <label>Nota de la visita</label>
-                    <textarea name="nota" class="form-control" rows="8" required
+                    <textarea name="nota" id="campo-nota-visita" class="form-control" rows="8" required
                               placeholder="Escriba aquí la nota de la visita (hallazgos, procedimiento realizado, recomendaciones, etc.)"></textarea>
                 </div>
                 <p class="text-muted small">
@@ -39,4 +52,19 @@
         </div>
     </div>
 </div>
+
+<script>
+const selectorPlantilla = document.getElementById("selector-plantilla-visita");
+if (selectorPlantilla) {
+    selectorPlantilla.addEventListener("change", function () {
+        const campoNota = document.getElementById("campo-nota-visita");
+        if (!this.value) return;
+        if (campoNota.value.trim() && !confirm("Esto va a reemplazar el texto que ya había escrito. ¿Continuar?")) {
+            this.value = "";
+            return;
+        }
+        campoNota.value = this.value;
+    });
+}
+</script>
 {% endblock %}

@@ -6,24 +6,23 @@ from database.database import consultar_todos, consultar_uno, ejecutar
 class PlantillasVisitaRepository:
 
     @staticmethod
-    def listar_disponibles_para_profesional(rol_profesional: str, profesional_id: int = None):
+    def listar_candidatas(profesional_id: int = None):
         """
-        Devuelve las plantillas que le corresponden a ESTE
-        profesional segun su rol/perfil: las de uso general
-        para su rol (o "Todos"), creadas por administracion,
-        MAS las suyas propias (las que el mismo creo para si).
+        Trae todas las plantillas activas que PODRÍAN
+        corresponderle a este profesional: las creadas por
+        administración (el servicio filtra después cuáles le
+        aplican, según los roles asignados a cada una -- que
+        pueden ser varios a la vez), MAS las suyas propias
+        (las que el mismo creó para sí).
         """
         return consultar_todos(
             """
             SELECT * FROM plantillas_visita
             WHERE activo=1
-              AND (
-                    (creado_por_administracion=1 AND (rol_destinatario=? OR rol_destinatario='Todos'))
-                    OR profesional_id=?
-                  )
+              AND (creado_por_administracion=1 OR profesional_id=?)
             ORDER BY creado_por_administracion DESC, nombre
             """,
-            (rol_profesional, profesional_id),
+            (profesional_id,),
         )
 
     @staticmethod

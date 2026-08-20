@@ -10,7 +10,7 @@
             <div class="card shadow mb-3">
                 <div class="card-header bg-white"><h5 class="mb-0">Nueva plantilla</h5></div>
                 <div class="card-body">
-                    <form method="post" action="/plantillas-visita/guardar">
+                    <form method="post" action="/plantillas-visita/guardar" id="form-nueva-plantilla">
                         <div class="mb-3">
                             <label>Nombre de la plantilla</label>
                             <input type="text" name="nombre" class="form-control" placeholder="Ej: Curación estándar de úlcera" required>
@@ -22,11 +22,17 @@
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label>¿Para qué perfil/rol es esta plantilla?</label>
-                            <select name="rol_destinatario" class="form-select" required>
-                                {% for r in roles %}<option value="{{ r }}">{{ r }}</option>{% endfor %}
-                            </select>
-                            <small class="text-muted">"Todos" la muestra a cualquier profesional; si elige un rol específico (Cuidador, Enfermero, etc.), solo la verán quienes tengan ese perfil.</small>
+                            <label>¿Para qué perfil(es)/rol(es) es esta plantilla?</label>
+                            <div class="border rounded p-2">
+                                {% for r in roles %}
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input check-rol-plantilla" value="{{ r }}" id="rol-crear-{{ loop.index }}" {% if r == "Todos" %}checked{% endif %}>
+                                    <label class="form-check-label" for="rol-crear-{{ loop.index }}">{{ r }}</label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            <small class="text-muted">Puede marcar varios perfiles a la vez (ej. Médico y Enfermero) para que la misma plantilla la puedan usar ambos. "Todos" la muestra a cualquier profesional.</small>
+                            <input type="hidden" name="rol_destinatario" id="campo-rol-destinatario-crear" value="Todos">
                         </div>
                         <div class="mb-3">
                             <label>Subtipo (opcional, ej. cuál terapia)</label>
@@ -65,7 +71,7 @@
                             {% for p in plantillas %}
                             <tr>
                                 <td>{{ p.nombre }}</td>
-                                <td><span class="badge bg-info text-dark">{{ p.rol_destinatario or "Todos" }}</span></td>
+                                <td>{% for r in (p.rol_destinatario or "Todos").split(",") %}<span class="badge bg-info text-dark me-1">{{ r.strip() }}</span>{% endfor %}</td>
                                 <td>{{ p.tipo_servicio }}{% if p.subtipo %} - {{ p.subtipo }}{% endif %}</td>
                                 <td>
                                     {% if p.creado_por_administracion %}
@@ -93,6 +99,22 @@
 <script>
 document.getElementById("select-origen").addEventListener("change", (e) => {
     document.getElementById("contenedor-profesional").style.display = e.target.value === "profesional" ? "block" : "none";
+});
+
+// Al marcar "Todos", se descartan los perfiles individuales (y viceversa) -- son excluyentes.
+document.querySelectorAll(".check-rol-plantilla").forEach((casilla) => {
+    casilla.addEventListener("change", function () {
+        if (this.value === "Todos" && this.checked) {
+            document.querySelectorAll(".check-rol-plantilla").forEach((c) => { if (c.value !== "Todos") c.checked = false; });
+        } else if (this.value !== "Todos" && this.checked) {
+            document.querySelectorAll(".check-rol-plantilla").forEach((c) => { if (c.value === "Todos") c.checked = false; });
+        }
+    });
+});
+
+document.getElementById("form-nueva-plantilla").addEventListener("submit", () => {
+    const seleccionados = Array.from(document.querySelectorAll(".check-rol-plantilla:checked")).map((c) => c.value);
+    document.getElementById("campo-rol-destinatario-crear").value = seleccionados.length ? seleccionados.join(",") : "Todos";
 });
 </script>
 {% endblock %}

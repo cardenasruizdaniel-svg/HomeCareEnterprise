@@ -333,7 +333,9 @@ async def asignar_programa_eps_desde_ficha(
 @router.get("/{paciente_id}/registrar-nota-visita")
 async def ver_registrar_nota_visita(request: Request, paciente_id: int, usuario=Depends(requiere_permiso("pacientes"))):
     """Pantalla dedicada para registrar la nota de la visita -- llegar aquí desde el botón de la ficha del paciente."""
+    from database.database import consultar_uno
     from services.evoluciones_service import tipo_nota_segun_rol
+    from services.plantillas_visita_service import listar_disponibles_por_rol, listar_todas
 
     paciente = PacientesService.obtener(paciente_id)
     if not paciente:
@@ -349,11 +351,24 @@ async def ver_registrar_nota_visita(request: Request, paciente_id: int, usuario=
             status_code=303,
         )
 
+    # Plantillas de visita que le corresponden a este profesional
+    # según su perfil (más las suyas propias, si tiene alguna
+    # creada) -- el super admin, al no tener un perfil clínico
+    # fijo, ve todas, para poder verificar cualquiera.
+    profesional = consultar_uno("SELECT id FROM profesionales WHERE usuario_id=?", (usuario.get("id"),))
+    profesional_id = dict(profesional)["id"] if profesional else None
+
+    if es_super_admin:
+        plantillas_disponibles = listar_todas()
+    else:
+        plantillas_disponibles = listar_disponibles_por_rol(tipo_nota_del_usuario, profesional_id)
+
     return templates.TemplateResponse(
         request=request, name="pacientes/registrar_nota_visita.html",
         context={
             "usuario": usuario, "paciente": paciente, "tipo_nota_del_usuario": tipo_nota_del_usuario,
             "es_super_admin": es_super_admin, "tipos_nota_disponibles": tipos_nota_disponibles,
+            "plantillas_disponibles": plantillas_disponibles,
             "error": request.query_params.get("error"),
         },
     )

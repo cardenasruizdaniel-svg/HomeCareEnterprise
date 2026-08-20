@@ -7,6 +7,11 @@ un cuidador solo ve plantillas para cuidadores, un enfermero
 solo las de enfermería, etc. Los profesionales de la salud
 (médicos, terapeutas, etc.) ademas pueden crear las suyas
 propias para su propio uso, sin depender de administracion.
+
+Una misma plantilla se puede asignar a VARIOS perfiles a la vez
+(ej. Médico y Enfermero) -- 'rol_destinatario' guarda la lista
+separada por comas (o 'Todos', para que la vean todos los
+perfiles sin excepción).
 """
 
 from repositories.plantillas_visita_repository import PlantillasVisitaRepository
@@ -53,13 +58,20 @@ def normalizar_rol_profesional(especialidad_principal: str) -> str:
     return "Todos"
 
 
+def _le_corresponde_por_rol(rol_destinatario: str, rol_buscado: str) -> bool:
+    """
+    'rol_destinatario' puede traer varios roles separados por
+    coma (ej. 'Médico,Enfermero,Terapeuta') -- se considera que
+    le corresponde a alguien si su rol está en esa lista, o si
+    la plantilla es para 'Todos'.
+    """
+    roles = [r.strip() for r in (rol_destinatario or "Todos").split(",")]
+    return "Todos" in roles or rol_buscado in roles
+
+
 def listar_disponibles_para_profesional(rol_profesional: str, profesional_id: int = None):
     rol_normalizado = normalizar_rol_profesional(rol_profesional)
-    return [
-        dict(p) for p in PlantillasVisitaRepository.listar_disponibles_para_profesional(
-            rol_normalizado, profesional_id
-        )
-    ]
+    return listar_disponibles_por_rol(rol_normalizado, profesional_id)
 
 
 def listar_disponibles_por_rol(rol: str, profesional_id: int = None):
@@ -69,10 +81,11 @@ def listar_disponibles_por_rol(rol: str, profesional_id: int = None):
     selector de "tipo de nota"), sin inferirlo de la
     especialidad del profesional.
     """
+    candidatas = [dict(p) for p in PlantillasVisitaRepository.listar_candidatas(profesional_id)]
     return [
-        dict(p) for p in PlantillasVisitaRepository.listar_disponibles_para_profesional(
-            rol, profesional_id
-        )
+        p for p in candidatas
+        if (profesional_id is not None and p.get("profesional_id") == profesional_id)
+        or _le_corresponde_por_rol(p.get("rol_destinatario"), rol)
     ]
 
 
