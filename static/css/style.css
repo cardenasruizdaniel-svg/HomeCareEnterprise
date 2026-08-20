@@ -783,19 +783,54 @@ footer{
 }
 
 /* ===========================================
-   BARRA LATERAL OCULTABLE
-   Un botón en la barra superior la esconde o
-   la vuelve a mostrar, para tener más espacio
-   en pantalla cuando se necesite.
+   BARRA LATERAL MINIMIZADA
+   Un botón en la barra superior la reduce a una
+   columna angosta con solo los íconos visibles
+   (en vez de esconderla del todo), para ganar
+   espacio en pantalla sin perder el acceso rápido
+   a los módulos. Pasar el mouse sobre un ícono
+   muestra su nombre completo.
    =========================================== */
+.sidebar, .topbar, .contenido-principal{
+    transition: width .25s ease, left .25s ease, margin-left .25s ease;
+}
 body.sidebar-oculta .sidebar{
-    transform: translateX(-270px);
+    width: 72px;
+}
+body.sidebar-oculta .sidebar .sidebar-header h4,
+body.sidebar-oculta .sidebar .sidebar-header small{
+    display: none;
+}
+body.sidebar-oculta .sidebar .sidebar-header .logo{
+    width: 36px;
+    height: 36px;
+}
+body.sidebar-oculta .sidebar .menu a span{
+    display: none;
+}
+body.sidebar-oculta .sidebar .menu a{
+    justify-content: center;
+    padding: 14px 0;
+}
+body.sidebar-oculta .sidebar .menu a i{
+    margin: 0;
+    font-size: 18px;
+}
+/* Los encabezados de grupo (que no tienen ícono propio, solo texto)
+   se ocultan, y su contenido queda siempre visible como una lista
+   plana de íconos -- sin importar si el grupo estaba abierto o
+   cerrado antes de minimizar. */
+body.sidebar-oculta .sidebar .menu-title{
+    display: none;
+}
+body.sidebar-oculta .sidebar .submenu{
+    display: block !important;
 }
 body.sidebar-oculta .topbar{
-    left: 0;
+    left: 72px;
 }
 body.sidebar-oculta .contenido-principal{
-    margin-left: 0;
+    margin-left: 72px;
 }
 #btn-alternar-sidebar{
     background: none;

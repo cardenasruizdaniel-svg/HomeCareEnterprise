@@ -317,6 +317,21 @@
 </div>
 
 <script>
+// Copia el texto de cada opción del menú a su atributo "title" --
+// así, cuando el menú está minimizado (y el texto queda oculto,
+// mostrando solo el ícono), al pasar el mouse por encima igual se
+// ve el nombre completo como un tooltip nativo del navegador.
+(function () {
+    document.querySelectorAll(".sidebar .menu a[href] span").forEach((etiqueta) => {
+        const enlace = etiqueta.closest("a");
+        if (enlace && !enlace.hasAttribute("title")) {
+            enlace.setAttribute("title", etiqueta.textContent.trim());
+        }
+    });
+})();
+</script>
+
+<script>
 // Resalta en el menú la opción de la pantalla en la que se
 // esta -- comparando la URL actual contra cada enlace, y
 // usando el mas largo que coincida (para que "/pacientes"
