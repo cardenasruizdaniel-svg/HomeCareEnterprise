@@ -151,21 +151,46 @@ const doc = new Document({
       ),
       espacio(),
 
-      // ===================== 6. SEGURIDAD =====================
-      titulo("6. Seguridad — a tener en cuenta"),
+      // ===================== 6. ARRANQUE AUTOMATICO =====================
+      titulo("6. Arranque automático — sin abrir PowerShell nunca más"),
+      parrafo("Para no tener que abrir PowerShell cada vez, hay un configurador que deja todo arrancando solo con Windows, y dos accesos directos en el Escritorio para el uso diario."),
+      subtitulo("Configurar (una sola vez)"),
+      numerada("Doble clic en Configurar_Inicio_Automatico.bat (dentro de deploy/windows).", 1),
+      numerada("Confirma que se crearon el arranque automático y los dos accesos directos del Escritorio.", 2),
+      espacio(),
+      parrafo("A partir de ahí, cada vez que se prenda el computador y se inicie sesión en Windows, el programa y el túnel arrancan solos (en ventanas minimizadas, sin taparle la pantalla a nadie)."),
+      subtitulo("Los dos íconos del Escritorio"),
+      tabla(
+        ["Ícono", "Para qué sirve"],
+        [
+          ["HomeCare - Iniciar Todo", "Arranca el programa y el túnel manualmente, sin tener que reiniciar el computador (por ejemplo, si se cerraron las ventanas sin querer)."],
+          ["HomeCare - Ver Dirección Externa", "Consulta la dirección https:// actual, la copia sola al portapapeles, y la abre en el navegador — sin tener que buscarla en ninguna ventana."],
+        ],
+        [4200, 5300]
+      ),
+      espacio(),
+      cajaNota(
+        "💡 Recomendado: usar siempre el ícono de \u201cVer Dirección Externa\u201d",
+        "Es la forma más rápida de conseguir la dirección del momento para compartirla o abrirla en el celular — la copia sola al portapapeles, lista para pegar.",
+        COLOR_FONDO_TABLA
+      ),
+      espacio(),
+
+      // ===================== 7. SEGURIDAD =====================
+      titulo("7. Seguridad — a tener en cuenta"),
       vineta("Mientras el túnel esté abierto, cualquiera con esa dirección puede llegar a la pantalla de login del sistema (aunque sí necesita usuario y contraseña válidos para hacer algo) — no compartir la dirección con quien no deba tenerla."),
       vineta("Cerrar la ventana del túnel (o del programa) cuando ya no se esté usando, sobre todo si el equipo se va a dejar solo."),
       vineta("Este mecanismo es para pruebas y demostraciones — para producción real y permanente, la recomendación sigue siendo el despliegue en Render (o el servidor que la empresa disponga), no dejar un computador de oficina como servidor final."),
       espacio(),
 
       // ===================== 7. PREGUNTAS FRECUENTES =====================
-      titulo("7. Preguntas frecuentes"),
+      titulo("8. Preguntas frecuentes"),
       subtitulo("Me sale \u201c502 Bad Gateway\u201d al entrar por la dirección externa"),
       parrafo("Significa que el túnel está funcionando, pero no encuentra el programa corriendo — verificar que la ventana \u201cHomeCare - Programa\u201d siga abierta y sin errores."),
       subtitulo("Me sale \u201caccepts 1 arg(s), received 0\u201d al configurar el authtoken"),
       parrafo("Se está copiando el texto de ejemplo (\"$YOUR_AUTHTOKEN\") en vez de la clave real — hay que copiar el texto largo que aparece en el dashboard de ngrok, no el nombre de la variable."),
       subtitulo("¿Puedo dejar esto encendido todo el tiempo, sin que nadie esté pendiente?"),
-      parrafo("Sí es posible, pero requiere pasos adicionales (registrar el túnel como tarea programada de Windows, y preferiblemente un dominio fijo de ngrok) — si se necesita, se puede ampliar esta configuración más adelante."),
+      parrafo("Sí — usando el configurador de arranque automático (sección 6). El programa y el túnel arrancan solos cada vez que se prende el computador, sin abrir PowerShell. La única salvedad: con el plan gratis de ngrok, la dirección https:// cambia en cada arranque — por eso conviene revisarla con el ícono \u201cVer Dirección Externa\u201d en vez de guardarla de un día para otro."),
 
       espacio(),
       new Paragraph({ children: [new TextRun({ text: "HomeCare Enterprise — Manual interno de Instalación Local y Acceso Externo", italics: true, color: COLOR_GRIS, size: 18 })] }),

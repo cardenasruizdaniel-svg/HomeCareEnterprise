@@ -14,7 +14,10 @@ REM que la persona tenga que saber la diferencia.
 REM =========================================================
 
 setlocal enabledelayedexpansion
-cd /d "%~dp0.."
+REM deploy/windows/ esta DOS niveles abajo de la raiz del
+REM proyecto (donde vive main.py) -- hay que subir dos veces,
+REM no una sola.
+cd /d "%~dp0..\.."
 
 set "PYTHONUTF8=1"
 set "PYTHONIOENCODING=utf-8"
