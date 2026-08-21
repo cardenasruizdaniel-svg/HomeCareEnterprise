@@ -135,6 +135,21 @@ def crear_usuario_admin():
 
         necesita_reparacion = not es_hash_valido
 
+        # Recuperación deliberada: si alguien queda bloqueado
+        # fuera del sistema (olvidó la contraseña, o quedó una
+        # de una prueba anterior sin anotar), se puede forzar el
+        # restablecimiento agregando la variable de entorno
+        # RESETEAR_PASSWORD_ADMIN=true en Render (o en el
+        # sistema local) y reiniciando -- a diferencia del
+        # comportamiento anterior, esto NO pasa solo en cada
+        # arranque: hay que pedirlo a propósito, y se recomienda
+        # quitar la variable después de recuperar el acceso.
+        import os as _os_recuperacion
+        recuperacion_solicitada = _os_recuperacion.environ.get("RESETEAR_PASSWORD_ADMIN", "").strip().lower() == "true"
+
+        if recuperacion_solicitada:
+            necesita_reparacion = True
+
         if necesita_reparacion:
 
             password_cifrada = AuthService.generar_hash("admin123")
@@ -146,7 +161,10 @@ def crear_usuario_admin():
 
             conexion.commit()
 
-            print("[OK] Se reparó la contraseña del administrador (estaba guardada en un formato no válido). Ahora es 'admin123'.")
+            if recuperacion_solicitada:
+                print("[OK] Se restableció la contraseña del administrador a 'admin123' porque se pidió explícitamente con RESETEAR_PASSWORD_ADMIN=true. Recuerde quitar esa variable de entorno después de recuperar el acceso.")
+            else:
+                print("[OK] Se reparó la contraseña del administrador (estaba guardada en un formato no válido). Ahora es 'admin123'.")
 
     # El administrador nunca debe quedar bloqueado por intentos
     # fallidos ni inactivo -- cada vez que arranca el sistema se
