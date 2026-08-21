@@ -109,6 +109,18 @@ def reiniciar_base_datos_en_blanco(usuario_id=None) -> dict:
     cie10_repository.sembrar_si_vacio()
     sembrar_examenes_lab()
 
+    # Los manuales de Capacitación y las Recomendaciones e
+    # Instrucciones para exámenes tampoco son "datos de
+    # prueba" -- son contenido de referencia del sistema, igual
+    # que los catálogos de arriba. Sin este paso, un reinicio
+    # dejaría esos dos módulos vacíos hasta el próximo arranque
+    # completo del servidor.
+    from services.capacitacion_service import sembrar_manuales_existentes
+    from services.recomendaciones_examenes_service import sembrar_recomendaciones_estandar
+
+    sembrar_manuales_existentes()
+    sembrar_recomendaciones_estandar()
+
     from database.database import consultar_escalar
     total_usuarios = consultar_escalar("SELECT COUNT(*) FROM usuarios")
 

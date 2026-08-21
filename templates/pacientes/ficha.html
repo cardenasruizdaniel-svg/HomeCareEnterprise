@@ -76,6 +76,51 @@
     {% endif %}
 
     {# =====================================================
+       CITAS DEL PACIENTE: próximas, pendientes de programar,
+       y aviso de primera visita de valoración si aplica.
+       ===================================================== #}
+    {% if resumen_citas.falta_programar_primera_visita %}
+    <div class="alert alert-warning">
+        <div class="d-flex align-items-center gap-2">
+            <i class="fa-solid fa-triangle-exclamation fa-lg"></i>
+            <strong>Este paciente todavía no tiene ninguna visita registrada — falta programarle la primera visita de valoración.</strong>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if resumen_citas.proximas or resumen_citas.pendientes_programar %}
+    <div class="card shadow mb-3">
+        <div class="card-header bg-white"><h6 class="mb-0"><i class="fa-solid fa-calendar-check text-primary"></i> Citas de este paciente</h6></div>
+        <div class="card-body">
+            {% if resumen_citas.proximas %}
+            <p class="small text-muted mb-1">Próximas citas programadas:</p>
+            <ul class="list-unstyled mb-3">
+                {% for cita in resumen_citas.proximas %}
+                <li class="mb-1">
+                    <span class="badge bg-primary">{{ cita.fecha }}{% if cita.hora %} {{ cita.hora }}{% endif %}</span>
+                    {{ cita.servicio }}
+                    {% if cita.prof_nombre %} — {{ cita.prof_nombre }} {{ cita.prof_apellido }}{% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            {% if resumen_citas.pendientes_programar %}
+            <p class="small text-muted mb-1">Servicios asignados que aún les falta programar fecha y hora exactas:</p>
+            <ul class="list-unstyled mb-0">
+                {% for pendiente in resumen_citas.pendientes_programar %}
+                <li class="mb-1">
+                    <span class="badge bg-warning text-dark">Pendiente</span>
+                    {{ pendiente.tipo_servicio }}{% if pendiente.subtipo %} — {{ pendiente.subtipo }}{% endif %}
+                    <small class="text-muted">(tentativa: {{ pendiente.fecha }})</small>
+                </li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {# =====================================================
        REGISTRAR NOTA DE VISITA (informe médico / de enfermería / etc.)
        -- solo se muestra si el usuario que inició sesión es un
        profesional de la salud, igual que en la app móvil.

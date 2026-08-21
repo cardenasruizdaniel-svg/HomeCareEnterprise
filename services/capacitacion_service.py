@@ -173,6 +173,7 @@ def sembrar_manuales_existentes(usuario_id=None, usuario_nombre="Sistema"):
         ("Manual_Convenios_EPS_Facturacion.docx", "Manual de Convenios EPS, Autorizaciones y Facturación", "Cómo parametrizar convenios, programas, autorizaciones, y generar la facturación.", "Facturación y Convenios", "Web", "Administrador,Coordinador,Administrativo"),
         ("Manual_Tramites_Entes_Reguladores_HomeCare.pdf", "Manual de Trámites ante Entes Reguladores", "Guía de los trámites y reportes obligatorios ante las entidades de vigilancia.", "Calidad y Normatividad", "Web", "Administrador,Coordinador"),
         ("Manual_Trazabilidad_Toma_Muestras.docx", "Manual de Trazabilidad — Toma de Muestras de Laboratorio", "Cadena de custodia, tipos de recipientes, y envío de indicaciones al paciente antes de la toma.", "Operación", "Ambas", "Todos"),
+        ("Manual_Instalacion_Local_Acceso_Externo.docx", "Manual de Instalación Local y Acceso Externo", "Cómo correr el sistema en un equipo local y habilitar el acceso externo por túnel para pruebas.", "Configuración", "Web", "Administrador"),
     ]
 
     creados = []

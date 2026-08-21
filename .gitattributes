@@ -1,0 +1,45 @@
+# =========================================================
+# HomeCare Enterprise - .gitattributes
+#
+# Le dice a git que estos tipos de archivo son BINARIOS, para
+# que nunca intente "normalizar" sus finales de línea (como sí
+# hace por defecto con archivos de texto en Windows). Esa
+# conversión automática es justamente lo que puede corromper
+# silenciosamente una base de datos SQLite, un manual Word, o
+# una imagen -- el archivo se ve del tamaño correcto, pero
+# queda dañado por dentro.
+# =========================================================
+
+# Bases de datos
+*.db binary
+*.db-journal binary
+*.db-wal binary
+*.db-shm binary
+*.sqlite binary
+*.sqlite3 binary
+
+# Documentos e imágenes
+*.docx binary
+*.doc binary
+*.xlsx binary
+*.xls binary
+*.pptx binary
+*.ppt binary
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+
+# Empaquetados y ejecutables
+*.zip binary
+*.exe binary
+*.dll binary
+
+# Fuentes
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary

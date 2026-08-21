@@ -54,8 +54,79 @@ def get_connection():
     if ES_POSTGRES:
         return ConnectionCompatible(conectar_postgres())
 
+    try:
+        conexion = _conectar_sqlite(DB_PATH)
+    except sqlite3.DatabaseError as error:
+
+        # "database disk image is malformed" y errores similares
+        # significan que el archivo se corrompió (por ejemplo,
+        # tras un corte de luz, un cierre forzado del programa,
+        # o un antivirus interfiriendo mientras escribía). En vez
+        # de que el sistema completo se caiga sin poder arrancar
+        # nunca más, se guarda el archivo dañado a un lado (por
+        # si alguien necesita intentar recuperarlo después) y se
+        # empieza con una base de datos nueva y limpia -- el
+        # arranque normal del sistema se encarga de recrear las
+        # tablas y los datos base (usuario administrador,
+        # catálogos, etc.) en el archivo nuevo.
+
+        mensaje_error = str(error).lower()
+        es_corrupcion = any(pista in mensaje_error for pista in (
+            "malformed", "corrupt", "not a database", "file is encrypted",
+        ))
+
+        if not es_corrupcion:
+            raise
+
+        print(f"[AVISO] La base de datos parece estar dañada ({error}). Se va a reparar automáticamente...")
+
+        if DB_PATH.exists():
+            respaldo_dañado = DB_PATH.with_name(f"database_DAÑADA_{datetime.now().strftime('%Y%m%d_%H%M%S')}.db")
+
+            # En Windows, si quedó otro proceso con el archivo
+            # abierto (por ejemplo, una ventana anterior del
+            # programa que no se cerró del todo), moverlo falla
+            # con "PermissionError" aunque el archivo sí exista.
+            # Se reintenta varias veces, esperando cada vez un
+            # poco más entre intento e intento (empieza en 2
+            # segundos, hasta llegar a 10) -- un antivirus
+            # escaneando el archivo justo en ese momento puede
+            # tardar bastante más que unos pocos segundos en
+            # soltarlo.
+            import time
+
+            total_intentos = 15
+            for intento in range(1, total_intentos + 1):
+                try:
+                    shutil.move(str(DB_PATH), str(respaldo_dañado))
+                    print(f"[AVISO] El archivo dañado se guardó como: {respaldo_dañado.name}")
+                    break
+                except PermissionError:
+                    if intento == total_intentos:
+                        raise RuntimeError(
+                            "No se pudo reparar la base de datos automáticamente porque el archivo "
+                            f"'{DB_PATH}' está siendo usado por otro proceso. "
+                            "Cierre TODAS las ventanas de PowerShell/CMD que hayan corrido este programa "
+                            "antes (revise también el Administrador de Tareas por si quedó algún "
+                            "proceso 'python.exe' abierto y termínelo -- y de paso revise que su "
+                            "antivirus no esté escaneando la carpeta del programa justo en este momento), "
+                            "y vuelva a intentarlo. Si el problema persiste, puede borrar manualmente el "
+                            f"archivo '{DB_PATH.name}' y volver a arrancar el programa."
+                        ) from error
+                    espera = min(2 + intento, 10)
+                    print(f"[AVISO] El archivo sigue en uso por otro proceso, reintentando en {espera} segundos... (intento {intento} de {total_intentos})")
+                    time.sleep(espera)
+
+        conexion = _conectar_sqlite(DB_PATH)
+        print("[OK] Se creó una base de datos nueva. El sistema la va a llenar con la información base al arrancar.")
+
+    return ConnectionCompatible(conexion)
+
+
+def _conectar_sqlite(ruta):
+
     conexion = sqlite3.connect(
-        DB_PATH,
+        ruta,
         check_same_thread=False,
         timeout=30,
     )
@@ -70,7 +141,7 @@ def get_connection():
     cursor.execute("PRAGMA temp_store=MEMORY;")
     cursor.execute("PRAGMA cache_size=-64000;")
 
-    return ConnectionCompatible(conexion)
+    return conexion
 
 
 # =====================================================

@@ -280,7 +280,7 @@ async def guardar_enrolamiento_facial(
                 status_code=400,
                 detail="No se detectó un rostro claro en la foto. Tome la foto de frente, con buena luz.",
             )
-    except ImportError:
+    except (ImportError, ValueError):
         pass  # si OpenCV no esta disponible en este servidor, se guarda igual sin poder validarla aqui
 
     from repositories.profesionales_repository import ProfesionalesRepository

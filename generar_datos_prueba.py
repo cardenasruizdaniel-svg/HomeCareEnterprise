@@ -437,7 +437,7 @@ consentimiento_id = crear_consentimiento(pacientes_ids["Sofía"],
                                            "Ingreso al Programa de Atención Domiciliaria",
                                            texto_consentimiento, 1)
 firmar_consentimiento(consentimiento_id, "Acudiente/Responsable", "Patricia Martínez",
-                        "1000222333", "Madre", FIRMA_EJEMPLO)
+                        "1000222333", "Madre", FIRMA_EJEMPLO, foto_firmante_base64=FOTO_EJEMPLO)
 
 print("[OK] Consentimiento informado de ejemplo generado y firmado")
 
@@ -490,6 +490,21 @@ configuracion_empresa_service.guardar({
 })
 
 print("[OK] Configuración de la empresa de ejemplo guardada (aparece en los reportes impresos)")
+
+# ==========================================================
+# CAPACITACIÓN Y RECOMENDACIONES (los mismos manuales e
+# indicaciones que se siembran solos en un arranque normal --
+# aquí se hace explícito para que la base de datos de prueba
+# quede completa, igual que se vería recién instalado)
+# ==========================================================
+
+from services.capacitacion_service import sembrar_manuales_existentes
+from services.recomendaciones_examenes_service import sembrar_recomendaciones_estandar
+
+manuales_creados = sembrar_manuales_existentes()
+recomendaciones_creadas = sembrar_recomendaciones_estandar()
+print(f"[OK] Módulo de Capacitación: {len(manuales_creados)} manual(es) sembrado(s)")
+print(f"[OK] Recomendaciones e Instrucciones: {len(recomendaciones_creadas)} recomendación(es) sembrada(s)")
 
 print("\n" + "=" * 60)
 print("BASE DE DATOS DE PRUEBA GENERADA CORRECTAMENTE")

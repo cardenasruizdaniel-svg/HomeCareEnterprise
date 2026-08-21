@@ -466,6 +466,9 @@ async def ficha(
     eps_paciente = paciente["eps"] if "eps" in paciente.keys() else None
     opciones_programa = {"con_convenio": [], "generales": []} if convenio_eps_actual else convenios.opciones_de_programa_para_paciente(eps_paciente)
 
+    from services.programacion_service import resumen_citas_paciente
+    resumen_citas = resumen_citas_paciente(paciente_id)
+
     from services.evoluciones_service import tipo_nota_segun_rol
     tipo_nota_del_usuario = tipo_nota_segun_rol(usuario.get("rol", ""))
 
@@ -492,6 +495,7 @@ async def ficha(
             "resumen_clinico": resumen_clinico,
             "convenio_eps_actual": convenio_eps_actual,
             "opciones_programa": opciones_programa,
+            "resumen_citas": resumen_citas,
             "tipo_nota_del_usuario": tipo_nota_del_usuario,
             "es_super_admin": es_super_admin,
             "tipos_nota_disponibles": tipos_nota_disponibles,

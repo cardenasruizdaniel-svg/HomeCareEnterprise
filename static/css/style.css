@@ -839,6 +839,8 @@ body.sidebar-oculta .contenido-principal{
     color: #334155;
     cursor: pointer;
     margin-right: 12px;
+    position: relative;
+    z-index: 1500;
 }
 #btn-alternar-sidebar:hover{
     color: #0f172a;
@@ -1130,3 +1132,119 @@ button:focus-visible,
         transition-duration:0.001ms !important;
     }
 }
+
+/* ===========================================
+   VISTA PARA CELULAR (pantallas angostas)
+   La versión web administrativa está pensada
+   para computador -- en un celular, el menú
+   lateral y el encabezado no caben mostrados
+   al mismo tiempo que el contenido. Aquí se
+   adapta: el menú se convierte en una cortina
+   que se abre encima del contenido (no lo
+   empuja), y el encabezado se acomoda para que
+   no se monte el texto.
+   =========================================== */
+@media (max-width: 768px){
+
+    /* El menú, oculto fuera de la pantalla por defecto */
+    .sidebar{
+        transform: translateX(-100%) !important;
+        width: 270px !important;
+        z-index: 1400;
+        transition: transform .3s ease;
+    }
+    /* Aunque esté "oculto" (modo mini de escritorio), en celular
+       siempre se ve con el texto completo cuando se abre --
+       el modo solo-íconos no tiene sentido en una cortina que
+       ya tapa toda la pantalla. */
+    .sidebar .sidebar-header h4,
+    .sidebar .sidebar-header small,
+    .sidebar .menu a span,
+    .sidebar .menu-title span{
+        display: block !important;
+    }
+    .sidebar .menu a{
+        justify-content: flex-start !important;
+    }
+    .sidebar .menu-title{
+        display: flex !important;
+    }
+    .sidebar .submenu{
+        display: block !important;
+    }
+
+    /* Al activar el botón de menú (≡), el menú se desliza
+       encima del contenido, con un fondo oscuro detrás para
+       que quede claro que hay que cerrarlo para seguir usando
+       la pantalla. */
+    body.sidebar-oculta .sidebar{
+        transform: translateX(0) !important;
+    }
+    body.sidebar-oculta{
+        overflow: hidden;
+    }
+    body.sidebar-oculta::after{
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: rgba(15,23,42,.45);
+        z-index: 1300;
+    }
+
+    /* El contenido y el encabezado siempre ocupan todo el ancho
+       -- el menú nunca les quita espacio, porque ahora flota
+       encima en vez de empujarlos. */
+    /* El topbar (y por lo tanto el botón ≡) siempre queda por
+       ENCIMA del menú y su fondo oscuro -- si no, al abrir el
+       menú, el botón para volver a cerrarlo queda tapado y no
+       se puede volver a tocar. */
+    .topbar{
+        z-index: 1500 !important;
+    }
+    .topbar,
+    body.sidebar-oculta .topbar{
+        left: 0 !important;
+    }
+    .contenido-principal,
+    body.sidebar-oculta .contenido-principal{
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 16px !important;
+    }
+
+    /* Encabezado: se acomoda en una sola fila, sin desbordarse.
+       El nombre completo de la empresa se esconde (ya está en
+       el logo del menú) para dejar espacio al usuario y el
+       botón de salir. */
+    .topbar{
+        padding: 0 10px !important;
+        gap: 6px;
+    }
+    .topbar-left{
+        display: none !important;
+    }
+    .topbar > .d-flex{
+        gap: 6px !important;
+        overflow: hidden;
+    }
+    .topbar > .d-flex .text-secondary{
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 110px;
+    }
+    .topbar > .d-flex .badge{
+        display: none;
+    }
+    .topbar > .d-flex .btn{
+        white-space: nowrap;
+        padding: 4px 10px;
+        font-size: 13px;
+    }
+    #btn-alternar-sidebar{
+        flex-shrink: 0;
+    }
+}
+

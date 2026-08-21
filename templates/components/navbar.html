@@ -37,5 +37,22 @@
         document.body.classList.toggle("sidebar-oculta");
         localStorage.setItem(PREFERENCIA, document.body.classList.contains("sidebar-oculta") ? "1" : "0");
     });
+
+    // En pantallas de celular, el menú abierto queda como una
+    // cortina encima del contenido -- tocar afuera de ella (en
+    // el fondo oscuro) lo cierra, como es de esperarse en un
+    // menú de este tipo.
+    document.addEventListener("click", (evento) => {
+        const esPantallaAngosta = window.innerWidth <= 768;
+        const menuAbierto = document.body.classList.contains("sidebar-oculta");
+        if (!esPantallaAngosta || !menuAbierto) return;
+
+        const dentroDelMenu = evento.target.closest(".sidebar");
+        const esElBoton = evento.target.closest("#btn-alternar-sidebar");
+        if (!dentroDelMenu && !esElBoton) {
+            document.body.classList.remove("sidebar-oculta");
+            localStorage.setItem(PREFERENCIA, "0");
+        }
+    });
 })();
 </script>

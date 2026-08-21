@@ -28,8 +28,27 @@ puede ajustar según la experiencia real de uso.
 import base64
 from io import BytesIO
 
-import cv2
-import numpy as np
+# El reconocimiento facial es una función OPCIONAL del sistema
+# (no bloquea nada si no está disponible -- ver
+# diagnostico_disponibilidad() más abajo). Por eso este import
+# se protege: si 'opencv-contrib-python' no está instalado (algo
+# común, sobre todo en Windows, o con versiones de Python muy
+# nuevas para las que OpenCV aún no publica una versión
+# compatible), el módulo entero NO debe dejar de cargar --
+# porque routers/configuracion_empresa.py, entre otros, importa
+# UNA función de este archivo (diagnostico_disponibilidad) solo
+# para avisar si la función está disponible, y si el import de
+# arriba fallara sin protección, tumbaría esa pantalla completa
+# aunque no tenga nada que ver con reconocimiento facial.
+try:
+    import cv2
+    import numpy as np
+    _CV2_DISPONIBLE = True
+except ImportError:
+    cv2 = None
+    np = None
+    _CV2_DISPONIBLE = False
+
 from PIL import Image, ImageOps
 
 # Se exige un 80% de similitud para aceptar la foto (ajustable
@@ -39,7 +58,19 @@ from PIL import Image, ImageOps
 # similitud para que sea más fácil de entender e interpretar.
 PORCENTAJE_MINIMO_SIMILITUD = 60
 
-_detector_rostros = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+_detector_rostros = (
+    cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+    if _CV2_DISPONIBLE else None
+)
+
+
+def _verificar_cv2_disponible():
+    if not _CV2_DISPONIBLE:
+        raise ValueError(
+            "El reconocimiento facial no está disponible en este servidor porque falta instalar OpenCV. "
+            "Ejecute: pip install opencv-contrib-python (agregue --break-system-packages en Linux/Render) "
+            "y reinicie el programa."
+        )
 
 
 def _decodificar_imagen(imagen_base64: str):
@@ -94,6 +125,8 @@ def _extraer_rostro(imagen_base64: str, tamano=(200, 200)):
     boca, mejillas), no en lo que rodea a la persona.
     Devuelve None si no se detecta ningún rostro.
     """
+    _verificar_cv2_disponible()
+
     imagen = _decodificar_imagen(imagen_base64)
     if imagen is None:
         return None
@@ -200,6 +233,12 @@ def comparar_rostros(foto_enrolamiento_base64: str, foto_nueva_base64: str) -> d
     evitar que alguien registre el ingreso con una foto de
     cualquier otra cosa.
     """
+
+    if not _CV2_DISPONIBLE:
+        return {
+            "verificado": True,
+            "motivo": "El reconocimiento facial no está disponible en este servidor (falta instalar OpenCV) -- no se bloquea el registro por esto.",
+        }
 
     if not foto_enrolamiento_base64:
         return {"verificado": True, "motivo": "Este profesional no tiene foto de enrolamiento registrada."}

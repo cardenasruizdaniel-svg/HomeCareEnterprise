@@ -90,6 +90,67 @@ def obtener_agenda_paciente(paciente_id):
     return ProgramacionRepository.agenda_paciente(paciente_id)
 
 
+def resumen_citas_paciente(paciente_id: int) -> dict:
+    """
+    Para la ficha del paciente: qué citas tiene programadas a
+    futuro, cuáles servicios ya asignados le faltan por
+    programar (tienen fecha "tentativa" pero sin hora/
+    profesional exacto todavía), y si nunca ha tenido ninguna
+    visita -- para poder avisar que le falta programar la
+    primera visita de valoración, igual que se avisa cuando le
+    falta asignar el programa.
+    """
+    from database.database import consultar_todos, consultar_uno
+
+    proximas = consultar_todos(
+        """
+        SELECT pr.*, p.primer_nombre AS prof_nombre, p.primer_apellido AS prof_apellido
+        FROM programaciones pr
+        LEFT JOIN profesionales p ON p.id = pr.profesional_id
+        WHERE pr.paciente_id=? AND pr.eliminado=0
+          AND date(pr.fecha) >= date('now')
+          AND pr.estado NOT IN ('Cancelada', 'Completada')
+        ORDER BY pr.fecha ASC, pr.hora ASC
+        LIMIT 10
+        """,
+        (paciente_id,),
+    )
+
+    pendientes_programar = consultar_todos(
+        """
+        SELECT pv.id, pv.fecha, sp.tipo_servicio, sp.subtipo
+        FROM planilla_visitas pv
+        JOIN servicios_paciente sp ON sp.id = pv.servicio_paciente_id
+        WHERE pv.paciente_id=? AND pv.estado='Pendiente'
+        ORDER BY pv.fecha ASC
+        """,
+        (paciente_id,),
+    )
+
+    # "Primera visita" = nunca se le ha registrado ninguna nota
+    # clínica (evolución) todavía -- sin importar si ya tiene o
+    # no servicios/citas asignadas.
+    total_evoluciones = consultar_uno("SELECT COUNT(*) AS total FROM evoluciones WHERE paciente_id=?", (paciente_id,))
+    es_primera_visita = (dict(total_evoluciones)["total"] if total_evoluciones else 0) == 0
+
+    proximas_dict = [dict(p) for p in proximas]
+    pendientes_dict = [dict(p) for p in pendientes_programar]
+
+    return {
+        "proximas": proximas_dict,
+        "pendientes_programar": pendientes_dict,
+        "es_primera_visita": es_primera_visita,
+        # Se avisa de la primera visita mientras el paciente NO
+        # tenga ninguna cita YA CONFIRMADA (con fecha, hora y
+        # profesional exactos) -- así ya exista una entrada
+        # "tentativa" en pendientes_programar (el sistema suele
+        # crear una sola de "Visita de valoración médica
+        # inicial" al registrar el paciente), el aviso sigue
+        # mostrándose hasta que de verdad se agende la cita.
+        "falta_programar_primera_visita": es_primera_visita and not proximas_dict,
+    }
+
+
 def visitas_pendientes():
     return ProgramacionRepository.programaciones_pendientes()
 
