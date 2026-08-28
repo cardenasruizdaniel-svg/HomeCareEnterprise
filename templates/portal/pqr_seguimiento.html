@@ -1,0 +1,52 @@
+{% extends "portal/base_publica.html" %}
+{% block titulo %}Consultar mi PQR — HomeCare del Quindío{% endblock %}
+{% block contenido %}
+<section class="py-5">
+<div class="container reveal" style="max-width: 720px;">
+<a href="/portal" class="text-decoration-none small">&larr; Volver</a>
+<h1 class="mt-2 mb-1 fw-bold" style="font-size:1.8rem;">Consultar el estado de mi PQR</h1>
+<p class="mb-4" style="color:var(--hc-muted)">Ingrese el número de radicado y la clave de seguimiento que le entregamos al presentar su solicitud.</p>
+
+{% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+{% if not resultado %}
+<div class="card portal-card border-0">
+    <div class="card-body p-4">
+        <form method="post" action="/portal/pqr/seguimiento">
+            <div class="mb-3">
+                <label class="form-label">Número de radicado</label>
+                <input type="text" name="radicado" class="form-control" required placeholder="Ej: PQR-2026-000001">
+            </div>
+            <div class="mb-4">
+                <label class="form-label">Clave de seguimiento</label>
+                <input type="text" name="clave" class="form-control" required placeholder="La clave de 6 caracteres que le entregamos">
+            </div>
+            <button type="submit" class="btn-hc-primario w-100 py-2 border-0"><i class="fa-solid fa-magnifying-glass"></i> Consultar</button>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="card portal-card border-0">
+    <div class="card-body p-4">
+        <h5 class="fw-bold">Radicado: {{ resultado.radicado }}</h5>
+        <p class="mb-3" style="color:var(--hc-muted)">{{ resultado.tipo }}</p>
+
+        <div class="d-flex align-items-center gap-2 mb-3">
+            <span class="badge fs-6 {% if resultado.estado == 'Cerrada' %}bg-success{% else %}bg-primary{% endif %}">{{ resultado.estado }}</span>
+            {% if resultado.ultima_actualizacion %}<span class="small" style="color:var(--hc-muted)">Última actualización: {{ resultado.ultima_actualizacion }}</span>{% endif %}
+        </div>
+
+        <p class="small mb-1"><strong>Fecha de radicación:</strong> {{ resultado.fecha_creacion }}</p>
+        {% if resultado.fecha_limite and resultado.estado != 'Cerrada' %}<p class="small mb-1"><strong>Fecha estimada de respuesta:</strong> {{ resultado.fecha_limite }}</p>{% endif %}
+        {% if resultado.fecha_cierre %}<p class="small mb-1"><strong>Fecha de cierre:</strong> {{ resultado.fecha_cierre }}</p>{% endif %}
+
+        <div class="alert alert-secondary mt-3 mb-0 small">
+            Si tiene alguna duda adicional sobre esta solicitud, puede comunicarse con nosotros indicando el número de radicado.
+        </div>
+    </div>
+</div>
+<a href="/portal/pqr/seguimiento" class="btn-hc-secundario text-decoration-none mt-3 d-inline-block">Consultar otra PQR</a>
+{% endif %}
+</div>
+</section>
+{% endblock %}

@@ -1,0 +1,67 @@
+<svg viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fondoHero" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00A19B"/>
+      <stop offset="55%" stop-color="#00807B"/>
+      <stop offset="100%" stop-color="#8a1f5c"/>
+    </linearGradient>
+    <linearGradient id="casaFondo" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.16"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.06"/>
+    </linearGradient>
+    <radialGradient id="brilloSuave" cx="30%" cy="20%" r="70%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect x="0" y="0" width="600" height="500" rx="28" fill="url(#fondoHero)"/>
+  <rect x="0" y="0" width="600" height="500" rx="28" fill="url(#brilloSuave)"/>
+
+  <!-- patron de puntos decorativo -->
+  <g fill="#ffffff" opacity="0.14">
+    <circle cx="60" cy="60" r="3"/><circle cx="90" cy="60" r="3"/><circle cx="120" cy="60" r="3"/>
+    <circle cx="60" cy="90" r="3"/><circle cx="90" cy="90" r="3"/><circle cx="120" cy="90" r="3"/>
+    <circle cx="60" cy="120" r="3"/><circle cx="90" cy="120" r="3"/><circle cx="120" cy="120" r="3"/>
+  </g>
+  <g fill="#ffffff" opacity="0.10">
+    <circle cx="500" cy="400" r="3"/><circle cx="530" cy="400" r="3"/><circle cx="560" cy="400" r="3"/>
+    <circle cx="500" cy="430" r="3"/><circle cx="530" cy="430" r="3"/><circle cx="560" cy="430" r="3"/>
+  </g>
+
+  <!-- circulos decorativos flotantes -->
+  <circle cx="500" cy="90" r="46" fill="#ffffff" opacity="0.08"/>
+  <circle cx="70" cy="430" r="60" fill="#ffffff" opacity="0.07"/>
+
+  <!-- silueta de casa, grande, en la parte superior -->
+  <g transform="translate(320,210)">
+    <path d="M -140 40 L -140 -30 L 0 -140 L 140 -30 L 140 40 Z" fill="url(#casaFondo)" stroke="#ffffff" stroke-opacity="0.5" stroke-width="3"/>
+    <rect x="-90" y="10" width="60" height="70" rx="6" fill="#ffffff" opacity="0.14"/>
+    <rect x="30" y="0" width="55" height="55" rx="6" fill="#ffffff" opacity="0.16"/>
+  </g>
+
+  <!-- corazon con signo medico, sobre la casa -->
+  <g transform="translate(320,85)">
+    <circle cx="0" cy="0" r="52" fill="#ffffff"/>
+    <path d="M0 26C-9 19 -30 4 -30 -14C-30 -27 -20 -35 -9 -35C-4 -35 0 -32 0 -27C0 -32 4 -35 9 -35C20 -35 30 -27 30 -14C30 4 9 19 0 26Z" fill="#e6006e"/>
+    <rect x="-3.5" y="-16" width="7" height="20" rx="1.5" fill="#ffffff"/>
+    <rect x="-10" y="-9.5" width="20" height="7" rx="1.5" fill="#ffffff"/>
+  </g>
+
+  <!-- figura: profesional de pie, con distintivo de uniforme -->
+  <g transform="translate(480,275)">
+    <circle cx="0" cy="-40" r="22" fill="#ffffff"/>
+    <path d="M -31 28 C -31 -13, 31 -13, 31 28 L 27 58 L -27 58 Z" fill="#ffffff"/>
+    <rect x="-10" y="-24" width="20" height="26" rx="6" fill="#00A19B"/>
+    <circle cx="0" cy="-9" r="3.6" fill="#ffffff"/>
+  </g>
+
+  <!-- figura: paciente sentado, mas pequeña, en calma -->
+  <g transform="translate(90,300)">
+    <circle cx="0" cy="-34" r="19" fill="#ffffff" opacity="0.95"/>
+    <path d="M -27 26 C -27 -9, 27 -9, 27 26 L 23 52 L -23 52 Z" fill="#ffffff" opacity="0.95"/>
+  </g>
+
+  <!-- linea de conexion / cuidado -->
+  <path d="M 130 260 Q 300 220 460 250" stroke="#ffffff" stroke-opacity="0.55" stroke-width="3" fill="none" stroke-dasharray="2 10" stroke-linecap="round"/>
+</svg>

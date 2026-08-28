@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block titulo %}Configuración del Portal Web{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-globe text-primary"></i> Configuración del Portal Web</h2>
+    <p class="text-muted">Contenido de la página pública — Inicio, Servicios, Nosotros y Contacto. <a href="/portal" target="_blank">Ver el portal público <i class="fa-solid fa-arrow-up-right-from-square"></i></a></p>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <ul class="nav nav-tabs mb-3" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-inicio" type="button">Inicio</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-nosotros" type="button">Nosotros</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-contacto" type="button">Contacto y Redes</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-servicios" type="button">Servicios</button></li>
+    </ul>
+
+    <!-- Las 4 pestañas viven como hermanas dentro del MISMO
+         .tab-content, para que Bootstrap las cambie de forma
+         correcta. El formulario de "Guardar todo" (que cubre
+         Inicio/Nosotros/Contacto) va POR FUERA, envolviendo el
+         bloque completo -- así nunca queda un <form> metido
+         dentro de otro <form> (HTML no lo permite), ya que los
+         botones de Servicios usan JavaScript en vez de
+         formularios propios. -->
+    <form method="post" action="/configuracion-web/guardar">
+        <div class="tab-content">
+            <div class="tab-pane fade show active" id="tab-inicio">
+                <div class="card shadow mb-3"><div class="card-body">
+                    <h6 class="mb-3">Sección "Inicio" (hero)</h6>
+                    <div class="mb-3"><label>Título principal</label><input type="text" name="hero_titulo" class="form-control" value="{{ config.hero_titulo }}"></div>
+                    <div class="mb-3"><label>Subtítulo</label><textarea name="hero_subtitulo" class="form-control" rows="2">{{ config.hero_subtitulo }}</textarea></div>
+                    <button type="submit" class="btn btn-success">Guardar todo</button>
+                </div></div>
+
+                <div class="card shadow mb-3"><div class="card-body">
+                    <h6 class="mb-3">Foto del Hero (portada)</h6>
+                    <p class="small text-muted">Una foto real de un paciente, familia, o profesional en atención domiciliaria transmite mucha más confianza que un ícono. Formatos: JPG, PNG o WEBP, hasta 8 MB.</p>
+                    {% if config.hero_imagen %}
+                    <img src="{{ config.hero_imagen }}" class="d-block mb-3 rounded" style="max-width:280px; max-height:180px; object-fit:cover;">
+                    {% endif %}
+                    <input type="file" class="form-control mb-2" accept=".jpg,.jpeg,.png,.webp" id="archivo-hero-imagen">
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="btn-subir-hero-imagen">Subir foto del Hero</button>
+                </div></div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-nosotros">
+                <div class="card shadow mb-3"><div class="card-body">
+                    <h6 class="mb-3">Sección "Nosotros"</h6>
+                    <div class="mb-3"><label>Historia</label><textarea name="historia" class="form-control" rows="4">{{ config.historia }}</textarea></div>
+                    <div class="mb-3"><label>Misión</label><textarea name="mision" class="form-control" rows="3">{{ config.mision }}</textarea></div>
+                    <div class="mb-3"><label>Visión</label><textarea name="vision" class="form-control" rows="3">{{ config.vision }}</textarea></div>
+                    <div class="mb-3"><label>Valores</label><textarea name="valores" class="form-control" rows="3">{{ config.valores }}</textarea></div>
+                    <button type="submit" class="btn btn-success">Guardar todo</button>
+                </div></div>
+
+                <div class="card shadow mb-3"><div class="card-body">
+                    <h6 class="mb-3">Foto de "Cómo cuidamos" (experiencia humana)</h6>
+                    <p class="small text-muted">Una foto de un cuidador con un paciente, o del equipo en atención domiciliaria. Formatos: JPG, PNG o WEBP, hasta 8 MB.</p>
+                    {% if config.experiencia_imagen %}
+                    <img src="{{ config.experiencia_imagen }}" class="d-block mb-3 rounded" style="max-width:280px; max-height:180px; object-fit:cover;">
+                    {% endif %}
+                    <input type="file" class="form-control mb-2" accept=".jpg,.jpeg,.png,.webp" id="archivo-experiencia-imagen">
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="btn-subir-experiencia-imagen">Subir foto</button>
+                </div></div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-contacto">
+                <div class="card shadow mb-3"><div class="card-body">
+                    <h6 class="mb-3">Datos de contacto</h6>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6"><label>Teléfono</label><input type="text" name="telefono" class="form-control" value="{{ config.telefono }}"></div>
+                        <div class="col-md-6"><label>WhatsApp</label><input type="text" name="whatsapp" class="form-control" value="{{ config.whatsapp }}"></div>
+                        <div class="col-md-6"><label>Correo</label><input type="email" name="correo" class="form-control" value="{{ config.correo }}"></div>
+                        <div class="col-md-6"><label>Horarios</label><input type="text" name="horarios" class="form-control" value="{{ config.horarios }}" placeholder="Ej: Lunes a viernes 7am - 6pm"></div>
+                        <div class="col-12"><label>Dirección</label><input type="text" name="direccion" class="form-control" value="{{ config.direccion }}"></div>
+                        <div class="col-md-6"><label>NIT</label><input type="text" name="nit" class="form-control" value="{{ config.nit }}" placeholder="Ej: 901.540.816-8"></div>
+                        <div class="col-md-6"><label>Enlace de pago en línea (opcional)</label><input type="url" name="enlace_pagos" class="form-control" value="{{ config.enlace_pagos }}" placeholder="https://..."></div>
+                    </div>
+                    <h6 class="mb-3 mt-4">Redes sociales</h6>
+                    <div class="row g-2">
+                        <div class="col-md-6"><label>Facebook</label><input type="url" name="facebook" class="form-control" value="{{ config.facebook }}"></div>
+                        <div class="col-md-6"><label>Instagram</label><input type="url" name="instagram" class="form-control" value="{{ config.instagram }}"></div>
+                        <div class="col-md-6"><label>TikTok</label><input type="url" name="tiktok" class="form-control" value="{{ config.tiktok }}"></div>
+                        <div class="col-md-6"><label>YouTube</label><input type="url" name="youtube" class="form-control" value="{{ config.youtube }}"></div>
+                        <div class="col-md-6"><label>LinkedIn</label><input type="url" name="linkedin" class="form-control" value="{{ config.linkedin }}"></div>
+                    </div>
+                    <button type="submit" class="btn btn-success mt-3">Guardar todo</button>
+                </div></div>
+            </div>
+
+            <div class="tab-pane fade" id="tab-servicios">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0">Servicios mostrados en el portal</h6>
+                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalServicio"><i class="fa-solid fa-plus"></i> Nuevo servicio</button>
+                </div>
+                <div class="card shadow">
+                    <div class="card-body p-0">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light"><tr><th></th><th>Servicio</th><th>Estado</th><th></th></tr></thead>
+                            <tbody>
+                                {% for s in servicios %}
+                                <tr class="{% if not s.activo %}table-secondary{% endif %}">
+                                    <td><i class="{{ s.icono }} fa-lg text-info"></i></td>
+                                    <td><strong>{{ s.nombre }}</strong><br><small class="text-muted">{{ s.descripcion }}</small></td>
+                                    <td>{% if s.activo %}<span class="badge bg-success">Visible</span>{% else %}<span class="badge bg-secondary">Oculto</span>{% endif %}</td>
+                                    <td class="text-nowrap">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm btn-editar-servicio"
+                                                data-id="{{ s.id }}" data-nombre="{{ s.nombre }}" data-descripcion="{{ s.descripcion or '' }}"
+                                                data-icono="{{ s.icono }}" data-orden="{{ s.orden }}">
+                                            <i class="fa-solid fa-pen"></i>
+                                        </button>
+                                        {% if s.activo %}
+                                        <button type="button" class="btn btn-outline-warning btn-sm btn-alternar-servicio" data-url="/configuracion-web/servicios/{{ s.id }}/desactivar"><i class="fa-solid fa-eye-slash"></i></button>
+                                        {% else %}
+                                        <button type="button" class="btn btn-outline-success btn-sm btn-alternar-servicio" data-url="/configuracion-web/servicios/{{ s.id }}/reactivar"><i class="fa-solid fa-eye"></i></button>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr><td colspan="4" class="text-center text-muted py-4">No hay servicios registrados.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="modal fade" id="modalServicio" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/configuracion-web/servicios/crear" id="form-servicio">
+            <div class="modal-header"><h5 class="modal-title" id="titulo-modal-servicio">Nuevo servicio</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Nombre</label><input type="text" name="nombre" id="campo-nombre-servicio" class="form-control" required></div>
+                <div class="mb-2"><label>Descripción</label><textarea name="descripcion" id="campo-descripcion-servicio" class="form-control" rows="2"></textarea></div>
+                <div class="mb-2">
+                    <label>Ícono</label>
+                    <select name="icono" id="campo-icono-servicio" class="form-select">
+                        {% for i in iconos %}<option value="{{ i }}">{{ i }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2"><label>Orden</label><input type="number" name="orden" id="campo-orden-servicio" class="form-control" value="0"></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-success">Guardar</button></div>
+        </form>
+    </div></div>
+</div>
+
+<script>
+const modalServicio = new bootstrap.Modal(document.getElementById("modalServicio"));
+
+document.querySelectorAll(".btn-editar-servicio").forEach((boton) => {
+    boton.addEventListener("click", () => {
+        document.getElementById("form-servicio").action = `/configuracion-web/servicios/${boton.dataset.id}/actualizar`;
+        document.getElementById("titulo-modal-servicio").textContent = "Editar servicio";
+        document.getElementById("campo-nombre-servicio").value = boton.dataset.nombre;
+        document.getElementById("campo-descripcion-servicio").value = boton.dataset.descripcion;
+        document.getElementById("campo-icono-servicio").value = boton.dataset.icono;
+        document.getElementById("campo-orden-servicio").value = boton.dataset.orden;
+        modalServicio.show();
+    });
+});
+
+// Activar/ocultar un servicio -- via fetch, no con un <form> propio,
+// para no tener que meter un formulario dentro del formulario grande
+// de "Guardar todo" que envuelve toda esta pantalla.
+document.querySelectorAll(".btn-alternar-servicio").forEach((boton) => {
+    boton.addEventListener("click", async () => {
+        await fetch(boton.dataset.url, { method: "POST" });
+        window.location.reload();
+    });
+});
+
+// Subida de imagenes del portal (Hero y Experiencia Humana) --
+// tambien por fuera del formulario grande, por la misma razon.
+function conectarSubidaImagen(idInput, idBoton, campo) {
+    const boton = document.getElementById(idBoton);
+    if (!boton) return;
+    boton.addEventListener("click", async () => {
+        const input = document.getElementById(idInput);
+        if (!input.files.length) {
+            alert("Primero elija un archivo de imagen.");
+            return;
+        }
+        const datosFormulario = new FormData();
+        datosFormulario.append("archivo", input.files[0]);
+        boton.disabled = true;
+        boton.textContent = "Subiendo...";
+        const respuesta = await fetch(`/configuracion-web/imagen/${campo}`, { method: "POST", body: datosFormulario });
+        if (respuesta.redirected) {
+            window.location.href = respuesta.url;
+        } else {
+            window.location.reload();
+        }
+    });
+}
+conectarSubidaImagen("archivo-hero-imagen", "btn-subir-hero-imagen", "hero_imagen");
+conectarSubidaImagen("archivo-experiencia-imagen", "btn-subir-experiencia-imagen", "experiencia_imagen");
+</script>
+{% endblock %}

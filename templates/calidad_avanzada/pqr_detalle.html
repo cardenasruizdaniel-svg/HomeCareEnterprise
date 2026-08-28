@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% block titulo %}{{ pqr.radicado }}{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/gestion-calidad/pqr" class="text-decoration-none small">&larr; Volver a la Bandeja</a>
+    <div class="d-flex justify-content-between align-items-start mt-2 mb-1">
+        <h2 class="mb-0">{{ pqr.radicado }}</h2>
+        <div class="text-end">
+            <span class="badge fs-6 {% if pqr.riesgo == 'Riesgo para la vida/integridad' %}bg-dark{% elif pqr.riesgo == 'Alta' %}bg-danger{% elif pqr.riesgo == 'Prioritaria' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ pqr.riesgo }}</span>
+            <span class="badge fs-6 {% if pqr.estado == 'Cerrada' %}bg-success{% else %}bg-primary{% endif %}">{{ pqr.estado }}</span>
+        </div>
+    </div>
+    <p class="text-muted">{{ pqr.tipo }} — Canal: {{ pqr.canal }} — Radicada: {{ pqr.fecha_creacion }}</p>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="row">
+        <div class="col-lg-7">
+            <div class="card shadow mb-3">
+                <div class="card-body">
+                    <p><strong>Solicitante:</strong> {{ pqr.solicitante_nombre }} ({{ pqr.solicitante_relacion }})</p>
+                    {% if pqr.solicitante_documento %}<p class="small mb-1"><strong>Documento:</strong> {{ pqr.solicitante_documento }}</p>{% endif %}
+                    {% if pqr.solicitante_telefono %}<p class="small mb-1"><strong>Teléfono:</strong> {{ pqr.solicitante_telefono }}</p>{% endif %}
+                    {% if pqr.solicitante_correo %}<p class="small mb-1"><strong>Correo:</strong> {{ pqr.solicitante_correo }}</p>{% endif %}
+                    {% if pqr.asunto %}<p class="mt-2 mb-1"><strong>Asunto:</strong> {{ pqr.asunto }}</p>{% endif %}
+                    <p class="mb-0"><strong>Descripción:</strong> {{ pqr.descripcion }}</p>
+                </div>
+            </div>
+
+            {% if pqr.respuesta %}
+            <div class="card shadow mb-3 border-success">
+                <div class="card-header bg-success bg-opacity-10"><h6 class="mb-0">Respuesta ({{ pqr.medio_respuesta }})</h6></div>
+                <div class="card-body"><p class="mb-0">{{ pqr.respuesta }}</p></div>
+            </div>
+            {% endif %}
+
+            {% if pqr.estado != 'Cerrada' %}
+            <div class="card shadow mb-3">
+                <div class="card-header bg-white"><h6 class="mb-0">Acciones</h6></div>
+                <div class="card-body d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalAsignar"><i class="fa-solid fa-people-arrows"></i> Asignar / reasignar área</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEstado"><i class="fa-solid fa-flag"></i> Cambiar estado</button>
+                    <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#modalComentario"><i class="fa-solid fa-comment"></i> Agregar comentario</button>
+                    <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalResponder"><i class="fa-solid fa-reply"></i> Responder y cerrar</button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card shadow">
+                <div class="card-header bg-white"><h6 class="mb-0"><i class="fa-solid fa-timeline"></i> Línea de tiempo</h6></div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        {% for ev in pqr.eventos %}
+                        <li class="mb-3 border-start border-2 ps-3">
+                            <div class="small text-muted">{{ ev.fecha }}</div>
+                            <div><strong>{{ ev.tipo_evento }}</strong></div>
+                            {% if ev.descripcion %}<div class="small">{{ ev.descripcion }}</div>{% endif %}
+                            {% if ev.area_nueva %}<div class="small text-muted">{% if ev.area_anterior %}{{ ev.area_anterior }} &rarr; {% endif %}{{ ev.area_nueva }}</div>{% endif %}
+                        </li>
+                        {% else %}
+                        <li class="text-muted">Sin eventos registrados.</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAsignar" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/pqr/{{ pqr.id }}/asignar">
+            <div class="modal-header"><h5 class="modal-title">Asignar / reasignar área</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <label>Área responsable</label>
+                <select name="area_responsable" class="form-select">
+                    {% for a in areas %}<option value="{{ a }}" {% if a == pqr.area_responsable %}selected{% endif %}>{{ a }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar</button></div>
+        </form>
+    </div></div>
+</div>
+
+<div class="modal fade" id="modalEstado" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/pqr/{{ pqr.id }}/estado">
+            <div class="modal-header"><h5 class="modal-title">Cambiar estado</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <label>Nuevo estado</label>
+                    <select name="estado" class="form-select">
+                        {% for e in estados %}<option value="{{ e }}" {% if e == pqr.estado %}selected{% endif %}>{{ e }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2"><label>Comentario (opcional)</label><textarea name="comentario" class="form-control" rows="2"></textarea></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar</button></div>
+        </form>
+    </div></div>
+</div>
+
+<div class="modal fade" id="modalComentario" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/pqr/{{ pqr.id }}/comentario">
+            <div class="modal-header"><h5 class="modal-title">Agregar comentario</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body"><textarea name="comentario" class="form-control" rows="3" required></textarea></div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar</button></div>
+        </form>
+    </div></div>
+</div>
+
+<div class="modal fade" id="modalResponder" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/pqr/{{ pqr.id }}/responder">
+            <div class="modal-header"><h5 class="modal-title">Responder y cerrar</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Respuesta</label><textarea name="respuesta" class="form-control" rows="4" required></textarea></div>
+                <div class="mb-2">
+                    <label>Medio de respuesta</label>
+                    <select name="medio_respuesta" class="form-select" required>
+                        <option value="Correo">Correo</option>
+                        <option value="Carta">Carta</option>
+                        <option value="Portal web">Portal web</option>
+                        <option value="Teléfono">Teléfono</option>
+                        <option value="Presencial">Presencial</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-success">Responder y cerrar</button></div>
+        </form>
+    </div></div>
+</div>
+{% endblock %}

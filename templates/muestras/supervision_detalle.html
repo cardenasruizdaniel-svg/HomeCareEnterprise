@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block titulo %}Supervisión #{{ supervision.id }}{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/muestras/supervision" class="text-decoration-none small">&larr; Volver al listado</a>
+
+    {% if guardado %}<div class="alert alert-success mt-2">Supervisión guardada correctamente.</div>{% endif %}
+
+    <div class="d-flex justify-content-between align-items-start mt-2 mb-3">
+        <div>
+            <h2 class="mb-0">Supervisión — {{ supervision.punto_toma }}</h2>
+            <p class="text-muted mb-0">{{ supervision.fecha }}{% if supervision.hora_inicio %} — {{ supervision.hora_inicio }}{% if supervision.hora_fin %} a {{ supervision.hora_fin }}{% endif %}{% endif %}</p>
+        </div>
+        {% if supervision.porcentaje_cumplimiento is not none %}
+        <div class="text-center">
+            <div class="display-5 fw-bold {% if supervision.porcentaje_cumplimiento >= 90 %}text-success{% elif supervision.porcentaje_cumplimiento >= 75 %}text-warning{% else %}text-danger{% endif %}">{{ supervision.porcentaje_cumplimiento }}%</div>
+            <div class="text-muted small">Cumplimiento</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-6"><strong>Auxiliar supervisado:</strong> {% if supervision.aux_nombre_real %}{{ supervision.aux_nombre_real }} {{ supervision.aux_apellido_real }}{% else %}{{ supervision.auxiliar_supervisado_nombre }}{% endif %}</div>
+        <div class="col-md-6"><strong>Responsable de la auditoría:</strong> {% if supervision.resp_nombre %}{{ supervision.resp_nombre }} {{ supervision.resp_apellido }}{% else %}—{% endif %}{% if supervision.cargo_responsable %} ({{ supervision.cargo_responsable }}){% endif %}</div>
+    </div>
+
+    {% for bloque in supervision.secciones %}
+    <div class="card shadow mb-3">
+        <div class="card-header bg-white"><h6 class="mb-0">{{ loop.index }}. {{ bloque.seccion|upper }}</h6></div>
+        <div class="card-body p-0">
+            <table class="table mb-0 align-middle">
+                <thead class="table-light"><tr><th style="width:45%">Aspecto verificado</th><th class="text-center">Resultado</th><th>Observaciones</th></tr></thead>
+                <tbody>
+                    {% for item in bloque["items"] %}
+                    <tr>
+                        <td>{{ item.texto }}</td>
+                        <td class="text-center">
+                            <span class="badge {% if item.respuesta == 'Cumple' %}bg-success{% elif item.respuesta == 'No cumple' %}bg-danger{% else %}bg-secondary{% endif %}">{{ item.respuesta }}</span>
+                        </td>
+                        <td class="small text-muted">{{ item.observaciones or "—" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% if supervision.observaciones_generales %}
+    <div class="card shadow mb-3"><div class="card-body">
+        <strong>Observaciones generales:</strong>
+        <p class="mb-0">{{ supervision.observaciones_generales }}</p>
+    </div></div>
+    {% endif %}
+</div>
+{% endblock %}

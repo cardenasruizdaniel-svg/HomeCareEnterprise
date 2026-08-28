@@ -290,6 +290,20 @@ def iniciar_sistema():
     except Exception as error:
         print(f"[AVISO] No se pudo sembrar las Recomendaciones e Instrucciones: {error}")
 
+    try:
+        from services.configuracion_web_service import sembrar_servicios_estandar, actualizar_servicios_con_catalogo_real, completar_con_datos_reales_si_vacio
+        servicios_sembrados = sembrar_servicios_estandar()
+        if servicios_sembrados:
+            print(f"[OK] Portal Web: se registraron {len(servicios_sembrados)} servicio(s) estándar.")
+        resultado_actualizacion = actualizar_servicios_con_catalogo_real()
+        if resultado_actualizacion["creados"] or resultado_actualizacion["ocultados"]:
+            print(f"[OK] Portal Web: se ajustó el catálogo al listado real ({len(resultado_actualizacion['creados'])} agregados, {len(resultado_actualizacion['ocultados'])} genéricos ocultados).")
+        campos_completados = completar_con_datos_reales_si_vacio()
+        if campos_completados:
+            print(f"[OK] Portal Web: se completaron {len(campos_completados)} campo(s) vacío(s) con la información real de la empresa.")
+    except Exception as error:
+        print(f"[AVISO] No se pudo sembrar los servicios del Portal Web: {error}")
+
     print()
 
     print("[OK] Sistema listo.")

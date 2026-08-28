@@ -84,6 +84,14 @@
                 <span>Muestras Pendientes de Entrega</span>
             </a>
         </li>
+        {% if usuario and tiene_permiso(usuario.rol, "calidad") %}
+        <li>
+            <a href="/muestras/supervision">
+                <i class="fa-solid fa-clipboard-check"></i>
+                <span>Supervisión Toma de Muestras</span>
+            </a>
+        </li>
+        {% endif %}
         <li>
             <a href="/programacion/mensual">
                 <i class="fa-solid fa-calendar-days"></i>
@@ -139,6 +147,12 @@
             </a>
         </li>
         <li>
+            <a href="/configuracion-web">
+                <i class="fa-solid fa-globe"></i>
+                <span>Portal Web Público</span>
+            </a>
+        </li>
+        <li>
             <a href="/configuracion-legal">
                 <i class="fa-solid fa-gavel"></i>
                 <span>Configuración Legal</span>
@@ -183,7 +197,13 @@
         <li>
             <a href="/calidad">
                 <i class="fa-solid fa-award"></i>
-                <span>Calidad</span>
+                <span>Calidad (PQR básico)</span>
+            </a>
+        </li>
+        <li>
+            <a href="/gestion-calidad">
+                <i class="fa-solid fa-medal"></i>
+                <span>Gestión de Calidad (PAMEC)</span>
             </a>
         </li>
         {% endif %}
@@ -294,6 +314,12 @@
             <a href="/app/" target="_blank">
                 <i class="fa-solid fa-mobile-screen"></i>
                 <span>App Móvil de Campo</span>
+            </a>
+        </li>
+        <li>
+            <a href="/portal" target="_blank">
+                <i class="fa-solid fa-globe"></i>
+                <span>Portal Web Público</span>
             </a>
         </li>
         {% if usuario and tiene_permiso(usuario.rol, "app_gerencial") %}

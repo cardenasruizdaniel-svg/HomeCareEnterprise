@@ -1,0 +1,35 @@
+<svg viewBox="0 0 1200 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fondoExperiencia" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00807B"/>
+      <stop offset="100%" stop-color="#00A19B"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="500" fill="url(#fondoExperiencia)"/>
+
+  <!-- formas organicas de fondo, sutiles -->
+  <circle cx="1050" cy="80" r="180" fill="#ffffff" opacity="0.06"/>
+  <circle cx="120" cy="450" r="220" fill="#ffffff" opacity="0.05"/>
+  <circle cx="950" cy="430" r="90" fill="#ffffff" opacity="0.07"/>
+
+  <!-- lineas de "onda de cuidado" concentricas, del lado derecho -->
+  <g stroke="#ffffff" stroke-width="2" fill="none" opacity="0.18">
+    <circle cx="980" cy="230" r="70"/>
+    <circle cx="980" cy="230" r="110"/>
+    <circle cx="980" cy="230" r="150"/>
+  </g>
+
+  <!-- corazon con signo medico, discreto, del lado derecho -->
+  <g transform="translate(980,230)">
+    <path d="M0 26C-9 19 -30 4 -30 -14C-30 -27 -20 -35 -9 -35C-4 -35 0 -32 0 -27C0 -32 4 -35 9 -35C20 -35 30 -27 30 -14C30 4 9 19 0 26Z" fill="#ffffff" opacity="0.85"/>
+    <rect x="-3.5" y="-16" width="7" height="20" rx="1.5" fill="#00807B"/>
+    <rect x="-10" y="-9.5" width="20" height="7" rx="1.5" fill="#00807B"/>
+  </g>
+
+  <!-- patron de puntos, esquina inferior derecha -->
+  <g fill="#ffffff" opacity="0.14">
+    <circle cx="1100" cy="60" r="3"/><circle cx="1130" cy="60" r="3"/><circle cx="1160" cy="60" r="3"/>
+    <circle cx="1100" cy="90" r="3"/><circle cx="1130" cy="90" r="3"/><circle cx="1160" cy="90" r="3"/>
+  </g>
+</svg>

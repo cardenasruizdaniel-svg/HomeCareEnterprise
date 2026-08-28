@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block titulo %}{{ ciclo.nombre }}{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/gestion-calidad/pamec" class="text-decoration-none small">&larr; Volver a PAMEC</a>
+    <div class="d-flex justify-content-between align-items-start mt-2 mb-1">
+        <h2 class="mb-0">{{ ciclo.nombre }}</h2>
+        <form method="post" action="/gestion-calidad/pamec/{{ ciclo.id }}/estado">
+            <select name="estado" class="form-select form-select-sm" onchange="this.form.submit()">
+                {% for e in estados %}<option value="{{ e }}" {% if e == ciclo.estado %}selected{% endif %}>{{ e }}</option>{% endfor %}
+            </select>
+        </form>
+    </div>
+    <p class="text-muted">{{ ciclo.periodo_desde }} — {{ ciclo.periodo_hasta }}</p>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-4"><strong>Objetivos:</strong><p class="small">{{ ciclo.objetivos or "—" }}</p></div>
+        <div class="col-md-4"><strong>Alcance:</strong><p class="small">{{ ciclo.alcance or "—" }}</p></div>
+        <div class="col-md-4"><strong>Criterios de priorización:</strong><p class="small">{{ ciclo.criterios_priorizacion or "—" }}</p></div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="mb-0">Procesos priorizados</h5>
+        <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalProceso"><i class="fa-solid fa-plus"></i> Agregar proceso</button>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr><th>Proceso</th><th>Indicador / Meta</th><th>Resultado</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                    {% for p in ciclo.procesos %}
+                    <tr>
+                        <td>{{ p.proceso }}<br><small class="text-muted">{{ p.riesgo_identificado or "" }}</small></td>
+                        <td class="small">{{ p.indicador or "—" }}<br>Meta: {{ p.meta or "—" }}</td>
+                        <td class="small">{{ p.resultado or "—" }}{% if p.porcentaje_cumplimiento is not none %} ({{ p.porcentaje_cumplimiento }}%){% endif %}</td>
+                        <td><span class="badge {% if p.estado == 'Cerrado' %}bg-success{% elif p.estado == 'Vencido' or p.estado == 'No efectivo' %}bg-danger{% elif p.estado == 'En ejecución' %}bg-primary{% else %}bg-secondary{% endif %}">{{ p.estado }}</span></td>
+                        <td>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalResultado{{ p.id }}"><i class="fa-solid fa-pen"></i></button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">No hay procesos priorizados todavía.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalProceso" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/pamec/{{ ciclo.id }}/procesos/agregar">
+            <div class="modal-header"><h5 class="modal-title">Agregar proceso priorizado</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Proceso</label><input type="text" name="proceso" class="form-control" required></div>
+                <div class="mb-2"><label>Riesgo identificado</label><textarea name="riesgo_identificado" class="form-control" rows="2"></textarea></div>
+                <div class="mb-2"><label>Indicador</label><input type="text" name="indicador" class="form-control"></div>
+                <div class="mb-2"><label>Meta</label><input type="text" name="meta" class="form-control"></div>
+                <div class="mb-2">
+                    <label>Responsable</label>
+                    <select name="responsable_id" class="form-select">
+                        <option value="">-- Sin asignar --</option>
+                        {% for p in profesionales %}<option value="{{ p.id }}">{{ p.primer_nombre }} {{ p.primer_apellido }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-success">Guardar</button></div>
+        </form>
+    </div></div>
+</div>
+
+{% for p in ciclo.procesos %}
+<div class="modal fade" id="modalResultado{{ p.id }}" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/pamec/procesos/{{ p.id }}/resultado">
+            <input type="hidden" name="ciclo_id" value="{{ ciclo.id }}">
+            <div class="modal-header"><h5 class="modal-title">Resultado: {{ p.proceso }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Resultado</label><input type="text" name="resultado" class="form-control" value="{{ p.resultado or '' }}"></div>
+                <div class="mb-2"><label>Porcentaje de cumplimiento</label><input type="number" step="0.1" name="porcentaje_cumplimiento" class="form-control" value="{{ p.porcentaje_cumplimiento or '' }}"></div>
+                <div class="mb-2"><label>Brecha</label><textarea name="brecha" class="form-control" rows="2">{{ p.brecha or '' }}</textarea></div>
+                <div class="mb-2"><label>Análisis</label><textarea name="analisis" class="form-control" rows="2">{{ p.analisis or '' }}</textarea></div>
+                <div class="mb-2">
+                    <label>Estado</label>
+                    <select name="estado" class="form-select">
+                        {% for e in estados_proceso %}<option value="{{ e }}" {% if e == p.estado %}selected{% endif %}>{{ e }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-success">Guardar</button></div>
+        </form>
+    </div></div>
+</div>
+{% endfor %}
+{% endblock %}

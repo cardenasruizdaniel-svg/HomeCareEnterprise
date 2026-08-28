@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block titulo %}PAMEC{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-list-check text-primary"></i> PAMEC — Auditoría para el Mejoramiento de la Calidad</h2>
+    <p class="text-muted">Ciclos de planeación, ejecución, evaluación y mejoramiento por periodo.</p>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalPamec"><i class="fa-solid fa-plus"></i> Nuevo ciclo PAMEC</button>
+
+    <div class="row g-3">
+        {% for c in ciclos %}
+        <div class="col-md-6 col-lg-4">
+            <a href="/gestion-calidad/pamec/{{ c.id }}" class="text-decoration-none">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="mb-1">{{ c.nombre }}</h6>
+                            <span class="badge {% if c.estado == 'Cerrado' %}bg-secondary{% elif c.estado == 'En ejecución' %}bg-primary{% else %}bg-warning text-dark{% endif %}">{{ c.estado }}</span>
+                        </div>
+                        <p class="small text-muted mb-1">{{ c.periodo_desde }} — {{ c.periodo_hasta }}</p>
+                        <p class="small text-secondary">{{ c.objetivos or "Sin objetivos definidos." }}</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% else %}
+        <div class="col-12"><div class="card shadow-sm"><div class="card-body text-center text-muted py-5">Todavía no hay ciclos PAMEC registrados.</div></div></div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="modal fade" id="modalPamec" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/pamec/crear">
+            <div class="modal-header"><h5 class="modal-title">Nuevo ciclo PAMEC</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="row g-2">
+                    <div class="col-12"><label>Nombre del ciclo</label><input type="text" name="nombre" class="form-control" required placeholder="Ej: PAMEC 2026"></div>
+                    <div class="col-md-6"><label>Periodo desde</label><input type="date" name="periodo_desde" class="form-control" required></div>
+                    <div class="col-md-6"><label>Periodo hasta</label><input type="date" name="periodo_hasta" class="form-control" required></div>
+                    <div class="col-12"><label>Objetivos</label><textarea name="objetivos" class="form-control" rows="2"></textarea></div>
+                    <div class="col-12"><label>Alcance</label><textarea name="alcance" class="form-control" rows="2"></textarea></div>
+                    <div class="col-12"><label>Criterios de priorización</label><textarea name="criterios_priorizacion" class="form-control" rows="2"></textarea></div>
+                    <div class="col-md-6">
+                        <label>Responsable</label>
+                        <select name="responsable_id" class="form-select">
+                            <option value="">-- Sin asignar --</option>
+                            {% for p in profesionales %}<option value="{{ p.id }}">{{ p.primer_nombre }} {{ p.primer_apellido }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Norma relacionada</label>
+                        <select name="norma_id" class="form-select">
+                            <option value="">-- Ninguna --</option>
+                            {% for n in normas %}<option value="{{ n.id }}">{{ n.tipo }} {{ n.numero }}/{{ n.anio }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-success">Guardar</button></div>
+        </form>
+    </div></div>
+</div>
+{% endblock %}

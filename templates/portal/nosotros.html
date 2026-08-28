@@ -1,0 +1,56 @@
+{% extends "portal/base_publica.html" %}
+{% block titulo %}Nosotros — HomeCare del Quindío{% endblock %}
+{% block meta_descripcion %}Conoce la historia, misión, visión y valores de HomeCare del Quindío I.P.S., IPS de atención domiciliaria en Armenia.{% endblock %}
+{% block contenido %}
+<section class="py-5" style="background: linear-gradient(180deg, #ffffff, #fbfcfe);">
+    <div class="container text-center reveal" style="max-width: 780px;">
+        <span class="badge-seccion">Quiénes somos</span>
+        <h1 class="fw-bold" style="font-size: clamp(1.8rem, 3.5vw, 2.6rem);">Nosotros</h1>
+    </div>
+</section>
+
+<section class="pb-5">
+    <div class="container" style="max-width: 900px;">
+        {% if config.historia %}
+        <div class="card portal-card mb-4 reveal border-0"><div class="card-body p-4 p-md-5">
+            <h6 class="text-uppercase small mb-2 fw-bold" style="color:var(--hc-teal)">Nuestra historia</h6>
+            <p class="mb-0">{{ config.historia }}</p>
+        </div></div>
+        {% endif %}
+
+        <div class="row g-3">
+            {% if config.mision %}
+            <div class="col-md-4 reveal">
+                <div class="card portal-card h-100 border-0"><div class="card-body p-4">
+                    <div class="icono-servicio"><i class="fa-solid fa-bullseye"></i></div>
+                    <h6 class="fw-bold">Misión</h6>
+                    <p class="small mb-0" style="color:var(--hc-muted)">{{ config.mision }}</p>
+                </div></div>
+            </div>
+            {% endif %}
+            {% if config.vision %}
+            <div class="col-md-4 reveal">
+                <div class="card portal-card h-100 border-0"><div class="card-body p-4">
+                    <div class="icono-servicio"><i class="fa-solid fa-eye"></i></div>
+                    <h6 class="fw-bold">Visión</h6>
+                    <p class="small mb-0" style="color:var(--hc-muted)">{{ config.vision }}</p>
+                </div></div>
+            </div>
+            {% endif %}
+            {% if config.valores %}
+            <div class="col-md-4 reveal">
+                <div class="card portal-card h-100 border-0"><div class="card-body p-4">
+                    <div class="icono-servicio"><i class="fa-solid fa-heart"></i></div>
+                    <h6 class="fw-bold">Valores</h6>
+                    <p class="small mb-0" style="color:var(--hc-muted)">{{ config.valores }}</p>
+                </div></div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="portal-card mt-4 p-4 reveal border-0" style="background: linear-gradient(135deg, rgba(0,161,155,.08), rgba(230,0,110,.06));">
+            <p class="mb-0 small"><i class="fa-solid fa-shield-heart me-2" style="color:var(--hc-teal)"></i>Compromiso con la calidad y la seguridad del paciente — nuestro sistema de gestión de calidad hace seguimiento continuo a la atención que brindamos.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

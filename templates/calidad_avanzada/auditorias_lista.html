@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block titulo %}Auditorías de Calidad{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-magnifying-glass text-primary"></i> Auditorías de Calidad</h2>
+    <p class="text-muted">Auditorías internas, de PAMEC, de habilitación, de seguimiento y de seguridad del paciente.</p>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalAuditoria"><i class="fa-solid fa-plus"></i> Nueva auditoría</button>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr><th>Proceso</th><th>Tipo</th><th>Fecha</th><th>Auditor</th><th>Estado</th></tr></thead>
+                <tbody>
+                    {% for a in auditorias %}
+                    <tr class="cursor-pointer" onclick="window.location='/gestion-calidad/auditorias/{{ a.id }}'" style="cursor:pointer">
+                        <td>{{ a.proceso }}{% if a.servicio %}<br><small class="text-muted">{{ a.servicio }}</small>{% endif %}</td>
+                        <td>{{ a.tipo }}</td>
+                        <td>{{ a.fecha }}</td>
+                        <td>{% if a.auditor_nombre %}{{ a.auditor_nombre }} {{ a.auditor_apellido }}{% else %}—{% endif %}</td>
+                        <td><span class="badge {% if a.estado == 'Cerrada' %}bg-success{% elif a.estado == 'En ejecución' %}bg-primary{% else %}bg-secondary{% endif %}">{{ a.estado }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">No hay auditorías registradas todavía.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalAuditoria" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/auditorias/crear">
+            <div class="modal-header"><h5 class="modal-title">Nueva auditoría</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="row g-2">
+                    <div class="col-md-6"><label>Tipo de auditoría</label><select name="tipo" class="form-select" required>{% for t in tipos %}<option value="{{ t }}">{{ t }}</option>{% endfor %}</select></div>
+                    <div class="col-md-6"><label>Fecha</label><input type="date" name="fecha" class="form-control" required></div>
+                    <div class="col-md-6"><label>Proceso a auditar</label><input type="text" name="proceso" class="form-control" required></div>
+                    <div class="col-md-6"><label>Servicio (opcional)</label><input type="text" name="servicio" class="form-control"></div>
+                    <div class="col-md-6">
+                        <label>Auditor</label>
+                        <select name="auditor_id" class="form-select">
+                            <option value="">-- Sin asignar --</option>
+                            {% for p in profesionales %}<option value="{{ p.id }}">{{ p.primer_nombre }} {{ p.primer_apellido }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Auditado</label>
+                        <select name="auditado_id" class="form-select">
+                            <option value="">-- Sin asignar --</option>
+                            {% for p in profesionales %}<option value="{{ p.id }}">{{ p.primer_nombre }} {{ p.primer_apellido }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Ciclo PAMEC relacionado</label>
+                        <select name="ciclo_pamec_id" class="form-select">
+                            <option value="">-- Ninguno --</option>
+                            {% for c in ciclos_pamec %}<option value="{{ c.id }}">{{ c.nombre }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Norma relacionada</label>
+                        <select name="norma_id" class="form-select">
+                            <option value="">-- Ninguna --</option>
+                            {% for n in normas %}<option value="{{ n.id }}">{{ n.tipo }} {{ n.numero }}/{{ n.anio }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12"><label>Objetivo</label><textarea name="objetivo" class="form-control" rows="2"></textarea></div>
+                    <div class="col-12"><label>Alcance</label><textarea name="alcance" class="form-control" rows="2"></textarea></div>
+                    <div class="col-12"><label>Criterios</label><textarea name="criterios" class="form-control" rows="2"></textarea></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-success">Guardar</button></div>
+        </form>
+    </div></div>
+</div>
+{% endblock %}

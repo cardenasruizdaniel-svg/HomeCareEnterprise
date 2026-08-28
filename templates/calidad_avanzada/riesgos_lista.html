@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block titulo %}Matriz de Riesgos{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-triangle-exclamation text-warning"></i> Matriz de Riesgos</h2>
+    <p class="text-muted">Riesgos identificados por proceso, con su nivel calculado (probabilidad × impacto) y su tratamiento.</p>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalRiesgo"><i class="fa-solid fa-plus"></i> Nuevo riesgo</button>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr><th>Proceso / Riesgo</th><th>Probabilidad × Impacto</th><th>Nivel</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                    {% for r in riesgos %}
+                    <tr>
+                        <td><strong>{{ r.proceso }}</strong><br><small class="text-muted">{{ r.riesgo }}</small></td>
+                        <td class="small">{{ r.probabilidad }} × {{ r.impacto }}</td>
+                        <td>
+                            <span class="badge {% if r.nivel_inherente == 'Extremo' %}bg-danger{% elif r.nivel_inherente == 'Alto' %}bg-warning text-dark{% elif r.nivel_inherente == 'Medio' %}bg-info text-dark{% else %}bg-success{% endif %}">{{ r.nivel_inherente }}</span>
+                        </td>
+                        <td><span class="badge {% if r.estado == 'Cerrado' %}bg-success{% elif r.estado == 'Aceptado' %}bg-secondary{% else %}bg-primary{% endif %}">{{ r.estado }}</span></td>
+                        <td>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTratamiento{{ r.id }}"><i class="fa-solid fa-pen"></i> Tratamiento</button>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">No hay riesgos registrados todavía.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalRiesgo" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/riesgos/crear">
+            <div class="modal-header"><h5 class="modal-title">Nuevo riesgo</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="row g-2">
+                    <div class="col-md-6"><label>Proceso</label><input type="text" name="proceso" class="form-control" required></div>
+                    <div class="col-md-6"><label>Fecha de identificación</label><input type="date" name="fecha_identificacion" class="form-control" required></div>
+                    <div class="col-12"><label>Riesgo</label><textarea name="riesgo" class="form-control" rows="2" required></textarea></div>
+                    <div class="col-12"><label>Causa</label><textarea name="causa" class="form-control" rows="2"></textarea></div>
+                    <div class="col-12"><label>Consecuencia</label><textarea name="consecuencia" class="form-control" rows="2"></textarea></div>
+                    <div class="col-md-6"><label>Probabilidad</label><select name="probabilidad" class="form-select" required><option value="">-- Seleccionar --</option>{% for p in probabilidades %}<option value="{{ p }}">{{ p }}</option>{% endfor %}</select></div>
+                    <div class="col-md-6"><label>Impacto</label><select name="impacto" class="form-select" required><option value="">-- Seleccionar --</option>{% for i in impactos %}<option value="{{ i }}">{{ i }}</option>{% endfor %}</select></div>
+                    <div class="col-12"><label>Controles existentes</label><textarea name="controles" class="form-control" rows="2"></textarea></div>
+                    <div class="col-12">
+                        <label>Responsable</label>
+                        <select name="responsable_id" class="form-select">
+                            <option value="">-- Sin asignar --</option>
+                            {% for p in profesionales %}<option value="{{ p.id }}">{{ p.primer_nombre }} {{ p.primer_apellido }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <p class="small text-muted mt-2 mb-0">El nivel del riesgo (Bajo/Medio/Alto/Extremo) se calcula automáticamente según la probabilidad y el impacto elegidos.</p>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-success">Guardar</button></div>
+        </form>
+    </div></div>
+</div>
+
+{% for r in riesgos %}
+<div class="modal fade" id="modalTratamiento{{ r.id }}" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/riesgos/{{ r.id }}/tratamiento">
+            <div class="modal-header"><h5 class="modal-title">Tratamiento: {{ r.riesgo[:60] }}</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Riesgo residual (después de controles)</label><textarea name="riesgo_residual" class="form-control" rows="2">{{ r.riesgo_residual or '' }}</textarea></div>
+                <div class="mb-2"><label>Tratamiento (evitar / mitigar / transferir / aceptar)</label><textarea name="tratamiento" class="form-control" rows="2">{{ r.tratamiento or '' }}</textarea></div>
+                <div class="mb-2"><label>Acción a implementar</label><textarea name="accion" class="form-control" rows="2">{{ r.accion or '' }}</textarea></div>
+                <div class="mb-2">
+                    <label>Estado</label>
+                    <select name="estado" class="form-select">
+                        {% for e in estados %}<option value="{{ e }}" {% if e == r.estado %}selected{% endif %}>{{ e }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-success">Guardar</button></div>
+        </form>
+    </div></div>
+</div>
+{% endfor %}
+{% endblock %}

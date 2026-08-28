@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block titulo %}Auditoría: {{ auditoria.proceso }}{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/gestion-calidad/auditorias" class="text-decoration-none small">&larr; Volver a Auditorías</a>
+    <div class="d-flex justify-content-between align-items-start mt-2 mb-1">
+        <h2 class="mb-0">{{ auditoria.proceso }}</h2>
+        <span class="badge fs-6 {% if auditoria.estado == 'Cerrada' %}bg-success{% elif auditoria.estado == 'En ejecución' %}bg-primary{% else %}bg-secondary{% endif %}">{{ auditoria.estado }}</span>
+    </div>
+    <p class="text-muted">{{ auditoria.tipo }} — {{ auditoria.fecha }}{% if auditoria.servicio %} — {{ auditoria.servicio }}{% endif %}</p>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-3"><strong>Auditor:</strong><br>{% if auditoria.auditor_nombre %}{{ auditoria.auditor_nombre }} {{ auditoria.auditor_apellido }}{% else %}—{% endif %}</div>
+        <div class="col-md-3"><strong>Auditado:</strong><br>{% if auditoria.auditado_nombre %}{{ auditoria.auditado_nombre }} {{ auditoria.auditado_apellido }}{% else %}—{% endif %}</div>
+        <div class="col-md-3"><strong>Objetivo:</strong><br><span class="small">{{ auditoria.objetivo or "—" }}</span></div>
+        <div class="col-md-3"><strong>Criterios:</strong><br><span class="small">{{ auditoria.criterios or "—" }}</span></div>
+    </div>
+
+    {% if auditoria.estado == 'Cerrada' %}
+    <div class="alert alert-secondary">
+        <strong>Resultado general:</strong> {{ auditoria.resultado_general }}
+        {% if auditoria.porcentaje_cumplimiento is not none %} — <strong>{{ auditoria.porcentaje_cumplimiento }}% de hallazgos sin clasificación crítica/mayor</strong>{% endif %}
+        {% if auditoria.observaciones %}<br><small>{{ auditoria.observaciones }}</small>{% endif %}
+    </div>
+    {% endif %}
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="mb-0">Hallazgos de esta auditoría</h5>
+        <div class="d-flex gap-2">
+            {% if auditoria.estado != 'Cerrada' %}
+            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalHallazgo"><i class="fa-solid fa-plus"></i> Registrar hallazgo</button>
+            <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalCerrar"><i class="fa-solid fa-check"></i> Cerrar auditoría</button>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr><th>Clasificación</th><th>Descripción</th><th>Estado</th></tr></thead>
+                <tbody>
+                    {% for h in auditoria.hallazgos %}
+                    <tr class="cursor-pointer" onclick="window.location='/gestion-calidad/hallazgos/{{ h.id }}'" style="cursor:pointer">
+                        <td><span class="badge {% if h.clasificacion == 'Crítico' %}bg-danger{% elif h.clasificacion == 'Mayor' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ h.clasificacion }}</span></td>
+                        <td>{{ h.descripcion }}</td>
+                        <td>{{ h.estado }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="3" class="text-center text-muted py-4">No se han registrado hallazgos en esta auditoría.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalHallazgo" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/auditorias/{{ auditoria.id }}/hallazgos/crear">
+            <div class="modal-header"><h5 class="modal-title">Registrar hallazgo</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="row g-2">
+                    <div class="col-md-6"><label>Clasificación</label><select name="clasificacion" class="form-select" required>{% for c in clasificaciones %}<option value="{{ c }}">{{ c }}</option>{% endfor %}</select></div>
+                    <div class="col-md-6"><label>Fecha</label><input type="date" name="fecha" class="form-control" required value="{{ auditoria.fecha }}"></div>
+                    <div class="col-md-6"><label>Proceso</label><input type="text" name="proceso" class="form-control" required value="{{ auditoria.proceso }}"></div>
+                    <div class="col-md-6"><label>Servicio</label><input type="text" name="servicio" class="form-control" value="{{ auditoria.servicio or '' }}"></div>
+                    <div class="col-12"><label>Descripción del hallazgo</label><textarea name="descripcion" class="form-control" rows="3" required></textarea></div>
+                    <div class="col-12"><label>Evidencia</label><textarea name="evidencia" class="form-control" rows="2"></textarea></div>
+                    <div class="col-12"><label>Riesgo asociado</label><textarea name="riesgo" class="form-control" rows="2"></textarea></div>
+                    <div class="col-md-6">
+                        <label>Responsable</label>
+                        <select name="responsable_id" class="form-select">
+                            <option value="">-- Sin asignar --</option>
+                            {% for p in profesionales %}<option value="{{ p.id }}">{{ p.primer_nombre }} {{ p.primer_apellido }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6"><label>Fecha límite</label><input type="date" name="fecha_limite" class="form-control"></div>
+                    <div class="col-12">
+                        <label>Norma relacionada</label>
+                        <select name="norma_id" class="form-select">
+                            <option value="">-- Ninguna --</option>
+                            {% for n in normas %}<option value="{{ n.id }}">{{ n.tipo }} {{ n.numero }}/{{ n.anio }}</option>{% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-danger">Registrar hallazgo</button></div>
+        </form>
+    </div></div>
+</div>
+
+<div class="modal fade" id="modalCerrar" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/auditorias/{{ auditoria.id }}/cerrar">
+            <div class="modal-header"><h5 class="modal-title">Cerrar auditoría</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Resultado general</label><textarea name="resultado_general" class="form-control" rows="3" required></textarea></div>
+                <div class="mb-2"><label>Observaciones</label><textarea name="observaciones" class="form-control" rows="2"></textarea></div>
+                <p class="small text-muted">El porcentaje de cumplimiento se calcula solo, según los hallazgos críticos/mayores registrados.</p>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-success">Cerrar auditoría</button></div>
+        </form>
+    </div></div>
+</div>
+{% endblock %}

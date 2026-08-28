@@ -1,0 +1,41 @@
+{% extends "portal/base_publica.html" %}
+{% block titulo %}Atención al Usuario — HomeCare del Quindío{% endblock %}
+{% block meta_descripcion %}Presenta una petición, queja, reclamo, sugerencia o felicitación, o consulta el estado de tu PQR.{% endblock %}
+{% block contenido %}
+<section class="py-5" style="background: linear-gradient(180deg, #ffffff, #fbfcfe);">
+    <div class="container text-center reveal" style="max-width: 780px;">
+        <span class="badge-seccion">Queremos escucharte</span>
+        <h1 class="fw-bold" style="font-size: clamp(1.8rem, 3.5vw, 2.6rem);">Atención al Usuario</h1>
+        <p style="color:var(--hc-muted)">Peticiones, quejas, reclamos, sugerencias y felicitaciones — su opinión nos ayuda a mejorar.</p>
+    </div>
+</section>
+
+<section class="pb-5">
+    <div class="container" style="max-width: 900px;">
+        <div class="row g-4">
+            <div class="col-md-6 reveal">
+                <a href="/portal/pqr" class="text-decoration-none">
+                    <div class="card portal-card h-100 border-0">
+                        <div class="card-body text-center p-4">
+                            <div class="icono-servicio"><i class="fa-solid fa-comment-medical"></i></div>
+                            <h5 class="fw-bold">Presentar una PQR</h5>
+                            <p class="small mb-0" style="color:var(--hc-muted)">Petición, queja, reclamo, sugerencia o felicitación.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 reveal">
+                <a href="/portal/pqr/seguimiento" class="text-decoration-none">
+                    <div class="card portal-card h-100 border-0">
+                        <div class="card-body text-center p-4">
+                            <div class="icono-servicio"><i class="fa-solid fa-magnifying-glass"></i></div>
+                            <h5 class="fw-bold">Consultar el estado de mi PQR</h5>
+                            <p class="small mb-0" style="color:var(--hc-muted)">Con el número de radicado y la clave de seguimiento.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

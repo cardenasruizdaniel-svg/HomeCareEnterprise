@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -33,6 +33,9 @@ from routers.configuracion_empresa import router as configuracion_empresa_router
 from routers.laboratorios import router as laboratorios_router
 from routers.pendientes_agendar import router as pendientes_agendar_router
 from routers.calidad import router as calidad_router
+from routers.calidad_avanzada import router as calidad_avanzada_router
+from routers.portal_publico import router as portal_publico_router
+from routers.configuracion_web import router as configuracion_web_router
 from routers.informes import router as informes_router
 from routers.examen_fisico import router as examen_fisico_router
 from routers.recomendaciones import router as recomendaciones_router
@@ -223,6 +226,37 @@ def create_app() -> FastAPI:
     app.include_router(pendientes_agendar_router)
 
     app.include_router(calidad_router)
+    app.include_router(calidad_avanzada_router)
+    app.include_router(portal_publico_router)
+    app.include_router(configuracion_web_router)
+
+    # SEO del portal público: robots.txt y sitemap.xml deben
+    # vivir en la raíz del dominio (no bajo /portal), así que se
+    # registran directo aquí en vez de en el router con prefijo.
+    @app.get("/robots.txt", include_in_schema=False)
+    async def robots_txt(request: Request):
+        from fastapi.responses import PlainTextResponse
+        base = str(request.base_url).rstrip("/")
+        contenido = (
+            "User-agent: *\n"
+            "Allow: /portal\n"
+            "Disallow: /login\n"
+            "Disallow: /gestion-calidad\n"
+            "Disallow: /configuracion-web\n"
+            "Disallow: /pacientes\n"
+            "Disallow: /app\n"
+            f"Sitemap: {base}/sitemap.xml\n"
+        )
+        return PlainTextResponse(content=contenido)
+
+    @app.get("/sitemap.xml", include_in_schema=False)
+    async def sitemap_xml(request: Request):
+        from fastapi.responses import Response
+        base = str(request.base_url).rstrip("/")
+        rutas = ["/portal", "/portal/servicios", "/portal/nosotros", "/portal/contacto", "/portal/atencion-usuario"]
+        urls = "".join(f"<url><loc>{base}{ruta}</loc></url>" for ruta in rutas)
+        xml = f'<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">{urls}</urlset>'
+        return Response(content=xml, media_type="application/xml")
 
     app.include_router(informes_router)
 

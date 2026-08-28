@@ -68,9 +68,27 @@
         </div>
     </div>
 
-    {% if gerencial.insumos_stock_bajo > 0 or gerencial.lotes_vencidos > 0 or gerencial.lotes_por_vencer > 0 or gerencial.cartera_pendiente > 0 or gerencial.autorizaciones_pendientes > 0 or gerencial.auditoria_errores_24h > 0 or gerencial.muestras_pendientes_entrega > 0 %}
+    {% if gerencial.insumos_stock_bajo > 0 or gerencial.lotes_vencidos > 0 or gerencial.lotes_por_vencer > 0 or gerencial.cartera_pendiente > 0 or gerencial.autorizaciones_pendientes > 0 or gerencial.auditoria_errores_24h > 0 or gerencial.muestras_pendientes_entrega > 0 or gerencial.pqr_nuevas > 0 or gerencial.pqr_vencidas > 0 or gerencial.pqr_alto_riesgo > 0 or gerencial.hallazgos_criticos > 0 or gerencial.riesgos_altos > 0 or gerencial.eventos_seguridad_graves > 0 %}
     <div class="row g-2 mb-4">
         <div class="col-12"><h6 class="text-muted mb-1"><i class="fa-solid fa-triangle-exclamation"></i> Alertas gerenciales</h6></div>
+        {% if gerencial.pqr_nuevas > 0 %}
+        <div class="col-auto"><a href="/gestion-calidad/pqr?estado=Nueva" class="btn btn-sm btn-danger"><i class="fa-solid fa-envelope-open-text"></i> {{ gerencial.pqr_nuevas }} PQR nueva(s) sin revisar</a></div>
+        {% endif %}
+        {% if gerencial.eventos_seguridad_graves > 0 %}
+        <div class="col-auto"><a href="/gestion-calidad/seguridad-paciente" class="btn btn-sm btn-outline-dark"><i class="fa-solid fa-shield-heart"></i> {{ gerencial.eventos_seguridad_graves }} evento(s) grave(s)/centinela de seguridad del paciente</a></div>
+        {% endif %}
+        {% if gerencial.pqr_alto_riesgo > 0 %}
+        <div class="col-auto"><a href="/gestion-calidad/pqr" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-inbox"></i> {{ gerencial.pqr_alto_riesgo }} PQR de alto riesgo (ordenadas de mayor a menor riesgo)</a></div>
+        {% endif %}
+        {% if gerencial.pqr_vencidas > 0 %}
+        <div class="col-auto"><a href="/gestion-calidad/pqr?vencidas=1" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-clock"></i> {{ gerencial.pqr_vencidas }} PQR vencida(s)</a></div>
+        {% endif %}
+        {% if gerencial.hallazgos_criticos > 0 %}
+        <div class="col-auto"><a href="/gestion-calidad/hallazgos" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-magnifying-glass"></i> {{ gerencial.hallazgos_criticos }} hallazgo(s) crítico(s) de calidad</a></div>
+        {% endif %}
+        {% if gerencial.riesgos_altos > 0 %}
+        <div class="col-auto"><a href="/gestion-calidad/riesgos" class="btn btn-sm btn-outline-warning"><i class="fa-solid fa-chart-diagram"></i> {{ gerencial.riesgos_altos }} riesgo(s) alto(s)/extremo(s) activo(s)</a></div>
+        {% endif %}
         {% if gerencial.muestras_pendientes_entrega > 0 %}
         <div class="col-auto"><a href="/muestras/pendientes" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-vial"></i> {{ gerencial.muestras_pendientes_entrega }} muestra(s) pendiente(s) de entrega al laboratorio</a></div>
         {% endif %}

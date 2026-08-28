@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block titulo %}Hallazgos y No Conformidades{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-triangle-exclamation text-danger"></i> Hallazgos y No Conformidades</h2>
+    <p class="text-muted">Hallazgos identificados en auditorías, con su análisis de causa raíz y las acciones de mejora asociadas.</p>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr><th>Clasificación</th><th>Proceso</th><th>Descripción</th><th>Fecha</th><th>Responsable</th><th>Estado</th></tr></thead>
+                <tbody>
+                    {% for h in hallazgos %}
+                    <tr class="cursor-pointer" onclick="window.location='/gestion-calidad/hallazgos/{{ h.id }}'" style="cursor:pointer">
+                        <td><span class="badge {% if h.clasificacion == 'Crítico' %}bg-danger{% elif h.clasificacion == 'Mayor' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ h.clasificacion }}</span></td>
+                        <td>{{ h.proceso }}</td>
+                        <td>{{ h.descripcion[:80] }}{% if h.descripcion|length > 80 %}...{% endif %}</td>
+                        <td>{{ h.fecha }}</td>
+                        <td>{% if h.resp_nombre %}{{ h.resp_nombre }} {{ h.resp_apellido }}{% else %}—{% endif %}</td>
+                        <td><span class="badge {% if h.estado == 'Cerrado' %}bg-success{% elif h.estado == 'Con acción asignada' %}bg-primary{% else %}bg-secondary{% endif %}">{{ h.estado }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-4">No hay hallazgos registrados todavía.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

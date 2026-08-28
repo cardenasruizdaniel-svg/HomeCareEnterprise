@@ -86,6 +86,84 @@ async def registrar(
     return RedirectResponse(url=f"/muestras/{muestra_id}", status_code=303)
 
 
+# ==========================================================
+# LISTA DE SUPERVISIÓN -- TOMA DE MUESTRAS (auditoría en sitio)
+# Estas rutas van ANTES de "/{muestra_id}" a propósito -- si
+# quedaran después, FastAPI trataría "supervision" como si
+# fuera un muestra_id numérico y fallaría con error 422.
+# ==========================================================
+
+from services import supervision_muestras_service as supervision
+
+
+@router.get("/supervision", response_class=HTMLResponse)
+async def supervision_lista(request: Request, usuario=Depends(requiere_permiso("calidad"))):
+    from services import profesionales_service
+    return templates.TemplateResponse(
+        request=request, name="muestras/supervision_lista.html",
+        context={
+            "usuario": usuario, "supervisiones": supervision.listar_supervisiones(),
+            "promedio": supervision.promedio_cumplimiento_general(),
+            "profesionales": profesionales_service.activos(),
+        },
+    )
+
+
+@router.get("/supervision/nueva", response_class=HTMLResponse)
+async def supervision_nueva(request: Request, usuario=Depends(requiere_permiso("calidad"))):
+    from services import profesionales_service
+    return templates.TemplateResponse(
+        request=request, name="muestras/supervision_formulario.html",
+        context={
+            "usuario": usuario, "secciones": supervision.SECCIONES_CHECKLIST,
+            "profesionales": profesionales_service.activos(),
+            "error": request.query_params.get("error"),
+        },
+    )
+
+
+@router.post("/supervision/crear")
+async def supervision_crear(request: Request, usuario=Depends(requiere_permiso("calidad"))):
+    formulario = await request.form()
+    datos = {
+        "fecha": formulario.get("fecha"), "punto_toma": formulario.get("punto_toma"),
+        "auxiliar_supervisado_id": formulario.get("auxiliar_supervisado_id") or None,
+        "auxiliar_supervisado_nombre": formulario.get("auxiliar_supervisado_nombre"),
+        "responsable_auditoria_id": _id_profesional_responsable(formulario),
+        "cargo_responsable": formulario.get("cargo_responsable"),
+        "hora_inicio": formulario.get("hora_inicio"), "hora_fin": formulario.get("hora_fin"),
+        "observaciones_generales": formulario.get("observaciones_generales"),
+    }
+    respuestas = {}
+    for bloque in supervision.SECCIONES_CHECKLIST:
+        for codigo, _texto in bloque["items"]:
+            respuestas[codigo] = {
+                "respuesta": formulario.get(f"respuesta_{codigo}", "N/A"),
+                "observaciones": formulario.get(f"observaciones_{codigo}", ""),
+            }
+    try:
+        supervision_id = supervision.crear_supervision(datos, respuestas, usuario_id=_id_usuario(usuario))
+    except ValueError as error:
+        return RedirectResponse(url=f"/muestras/supervision/nueva?error={error}", status_code=303)
+    return RedirectResponse(url=f"/muestras/supervision/{supervision_id}?guardado=1", status_code=303)
+
+
+def _id_profesional_responsable(formulario):
+    valor = formulario.get("responsable_auditoria_id")
+    return int(valor) if valor else None
+
+
+@router.get("/supervision/{supervision_id}", response_class=HTMLResponse)
+async def supervision_detalle(request: Request, supervision_id: int, usuario=Depends(requiere_permiso("calidad"))):
+    registro = supervision.obtener_supervision(supervision_id)
+    if not registro:
+        raise HTTPException(status_code=404, detail="La supervisión no existe.")
+    return templates.TemplateResponse(
+        request=request, name="muestras/supervision_detalle.html",
+        context={"usuario": usuario, "supervision": registro, "guardado": request.query_params.get("guardado")},
+    )
+
+
 @router.get("/{muestra_id}", response_class=HTMLResponse)
 async def ver_muestra(request: Request, muestra_id: int, usuario=Depends(requiere_permiso("pacientes"))):
     muestra = muestras.obtener(muestra_id)

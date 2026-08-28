@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block titulo %}Nueva Supervisión — Toma de Muestras{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/muestras/supervision" class="text-decoration-none small">&larr; Volver al listado</a>
+    <h2 class="mt-2 mb-1"><i class="fa-solid fa-clipboard-check text-primary"></i> Lista de Supervisión Toma de Muestras</h2>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <form method="post" action="/muestras/supervision/crear">
+        <div class="card shadow mb-3">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3"><label>Fecha</label><input type="date" name="fecha" class="form-control" required></div>
+                    <div class="col-md-5"><label>Dirección / IPS / Punto de toma</label><input type="text" name="punto_toma" class="form-control" required></div>
+                    <div class="col-md-2"><label>Hora de inicio</label><input type="time" name="hora_inicio" class="form-control"></div>
+                    <div class="col-md-2"><label>Hora de finalización</label><input type="time" name="hora_fin" class="form-control"></div>
+
+                    <div class="col-md-6">
+                        <label>Nombre del auxiliar que toma las muestras</label>
+                        <input type="text" name="auxiliar_supervisado_nombre" class="form-control" required list="lista-profesionales">
+                        <datalist id="lista-profesionales">
+                            {% for p in profesionales %}<option value="{{ p.primer_nombre }} {{ p.primer_apellido }}" data-id="{{ p.id }}">{% endfor %}
+                        </datalist>
+                        <select name="auxiliar_supervisado_id" id="select-auxiliar-oculto" style="display:none">
+                            <option value="">-- Ninguno --</option>
+                            {% for p in profesionales %}<option value="{{ p.id }}">{{ p.primer_nombre }} {{ p.primer_apellido }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Responsable de la auditoría</label>
+                        <select name="responsable_auditoria_id" class="form-select">
+                            <option value="">-- Sin asignar --</option>
+                            {% for p in profesionales %}<option value="{{ p.id }}">{{ p.primer_nombre }} {{ p.primer_apellido }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3"><label>Cargo del responsable</label><input type="text" name="cargo_responsable" class="form-control"></div>
+                </div>
+            </div>
+        </div>
+
+        {% for bloque in secciones %}
+        <div class="card shadow mb-3">
+            <div class="card-header bg-white"><h6 class="mb-0">{{ loop.index }}. {{ bloque.seccion|upper }}</h6></div>
+            <div class="card-body p-0">
+                <table class="table mb-0 align-middle">
+                    <thead class="table-light"><tr><th style="width:45%">Aspecto a verificar</th><th class="text-center">Cumple</th><th class="text-center">No cumple</th><th class="text-center">N/A</th><th>Observaciones</th></tr></thead>
+                    <tbody>
+                        {% for item in bloque["items"] %}
+                        <tr>
+                            <td>{{ item[1] }}</td>
+                            <td class="text-center"><input type="radio" name="respuesta_{{ item[0] }}" value="Cumple" class="form-check-input"></td>
+                            <td class="text-center"><input type="radio" name="respuesta_{{ item[0] }}" value="No cumple" class="form-check-input"></td>
+                            <td class="text-center"><input type="radio" name="respuesta_{{ item[0] }}" value="N/A" class="form-check-input" checked></td>
+                            <td><input type="text" name="observaciones_{{ item[0] }}" class="form-control form-control-sm"></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="card shadow mb-3">
+            <div class="card-body">
+                <label>Observaciones generales</label>
+                <textarea name="observaciones_generales" class="form-control" rows="3"></textarea>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-success btn-lg mb-4"><i class="fa-solid fa-floppy-disk"></i> Guardar supervisión</button>
+    </form>
+</div>
+
+<script>
+// Al escribir/elegir el nombre del auxiliar (con autocompletar), si coincide
+// con un profesional real de la lista, se guarda tambien su id -- para que
+// quede enlazado correctamente y no solo como texto suelto.
+document.querySelector('input[name="auxiliar_supervisado_nombre"]').addEventListener("input", function () {
+    const opciones = document.querySelectorAll("#lista-profesionales option");
+    const seleccionOculta = document.getElementById("select-auxiliar-oculto");
+    let encontrado = "";
+    opciones.forEach((opcion) => {
+        if (opcion.value === this.value) encontrado = opcion.dataset.id;
+    });
+    seleccionOculta.value = encontrado;
+    seleccionOculta.name = encontrado ? "auxiliar_supervisado_id" : "";
+});
+</script>
+{% endblock %}

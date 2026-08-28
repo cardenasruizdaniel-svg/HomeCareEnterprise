@@ -1,0 +1,33 @@
+{% extends "portal/base_publica.html" %}
+{% block titulo %}Servicios de atención domiciliaria — HomeCare del Quindío{% endblock %}
+{% block meta_descripcion %}Medicina general, enfermería, terapias, toma de muestras y más servicios de salud domiciliarios en Armenia, Quindío.{% endblock %}
+{% block contenido %}
+<section class="py-5" style="background: linear-gradient(180deg, #ffffff, #fbfcfe);">
+    <div class="container text-center reveal">
+        <span class="badge-seccion">Qué hacemos</span>
+        <h1 class="fw-bold" style="font-size: clamp(1.8rem, 3.5vw, 2.6rem);">Servicios de salud pensados para ti</h1>
+        <p style="color:var(--hc-muted); max-width:640px; margin:0 auto;">Un equipo interdisciplinario que lleva la atención de salud hasta la puerta de su casa, con calidad y calidez humana.</p>
+    </div>
+</section>
+
+<section class="pb-5">
+    <div class="container">
+        <div class="row g-4">
+            {% for s in servicios %}
+            <div class="col-md-4 reveal">
+                <div class="card portal-card h-100 border-0">
+                    <div class="card-body text-center p-4">
+                        <div class="icono-servicio"><i class="{{ s.icono }}"></i></div>
+                        <h6 class="fw-bold">{{ s.nombre }}</h6>
+                        <p class="small mb-3" style="color:var(--hc-muted)">{{ s.descripcion }}</p>
+                        <a href="/portal/contacto" class="fw-semibold small text-decoration-none" style="color:var(--hc-magenta)">Solicitar este servicio <i class="fa-solid fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="col-12"><p class="text-muted text-center py-5">Todavía no hay servicios publicados.</p></div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}

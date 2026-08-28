@@ -32,3 +32,7 @@ openpyxl==3.1.5
 opencv-contrib-python==4.10.0.84
 numpy==1.26.4
 Pillow==10.4.0
+
+# --- Pruebas automatizadas (no se necesita en producción, pero
+# no hace daño tenerla instalada) ---
+pytest==8.3.3

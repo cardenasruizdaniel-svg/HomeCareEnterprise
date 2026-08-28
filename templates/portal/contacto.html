@@ -1,0 +1,77 @@
+{% extends "portal/base_publica.html" %}
+{% block titulo %}Contacto — HomeCare del Quindío{% endblock %}
+{% block meta_descripcion %}Contáctanos por teléfono, WhatsApp o correo, o escríbenos directamente para solicitar información o un servicio.{% endblock %}
+{% block contenido %}
+<section class="py-5" style="background: linear-gradient(180deg, #ffffff, #fbfcfe);">
+    <div class="container text-center reveal" style="max-width: 780px;">
+        <span class="badge-seccion">Estamos para ayudarte</span>
+        <h1 class="fw-bold" style="font-size: clamp(1.8rem, 3.5vw, 2.6rem);">Contacto</h1>
+        <p style="color:var(--hc-muted)">Escríbanos y le responderemos lo antes posible.</p>
+    </div>
+</section>
+
+<section class="pb-5">
+    <div class="container" style="max-width: 1000px;">
+        <div class="row g-4">
+            <div class="col-md-5 reveal">
+                <div class="card portal-card h-100 border-0"><div class="card-body p-4">
+                    <h6 class="fw-bold mb-3">Datos de contacto</h6>
+                    {% if config.telefono %}<p class="mb-2"><i class="fa-solid fa-phone me-2" style="color:var(--hc-teal)"></i>{{ config.telefono }}</p>{% endif %}
+                    {% if config.whatsapp %}<p class="mb-2"><i class="fa-brands fa-whatsapp me-2" style="color:#25D366"></i>{{ config.whatsapp }}</p>{% endif %}
+                    {% if config.correo %}<p class="mb-2"><i class="fa-solid fa-envelope me-2" style="color:var(--hc-teal)"></i>{{ config.correo }}</p>{% endif %}
+                    {% if config.direccion %}<p class="mb-2"><i class="fa-solid fa-location-dot me-2" style="color:var(--hc-teal)"></i>{{ config.direccion }}</p>{% endif %}
+                    {% if config.horarios %}<p class="mb-2"><i class="fa-solid fa-clock me-2" style="color:var(--hc-teal)"></i>{{ config.horarios }}</p>{% endif %}
+
+                    {% if config.whatsapp_link %}
+                    <a href="https://wa.me/{{ config.whatsapp_link }}?text={{ 'Hola, estoy interesado(a) en conocer los servicios de HomeCare y quisiera recibir información.' | urlencode }}" target="_blank" rel="noopener" class="btn-whatsapp text-decoration-none d-block text-center mt-3">
+                        <i class="fa-brands fa-whatsapp"></i> Iniciar chat
+                    </a>
+                    {% endif %}
+
+                    {% if config.facebook or config.instagram or config.tiktok or config.youtube or config.linkedin %}
+                    <div class="mt-4 d-flex gap-3">
+                        {% if config.facebook %}<a href="{{ config.facebook }}" target="_blank" rel="noopener" style="color:var(--hc-ink)"><i class="fa-brands fa-facebook fa-lg"></i></a>{% endif %}
+                        {% if config.instagram %}<a href="{{ config.instagram }}" target="_blank" rel="noopener" style="color:var(--hc-ink)"><i class="fa-brands fa-instagram fa-lg"></i></a>{% endif %}
+                        {% if config.tiktok %}<a href="{{ config.tiktok }}" target="_blank" rel="noopener" style="color:var(--hc-ink)"><i class="fa-brands fa-tiktok fa-lg"></i></a>{% endif %}
+                        {% if config.youtube %}<a href="{{ config.youtube }}" target="_blank" rel="noopener" style="color:var(--hc-ink)"><i class="fa-brands fa-youtube fa-lg"></i></a>{% endif %}
+                        {% if config.linkedin %}<a href="{{ config.linkedin }}" target="_blank" rel="noopener" style="color:var(--hc-ink)"><i class="fa-brands fa-linkedin fa-lg"></i></a>{% endif %}
+                    </div>
+                    {% endif %}
+                </div></div>
+            </div>
+
+            <div class="col-md-7 reveal">
+                <div class="card portal-card border-0"><div class="card-body p-4">
+                    {% if enviado %}
+                    <div class="text-center py-4">
+                        <i class="fa-solid fa-circle-check fa-2x mb-3" style="color:var(--hc-teal)"></i>
+                        <h5 class="fw-bold">¡Mensaje enviado!</h5>
+                        <p class="mb-0" style="color:var(--hc-muted)">Nos pondremos en contacto con usted lo antes posible.</p>
+                    </div>
+                    {% else %}
+                    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+                    <form method="post" action="/portal/contacto/enviar">
+                        <div class="mb-3">
+                            <label class="form-label">¿En qué le podemos ayudar?</label>
+                            <select name="motivo" class="form-select">
+                                <option value="Solicitar información">Solicitar información</option>
+                                <option value="Pedir una cita">Pedir una cita</option>
+                                <option value="Solicitar un servicio">Solicitar un servicio</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3"><label class="form-label">Nombre completo</label><input type="text" name="nombre" class="form-control" required></div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6"><label class="form-label">Teléfono</label><input type="tel" name="telefono" class="form-control"></div>
+                            <div class="col-md-6"><label class="form-label">Correo</label><input type="email" name="correo" class="form-control"></div>
+                        </div>
+                        <div class="mb-4"><label class="form-label">Mensaje</label><textarea name="mensaje" class="form-control" rows="4" required></textarea></div>
+                        <button type="submit" class="btn-hc-primario w-100 py-2 border-0"><i class="fa-solid fa-paper-plane"></i> Enviar</button>
+                    </form>
+                    {% endif %}
+                </div></div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

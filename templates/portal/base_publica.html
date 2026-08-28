@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block titulo %}HomeCare del Quindío I.P.S. — Bienestar en casa{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="icon" href="/static/img/logo_homecare.ico">
+
+    <!-- SEO basico -->
+    <meta name="description" content="{% block meta_descripcion %}Atención domiciliaria integral en Armenia y el Quindío: medicina general, enfermería, terapias, toma de muestras y más, con calidad y calidez humana.{% endblock %}">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="{{ request.url }}">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="HomeCare del Quindío I.P.S.">
+    <meta property="og:title" content="{% block og_titulo %}HomeCare del Quindío I.P.S. — Bienestar en casa{% endblock %}">
+    <meta property="og:description" content="{% block og_descripcion %}Atención domiciliaria integral en Armenia y el Quindío, con calidad y calidez humana.{% endblock %}">
+    <meta property="og:image" content="{{ request.base_url }}static/img/logo_homecare.png">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:locale" content="es_CO">
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="{% block twitter_titulo %}HomeCare del Quindío I.P.S.{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_descripcion %}Atención domiciliaria integral en Armenia y el Quindío.{% endblock %}">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "MedicalOrganization",
+        "name": "HomeCare del Quindío I.P.S.",
+        "description": "Atención domiciliaria integral: medicina general, enfermería, terapias y más.",
+        "areaServed": "Armenia, Quindío, Colombia",
+        "logo": "{{ request.base_url }}static/img/logo_homecare.png"{% if config and config.telefono %},
+        "telephone": "{{ config.telefono }}"{% endif %}{% if config and config.direccion %},
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "{{ config.direccion }}",
+            "addressLocality": "Armenia",
+            "addressRegion": "Quindío",
+            "addressCountry": "CO"
+        }{% endif %}
+    }
+    </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        :root{
+            --hc-magenta:#e6006e;
+            --hc-magenta-dark:#b30057;
+            --hc-teal:#00a19b;
+            --hc-teal-dark:#00807b;
+            --hc-verde:#8bbd00;
+            --hc-morado:#6b5b95;
+            --hc-ink:#1f2430;
+            --hc-muted:#6c7280;
+            --hc-bg:#fbfcfe;
+            --hc-radio-lg:22px;
+            --hc-radio-md:14px;
+            --hc-sombra:0 20px 50px -20px rgba(31,36,48,.18);
+        }
+        *{ box-sizing:border-box; }
+        html{ scroll-behavior:smooth; }
+        body{
+            background: var(--hc-bg);
+            font-family:"Inter",sans-serif;
+            color: var(--hc-ink);
+        }
+        h1,h2,h3,h4,h5,h6{ font-family:"Poppins",sans-serif; }
+
+        /* ---------- Header ---------- */
+        .portal-header{
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: rgba(255,255,255,.92);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(31,36,48,.06);
+            transition: box-shadow .25s ease, padding .25s ease;
+            padding: 10px 0;
+        }
+        .portal-header.con-sombra{
+            box-shadow: 0 8px 30px -18px rgba(31,36,48,.35);
+        }
+        .portal-header .logo-img{ height: 68px; width:auto; transition: height .25s ease; }
+        .portal-header.con-sombra .logo-img{ height: 54px; }
+        .marca-nombre{ font-family:"Poppins",sans-serif; line-height:1.1; }
+        .marca-nombre .home{ color: var(--hc-teal); font-weight:800; }
+        .marca-nombre .care{ color: var(--hc-magenta); font-weight:800; }
+        .marca-nombre small{ display:block; font-size:11px; font-weight:600; color: var(--hc-muted); letter-spacing:.03em; }
+        .portal-nav a{
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--hc-ink);
+            padding: 8px 4px;
+            position: relative;
+        }
+        .portal-nav a::after{
+            content:"";
+            position:absolute; left:0; right:0; bottom:0;
+            height:2px; background: var(--hc-teal);
+            transform: scaleX(0);
+            transition: transform .2s ease;
+        }
+        .portal-nav a:hover::after{ transform: scaleX(1); }
+        .btn-nav-cta{
+            background: linear-gradient(135deg, var(--hc-magenta), var(--hc-magenta-dark));
+            color: white !important;
+            border-radius: 999px;
+            padding: 9px 22px !important;
+            font-weight: 700;
+            box-shadow: 0 10px 24px -10px rgba(230,0,110,.55);
+        }
+        .btn-nav-cta::after{ display:none; }
+        #btn-menu-movil{
+            border: none; background: none; font-size: 24px; color: var(--hc-ink);
+        }
+        #menu-movil{
+            display:none;
+            border-top: 1px solid rgba(31,36,48,.08);
+            padding: 12px 0 4px;
+        }
+        #menu-movil.abierto{ display:block; }
+        #menu-movil a{
+            display:block; padding: 10px 4px; font-weight:600; color: var(--hc-ink); text-decoration:none;
+        }
+
+        /* ---------- Botones ---------- */
+        .btn-hc-primario{
+            background: linear-gradient(135deg, var(--hc-magenta), var(--hc-magenta-dark));
+            border: none;
+            color: white;
+            border-radius: 999px;
+            font-weight: 700;
+            padding: 13px 30px;
+            box-shadow: 0 14px 30px -12px rgba(230,0,110,.5);
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .btn-hc-primario:hover{ transform: translateY(-2px); box-shadow: 0 18px 36px -12px rgba(230,0,110,.6); color:white; }
+        .btn-hc-secundario{
+            background: white;
+            border: 2px solid rgba(31,36,48,.12);
+            color: var(--hc-ink);
+            border-radius: 999px;
+            font-weight: 700;
+            padding: 11px 28px;
+            transition: border-color .2s ease, transform .2s ease;
+        }
+        .btn-hc-secundario:hover{ border-color: var(--hc-teal); transform: translateY(-2px); color: var(--hc-ink); }
+        .btn-whatsapp{
+            background: linear-gradient(135deg, #25D366, #1DA851);
+            border: none; color: white; border-radius: 999px; font-weight: 700;
+            padding: 13px 28px;
+            box-shadow: 0 14px 30px -12px rgba(29,168,81,.55);
+            transition: transform .2s ease;
+        }
+        .btn-whatsapp:hover{ transform: translateY(-2px); color:white; }
+
+        /* ---------- Cards ---------- */
+        .portal-card{
+            border: none;
+            border-radius: var(--hc-radio-lg);
+            box-shadow: var(--hc-sombra);
+            transition: transform .25s ease, box-shadow .25s ease;
+        }
+        .portal-card:hover{
+            transform: translateY(-6px);
+            box-shadow: 0 30px 60px -20px rgba(31,36,48,.28);
+        }
+        .icono-servicio{
+            width: 62px; height:62px; border-radius: 18px;
+            display:flex; align-items:center; justify-content:center;
+            background: linear-gradient(135deg, rgba(0,161,155,.12), rgba(230,0,110,.10));
+            color: var(--hc-teal);
+            font-size: 24px;
+            margin: 0 auto 14px;
+        }
+
+        /* ---------- WhatsApp flotante ---------- */
+        .whatsapp-flotante{
+            position: fixed;
+            right: 20px; bottom: 20px;
+            z-index: 1200;
+            width: 60px; height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #25D366, #1DA851);
+            display:flex; align-items:center; justify-content:center;
+            color: white; font-size: 30px;
+            box-shadow: 0 14px 34px -10px rgba(29,168,81,.6);
+            animation: pulso-wsp 2.6s infinite;
+            text-decoration:none;
+        }
+        .whatsapp-flotante:hover{ color:white; }
+        @keyframes pulso-wsp{
+            0%   { box-shadow: 0 0 0 0 rgba(37,211,102,.45), 0 14px 34px -10px rgba(29,168,81,.6); }
+            70%  { box-shadow: 0 0 0 14px rgba(37,211,102,0), 0 14px 34px -10px rgba(29,168,81,.6); }
+            100% { box-shadow: 0 0 0 0 rgba(37,211,102,0), 0 14px 34px -10px rgba(29,168,81,.6); }
+        }
+
+        /* ---------- Footer ---------- */
+        .portal-footer{
+            background: var(--hc-ink);
+            color: rgba(255,255,255,.72);
+            padding: 56px 0 24px;
+            margin-top: 80px;
+        }
+        .portal-footer h6{ color:white; font-weight:700; margin-bottom:16px; }
+        .portal-footer a{ color: rgba(255,255,255,.72); text-decoration:none; display:block; margin-bottom:8px; font-size:14px; }
+        .portal-footer a:hover{ color: white; }
+        .portal-footer .redes a{
+            display:inline-flex; width:38px; height:38px; border-radius:50%;
+            background: rgba(255,255,255,.08); align-items:center; justify-content:center;
+            margin-right:8px; margin-bottom:0;
+        }
+        .portal-footer .redes a:hover{ background: var(--hc-teal); }
+        .portal-footer hr{ border-color: rgba(255,255,255,.1); margin: 32px 0 20px; }
+
+        /* ---------- Reveal al hacer scroll ---------- */
+        .reveal{ opacity:0; transform: translateY(24px); transition: opacity .6s ease, transform .6s ease; }
+        .reveal.visible{ opacity:1; transform: translateY(0); }
+
+        @media (prefers-reduced-motion: reduce){
+            .reveal{ opacity:1; transform:none; transition:none; }
+            .whatsapp-flotante{ animation:none; }
+        }
+    </style>
+    {% block estilos_extra %}{% endblock %}
+</head>
+<body>
+
+    <!-- ===================== HEADER ===================== -->
+    <header class="portal-header" id="header-portal">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="/portal" class="d-flex align-items-center text-decoration-none gap-2">
+                <img src="/static/img/logo_homecare.png" alt="HomeCare del Quindío I.P.S." class="logo-img">
+                <span class="marca-nombre d-none d-sm-block" style="font-size:19px;">
+                    <span class="home">Home</span><span class="care">Care</span><br>
+                    <small>del Quindío I.P.S.</small>
+                </span>
+            </a>
+
+            <nav class="d-none d-lg-flex align-items-center gap-4 portal-nav">
+                <a href="/portal">Inicio</a>
+                <a href="/portal/nosotros">Nosotros</a>
+                <a href="/portal/servicios">Servicios</a>
+                <a href="/portal/atencion-usuario">SIAU / PQR</a>
+                <a href="/portal/contacto">Contacto</a>
+                {% if config and config.enlace_pagos %}<a href="{{ config.enlace_pagos }}" target="_blank" rel="noopener">Paga en línea</a>{% endif %}
+                <a href="/portal/contacto" class="btn-nav-cta">Solicitar atención</a>
+            </nav>
+
+            <button id="btn-menu-movil" class="d-lg-none" aria-label="Abrir menú">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+
+        <div id="menu-movil" class="container d-lg-none">
+            <a href="/portal">Inicio</a>
+            <a href="/portal/nosotros">Nosotros</a>
+            <a href="/portal/servicios">Servicios</a>
+            <a href="/portal/atencion-usuario">SIAU / PQR</a>
+            <a href="/portal/contacto">Contacto</a>
+            {% if config and config.enlace_pagos %}<a href="{{ config.enlace_pagos }}" target="_blank" rel="noopener">Paga en línea</a>{% endif %}
+            <a href="/portal/contacto" class="btn-hc-primario d-block text-center text-decoration-none mt-2">Solicitar atención</a>
+        </div>
+    </header>
+
+    <main>
+        {% block contenido %}{% endblock %}
+    </main>
+
+    <!-- ===================== FOOTER ===================== -->
+    <footer class="portal-footer">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <img src="/static/img/logo_homecare.png" alt="HomeCare del Quindío I.P.S." style="height:58px; background:white; border-radius:50%; padding:2px;">
+                    <p class="mt-3 small">Atención domiciliaria integral, con calidad y calidez humana, en Armenia y el Quindío.</p>
+                    {% if config and (config.facebook or config.instagram or config.tiktok or config.youtube or config.linkedin) %}
+                    <div class="redes mt-3">
+                        {% if config.facebook %}<a href="{{ config.facebook }}" target="_blank" rel="noopener"><i class="fa-brands fa-facebook-f"></i></a>{% endif %}
+                        {% if config.instagram %}<a href="{{ config.instagram }}" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i></a>{% endif %}
+                        {% if config.tiktok %}<a href="{{ config.tiktok }}" target="_blank" rel="noopener"><i class="fa-brands fa-tiktok"></i></a>{% endif %}
+                        {% if config.youtube %}<a href="{{ config.youtube }}" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i></a>{% endif %}
+                        {% if config.linkedin %}<a href="{{ config.linkedin }}" target="_blank" rel="noopener"><i class="fa-brands fa-linkedin-in"></i></a>{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-md-3">
+                    <h6>HomeCare</h6>
+                    <a href="/portal/nosotros">Nosotros</a>
+                    <a href="/portal/servicios">Servicios</a>
+                    <a href="/portal/atencion-usuario">SIAU / PQR</a>
+                    <a href="/portal/contacto">Contacto</a>
+                </div>
+                <div class="col-md-3">
+                    <h6>Atención</h6>
+                    {% if config and config.whatsapp %}<a href="https://wa.me/{{ config.whatsapp_link }}" target="_blank" rel="noopener">WhatsApp: {{ config.whatsapp }}</a>{% endif %}
+                    {% if config and config.telefono %}<a href="tel:{{ config.telefono }}">Tel: {{ config.telefono }}</a>{% endif %}
+                    {% if config and config.correo %}<a href="mailto:{{ config.correo }}">{{ config.correo }}</a>{% endif %}
+                    {% if config and config.horarios %}<span class="d-block small mt-2">{{ config.horarios }}</span>{% endif %}
+                </div>
+                <div class="col-md-2">
+                    <h6>Legal</h6>
+                    <a href="/portal/nosotros">Derechos y deberes</a>
+                    <a href="/portal/atencion-usuario">Participación social</a>
+                </div>
+            </div>
+            <hr>
+            <p class="small mb-0 text-center" style="color:rgba(255,255,255,.5)">© 2026 HomeCare del Quindío I.P.S. — Bienestar en casa.{% if config and config.nit %} — NIT {{ config.nit }}{% endif %}</p>
+        </div>
+    </footer>
+
+    {% if config and config.whatsapp_link %}
+    <a class="whatsapp-flotante" target="_blank" rel="noopener"
+       href="https://wa.me/{{ config.whatsapp_link }}?text={{ whatsapp_mensaje | default('Hola, estoy interesado(a) en conocer los servicios de HomeCare y quisiera recibir información.') | urlencode }}"
+       aria-label="Hablar por WhatsApp">
+        <i class="fa-brands fa-whatsapp"></i>
+    </a>
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Header: sombra y encogimiento del logo al hacer scroll
+        const encabezado = document.getElementById("header-portal");
+        window.addEventListener("scroll", () => {
+            encabezado.classList.toggle("con-sombra", window.scrollY > 12);
+        });
+
+        // Menu movil
+        const btnMenu = document.getElementById("btn-menu-movil");
+        const menuMovil = document.getElementById("menu-movil");
+        btnMenu.addEventListener("click", () => {
+            menuMovil.classList.toggle("abierto");
+            btnMenu.innerHTML = menuMovil.classList.contains("abierto")
+                ? '<i class="fa-solid fa-xmark"></i>' : '<i class="fa-solid fa-bars"></i>';
+        });
+
+        // Reveal suave al hacer scroll
+        const observador = new IntersectionObserver((entradas) => {
+            entradas.forEach((entrada) => {
+                if (entrada.isIntersecting) entrada.target.classList.add("visible");
+            });
+        }, { threshold: 0.12, rootMargin: "0px 0px -10% 0px" });
+        document.querySelectorAll(".reveal").forEach((el) => observador.observe(el));
+
+        // Red de seguridad: si por cualquier motivo el navegador no
+        // llega a "revelar" algún bloque (una pantalla muy alta,
+        // una herramienta de capturas automáticas, o cualquier caso
+        // raro donde el scroll no dispare el observador), se
+        // termina mostrando de todas formas -- el contenido nunca
+        // debe quedar invisible para siempre por un detalle de la
+        // animación.
+        setTimeout(() => {
+            document.querySelectorAll(".reveal:not(.visible)").forEach((el) => el.classList.add("visible"));
+        }, 1200);
+    </script>
+    {% block javascript %}{% endblock %}
+</body>
+</html>

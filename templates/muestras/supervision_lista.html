@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block titulo %}Supervisión — Toma de Muestras{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-clipboard-check text-primary"></i> Lista de Supervisión — Toma de Muestras</h2>
+    <p class="text-muted">Versión digital de la lista de chequeo de auditoría en sitio — identificación del paciente, datos demográficos, y técnica de la toma (23 puntos).</p>
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100"><div class="card-body text-center">
+                <div class="display-6 fw-bold">{{ supervisiones|length }}</div>
+                <div class="text-muted">Supervisiones registradas</div>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100"><div class="card-body text-center">
+                <div class="display-6 fw-bold {% if promedio and promedio < 80 %}text-danger{% elif promedio %}text-success{% else %}text-muted{% endif %}">{% if promedio %}{{ promedio }}%{% else %}—{% endif %}</div>
+                <div class="text-muted">Cumplimiento promedio general</div>
+            </div></div>
+        </div>
+    </div>
+
+    <a href="/muestras/supervision/nueva" class="btn btn-success mb-3"><i class="fa-solid fa-plus"></i> Nueva supervisión</a>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr><th>Fecha</th><th>Punto de toma</th><th>Auxiliar supervisado</th><th>Responsable</th><th>Cumplimiento</th></tr></thead>
+                <tbody>
+                    {% for s in supervisiones %}
+                    <tr class="cursor-pointer" onclick="window.location='/muestras/supervision/{{ s.id }}'" style="cursor:pointer">
+                        <td>{{ s.fecha }}</td>
+                        <td>{{ s.punto_toma }}</td>
+                        <td>{{ s.aux_nombre_real }} {{ s.aux_apellido_real }}{% if not s.aux_nombre_real %}{{ s.auxiliar_supervisado_nombre }}{% endif %}</td>
+                        <td>{% if s.resp_nombre %}{{ s.resp_nombre }} {{ s.resp_apellido }}{% else %}—{% endif %}</td>
+                        <td>
+                            {% if s.porcentaje_cumplimiento is not none %}
+                            <span class="badge {% if s.porcentaje_cumplimiento >= 90 %}bg-success{% elif s.porcentaje_cumplimiento >= 75 %}bg-warning text-dark{% else %}bg-danger{% endif %}">{{ s.porcentaje_cumplimiento }}%</span>
+                            {% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">No hay supervisiones registradas todavía.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

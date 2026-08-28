@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block titulo %}Sistema de Gestión de Calidad{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-medal text-primary"></i> Sistema Integral de Gestión de Calidad</h2>
+    <p class="text-muted">Ciclo completo: Planear (PAMEC) → Ejecutar (Auditoría) → Detectar (Hallazgo) → Corregir (Acción) → Verificar → Mejorar.</p>
+
+    <div class="row g-3 mb-4">
+        {% if resumen.pqr_nuevas > 0 %}
+        <div class="col-md-4 col-lg-2">
+            <a href="/gestion-calidad/pqr?estado=Nueva" class="text-decoration-none">
+                <div class="card shadow-sm h-100 border-danger" style="background:#fff5f5;"><div class="card-body text-center">
+                    <div class="display-6 fw-bold text-danger">{{ resumen.pqr_nuevas }}</div>
+                    <div class="text-danger fw-semibold"><i class="fa-solid fa-envelope-open-text"></i> PQR nueva(s) sin revisar</div>
+                </div></div>
+            </a>
+        </div>
+        {% endif %}
+        <div class="col-md-4 col-lg-2">
+            <a href="/gestion-calidad/normas" class="text-decoration-none">
+                <div class="card shadow-sm h-100"><div class="card-body text-center">
+                    <i class="fa-solid fa-scale-balanced fa-lg text-secondary"></i>
+                    <div class="fw-bold mt-2">Motor de Normatividad</div>
+                </div></div>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <a href="/gestion-calidad/pamec" class="text-decoration-none">
+                <div class="card shadow-sm h-100 {% if resumen.ciclos_pamec_activos > 0 %}border-primary{% endif %}"><div class="card-body text-center">
+                    <div class="display-6 fw-bold {% if resumen.ciclos_pamec_activos > 0 %}text-primary{% endif %}">{{ resumen.ciclos_pamec_activos }}</div>
+                    <div class="text-muted">Ciclos PAMEC en ejecución</div>
+                </div></div>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <a href="/gestion-calidad/auditorias" class="text-decoration-none">
+                <div class="card shadow-sm h-100 {% if resumen.auditorias_pendientes > 0 %}border-warning{% endif %}"><div class="card-body text-center">
+                    <div class="display-6 fw-bold {% if resumen.auditorias_pendientes > 0 %}text-warning{% endif %}">{{ resumen.auditorias_pendientes }}</div>
+                    <div class="text-muted">Auditorías pendientes</div>
+                </div></div>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <a href="/gestion-calidad/hallazgos" class="text-decoration-none">
+                <div class="card shadow-sm h-100 {% if resumen.hallazgos_criticos > 0 %}border-danger{% endif %}"><div class="card-body text-center">
+                    <div class="display-6 fw-bold {% if resumen.hallazgos_criticos > 0 %}text-danger{% else %}text-muted{% endif %}">{{ resumen.hallazgos_criticos }}</div>
+                    <div class="text-muted">Hallazgos críticos abiertos</div>
+                </div></div>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <a href="/gestion-calidad/hallazgos" class="text-decoration-none">
+                <div class="card shadow-sm h-100"><div class="card-body text-center">
+                    <div class="display-6 fw-bold">{{ resumen.hallazgos_abiertos }}</div>
+                    <div class="text-muted">Hallazgos abiertos (total)</div>
+                </div></div>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <div class="card shadow-sm h-100 {% if resumen.acciones_vencidas > 0 %}border-danger{% endif %}"><div class="card-body text-center">
+                <div class="display-6 fw-bold {% if resumen.acciones_vencidas > 0 %}text-danger{% else %}text-muted{% endif %}">{{ resumen.acciones_vencidas }}</div>
+                <div class="text-muted">Acciones de mejora vencidas</div>
+            </div></div>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <a href="/gestion-calidad/riesgos" class="text-decoration-none">
+                <div class="card shadow-sm h-100 {% if resumen.riesgos_altos > 0 %}border-warning{% endif %}"><div class="card-body text-center">
+                    <div class="display-6 fw-bold {% if resumen.riesgos_altos > 0 %}text-warning{% else %}text-muted{% endif %}">{{ resumen.riesgos_altos }}</div>
+                    <div class="text-muted">Riesgos altos/extremos activos</div>
+                </div></div>
+            </a>
+        </div>
+        <div class="col-md-4 col-lg-2">
+            <a href="/gestion-calidad/seguridad-paciente" class="text-decoration-none">
+                <div class="card shadow-sm h-100 {% if resumen.eventos_seguridad_graves > 0 %}border-danger{% endif %}"><div class="card-body text-center">
+                    <div class="display-6 fw-bold {% if resumen.eventos_seguridad_graves > 0 %}text-danger{% else %}text-muted{% endif %}">{{ resumen.eventos_seguridad_graves }}</div>
+                    <div class="text-muted">Eventos graves/centinela abiertos</div>
+                </div></div>
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-3">
+            <a href="/gestion-calidad/normas" class="btn btn-outline-secondary w-100 p-3"><i class="fa-solid fa-scale-balanced fa-lg d-block mb-2"></i> Normas Regulatorias</a>
+        </div>
+        <div class="col-md-3">
+            <a href="/gestion-calidad/pamec" class="btn btn-outline-primary w-100 p-3"><i class="fa-solid fa-list-check fa-lg d-block mb-2"></i> PAMEC</a>
+        </div>
+        <div class="col-md-3">
+            <a href="/gestion-calidad/auditorias" class="btn btn-outline-info w-100 p-3"><i class="fa-solid fa-magnifying-glass fa-lg d-block mb-2"></i> Auditorías de Calidad</a>
+        </div>
+        <div class="col-md-3">
+            <a href="/gestion-calidad/hallazgos" class="btn btn-outline-danger w-100 p-3"><i class="fa-solid fa-triangle-exclamation fa-lg d-block mb-2"></i> Hallazgos y Acciones</a>
+        </div>
+        <div class="col-md-3">
+            <a href="/gestion-calidad/pqr" class="btn btn-outline-success w-100 p-3"><i class="fa-solid fa-inbox fa-lg d-block mb-2"></i> PQR / SIAU</a>
+        </div>
+        <div class="col-md-3">
+            <a href="/gestion-calidad/riesgos" class="btn btn-outline-warning w-100 p-3"><i class="fa-solid fa-chart-diagram fa-lg d-block mb-2"></i> Matriz de Riesgos</a>
+        </div>
+        <div class="col-md-3">
+            <a href="/gestion-calidad/seguridad-paciente" class="btn btn-outline-dark w-100 p-3"><i class="fa-solid fa-shield-heart fa-lg d-block mb-2"></i> Seguridad del Paciente</a>
+        </div>
+    </div>
+
+    <div class="alert alert-secondary mt-4 small">
+        <i class="fa-solid fa-circle-info"></i> El sistema facilita la gestión, seguimiento y evidencia del cumplimiento normativo — no garantiza por sí mismo el cumplimiento legal, que depende de la operación real de la IPS.
+    </div>
+</div>
+{% endblock %}

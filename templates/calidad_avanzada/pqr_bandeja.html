@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block titulo %}Bandeja PQR / SIAU{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-inbox text-primary"></i> Bandeja PQR / SIAU</h2>
+    <p class="text-muted">Peticiones, quejas, reclamos y sugerencias — internas y las que llegan del portal web público.</p>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="row g-3 mb-3">
+        <div class="col-md-3">
+            <a href="?vencidas=1" class="text-decoration-none">
+                <div class="card shadow-sm h-100 {% if indicadores.vencidas > 0 %}border-danger{% endif %}"><div class="card-body text-center">
+                    <div class="display-6 fw-bold {% if indicadores.vencidas > 0 %}text-danger{% else %}text-muted{% endif %}">{{ indicadores.vencidas }}</div>
+                    <div class="text-muted">Vencidas</div>
+                </div></div>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100"><div class="card-body text-center">
+                <div class="display-6 fw-bold text-warning">{{ indicadores.proximas_vencer }}</div>
+                <div class="text-muted">Próximas a vencer (2 días)</div>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100"><div class="card-body text-center">
+                <div class="display-6 fw-bold text-danger">{{ indicadores.alto_riesgo }}</div>
+                <div class="text-muted">Alto riesgo</div>
+            </div></div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100"><div class="card-body text-center">
+                <div class="display-6 fw-bold">{{ indicadores.abiertas }}</div>
+                <div class="text-muted">Abiertas (total)</div>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <div class="d-flex gap-2">
+            <a href="/gestion-calidad/pqr" class="btn btn-sm {% if not filtro_estado and not filtro_riesgo and not filtro_vencidas %}btn-primary{% else %}btn-outline-secondary{% endif %}">Todas</a>
+            {% for e in estados %}
+            <a href="?estado={{ e }}" class="btn btn-sm {% if filtro_estado == e %}btn-primary{% else %}btn-outline-secondary{% endif %}">{{ e }}</a>
+            {% endfor %}
+        </div>
+        <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalPqr"><i class="fa-solid fa-plus"></i> Registrar PQR</button>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr><th>Radicado</th><th>Tipo</th><th>Solicitante</th><th>Riesgo</th><th>Área</th><th>Fecha límite</th><th>Estado</th></tr></thead>
+                <tbody>
+                    {% for p in pqrs %}
+                    <tr class="cursor-pointer" onclick="window.location='/gestion-calidad/pqr/{{ p.id }}'" style="cursor:pointer">
+                        <td><strong>{{ p.radicado }}</strong><br><small class="text-muted">{{ p.canal }}</small></td>
+                        <td>{{ p.tipo }}</td>
+                        <td>{{ p.solicitante_nombre }}<br><small class="text-muted">{{ p.solicitante_relacion }}</small></td>
+                        <td><span class="badge {% if p.riesgo == 'Riesgo para la vida/integridad' %}bg-dark{% elif p.riesgo == 'Alta' %}bg-danger{% elif p.riesgo == 'Prioritaria' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ p.riesgo }}</span></td>
+                        <td>{{ p.area_responsable or "—" }}</td>
+                        <td class="small">{{ p.fecha_limite or "—" }}</td>
+                        <td><span class="badge {% if p.estado == 'Cerrada' %}bg-success{% else %}bg-primary{% endif %}">{{ p.estado }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="7" class="text-center text-muted py-4">No hay PQR registradas con este filtro.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalPqr" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/pqr/crear">
+            <div class="modal-header"><h5 class="modal-title">Registrar PQR (interna)</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="row g-2">
+                    <div class="col-md-6"><label>Tipo</label><select name="tipo" class="form-select" required>{% for t in tipos %}<option value="{{ t }}">{{ t }}</option>{% endfor %}</select></div>
+                    <div class="col-md-6"><label>Canal</label><select name="canal" class="form-select">{% for c in canales %}<option value="{{ c }}">{{ c }}</option>{% endfor %}</select></div>
+                    <div class="col-md-6"><label>¿Quién presenta la solicitud?</label><select name="solicitante_relacion" class="form-select">{% for r in relaciones %}<option value="{{ r }}">{{ r }}</option>{% endfor %}</select></div>
+                    <div class="col-md-6"><label>Nombre del solicitante</label><input type="text" name="solicitante_nombre" class="form-control" required></div>
+                    <div class="col-md-6"><label>Documento</label><input type="text" name="solicitante_documento" class="form-control"></div>
+                    <div class="col-md-6"><label>Teléfono</label><input type="text" name="solicitante_telefono" class="form-control"></div>
+                    <div class="col-12"><label>Asunto</label><input type="text" name="asunto" class="form-control"></div>
+                    <div class="col-12"><label>Descripción</label><textarea name="descripcion" class="form-control" rows="3" required></textarea></div>
+                    <div class="col-md-6"><label>Clasificación de riesgo</label><select name="riesgo" class="form-select">{% for r in riesgos %}<option value="{{ r }}">{{ r }}</option>{% endfor %}</select></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-success">Registrar</button></div>
+        </form>
+    </div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "portal/base_publica.html" %}
+{% block titulo %}PQR recibida — HomeCare del Quindío{% endblock %}
+{% block contenido %}
+<section class="py-5">
+<div class="container reveal" style="max-width: 720px;">
+<div class="card portal-card border-0">
+    <div class="card-body p-4 p-md-5 text-center">
+        <i class="fa-solid fa-circle-check fa-3x mb-3" style="color:var(--hc-teal)"></i>
+        <h3 class="fw-bold">Su solicitud fue recibida</h3>
+        <p style="color:var(--hc-muted)">Guarde este número de radicado y la clave de seguimiento — los necesitará para consultar el estado de su solicitud.</p>
+
+        <div class="row g-3 my-4">
+            <div class="col-md-6">
+                <div class="border rounded p-3">
+                    <div class="small" style="color:var(--hc-muted)">Número de radicado</div>
+                    <div class="fs-4 fw-bold" style="color: var(--hc-teal)">{{ radicado }}</div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="border rounded p-3">
+                    <div class="small" style="color:var(--hc-muted)">Clave de seguimiento</div>
+                    <div class="fs-4 fw-bold" style="color: var(--hc-magenta)">{{ clave }}</div>
+                </div>
+            </div>
+        </div>
+
+        <a href="/portal/pqr/seguimiento" class="btn-hc-secundario text-decoration-none">Consultar el estado ahora</a>
+        <a href="/portal" class="btn-hc-primario text-decoration-none">Volver al inicio</a>
+    </div>
+</div>
+</div>
+</section>
+{% endblock %}

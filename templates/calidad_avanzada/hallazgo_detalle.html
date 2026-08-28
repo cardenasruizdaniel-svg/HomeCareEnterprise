@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block titulo %}Hallazgo #{{ hallazgo.id }}{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/gestion-calidad/hallazgos" class="text-decoration-none small">&larr; Volver a Hallazgos</a>
+    <div class="d-flex justify-content-between align-items-start mt-2 mb-1">
+        <h2 class="mb-0">Hallazgo #{{ hallazgo.id }} — {{ hallazgo.proceso }}</h2>
+        <div class="text-end">
+            <span class="badge fs-6 {% if hallazgo.clasificacion == 'Crítico' %}bg-danger{% elif hallazgo.clasificacion == 'Mayor' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ hallazgo.clasificacion }}</span>
+            <span class="badge fs-6 {% if hallazgo.estado == 'Cerrado' %}bg-success{% else %}bg-primary{% endif %}">{{ hallazgo.estado }}</span>
+        </div>
+    </div>
+    <p class="text-muted">{{ hallazgo.fecha }}{% if hallazgo.servicio %} — {{ hallazgo.servicio }}{% endif %}{% if hallazgo.fuente %} — Fuente: {{ hallazgo.fuente }}{% endif %}</p>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <div class="card shadow mb-3">
+        <div class="card-body">
+            <p><strong>Descripción:</strong> {{ hallazgo.descripcion }}</p>
+            {% if hallazgo.evidencia %}<p><strong>Evidencia:</strong> {{ hallazgo.evidencia }}</p>{% endif %}
+            {% if hallazgo.riesgo %}<p><strong>Riesgo asociado:</strong> {{ hallazgo.riesgo }}</p>{% endif %}
+            <p><strong>Responsable:</strong> {% if hallazgo.resp_nombre %}{{ hallazgo.resp_nombre }} {{ hallazgo.resp_apellido }}{% else %}Sin asignar{% endif %}{% if hallazgo.fecha_limite %} — <strong>Fecha límite:</strong> {{ hallazgo.fecha_limite }}{% endif %}</p>
+        </div>
+    </div>
+
+    <div class="card shadow mb-3">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+            <h6 class="mb-0"><i class="fa-solid fa-magnifying-glass-chart"></i> Análisis de causa raíz</h6>
+            {% if not hallazgo.causa_raiz %}
+            <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalCausa">Registrar análisis</button>
+            {% endif %}
+        </div>
+        <div class="card-body">
+            {% if hallazgo.causa_raiz %}
+            <p><strong>Causa raíz:</strong> {{ hallazgo.causa_raiz }}</p>
+            {% if hallazgo.metodologia_analisis %}<p class="small text-muted">Metodología: {{ hallazgo.metodologia_analisis }}</p>{% endif %}
+            {% else %}
+            <p class="text-muted mb-0">Todavía no se ha registrado el análisis de causa raíz.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="mb-0">Acciones de mejora (CAPA)</h5>
+        <div class="d-flex gap-2">
+            <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalAccion"><i class="fa-solid fa-plus"></i> Nueva acción</button>
+            {% if hallazgo.estado != 'Cerrado' %}
+            <form method="post" action="/gestion-calidad/hallazgos/{{ hallazgo.id }}/cerrar">
+                <button type="submit" class="btn btn-success btn-sm"><i class="fa-solid fa-check"></i> Cerrar hallazgo</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-3">
+        {% for accion in hallazgo.acciones %}
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <span class="badge bg-info text-dark">{{ accion.tipo }}</span>
+                        <span class="badge {% if accion.estado == 'Verificado' %}bg-success{% elif accion.estado == 'No efectivo' %}bg-danger{% elif accion.estado == 'Ejecutado' %}bg-primary{% else %}bg-secondary{% endif %}">{{ accion.estado }}</span>
+                    </div>
+                    <p class="mt-2 mb-1">{{ accion.descripcion }}</p>
+                    <p class="small text-muted mb-1">Responsable: {% if accion.resp_nombre %}{{ accion.resp_nombre }} {{ accion.resp_apellido }}{% else %}Sin asignar{% endif %}</p>
+                    <p class="small text-muted mb-2">Fecha compromiso: {{ accion.fecha_compromiso }}{% if accion.fecha_ejecucion %} — Ejecutada: {{ accion.fecha_ejecucion }}{% endif %}</p>
+
+                    {% if accion.estado == 'Planeado' or accion.estado == 'En ejecución' %}
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEjecutar{{ accion.id }}">Marcar como ejecutada</button>
+                    {% elif accion.estado == 'Ejecutado' %}
+                    <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#modalVerificar{{ accion.id }}">Verificar eficacia</button>
+                    {% elif accion.verificacion_eficacia %}
+                    <p class="small mb-0"><strong>Verificación:</strong> {{ accion.verificacion_eficacia }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12"><div class="card shadow-sm"><div class="card-body text-center text-muted py-4">No hay acciones de mejora registradas todavía.</div></div></div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="modal fade" id="modalCausa" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/hallazgos/{{ hallazgo.id }}/causa-raiz">
+            <div class="modal-header"><h5 class="modal-title">Análisis de causa raíz</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Causa raíz identificada</label><textarea name="causa_raiz" class="form-control" rows="3" required></textarea></div>
+                <div class="mb-2">
+                    <label>Metodología de análisis</label>
+                    <select name="metodologia_analisis" class="form-select">
+                        <option value="">-- No especificar --</option>
+                        <option value="5 Porqués">5 Porqués</option>
+                        <option value="Ishikawa">Ishikawa (espina de pescado)</option>
+                        <option value="PHVA">PHVA</option>
+                        <option value="Análisis de causa raíz">Análisis de causa raíz (general)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar</button></div>
+        </form>
+    </div></div>
+</div>
+
+<div class="modal fade" id="modalAccion" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/hallazgos/{{ hallazgo.id }}/acciones/crear">
+            <div class="modal-header"><h5 class="modal-title">Nueva acción de mejora</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Tipo</label><select name="tipo" class="form-select" required>{% for t in tipos_accion %}<option value="{{ t }}">{{ t }}</option>{% endfor %}</select></div>
+                <div class="mb-2"><label>Descripción de la acción</label><textarea name="descripcion" class="form-control" rows="3" required></textarea></div>
+                <div class="mb-2">
+                    <label>Responsable</label>
+                    <select name="responsable_id" class="form-select">
+                        <option value="">-- Sin asignar --</option>
+                        {% for p in profesionales %}<option value="{{ p.id }}">{{ p.primer_nombre }} {{ p.primer_apellido }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2"><label>Fecha compromiso</label><input type="date" name="fecha_compromiso" class="form-control" required></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-success">Guardar</button></div>
+        </form>
+    </div></div>
+</div>
+
+{% for accion in hallazgo.acciones %}
+<div class="modal fade" id="modalEjecutar{{ accion.id }}" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/acciones/{{ accion.id }}/ejecutar">
+            <input type="hidden" name="hallazgo_id" value="{{ hallazgo.id }}">
+            <div class="modal-header"><h5 class="modal-title">Marcar acción como ejecutada</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Fecha de ejecución</label><input type="date" name="fecha_ejecucion" class="form-control" required></div>
+                <div class="mb-2"><label>Evidencia</label><textarea name="evidencia" class="form-control" rows="2"></textarea></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Guardar</button></div>
+        </form>
+    </div></div>
+</div>
+
+<div class="modal fade" id="modalVerificar{{ accion.id }}" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/acciones/{{ accion.id }}/verificar">
+            <input type="hidden" name="hallazgo_id" value="{{ hallazgo.id }}">
+            <div class="modal-header"><h5 class="modal-title">Verificar eficacia de la acción</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2">
+                    <label>¿La acción fue eficaz?</label>
+                    <select name="fue_eficaz" class="form-select" required>
+                        <option value="si">Sí, fue eficaz</option>
+                        <option value="no">No fue eficaz</option>
+                    </select>
+                </div>
+                <div class="mb-2"><label>Verificación / evidencia de la eficacia</label><textarea name="verificacion_eficacia" class="form-control" rows="3" required></textarea></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-success">Guardar</button></div>
+        </form>
+    </div></div>
+</div>
+{% endfor %}
+{% endblock %}

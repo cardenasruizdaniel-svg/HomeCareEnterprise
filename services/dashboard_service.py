@@ -412,6 +412,22 @@ class DashboardService:
         from services.trazabilidad_muestras_service import resumen_dashboard as _resumen_muestras
         muestras_pendientes = _resumen_muestras()["pendientes_entrega"]
 
+        # --- Calidad / PQR / Riesgos / Seguridad del paciente ---
+        # (modulos mas nuevos -- se protegen con try/except para
+        # que, si algo llegara a fallar ahi, el resto del
+        # dashboard gerencial siga funcionando igual)
+        try:
+            from services.calidad_avanzada_service import resumen_dashboard_calidad
+            resumen_calidad = resumen_dashboard_calidad()
+        except Exception:
+            resumen_calidad = {}
+
+        try:
+            from services.pqr_service import indicadores_pqr_siau
+            resumen_pqr = indicadores_pqr_siau()
+        except Exception:
+            resumen_pqr = {}
+
         return {
             "facturado_mes": facturado_mes, "facturado_mes_texto": self.formato_moneda(facturado_mes),
             "facturas_mes": facturas_mes, "tendencia_facturacion": tendencia_facturacion,
@@ -429,6 +445,14 @@ class DashboardService:
             "auditoria_errores_24h": auditoria_24h["errores"],
             "auditoria_advertencias_24h": auditoria_24h["advertencias"],
             "muestras_pendientes_entrega": muestras_pendientes,
+            "pqr_nuevas": resumen_pqr.get("nuevas", 0),
+            "pqr_vencidas": resumen_pqr.get("vencidas", 0),
+            "pqr_alto_riesgo": resumen_pqr.get("alto_riesgo", 0),
+            "pqr_abiertas": resumen_pqr.get("abiertas", 0),
+            "hallazgos_criticos": resumen_calidad.get("hallazgos_criticos", 0),
+            "acciones_vencidas": resumen_calidad.get("acciones_vencidas", 0),
+            "riesgos_altos": resumen_calidad.get("riesgos_altos", 0),
+            "eventos_seguridad_graves": resumen_calidad.get("eventos_seguridad_graves", 0),
         }
 
     def grafico_produccion_detallado(self):

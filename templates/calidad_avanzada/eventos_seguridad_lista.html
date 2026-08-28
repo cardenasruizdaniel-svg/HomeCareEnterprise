@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block titulo %}Seguridad del Paciente{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-shield-heart text-danger"></i> Seguridad del Paciente</h2>
+    <p class="text-muted">Eventos adversos, incidentes, eventos centinela y otras situaciones que afectan la seguridad del paciente.</p>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <button type="button" class="btn btn-danger mb-3" data-bs-toggle="modal" data-bs-target="#modalEvento"><i class="fa-solid fa-plus"></i> Reportar evento</button>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr><th>Tipo</th><th>Severidad</th><th>Paciente</th><th>Fecha</th><th>Estado</th></tr></thead>
+                <tbody>
+                    {% for e in eventos %}
+                    <tr class="cursor-pointer" onclick="window.location='/gestion-calidad/seguridad-paciente/{{ e.id }}'" style="cursor:pointer">
+                        <td>{{ e.tipo }}</td>
+                        <td><span class="badge {% if e.severidad == 'Centinela' %}bg-dark{% elif e.severidad == 'Grave' %}bg-danger{% elif e.severidad == 'Moderada' %}bg-warning text-dark{% else %}bg-secondary{% endif %}">{{ e.severidad }}</span></td>
+                        <td>{% if e.pac_nombre %}{{ e.pac_nombre }} {{ e.pac_apellido }}{% else %}—{% endif %}</td>
+                        <td>{{ e.fecha }}</td>
+                        <td><span class="badge {% if e.estado == 'Cerrado' %}bg-success{% else %}bg-primary{% endif %}">{{ e.estado }}</span></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">No hay eventos registrados todavía.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalEvento" tabindex="-1">
+    <div class="modal-dialog modal-lg"><div class="modal-content">
+        <form method="post" action="/gestion-calidad/seguridad-paciente/crear">
+            <div class="modal-header"><h5 class="modal-title">Reportar evento de seguridad del paciente</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="row g-2">
+                    <div class="col-md-6"><label>Tipo de evento</label><select name="tipo" class="form-select" required>{% for t in tipos %}<option value="{{ t }}">{{ t }}</option>{% endfor %}</select></div>
+                    <div class="col-md-6"><label>Severidad</label><select name="severidad" class="form-select" required>{% for s in severidades %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></div>
+                    <div class="col-md-6"><label>Fecha del evento</label><input type="date" name="fecha" class="form-control" required></div>
+                    <div class="col-md-6"><label>Servicio</label><input type="text" name="servicio" class="form-control"></div>
+                    <div class="col-md-6">
+                        <label>Paciente (si aplica)</label>
+                        <select name="paciente_id" class="form-select">
+                            <option value="">-- No aplica / sin especificar --</option>
+                            {% for p in pacientes %}<option value="{{ p.id }}">{{ p.primer_nombre }} {{ p.primer_apellido }} — {{ p.documento }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label>Profesional relacionado</label>
+                        <select name="profesional_id" class="form-select">
+                            <option value="">-- Sin especificar --</option>
+                            {% for p in profesionales %}<option value="{{ p.id }}">{{ p.primer_nombre }} {{ p.primer_apellido }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12"><label>Descripción del evento</label><textarea name="descripcion" class="form-control" rows="3" required></textarea></div>
+                    <div class="col-12"><label>Acciones inmediatas tomadas</label><textarea name="acciones_inmediatas" class="form-control" rows="2"></textarea></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-danger">Reportar evento</button></div>
+        </form>
+    </div></div>
+</div>
+{% endblock %}

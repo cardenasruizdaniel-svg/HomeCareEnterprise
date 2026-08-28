@@ -1046,6 +1046,418 @@ class MigrationManager:
 
         return cambios
 
+    def migrar_calidad_avanzada(self):
+        """
+        Sistema Integral de Gestión de Calidad -- Fase 1:
+        Motor de Normatividad configurable, PAMEC, Auditorías
+        de Calidad, Hallazgos/No Conformidades, y Acciones de
+        Mejora (CAPA: correctivas, preventivas, de mejora).
+
+        Se deja aparte de 'calidad_pqr'/'calidad_planificacion'
+        (que ya existían y se siguen usando) -- este es un
+        sistema nuevo y más completo, no un reemplazo.
+
+        El Motor de Normatividad es deliberadamente genérico
+        (no hardcodea ninguna resolución específica) porque la
+        norma de habilitación cambió de la Resolución 3100/2019
+        a la 1732/2026 mientras se construía este módulo -- la
+        arquitectura debe sobrevivir al próximo cambio normativo
+        sin tener que reescribir tablas ni código.
+        """
+        cambios = []
+
+        if not self.existe_tabla("normas_regulatorias"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS normas_regulatorias(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    tipo TEXT NOT NULL,
+                    numero TEXT NOT NULL,
+                    anio INTEGER NOT NULL,
+                    entidad_emisora TEXT,
+                    titulo TEXT NOT NULL,
+                    fecha_expedicion TEXT,
+                    fecha_vigencia_desde TEXT,
+                    fecha_vigencia_hasta TEXT,
+                    estado TEXT DEFAULT 'Vigente',
+                    norma_que_deroga TEXT,
+                    procesos_afectados TEXT,
+                    requisitos TEXT,
+                    evidencias_requeridas TEXT,
+                    responsable_id INTEGER,
+                    frecuencia_revision TEXT,
+                    observaciones TEXT,
+                    activo INTEGER DEFAULT 1,
+                    usuario_creacion INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(responsable_id) REFERENCES profesionales(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla normas_regulatorias")
+
+        if not self.existe_tabla("pamec_ciclos"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS pamec_ciclos(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nombre TEXT NOT NULL,
+                    periodo_desde TEXT NOT NULL,
+                    periodo_hasta TEXT NOT NULL,
+                    objetivos TEXT,
+                    alcance TEXT,
+                    criterios_priorizacion TEXT,
+                    estado TEXT DEFAULT 'Planeado',
+                    responsable_id INTEGER,
+                    norma_id INTEGER,
+                    usuario_creacion INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(responsable_id) REFERENCES profesionales(id),
+                    FOREIGN KEY(norma_id) REFERENCES normas_regulatorias(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla pamec_ciclos")
+
+        if not self.existe_tabla("pamec_procesos_priorizados"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS pamec_procesos_priorizados(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ciclo_id INTEGER NOT NULL,
+                    proceso TEXT NOT NULL,
+                    riesgo_identificado TEXT,
+                    indicador TEXT,
+                    meta TEXT,
+                    responsable_id INTEGER,
+                    resultado TEXT,
+                    porcentaje_cumplimiento REAL,
+                    brecha TEXT,
+                    analisis TEXT,
+                    estado TEXT DEFAULT 'Planeado',
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(ciclo_id) REFERENCES pamec_ciclos(id),
+                    FOREIGN KEY(responsable_id) REFERENCES profesionales(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla pamec_procesos_priorizados")
+
+        if not self.existe_tabla("auditorias_calidad"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS auditorias_calidad(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ciclo_pamec_id INTEGER,
+                    tipo TEXT NOT NULL,
+                    proceso TEXT NOT NULL,
+                    servicio TEXT,
+                    auditor_id INTEGER,
+                    auditado_id INTEGER,
+                    fecha TEXT NOT NULL,
+                    objetivo TEXT,
+                    alcance TEXT,
+                    criterios TEXT,
+                    norma_id INTEGER,
+                    resultado_general TEXT,
+                    porcentaje_cumplimiento REAL,
+                    observaciones TEXT,
+                    estado TEXT DEFAULT 'Planeada',
+                    usuario_creacion INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(ciclo_pamec_id) REFERENCES pamec_ciclos(id),
+                    FOREIGN KEY(auditor_id) REFERENCES profesionales(id),
+                    FOREIGN KEY(auditado_id) REFERENCES profesionales(id),
+                    FOREIGN KEY(norma_id) REFERENCES normas_regulatorias(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla auditorias_calidad")
+
+        if not self.existe_tabla("hallazgos_calidad"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS hallazgos_calidad(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    auditoria_id INTEGER,
+                    fuente TEXT DEFAULT 'Auditoría',
+                    clasificacion TEXT NOT NULL,
+                    proceso TEXT NOT NULL,
+                    servicio TEXT,
+                    fecha TEXT NOT NULL,
+                    descripcion TEXT NOT NULL,
+                    evidencia TEXT,
+                    norma_id INTEGER,
+                    responsable_id INTEGER,
+                    riesgo TEXT,
+                    causa_raiz TEXT,
+                    metodologia_analisis TEXT,
+                    estado TEXT DEFAULT 'Abierto',
+                    fecha_limite TEXT,
+                    usuario_creacion INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(auditoria_id) REFERENCES auditorias_calidad(id),
+                    FOREIGN KEY(norma_id) REFERENCES normas_regulatorias(id),
+                    FOREIGN KEY(responsable_id) REFERENCES profesionales(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla hallazgos_calidad")
+
+        if not self.existe_tabla("acciones_mejora"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS acciones_mejora(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    hallazgo_id INTEGER,
+                    tipo TEXT NOT NULL DEFAULT 'Correctiva',
+                    descripcion TEXT NOT NULL,
+                    responsable_id INTEGER,
+                    fecha_compromiso TEXT,
+                    fecha_ejecucion TEXT,
+                    evidencia TEXT,
+                    estado TEXT DEFAULT 'Planeado',
+                    verificacion_eficacia TEXT,
+                    fecha_verificacion TEXT,
+                    verificado_por_id INTEGER,
+                    usuario_creacion INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(hallazgo_id) REFERENCES hallazgos_calidad(id),
+                    FOREIGN KEY(responsable_id) REFERENCES profesionales(id),
+                    FOREIGN KEY(verificado_por_id) REFERENCES profesionales(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla acciones_mejora")
+
+        if not self.existe_tabla("matriz_riesgos"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS matriz_riesgos(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    proceso TEXT NOT NULL,
+                    riesgo TEXT NOT NULL,
+                    causa TEXT,
+                    consecuencia TEXT,
+                    probabilidad TEXT NOT NULL,
+                    impacto TEXT NOT NULL,
+                    nivel_inherente TEXT,
+                    controles TEXT,
+                    responsable_id INTEGER,
+                    riesgo_residual TEXT,
+                    tratamiento TEXT,
+                    accion TEXT,
+                    fecha_identificacion TEXT NOT NULL,
+                    estado TEXT DEFAULT 'Identificado',
+                    usuario_creacion INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(responsable_id) REFERENCES profesionales(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla matriz_riesgos")
+
+        if not self.existe_tabla("eventos_seguridad_paciente"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS eventos_seguridad_paciente(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    paciente_id INTEGER,
+                    servicio TEXT,
+                    profesional_id INTEGER,
+                    fecha TEXT NOT NULL,
+                    tipo TEXT NOT NULL,
+                    severidad TEXT NOT NULL,
+                    descripcion TEXT NOT NULL,
+                    acciones_inmediatas TEXT,
+                    analisis TEXT,
+                    causa_raiz TEXT,
+                    plan_mejora TEXT,
+                    seguimiento TEXT,
+                    fecha_cierre TEXT,
+                    estado TEXT DEFAULT 'Reportado',
+                    hallazgo_id INTEGER,
+                    usuario_creacion INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
+                    FOREIGN KEY(profesional_id) REFERENCES profesionales(id),
+                    FOREIGN KEY(hallazgo_id) REFERENCES hallazgos_calidad(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla eventos_seguridad_paciente")
+
+        return cambios
+
+    def migrar_pqr_siau_completo(self):
+        """
+        Evoluciona 'calidad_pqr' (que ya existía, con lo básico:
+        tipo/asunto/descripción/prioridad/estado/responsable) a
+        un verdadero sistema PQR/SIAU: radicado único, datos del
+        solicitante (que puede ser el paciente, un familiar, un
+        acudiente, o cualquier otra persona -- no siempre es el
+        paciente quien presenta la PQR), canal de origen,
+        clasificación de riesgo, fecha límite de respuesta, área
+        responsable, y una tabla de línea de tiempo aparte para
+        no perder el historial completo de cada cambio.
+
+        No se crea una tabla PQR nueva -- se EXTIENDE la que ya
+        existía, para no duplicar el concepto ni perder los
+        datos que ya se hubieran registrado ahí.
+        """
+        cambios = []
+
+        columnas_nuevas = {
+            "radicado": "radicado TEXT",
+            "solicitante_es_paciente": "solicitante_es_paciente INTEGER DEFAULT 1",
+            "solicitante_relacion": "solicitante_relacion TEXT",
+            "solicitante_nombre": "solicitante_nombre TEXT",
+            "solicitante_documento": "solicitante_documento TEXT",
+            "solicitante_telefono": "solicitante_telefono TEXT",
+            "solicitante_correo": "solicitante_correo TEXT",
+            "canal": "canal TEXT DEFAULT 'Presencial/Interno'",
+            "riesgo": "riesgo TEXT DEFAULT 'Normal'",
+            "area_responsable": "area_responsable TEXT",
+            "fecha_limite": "fecha_limite TEXT",
+            "medio_respuesta": "medio_respuesta TEXT",
+            "clave_seguimiento": "clave_seguimiento TEXT",
+        }
+        for nombre_columna, definicion in columnas_nuevas.items():
+            if self.agregar_columna("calidad_pqr", definicion):
+                cambios.append(f"Se agregó la columna '{nombre_columna}' a calidad_pqr")
+
+        if not self.existe_tabla("pqr_eventos"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS pqr_eventos(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    pqr_id INTEGER NOT NULL,
+                    tipo_evento TEXT NOT NULL,
+                    descripcion TEXT,
+                    area_anterior TEXT,
+                    area_nueva TEXT,
+                    usuario_id INTEGER,
+                    fecha TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(pqr_id) REFERENCES calidad_pqr(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla pqr_eventos")
+
+        return cambios
+
+    def migrar_portal_web(self):
+        """
+        Contenido configurable del portal web público -- para
+        que el "Inicio", "Servicios", "Nosotros" y "Contacto"
+        de la página pública se administren desde dentro del
+        sistema, sin tener que tocar código ni templates cada
+        vez que cambie un texto, un teléfono, o la lista de
+        servicios que se ofrecen.
+        """
+        cambios = []
+
+        if not self.existe_tabla("configuracion_web"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS configuracion_web(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    hero_titulo TEXT DEFAULT 'Bienestar y cuidado en casa',
+                    hero_subtitulo TEXT DEFAULT 'Atención integral, humana y profesional directamente en su hogar.',
+                    historia TEXT,
+                    mision TEXT,
+                    vision TEXT,
+                    valores TEXT,
+                    telefono TEXT,
+                    whatsapp TEXT,
+                    correo TEXT,
+                    direccion TEXT,
+                    horarios TEXT,
+                    facebook TEXT,
+                    instagram TEXT,
+                    tiktok TEXT,
+                    youtube TEXT,
+                    linkedin TEXT,
+                    fecha_actualizacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    usuario_actualizacion INTEGER
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla configuracion_web")
+
+        # Columnas agregadas después de la primera versión de esta
+        # tabla -- con ALTER TABLE, para que también lleguen a
+        # instalaciones que ya tenían configuracion_web creada.
+        for nombre_columna, definicion in {
+            "nit": "nit TEXT",
+            "enlace_pagos": "enlace_pagos TEXT",
+            "hero_imagen": "hero_imagen TEXT",
+            "experiencia_imagen": "experiencia_imagen TEXT",
+        }.items():
+            if self.agregar_columna("configuracion_web", definicion):
+                cambios.append(f"Se agregó la columna '{nombre_columna}' a configuracion_web")
+
+        if not self.existe_tabla("servicios_web"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS servicios_web(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nombre TEXT NOT NULL,
+                    descripcion TEXT,
+                    icono TEXT DEFAULT 'fa-solid fa-house-medical',
+                    orden INTEGER DEFAULT 0,
+                    activo INTEGER DEFAULT 1,
+                    usuario_creacion INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla servicios_web")
+
+        return cambios
+
+    def migrar_supervision_toma_muestras(self):
+        """
+        Versión digital de la 'Lista de Supervisión Toma de
+        Muestras' que ya usa el equipo en papel -- mismos 3
+        bloques y 20 puntos exactos (identificación del
+        paciente, datos demográficos, técnica de la toma), para
+        que un supervisor/auditor la diligencie desde el
+        sistema y quede con historial, en vez de en papel suelto.
+        """
+        cambios = []
+
+        if not self.existe_tabla("supervision_muestras"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS supervision_muestras(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    fecha TEXT NOT NULL,
+                    punto_toma TEXT NOT NULL,
+                    auxiliar_supervisado_id INTEGER,
+                    auxiliar_supervisado_nombre TEXT,
+                    responsable_auditoria_id INTEGER,
+                    cargo_responsable TEXT,
+                    hora_inicio TEXT,
+                    hora_fin TEXT,
+                    muestra_id INTEGER,
+                    porcentaje_cumplimiento REAL,
+                    observaciones_generales TEXT,
+                    usuario_creacion INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(auxiliar_supervisado_id) REFERENCES profesionales(id),
+                    FOREIGN KEY(responsable_auditoria_id) REFERENCES profesionales(id),
+                    FOREIGN KEY(muestra_id) REFERENCES trazabilidad_muestras(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla supervision_muestras")
+
+        if not self.existe_tabla("supervision_muestras_items"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS supervision_muestras_items(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    supervision_id INTEGER NOT NULL,
+                    seccion TEXT NOT NULL,
+                    codigo_item TEXT NOT NULL,
+                    respuesta TEXT NOT NULL DEFAULT 'N/A',
+                    observaciones TEXT,
+                    FOREIGN KEY(supervision_id) REFERENCES supervision_muestras(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla supervision_muestras_items")
+
+        return cambios
+
     def migrar_recomendaciones_examenes(self):
         """
         Documentos con las indicaciones que debe seguir el
@@ -3047,6 +3459,22 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_recomendaciones_examenes()
+        )
+
+        cambios.extend(
+            self.migrar_calidad_avanzada()
+        )
+
+        cambios.extend(
+            self.migrar_pqr_siau_completo()
+        )
+
+        cambios.extend(
+            self.migrar_portal_web()
+        )
+
+        cambios.extend(
+            self.migrar_supervision_toma_muestras()
         )
 
         cambios.extend(
