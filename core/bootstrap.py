@@ -152,7 +152,15 @@ def crear_usuario_admin():
 
         if necesita_reparacion:
 
-            password_cifrada = AuthService.generar_hash("admin123")
+            # Si además se define NUEVA_PASSWORD_ADMIN, se usa esa
+            # clave directamente en vez de "admin123" -- útil
+            # cuando la pantalla de Usuarios no deja editar la
+            # cuenta admin, así se puede poner la clave definitiva
+            # de una sola vez, sin pasos intermedios.
+            password_personalizada = _os_recuperacion.environ.get("NUEVA_PASSWORD_ADMIN", "").strip()
+            password_a_usar = password_personalizada if password_personalizada else "admin123"
+
+            password_cifrada = AuthService.generar_hash(password_a_usar)
 
             cursor.execute(
                 "UPDATE usuarios SET password=? WHERE usuario='admin'",
@@ -161,7 +169,9 @@ def crear_usuario_admin():
 
             conexion.commit()
 
-            if recuperacion_solicitada:
+            if recuperacion_solicitada and password_personalizada:
+                print("[OK] Se estableció la contraseña del administrador a la clave personalizada indicada en NUEVA_PASSWORD_ADMIN. Recuerde quitar AMBAS variables de entorno (RESETEAR_PASSWORD_ADMIN y NUEVA_PASSWORD_ADMIN) después de recuperar el acceso.")
+            elif recuperacion_solicitada:
                 print("[OK] Se restableció la contraseña del administrador a 'admin123' porque se pidió explícitamente con RESETEAR_PASSWORD_ADMIN=true. Recuerde quitar esa variable de entorno después de recuperar el acceso.")
             else:
                 print("[OK] Se reparó la contraseña del administrador (estaba guardada en un formato no válido). Ahora es 'admin123'.")
