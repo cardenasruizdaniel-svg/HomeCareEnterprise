@@ -157,3 +157,76 @@ async def consultar_seguimiento(request: Request, radicado: str = Form(...), cla
         request=request, name="portal/pqr_seguimiento.html",
         context={"resultado": resultado, "error": None},
     )
+
+
+# ==========================================================
+# TURNERO -- solicitar y consultar turno desde el portal público
+# ==========================================================
+
+from services import turnero_service as turnero
+
+
+@router.get("/turno", response_class=HTMLResponse)
+async def turno_formulario(request: Request):
+    return templates.TemplateResponse(
+        request=request, name="portal/turno_formulario.html",
+        context={"servicios": turnero.listar_servicios(solo_activos=True), "error": request.query_params.get("error")},
+    )
+
+
+@router.post("/turno/solicitar")
+async def turno_solicitar(
+    servicio_id: int = Form(...), documento: str = Form(...),
+    nombre_visitante: str = Form(""), fecha_nacimiento: str = Form(""),
+):
+    try:
+        turno = turnero.crear_turno(
+            {
+                "servicio_id": servicio_id, "documento": documento,
+                "nombre_visitante": nombre_visitante or None, "fecha_nacimiento": fecha_nacimiento or None,
+            },
+            canal="Web",
+        )
+    except ValueError as error:
+        return RedirectResponse(url=f"/portal/turno?error={error}", status_code=303)
+    return RedirectResponse(
+        url=f"/portal/turno/confirmacion?numero={turno['numero_completo']}&documento={documento}",
+        status_code=303,
+    )
+
+
+@router.get("/turno/confirmacion", response_class=HTMLResponse)
+async def turno_confirmacion(request: Request):
+    numero = request.query_params.get("numero")
+    documento = request.query_params.get("documento")
+    if not numero or not documento:
+        raise HTTPException(status_code=404, detail="No se encontró la confirmación solicitada.")
+    resultado = turnero.consultar_estado_publico(numero, documento)
+    if not resultado:
+        raise HTTPException(status_code=404, detail="No se encontró el turno solicitado.")
+    return templates.TemplateResponse(
+        request=request, name="portal/turno_confirmacion.html",
+        context={"turno": resultado, "documento": documento},
+    )
+
+
+@router.get("/turno/consultar", response_class=HTMLResponse)
+async def turno_consultar_formulario(request: Request):
+    return templates.TemplateResponse(
+        request=request, name="portal/turno_consultar.html",
+        context={"resultado": None, "error": request.query_params.get("error")},
+    )
+
+
+@router.post("/turno/consultar", response_class=HTMLResponse)
+async def turno_consultar_resultado(request: Request, numero: str = Form(...), documento: str = Form(...)):
+    resultado = turnero.consultar_estado_publico(numero, documento)
+    if not resultado:
+        return templates.TemplateResponse(
+            request=request, name="portal/turno_consultar.html",
+            context={"resultado": None, "error": "No se encontró ningún turno con ese número y ese documento. Verifique que estén escritos correctamente."},
+        )
+    return templates.TemplateResponse(
+        request=request, name="portal/turno_consultar.html",
+        context={"resultado": resultado, "error": None},
+    )

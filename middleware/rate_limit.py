@@ -30,6 +30,7 @@ REGLAS_ESTRICTAS = [
     ("/login", 10, 60),
     ("/api/movil/login", 10, 60),
     ("/portal/pqr/enviar", 5, 300),
+    ("/portal/turno/solicitar", 8, 300),
 ]
 LIMITE_GENERAL = 300
 VENTANA_GENERAL_SEGUNDOS = 60

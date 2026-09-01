@@ -1,0 +1,39 @@
+{% extends "portal/base_publica.html" %}
+{% block titulo %}Tu turno — HomeCare del Quindío{% endblock %}
+{% block contenido %}
+<section class="py-5">
+<div class="container reveal" style="max-width: 640px;">
+<div class="card portal-card border-0">
+    <div class="card-body p-4 p-md-5 text-center">
+        <p class="text-muted mb-1">Tu turno es</p>
+        <div class="display-2 fw-bold mb-2" style="color:{{ turno.servicio_color }}">{{ turno.numero_completo }}</div>
+        <p class="fs-5 mb-1">{{ turno.servicio_nombre }}</p>
+
+        {% if turno.prioridad %}
+        <span class="badge fs-6" style="background:var(--hc-magenta)">🔵 Turno prioritario</span>
+        {% endif %}
+
+        <div class="row g-3 my-4">
+            <div class="col-6">
+                <div class="border rounded p-3">
+                    <div class="small" style="color:var(--hc-muted)">Estado</div>
+                    <div class="fw-bold" style="color:var(--hc-teal)">🟢 {{ turno.estado }}</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="border rounded p-3">
+                    <div class="small" style="color:var(--hc-muted)">Personas antes</div>
+                    <div class="fw-bold">{{ turno.posicion if turno.posicion is not none else "—" }}</div>
+                </div>
+            </div>
+        </div>
+
+        <p class="small" style="color:var(--hc-muted)">Guarde su número de documento — lo necesitará para consultar el estado de su turno.</p>
+
+        <a href="/portal/turno/consultar" class="btn-hc-secundario text-decoration-none">Consultar mi turno</a>
+        <a href="/portal" class="btn-hc-primario text-decoration-none">Volver al inicio</a>
+    </div>
+</div>
+</div>
+</section>
+{% endblock %}

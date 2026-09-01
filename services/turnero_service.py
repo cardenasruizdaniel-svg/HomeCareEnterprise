@@ -461,6 +461,39 @@ def resumen_dashboard():
     return {k: (r.get(k) or 0) for k in ("total_hoy", "en_espera", "en_atencion", "atendidos", "no_presentados", "prioritarios", "normales")}
 
 
+def consultar_estado_publico(numero_completo: str, documento: str):
+    """
+    Para la página pública "Consulta tu turno" -- el paciente
+    ingresa el número de turno y su documento (los dos, para no
+    permitir que cualquiera consulte cualquier turno solo
+    adivinando el número). No expone datos clínicos, solo el
+    estado administrativo del turno.
+    """
+    fila = consultar_uno(
+        """
+        SELECT t.*, s.nombre AS servicio_nombre, s.color AS servicio_color, m.nombre AS modulo_nombre
+        FROM turnero_turnos t
+        JOIN turnero_servicios s ON s.id = t.servicio_id
+        LEFT JOIN turnero_modulos m ON m.id = t.modulo_id
+        WHERE t.numero_completo=? AND t.documento=? AND t.fecha=?
+        """,
+        (numero_completo.strip().upper(), documento.strip(), _hoy()),
+    )
+    if not fila:
+        return None
+
+    turno = dict(fila)
+    return {
+        "numero_completo": turno["numero_completo"],
+        "servicio_nombre": turno["servicio_nombre"],
+        "servicio_color": turno["servicio_color"],
+        "estado": turno["estado"],
+        "prioridad": bool(turno["prioridad"]),
+        "modulo_nombre": turno["modulo_nombre"],
+        "posicion": posicion_en_cola(turno["id"]) if turno["estado"] == "En espera" else None,
+    }
+
+
 def sembrar_ejemplo(usuario_id=None) -> dict:
     """
     Servicios y módulos de ejemplo, para poder probar el
