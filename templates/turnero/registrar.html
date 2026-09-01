@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block titulo %}Registrar Turno{% endblock %}
+{% block contenido %}
+<div class="container-fluid" style="max-width: 640px;">
+    <a href="/turnero" class="text-decoration-none small">&larr; Volver al Turnero</a>
+    <h2 class="mt-2 mb-1"><i class="fa-solid fa-plus text-primary"></i> Registrar Turno</h2>
+    <p class="text-muted">Para un paciente que llega presencialmente y solicita turno.</p>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    {% if turno_creado %}
+    <div class="card shadow border-success">
+        <div class="card-body text-center p-4">
+            <p class="text-muted mb-1">Su turno es</p>
+            <div class="display-3 fw-bold" style="color:{{ turno_creado.servicio_color }}">{{ turno_creado.numero_completo }}</div>
+            <p class="mb-1">{{ turno_creado.servicio_nombre }}</p>
+            {% if turno_creado.prioridad %}<span class="badge bg-warning text-dark">Turno prioritario — {{ turno_creado.motivo_prioridad }}</span>{% endif %}
+            <hr>
+            <a href="/turnero/registrar" class="btn btn-success">Registrar otro turno</a>
+        </div>
+    </div>
+    {% else %}
+    <div class="card shadow">
+        <div class="card-body">
+            <form method="post" action="/turnero/registrar">
+                <div class="mb-3">
+                    <label>Servicio</label>
+                    <select name="servicio_id" class="form-select" required>
+                        <option value="">-- Seleccionar --</option>
+                        {% for s in servicios %}<option value="{{ s.id }}">{{ s.nombre }} ({{ s.prefijo }})</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label>Número de documento</label>
+                    <input type="text" name="documento" class="form-control" required autofocus>
+                    <small class="text-muted">Si el paciente ya existe en el sistema, se usan sus datos automáticamente.</small>
+                </div>
+                <div class="mb-3">
+                    <label>Nombre completo (solo si es visitante nuevo)</label>
+                    <input type="text" name="nombre_visitante" class="form-control">
+                </div>
+                <div class="mb-3">
+                    <label>Fecha de nacimiento (solo si es visitante nuevo)</label>
+                    <input type="date" name="fecha_nacimiento" class="form-control">
+                    <small class="text-muted">Se usa para calcular la prioridad automáticamente (60 años o más).</small>
+                </div>
+                <button type="submit" class="btn btn-success btn-lg w-100">Generar Turno</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

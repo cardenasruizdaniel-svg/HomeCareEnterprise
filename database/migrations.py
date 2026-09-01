@@ -1458,6 +1458,126 @@ class MigrationManager:
 
         return cambios
 
+    def migrar_turnero(self):
+        """
+        Módulo Turnero HomeCare -- fila de espera con numerador,
+        para consultorios/ventanillas/salas, con prioridad
+        automática por edad y llamados. Se usa el prefijo
+        "turnero_" en TODAS las tablas nuevas a propósito -- ya
+        existía un módulo distinto llamado "turnos" (horarios de
+        trabajo del personal), y esto es un concepto totalmente
+        diferente (fila de espera física), así que no deben
+        confundirse ni chocar entre sí.
+        """
+        cambios = []
+
+        if not self.existe_tabla("turnero_servicios"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS turnero_servicios(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nombre TEXT NOT NULL,
+                    codigo TEXT,
+                    descripcion TEXT,
+                    color TEXT DEFAULT '#00A19B',
+                    icono TEXT DEFAULT 'fa-solid fa-user-doctor',
+                    prefijo TEXT NOT NULL,
+                    tiempo_promedio_minutos INTEGER DEFAULT 15,
+                    permite_prioridad INTEGER DEFAULT 1,
+                    orden INTEGER DEFAULT 0,
+                    activo INTEGER DEFAULT 1,
+                    usuario_creacion INTEGER,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla turnero_servicios")
+
+        if not self.existe_tabla("turnero_modulos"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS turnero_modulos(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nombre TEXT NOT NULL,
+                    codigo TEXT,
+                    tipo TEXT NOT NULL DEFAULT 'Consultorio',
+                    servicio_id INTEGER,
+                    usuario_asignado_id INTEGER,
+                    descripcion TEXT,
+                    activo INTEGER DEFAULT 1,
+                    fecha_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(servicio_id) REFERENCES turnero_servicios(id),
+                    FOREIGN KEY(usuario_asignado_id) REFERENCES usuarios(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla turnero_modulos")
+
+        if not self.existe_tabla("turnero_turnos"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS turnero_turnos(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    numero_completo TEXT NOT NULL,
+                    numero INTEGER NOT NULL,
+                    servicio_id INTEGER NOT NULL,
+                    paciente_id INTEGER,
+                    documento TEXT,
+                    nombre_visitante TEXT,
+                    fecha_nacimiento TEXT,
+                    prioridad INTEGER DEFAULT 0,
+                    motivo_prioridad TEXT,
+                    canal TEXT NOT NULL DEFAULT 'Presencial',
+                    estado TEXT NOT NULL DEFAULT 'En espera',
+                    modulo_id INTEGER,
+                    usuario_operador_id INTEGER,
+                    fecha TEXT NOT NULL,
+                    hora_creacion TEXT DEFAULT CURRENT_TIMESTAMP,
+                    hora_llamado TEXT,
+                    hora_inicio_atencion TEXT,
+                    hora_fin TEXT,
+                    veces_llamado INTEGER DEFAULT 0,
+                    transferido_de_turno_id INTEGER,
+                    FOREIGN KEY(servicio_id) REFERENCES turnero_servicios(id),
+                    FOREIGN KEY(paciente_id) REFERENCES pacientes(id),
+                    FOREIGN KEY(modulo_id) REFERENCES turnero_modulos(id),
+                    FOREIGN KEY(usuario_operador_id) REFERENCES usuarios(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla turnero_turnos")
+
+        if not self.existe_tabla("turnero_eventos"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS turnero_eventos(
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    turno_id INTEGER NOT NULL,
+                    tipo_evento TEXT NOT NULL,
+                    detalle TEXT,
+                    usuario_id INTEGER,
+                    modulo_id INTEGER,
+                    fecha TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY(turno_id) REFERENCES turnero_turnos(id)
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla turnero_eventos")
+
+        if not self.existe_tabla("turnero_configuracion"):
+            self.connection.executescript("""
+                CREATE TABLE IF NOT EXISTS turnero_configuracion(
+                    id INTEGER PRIMARY KEY CHECK (id = 1),
+                    nombre TEXT DEFAULT 'Turnero HomeCare',
+                    normales_por_prioritario INTEGER DEFAULT 2,
+                    edad_prioridad INTEGER DEFAULT 60,
+                    reinicio_numeracion TEXT DEFAULT 'Diario',
+                    mensaje_voz TEXT DEFAULT 'Turno {TURNO}, {PACIENTE}, diríjase a {MODULO}.',
+                    volumen INTEGER DEFAULT 80,
+                    timbre_activo INTEGER DEFAULT 1
+                );
+            """)
+            self.connection.commit()
+            cambios.append("Se creó la tabla turnero_configuracion")
+
+        return cambios
+
     def migrar_recomendaciones_examenes(self):
         """
         Documentos con las indicaciones que debe seguir el
@@ -3475,6 +3595,10 @@ class MigrationManager:
 
         cambios.extend(
             self.migrar_supervision_toma_muestras()
+        )
+
+        cambios.extend(
+            self.migrar_turnero()
         )
 
         cambios.extend(

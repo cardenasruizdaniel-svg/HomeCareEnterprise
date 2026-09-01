@@ -54,3 +54,4 @@
 {"fecha": "2026-08-21T13:39:41.609590", "usuario": "sistema", "accion": "CREAR", "modulo": "PACIENTES", "registro": "1002", "resultado": "OK"}
 {"fecha": "2026-08-21T13:39:41.738472", "usuario": "sistema", "accion": "CREAR", "modulo": "PACIENTES", "registro": "1003", "resultado": "OK"}
 {"fecha": "2026-08-21T13:40:14.039483", "usuario": "sistema", "accion": "CREAR", "modulo": "PACIENTES", "registro": "1001", "resultado": "OK"}
+{"fecha": "2026-09-01T14:12:33.326959", "usuario": "sistema", "accion": "CREAR", "modulo": "PACIENTES", "registro": "800555", "resultado": "OK"}

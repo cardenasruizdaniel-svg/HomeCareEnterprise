@@ -314,6 +314,14 @@ def iniciar_sistema():
     except Exception as error:
         print(f"[AVISO] No se pudo sembrar los servicios del Portal Web: {error}")
 
+    try:
+        from services.turnero_service import sembrar_ejemplo
+        resultado_turnero = sembrar_ejemplo()
+        if resultado_turnero["servicios"]:
+            print(f"[OK] Turnero: se registraron {len(resultado_turnero['servicios'])} servicio(s) y {len(resultado_turnero['modulos'])} módulo(s) de ejemplo.")
+    except Exception as error:
+        print(f"[AVISO] No se pudo sembrar los servicios de ejemplo del Turnero: {error}")
+
     print()
 
     print("[OK] Sistema listo.")

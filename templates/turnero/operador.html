@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block titulo %}{{ modulo.nombre }} — Turnero{% endblock %}
+{% block contenido %}
+<div class="container-fluid" style="max-width: 720px;">
+    <a href="/turnero" class="text-decoration-none small">&larr; Volver al Turnero</a>
+    <h2 class="mt-2 mb-1">{{ modulo.nombre }}</h2>
+    <p class="text-muted">{{ modulo.servicio_nombre or "Cualquier servicio" }} — {{ en_espera }} en espera</p>
+
+    {% if request.query_params.get('error') %}<div class="alert alert-danger">{{ request.query_params.get('error') }}</div>{% endif %}
+
+    <div class="card shadow mb-3">
+        <div class="card-body text-center p-4">
+            {% if turno_actual %}
+                <p class="text-muted mb-1">Turno actual</p>
+                <div class="display-2 fw-bold" style="color:{{ turno_actual.servicio_color }}">{{ turno_actual.numero_completo }}</div>
+                <p class="fs-4 mb-1">{{ turno_actual.nombre_visitante }}</p>
+                {% if turno_actual.prioridad %}<span class="badge bg-warning text-dark mb-2">Prioritario — {{ turno_actual.motivo_prioridad }}</span><br>{% endif %}
+                <span class="badge bg-info text-dark">{{ turno_actual.estado }}</span>
+
+                <div class="d-flex flex-wrap justify-content-center gap-2 mt-4">
+                    <form method="post" action="/turnero/operador/{{ modulo.id }}/rellamar/{{ turno_actual.id }}">
+                        <button type="submit" class="btn btn-outline-primary btn-lg"><i class="fa-solid fa-bell"></i> Re-llamar</button>
+                    </form>
+                    {% if turno_actual.estado == 'Llamado' %}
+                    <form method="post" action="/turnero/operador/{{ modulo.id }}/iniciar-atencion/{{ turno_actual.id }}">
+                        <button type="submit" class="btn btn-outline-info btn-lg"><i class="fa-solid fa-play"></i> Iniciar Atención</button>
+                    </form>
+                    {% endif %}
+                    <form method="post" action="/turnero/operador/{{ modulo.id }}/finalizar/{{ turno_actual.id }}">
+                        <button type="submit" class="btn btn-success btn-lg"><i class="fa-solid fa-check"></i> Finalizar</button>
+                    </form>
+                    <form method="post" action="/turnero/operador/{{ modulo.id }}/no-presentado/{{ turno_actual.id }}">
+                        <button type="submit" class="btn btn-outline-danger btn-lg"><i class="fa-solid fa-user-slash"></i> No Presentado</button>
+                    </form>
+                    <button type="button" class="btn btn-outline-secondary btn-lg" data-bs-toggle="modal" data-bs-target="#modalTransferir"><i class="fa-solid fa-arrow-right-arrow-left"></i> Transferir</button>
+                </div>
+            {% else %}
+                <p class="text-muted py-4">No hay ningún turno en atención en este momento.</p>
+                <form method="post" action="/turnero/operador/{{ modulo.id }}/llamar-siguiente">
+                    <input type="hidden" name="servicio_id" value="{{ modulo.servicio_id }}">
+                    <button type="submit" class="btn btn-success btn-lg px-5" {% if not modulo.servicio_id %}disabled{% endif %}>
+                        <i class="fa-solid fa-forward"></i> Llamar Siguiente
+                    </button>
+                </form>
+                {% if not modulo.servicio_id %}<p class="small text-danger mt-2">Este módulo no tiene un servicio asignado — asígnelo en Módulos de Atención.</p>{% endif %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalTransferir" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/turnero/operador/{{ modulo.id }}/transferir/{{ turno_actual.id if turno_actual else 0 }}">
+            <div class="modal-header"><h5 class="modal-title">Transferir turno</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <label>Transferir a</label>
+                <select name="nuevo_servicio_id" class="form-select" required>
+                    {% for s in servicios %}<option value="{{ s.id }}">{{ s.nombre }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-primary">Transferir</button></div>
+        </form>
+    </div></div>
+</div>
+{% endblock %}

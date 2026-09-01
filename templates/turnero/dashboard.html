@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block titulo %}Turnero HomeCare{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <h2 class="mb-1"><i class="fa-solid fa-ticket text-primary"></i> Turnero HomeCare</h2>
+    <p class="text-muted">Fila de espera, llamados y atención por turnos.</p>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-lg-2">
+            <div class="card shadow-sm h-100"><div class="card-body text-center">
+                <div class="display-6 fw-bold">{{ resumen.total_hoy }}</div>
+                <div class="text-muted small">Turnos de hoy</div>
+            </div></div>
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <div class="card shadow-sm h-100"><div class="card-body text-center">
+                <div class="display-6 fw-bold text-primary">{{ resumen.en_espera }}</div>
+                <div class="text-muted small">En espera</div>
+            </div></div>
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <div class="card shadow-sm h-100"><div class="card-body text-center">
+                <div class="display-6 fw-bold text-info">{{ resumen.en_atencion }}</div>
+                <div class="text-muted small">En atención</div>
+            </div></div>
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <div class="card shadow-sm h-100"><div class="card-body text-center">
+                <div class="display-6 fw-bold text-success">{{ resumen.atendidos }}</div>
+                <div class="text-muted small">Atendidos</div>
+            </div></div>
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <div class="card shadow-sm h-100"><div class="card-body text-center">
+                <div class="display-6 fw-bold text-danger">{{ resumen.no_presentados }}</div>
+                <div class="text-muted small">No presentados</div>
+            </div></div>
+        </div>
+        <div class="col-md-3 col-lg-2">
+            <div class="card shadow-sm h-100"><div class="card-body text-center">
+                <div class="display-6 fw-bold text-warning">{{ resumen.prioritarios }}</div>
+                <div class="text-muted small">Prioritarios hoy</div>
+            </div></div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3"><a href="/turnero/registrar" class="btn btn-success w-100 p-3"><i class="fa-solid fa-plus fa-lg d-block mb-2"></i> Registrar Turno</a></div>
+        <div class="col-md-3"><a href="/turnero/servicios" class="btn btn-outline-primary w-100 p-3"><i class="fa-solid fa-list fa-lg d-block mb-2"></i> Servicios</a></div>
+        <div class="col-md-3"><a href="/turnero/modulos" class="btn btn-outline-primary w-100 p-3"><i class="fa-solid fa-door-open fa-lg d-block mb-2"></i> Módulos de Atención</a></div>
+        <div class="col-md-3"><a href="/turnero/configuracion" class="btn btn-outline-secondary w-100 p-3"><i class="fa-solid fa-gear fa-lg d-block mb-2"></i> Configuración</a></div>
+    </div>
+
+    <h5 class="mb-2">Módulos activos — entrar a atender</h5>
+    <div class="row g-3">
+        {% for m in modulos %}
+        <div class="col-md-4">
+            <a href="/turnero/operador/{{ m.id }}" class="text-decoration-none">
+                <div class="card shadow-sm h-100"><div class="card-body">
+                    <h6 class="mb-1">{{ m.nombre }}</h6>
+                    <p class="small text-muted mb-0">{{ m.tipo }}{% if m.servicio_nombre %} — {{ m.servicio_nombre }}{% endif %}</p>
+                </div></div>
+            </a>
+        </div>
+        {% else %}
+        <div class="col-12"><p class="text-muted">No hay módulos de atención activos todavía. <a href="/turnero/modulos">Crear uno</a>.</p></div>
+        {% endfor %}
+    </div>
+
+    <div class="mt-4">
+        <a href="/turnero/pantalla" target="_blank" class="btn btn-outline-dark"><i class="fa-solid fa-tv"></i> Abrir Pantalla Pública</a>
+    </div>
+</div>
+{% endblock %}

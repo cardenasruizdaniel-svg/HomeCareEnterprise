@@ -293,6 +293,15 @@
         </li>
         {% endif %}
 
+        {% if usuario and tiene_permiso(usuario.rol, "turnero") %}
+        <li>
+            <a href="/turnero">
+                <i class="fa-solid fa-ticket"></i>
+                <span>Turnero HomeCare</span>
+            </a>
+        </li>
+        {% endif %}
+
         {% if usuario and tiene_permiso(usuario.rol, "catalogos") %}
         <li>
             <a href="/catalogos">

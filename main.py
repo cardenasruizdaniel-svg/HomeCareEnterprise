@@ -36,6 +36,7 @@ from routers.calidad import router as calidad_router
 from routers.calidad_avanzada import router as calidad_avanzada_router
 from routers.portal_publico import router as portal_publico_router
 from routers.configuracion_web import router as configuracion_web_router
+from routers.turnero import router as turnero_router
 from routers.informes import router as informes_router
 from routers.examen_fisico import router as examen_fisico_router
 from routers.recomendaciones import router as recomendaciones_router
@@ -229,6 +230,7 @@ def create_app() -> FastAPI:
     app.include_router(calidad_avanzada_router)
     app.include_router(portal_publico_router)
     app.include_router(configuracion_web_router)
+    app.include_router(turnero_router)
 
     # SEO del portal público: robots.txt y sitemap.xml deben
     # vivir en la raíz del dominio (no bajo /portal), así que se

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block titulo %}Configuración — Turnero{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/turnero" class="text-decoration-none small">&larr; Volver al Turnero</a>
+    <h2 class="mt-2 mb-1"><i class="fa-solid fa-gear text-primary"></i> Configuración del Turnero</h2>
+
+    {% if guardado %}<div class="alert alert-success">Guardado correctamente.</div>{% endif %}
+
+    <form method="post" action="/turnero/configuracion/guardar">
+        <div class="card shadow mb-3"><div class="card-body">
+            <h6 class="mb-3">General</h6>
+            <div class="mb-3"><label>Nombre del sistema</label><input type="text" name="nombre" class="form-control" value="{{ config.nombre }}"></div>
+        </div></div>
+
+        <div class="card shadow mb-3"><div class="card-body">
+            <h6 class="mb-3">Cola y prioridad</h6>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label>Turnos normales antes de llamar 1 prioritario</label>
+                    <input type="number" name="normales_por_prioritario" class="form-control" value="{{ config.normales_por_prioritario }}" min="1">
+                    <small class="text-muted">Por defecto: 2 (cada 2 normales, se llama 1 prioritario).</small>
+                </div>
+                <div class="col-md-6">
+                    <label>Edad para prioridad automática</label>
+                    <input type="number" name="edad_prioridad" class="form-control" value="{{ config.edad_prioridad }}" min="1">
+                    <small class="text-muted">Se calcula desde la fecha de nacimiento, nunca de una edad digitada a mano.</small>
+                </div>
+                <div class="col-md-6">
+                    <label>Reinicio de numeración</label>
+                    <select name="reinicio_numeracion" class="form-select">
+                        <option value="Diario" {% if config.reinicio_numeracion == "Diario" %}selected{% endif %}>Diario (cada día empieza en 001)</option>
+                        <option value="Continuo" {% if config.reinicio_numeracion == "Continuo" %}selected{% endif %}>Continuo (nunca se reinicia)</option>
+                    </select>
+                </div>
+            </div>
+        </div></div>
+
+        <div class="card shadow mb-3"><div class="card-body">
+            <h6 class="mb-3">Pantalla, voz y timbre</h6>
+            <div class="mb-3">
+                <label>Mensaje de voz</label>
+                <input type="text" name="mensaje_voz" class="form-control" value="{{ config.mensaje_voz }}">
+                <small class="text-muted">Use {TURNO}, {PACIENTE} y {MODULO} — se reemplazan automáticamente al llamar.</small>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6"><label>Volumen (0-100)</label><input type="number" name="volumen" class="form-control" value="{{ config.volumen }}" min="0" max="100"></div>
+                <div class="col-md-6 d-flex align-items-end">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="timbre_activo" value="true" id="checkTimbre" {% if config.timbre_activo %}checked{% endif %}>
+                        <label class="form-check-label" for="checkTimbre">Timbre antes de la voz</label>
+                    </div>
+                </div>
+            </div>
+        </div></div>
+
+        <button type="submit" class="btn btn-success btn-lg"><i class="fa-solid fa-floppy-disk"></i> Guardar configuración</button>
+    </form>
+</div>
+{% endblock %}

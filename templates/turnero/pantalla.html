@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Turnero HomeCare — Pantalla</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body{
+            background: linear-gradient(160deg, #00201f, #062a2a 60%, #3a0a24);
+            color: white; font-family:"Poppins",sans-serif;
+            height: 100vh; margin: 0; overflow: hidden;
+        }
+        .encabezado{ text-align:center; padding: 18px 0 6px; font-size: 22px; font-weight:700; letter-spacing:.04em; opacity:.85; }
+        .zona-turno{
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            padding: 20px 0 30px;
+        }
+        .etiqueta{ font-size: 26px; opacity:.75; margin-bottom: 6px; }
+        .numero-turno{ font-size: clamp(90px, 14vw, 190px); font-weight:800; line-height:1; transition: transform .3s ease; }
+        .numero-turno.animar{ animation: pulso 1s ease 2; }
+        @keyframes pulso{ 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.06); } }
+        .nombre-paciente{ font-size: clamp(28px, 4vw, 46px); font-weight:700; margin-top: 10px; }
+        .modulo-destino{ font-size: clamp(22px, 3vw, 34px); opacity:.9; margin-top: 4px; }
+        .franja-inferior{ display:flex; height: 30vh; border-top: 2px solid rgba(255,255,255,.12); }
+        .columna-llamados{ flex: 1; padding: 18px 30px; overflow:hidden; }
+        .columna-llamados h6{ text-transform:uppercase; letter-spacing:.06em; opacity:.7; font-size:14px; margin-bottom:10px; }
+        .fila-llamado{ display:flex; justify-content:space-between; padding:6px 0; border-bottom:1px solid rgba(255,255,255,.08); font-size: 18px; }
+        .columna-qr{ width: 260px; display:flex; flex-direction:column; align-items:center; justify-content:center; padding: 10px; border-left: 2px solid rgba(255,255,255,.12); }
+        .columna-qr img{ background:white; padding:8px; border-radius:10px; width:130px; height:130px; }
+        .columna-qr p{ font-size: 14px; text-align:center; margin-top:8px; opacity:.85; }
+    </style>
+</head>
+<body>
+    <div class="encabezado">TURNERO HOMECARE</div>
+
+    <div class="zona-turno" id="zonaTurno">
+        <div class="etiqueta">Turno actual</div>
+        <div class="numero-turno" id="numeroTurno">—</div>
+        <div class="nombre-paciente" id="nombrePaciente"></div>
+        <div class="modulo-destino" id="moduloDestino"></div>
+    </div>
+
+    <div class="franja-inferior">
+        <div class="columna-llamados">
+            <h6>Últimos llamados</h6>
+            <div id="listaUltimos"></div>
+        </div>
+        <div class="columna-qr">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=130x130&data={{ request.base_url }}portal" alt="QR">
+            <p>¿Necesitas un turno?<br>Escanea el QR</p>
+        </div>
+    </div>
+
+    <audio id="sonidoTimbre" preload="auto">
+        <source src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" type="audio/wav">
+    </audio>
+
+    <script>
+        let ultimoTurnoVisto = null;
+
+        async function actualizar() {
+            try {
+                const respuesta = await fetch("/turnero/pantalla/datos");
+                const datos = await respuesta.json();
+
+                const numeroEl = document.getElementById("numeroTurno");
+                const nombreEl = document.getElementById("nombrePaciente");
+                const moduloEl = document.getElementById("moduloDestino");
+
+                if (datos.actual) {
+                    if (datos.actual.numero_completo !== ultimoTurnoVisto) {
+                        ultimoTurnoVisto = datos.actual.numero_completo;
+                        numeroEl.classList.add("animar");
+                        setTimeout(() => numeroEl.classList.remove("animar"), 2000);
+
+                        // Timbre + voz -- requiere que el navegador ya haya
+                        // tenido una interaccion (politica de autoplay); en
+                        // modo kiosco normalmente se configura sin ese bloqueo.
+                        try {
+                            document.getElementById("sonidoTimbre").play().catch(() => {});
+                            const mensaje = (datos.config.mensaje_voz || "Turno {TURNO}, {PACIENTE}, diríjase a {MODULO}.")
+                                .replace("{TURNO}", datos.actual.numero_completo)
+                                .replace("{PACIENTE}", datos.actual.nombre_visitante || "")
+                                .replace("{MODULO}", datos.actual.modulo_nombre || "");
+                            const enunciado = new SpeechSynthesisUtterance(mensaje);
+                            enunciado.lang = "es-CO";
+                            enunciado.volume = (datos.config.volumen || 80) / 100;
+                            speechSynthesis.speak(enunciado);
+                        } catch (e) {}
+                    }
+                    numeroEl.textContent = datos.actual.numero_completo;
+                    nombreEl.textContent = datos.actual.nombre_visitante || "";
+                    moduloEl.textContent = datos.actual.modulo_nombre ? ("Diríjase a " + datos.actual.modulo_nombre) : "";
+                } else {
+                    numeroEl.textContent = "—";
+                    nombreEl.textContent = "";
+                    moduloEl.textContent = "";
+                }
+
+                const listaEl = document.getElementById("listaUltimos");
+                listaEl.innerHTML = (datos.ultimos || []).map((u) =>
+                    `<div class="fila-llamado"><span>${u.numero_completo}</span><span>${u.modulo_nombre || ""}</span></div>`
+                ).join("");
+            } catch (e) {
+                // Si la pantalla se desconecta temporalmente, el siguiente
+                // intento (3s despues) recupera el estado solo -- no hace
+                // falta recargar la pagina manualmente.
+            }
+        }
+
+        actualizar();
+        setInterval(actualizar, 3000);
+    </script>
+</body>
+</html>

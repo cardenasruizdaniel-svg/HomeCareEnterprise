@@ -28,6 +28,10 @@ class PacientesService:
         return PacientesRepository.buscar(texto)
 
     @staticmethod
+    def obtener_por_documento(documento: str):
+        return PacientesRepository.obtener_por_documento(documento)
+
+    @staticmethod
     def guardar(datos:dict):
         paciente=Paciente(**datos)
         errores=paciente.validar()

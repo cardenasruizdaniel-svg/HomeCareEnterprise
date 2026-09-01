@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block titulo %}Módulos de Atención — Turnero{% endblock %}
+{% block contenido %}
+<div class="container-fluid">
+    <a href="/turnero" class="text-decoration-none small">&larr; Volver al Turnero</a>
+    <h2 class="mt-2 mb-1"><i class="fa-solid fa-door-open text-primary"></i> Módulos de Atención</h2>
+    <p class="text-muted">Consultorios, ventanillas y salas — el lugar físico donde se atiende al paciente.</p>
+
+    {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+
+    <button type="button" class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#modalModulo"><i class="fa-solid fa-plus"></i> Nuevo módulo</button>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-light"><tr><th>Nombre</th><th>Tipo</th><th>Servicio</th><th>Estado</th><th></th></tr></thead>
+                <tbody>
+                    {% for m in modulos %}
+                    <tr class="{% if not m.activo %}table-secondary{% endif %}">
+                        <td>{{ m.nombre }}</td>
+                        <td>{{ m.tipo }}</td>
+                        <td>{{ m.servicio_nombre or "—" }}</td>
+                        <td>{% if m.activo %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-secondary">Inactivo</span>{% endif %}</td>
+                        <td>
+                            {% if m.activo %}
+                            <a href="/turnero/operador/{{ m.id }}" class="btn btn-outline-primary btn-sm">Entrar a atender</a>
+                            <form method="post" action="/turnero/modulos/{{ m.id }}/desactivar" class="d-inline"><button class="btn btn-outline-warning btn-sm">Desactivar</button></form>
+                            {% else %}
+                            <form method="post" action="/turnero/modulos/{{ m.id }}/reactivar" class="d-inline"><button class="btn btn-outline-success btn-sm">Reactivar</button></form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="5" class="text-center text-muted py-4">No hay módulos registrados todavía.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalModulo" tabindex="-1">
+    <div class="modal-dialog"><div class="modal-content">
+        <form method="post" action="/turnero/modulos/crear">
+            <div class="modal-header"><h5 class="modal-title">Nuevo módulo de atención</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="mb-2"><label>Nombre</label><input type="text" name="nombre" class="form-control" required placeholder="Ej: Consultorio 1"></div>
+                <div class="mb-2">
+                    <label>Tipo</label>
+                    <select name="tipo" class="form-select" required>
+                        {% for tipo in tipos %}<option value="{{ tipo }}">{{ tipo }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label>Servicio que atiende</label>
+                    <select name="servicio_id" class="form-select">
+                        <option value="">-- Cualquier servicio --</option>
+                        {% for s in servicios %}<option value="{{ s.id }}">{{ s.nombre }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label>Usuario asignado (opcional)</label>
+                    <select name="usuario_asignado_id" class="form-select">
+                        <option value="">-- Sin asignar --</option>
+                        {% for u in usuarios_sistema %}<option value="{{ u.id }}">{{ u.nombre }} ({{ u.usuario }})</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="mb-2"><label>Descripción</label><textarea name="descripcion" class="form-control" rows="2"></textarea></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button><button type="submit" class="btn btn-success">Guardar</button></div>
+        </form>
+    </div></div>
+</div>
+{% endblock %}
